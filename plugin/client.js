@@ -799,6 +799,8 @@ window.__ModuleLoader__.load({
         // Legacy: the old customNested flag folded custom groups.
         const legacy = family === 'custom' && settings.customNested === true ? 'nested' : undefined;
         display[family] = modes.indexOf(value) >= 0 ? value : legacy || defaults[family];
+        // Built-in groups are the backbone of the pool, so they cannot be hidden.
+        if (family === 'builtin' && display[family] === 'hidden') display[family] = 'tabs';
       }
       return {
         workspaceTabs: settings.workspaceTabs !== false,
@@ -1811,7 +1813,7 @@ window.__ModuleLoader__.load({
               h(
                 'div',
                 { className: 'pp-set-row' },
-                ['tabs', 'nested', 'hidden'].map((mode) =>
+                (family === 'builtin' ? ['tabs', 'nested'] : ['tabs', 'nested', 'hidden']).map((mode) =>
                   h(
                     'label',
                     { key: mode, className: 'pp-set-inline' },
