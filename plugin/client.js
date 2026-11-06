@@ -1800,7 +1800,6 @@ window.__ModuleLoader__.load({
               h('span', null, translate('settings.leading.' + name)),
             ),
           ),
-        ),
           h('div', { className: 'pp-set-divider' }),
           h('div', { className: 'pp-set-label' }, translate('settings.display')),
           ['builtin', 'custom', 'workspace'].map((family) =>
@@ -1827,6 +1826,7 @@ window.__ModuleLoader__.load({
               ),
             ),
           ),
+        ),
       );
     }
 
