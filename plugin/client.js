@@ -45,6 +45,7 @@ window.__ModuleLoader__.load({
       'tab.deleteAction': '删除',
       'tab.cancelAction': '取消',
       'kind.note': '便签',
+      'kind.pinned': '常用',
       'kind.snippet': '模板',
       'kind.skill': '技能',
       'kind.untitled': '（未命名）',
@@ -62,7 +63,7 @@ window.__ModuleLoader__.load({
       'row.insert': '插入到输入框',
       'row.pin': '标为常用',
       'row.unpin': '取消常用',
-      'row.select': '加入已选列表',
+      'row.select': '加入待发送队列',
       'row.copy': '复制内容',
       'row.duplicate': '复制一份，追加到池子末尾',
       'page.title': '提示词池',
@@ -83,6 +84,14 @@ window.__ModuleLoader__.load({
       'settings.nav': '提示词池',
       'settings.open': '提示词池设置',
       'settings.button': '设置',
+      'settings.tab.order': '顺序',
+      'settings.tab.workspace': '工作区',
+      'settings.workspaceCard': '工作区如何展示',
+      'settings.leading': '哪一组排在前面',
+      'settings.leading.workspace': '工作区',
+      'settings.leading.custom': '自定义分组',
+      'settings.leading.builtin': '内置分组',
+      'settings.leadingHint': '「全部」始终在最前；这里决定它后面先出现哪一组，另外两组按固定顺序跟随。',
       'settings.reload': '重新加载界面',
       'settings.reloadHint': '插件代码更新后，界面不会自动换新。点这里重新加载（比重启应用快）。',
       'settings.title': '提示词池',
@@ -100,13 +109,14 @@ window.__ModuleLoader__.load({
       'row.cancel': '取消',
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
-      'row.kindLabel': '类型',
-      'row.categoryLabel': '类别',
+      'row.kindLabel': '内置分组',
+      'row.categoryLabel': '自定义分组',
       'row.classification': '分类',
       'page.new': '提示词',
       'row.noCategory': '未分类',
+      'tray.title': '待发送队列',
       'tray.selected': '已选 {n} 条',
-      'tray.release': '发送列表',
+      'tray.release': '发送',
       'tray.clear': '清空',
       'tray.empty': '还没选中任何条目，点左侧「＋」加入',
       'tray.remove': '移出',
@@ -154,6 +164,7 @@ window.__ModuleLoader__.load({
       'tab.deleteAction': 'Delete',
       'tab.cancelAction': 'Cancel',
       'kind.note': 'Note',
+      'kind.pinned': 'Pinned',
       'kind.snippet': 'Template',
       'kind.skill': 'Skill',
       'kind.untitled': '(untitled)',
@@ -171,7 +182,7 @@ window.__ModuleLoader__.load({
       'row.insert': 'Insert into the composer',
       'row.pin': 'Mark as pinned',
       'row.unpin': 'Unpin',
-      'row.select': 'Add to the selected list',
+      'row.select': 'Add to the send queue',
       'row.copy': 'Copy the text',
       'row.duplicate': 'Duplicate and append to the pool',
       'page.title': 'Prompt pool',
@@ -192,6 +203,14 @@ window.__ModuleLoader__.load({
       'settings.nav': 'Prompt pool',
       'settings.open': 'Prompt-pool settings',
       'settings.button': 'Settings',
+      'settings.tab.order': 'Order',
+      'settings.tab.workspace': 'Workspaces',
+      'settings.workspaceCard': 'How workspaces appear',
+      'settings.leading': 'Which group comes first',
+      'settings.leading.workspace': 'Workspaces',
+      'settings.leading.custom': 'Custom groups',
+      'settings.leading.builtin': 'Built-in groups',
+      'settings.leadingHint': '"All" always leads; this picks which group follows it, the other two keep their fixed order.',
       'settings.reload': 'Reload the UI',
       'settings.reloadHint': 'A plugin code change does not swap the running UI. Use this instead of restarting the app.',
       'settings.title': 'Prompt pool',
@@ -209,13 +228,14 @@ window.__ModuleLoader__.load({
       'row.cancel': 'Cancel',
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
-      'row.kindLabel': 'Kind',
-      'row.categoryLabel': 'Category',
+      'row.kindLabel': 'Built-in',
+      'row.categoryLabel': 'Custom',
       'row.classification': 'Classification',
       'page.new': 'Prompt',
       'row.noCategory': 'Uncategorized',
+      'tray.title': 'Send queue',
       'tray.selected': '{n} selected',
-      'tray.release': 'Send list',
+      'tray.release': 'Send',
       'tray.clear': 'Clear',
       'tray.empty': 'Nothing selected yet — use the ＋ control on a row',
       'tray.remove': 'Remove',
@@ -355,12 +375,39 @@ window.__ModuleLoader__.load({
       return 'ws:' + workspaceId;
     }
 
-    /** One classification control: an item is either a kind or a category/workspace entry. */
+    /**
+     * One classification control. Built-in groups (常用 / 便签 / 模板) are
+     * exclusive, so choosing one clears the other two.
+     */
     function withClassification(draft, value) {
+      if (value === 'builtin:pinned') return { ...draft, pinned: true, categoryId: '' };
       if (typeof value === 'string' && value.indexOf('kind:') === 0) {
-        return { ...draft, kind: value === 'kind:snippet' ? 'snippet' : 'note', categoryId: '' };
+        return { ...draft, pinned: false, kind: value === 'kind:snippet' ? 'snippet' : 'note', categoryId: '' };
       }
-      return { ...draft, categoryId: value };
+      return { ...draft, pinned: false, categoryId: value };
+    }
+
+    /** The group an item belongs to, for the badge shown in the mixed view. */
+    function groupLabelOf(item, categories, workspaces) {
+      if (item.pinned === true) return translate('kind.pinned');
+      const ref = item.categoryId || '';
+      if (ref.indexOf('cat:') === 0) {
+        const found = (categories || []).find((category) => 'cat:' + category.id === ref);
+        return found ? found.name : translate('row.noCategory');
+      }
+      if (ref.indexOf('ws:') === 0) {
+        const found = (workspaces || []).find((workspace) => workspace.id === ref);
+        return found ? found.name : '';
+      }
+      if (item.kind === 'snippet') return translate('kind.snippet');
+      if (item.kind === 'skill') return translate('kind.skill');
+      return translate('kind.note');
+    }
+
+    function clipLabel(text, max) {
+      const value = String(text || '');
+      const limit = max || 8;
+      return value.length > limit ? value.slice(0, limit) + '…' : value;
     }
 
     /** Tab filter shared by the composer panel and the sidebar page. */
@@ -368,6 +415,8 @@ window.__ModuleLoader__.load({
       if (tab === 'all') return true;
       if (tab === 'pinned') return item.pinned === true;
       if (categoryIdOf(tab)) return (item.categoryId || '') === tab;
+      // 常用 is a built-in group of its own, so it does not also list under 便签/模板.
+      if (item.pinned === true) return false;
       return item.kind === tab;
     }
 
@@ -397,48 +446,69 @@ window.__ModuleLoader__.load({
     function workspaceRail(workspaces, settings, currentWorkspaceId) {
       const flags = normalizeSettings(settings);
       const list = workspaces || [];
-      const rail = [];
-      if (flags.currentWorkspaceTab && currentWorkspaceId) {
-        const current = list.find((workspace) => workspace.workspaceId === currentWorkspaceId);
-        if (current) rail.push(current);
-      }
-      if (flags.workspaceTabs) {
-        for (const workspace of list) {
-          if (!rail.some((entry) => entry.id === workspace.id)) rail.push(workspace);
-        }
-      }
-      return rail;
+      const current = currentWorkspaceId ? list.find((workspace) => workspace.workspaceId === currentWorkspaceId) : undefined;
+      // "List every workspace" off: only the current one remains, so the tab survives.
+      if (!flags.workspaceTabs) return current ? [current] : list.slice(0, 1);
+      // The other toggle only decides whether the current workspace leads the list.
+      if (!flags.currentWorkspaceTab || !current) return list.slice();
+      return [current, ...list.filter((workspace) => workspace.id !== current.id)];
     }
 
     /** One 「工作区」 tab replaces the per-workspace tabs; its content is vertical. */
     function buildTabs(categories, workspaces, settings, currentWorkspaceId) {
       const flags = normalizeSettings(settings);
-      const showWorkspaceTab = (flags.workspaceTabs || flags.currentWorkspaceTab) && (workspaces || []).length > 0;
-      return [
-        // Three blocks: the user's categories, the built-in views, then workspaces.
-        ...categories.map((category) => ({ id: 'cat:' + category.id, label: category.name, category: true, group: 'custom' })),
-        { id: 'all', label: translate('tab.all'), group: 'builtin' },
-        { id: 'pinned', label: translate('tab.pinned'), group: 'builtin' },
-        { id: 'note', label: translate('tab.note'), group: 'builtin' },
-        { id: 'snippet', label: translate('tab.snippet'), group: 'builtin' },
-        { id: 'skill', label: translate('tab.skill'), group: 'builtin' },
-        ...(showWorkspaceTab
+      const showWorkspaceTab = workspaceRail(workspaces, settings, currentWorkspaceId).length > 0;
+      const blocks = {
+        workspace: showWorkspaceTab
           ? [{ id: 'workspace', label: translate(flags.workspaceTabs ? 'tab.workspace' : 'tab.currentWorkspace'), group: 'workspace' }]
-          : []),
+          : [],
+        builtin: [
+          { id: 'pinned', label: translate('tab.pinned'), group: 'builtin' },
+          { id: 'note', label: translate('tab.note'), group: 'builtin' },
+          { id: 'snippet', label: translate('tab.snippet'), group: 'builtin' },
+          { id: 'skill', label: translate('tab.skill'), group: 'builtin' },
+        ],
+        custom: categories.map((category) => ({ id: 'cat:' + category.id, label: category.name, category: true, group: 'custom' })),
+      };
+      const rest = ['workspace', 'custom', 'builtin'].filter((name) => name !== flags.leadingGroup);
+      return [
+        // 全部 always anchors the row; the chosen block leads the rest.
+        { id: 'all', label: translate('tab.all'), group: 'all' },
+        ...[flags.leadingGroup, ...rest].reduce((list, name) => list.concat(blocks[name]), []),
       ];
     }
 
-    /** Confirmation for deleting one of the user's own tabs. */
+    /** Confirmation for deleting one of the user's own tabs, as a modal. */
     function CategoryDeleteConfirm(props) {
+      useEffect(() => {
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') return;
+          event.preventDefault();
+          event.stopPropagation();
+          props.onCancel();
+        };
+        window.addEventListener('keydown', onKeyDown, true);
+        return () => window.removeEventListener('keydown', onKeyDown, true);
+      }, [props.onCancel]);
+
       return h(
         'div',
-        { className: 'pp-confirm' },
-        h('div', { className: 'pp-confirm-text' }, translate('tab.deleteConfirm')),
+        {
+          className: 'pp-modal',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) props.onCancel();
+          },
+        },
         h(
           'div',
-          { className: 'pp-edit-actions' },
-          h('button', { type: 'button', className: 'pp-mini', onClick: props.onCancel }, translate('tab.cancelAction')),
-          h('button', { type: 'button', className: 'pp-primary', onClick: props.onConfirm }, translate('tab.deleteAction')),
+          { className: 'pp-modal-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': translate('tab.delete') },
+          h('div', { className: 'pp-modal-text' }, translate('tab.deleteConfirm')),
+          h(
+            'div',
+            { className: 'pp-modal-actions' },
+            h('button', { type: 'button', className: 'pp-mini', onClick: props.onCancel }, translate('tab.cancelAction')),
+            h('button', { type: 'button', className: 'pp-primary', autoFocus: true, onClick: props.onConfirm }, translate('tab.deleteAction')),
+          ),
         ),
       );
     }
@@ -512,18 +582,112 @@ window.__ModuleLoader__.load({
       const byId = new Map(items.map((item) => [item.id, item]));
       const rawTray = Array.isArray(data && data.tray) ? data.tray : [];
       const tray = rawTray.map((entry) => normalizeTrayEntry(entry, byId)).filter(Boolean);
-      return { version: 1, categories, items, tray, settings: normalizeSettings(data && data.settings) };
+      return { version: 1, categories, items, tray, settings: normalizeSettings(data && data.settings), seeded: Boolean(data && data.seeded === true) };
     }
 
     function emptyPool() {
-      return { version: 1, categories: [], items: [], tray: [], settings: normalizeSettings(undefined) };
+      return { version: 1, categories: [], items: [], tray: [], settings: normalizeSettings(undefined), seeded: true };
+    }
+
+    /**
+     * First-run content: five behaviour switches that stay valid as one-liners.
+     * They land in the 常用 group and stay ordinary, deletable items.
+     */
+    const SEED_PROMPTS = [
+      ['seed:plan-first', '先给方案', '先列改动清单：要改哪些文件、每处改什么、怎么验证。等我确认后再动手。'],
+      ['seed:scope-guard', '不动无关代码', '只改与目标直接相关的行；看到别的问题只记录，不顺手修。'],
+      [
+        'seed:pre-delivery',
+        '交付前自检',
+        '交付前给一条最小验证（命令或测试），并回答三件事：最可能出问题的地方、怎么回滚、哪些假设我没验证过。',
+      ],
+      ['seed:stop-restate', '停下重述', '停一下：重述我的原始要求和当前实际在做的事，指出偏差，再决定继续还是回退。'],
+      ['seed:commands', '给命令不给描述', '需要我操作时直接给可粘贴的命令、路径或代码块。'],
+    ];
+
+    /** Templates: each one has a hole to fill and a shape the answer must take. */
+    const SEED_TEMPLATES = [
+      [
+        'seed:review',
+        '代码审查',
+        '审阅 {{贴 diff 或文件}}：先用一句话给结论（能否合入、卡在哪）；再按「阻塞 / 建议 / 可选」分级列问题，每条给行号、触发条件、修法。不要重述代码在做什么。',
+      ],
+      [
+        'seed:options',
+        '方案对比',
+        '针对 {{决策点}} 给 2–3 个候选方案，用表格对比：改动范围、风险、回滚难度、后续维护成本；最后给推荐项和一句理由。',
+      ],
+      [
+        'seed:acceptance',
+        '验收清单',
+        '为 {{功能名}} 输出可勾选清单，按「正常路径 / 边界 / 失败恢复」分组；每条写成一个可观察的结果，能被执行或验证。',
+      ],
+      [
+        'seed:changelog',
+        '变更说明',
+        '按 Keep a Changelog 写 {{版本号}} 的变更说明：动词开头、一条一个变更、修复与新增不混在同一条；破坏性变更单独列一节。',
+      ],
+      [
+        'seed:explain',
+        '解释这段代码',
+        '解释 {{代码或模块}}：先用一句话说它解决什么问题，再说依赖的关键不变量、最容易踩的坑、以及改动时不能破坏的东西。',
+      ],
+    ];
+
+    /** A build bumps this and adds one batch; older pools receive only the new batch. */
+    const SEED_LEVEL = 2;
+
+    function seedItem([id, title, body], kind, pinned, now) {
+      return { id, kind, title, body, pinned, categoryId: '', createdAt: now, updatedAt: now };
+    }
+
+    function seedsAbove(level, now) {
+      const batches = [
+        { level: 1, items: SEED_PROMPTS.map((entry) => seedItem(entry, 'note', true, now)) },
+        { level: 2, items: SEED_TEMPLATES.map((entry) => seedItem(entry, 'snippet', false, now)) },
+      ];
+      return batches.filter((batch) => batch.level > level).reduce((list, batch) => list.concat(batch.items), []);
+    }
+
+    function seededPool() {
+      return {
+        version: 1,
+        categories: [],
+        items: seedsAbove(0, Date.now()),
+        tray: [],
+        settings: normalizeSettings(undefined),
+        seeded: SEED_LEVEL,
+      };
+    }
+
+    function seedItems(existing, level) {
+      const taken = new Set(existing.map((item) => item.id));
+      return seedsAbove(level, Date.now()).filter((item) => !taken.has(item.id));
     }
 
     function loadPool() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return emptyPool();
-        return normalizePool(JSON.parse(raw));
+        if (!raw) {
+          // Brand-new install only: an existing (even empty) pool is never reseeded.
+          const seeded = seededPool();
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+          } catch (_error) {
+            /* storage unavailable: keep the in-memory copy only */
+          }
+          return seeded;
+        }
+        const pool = normalizePool(JSON.parse(raw));
+        const level = Number(pool.seeded) || 0;
+        if (level >= SEED_LEVEL) return pool;
+        const migrated = { ...pool, items: [...pool.items, ...seedItems(pool.items, level)], seeded: SEED_LEVEL };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        } catch (_error) {
+          /* storage unavailable: keep the in-memory copy only */
+        }
+        return migrated;
       } catch (_error) {
         return emptyPool();
       }
@@ -592,9 +756,11 @@ window.__ModuleLoader__.load({
 
     function normalizeSettings(raw) {
       const settings = raw && typeof raw === 'object' ? raw : {};
+      const leaders = ['workspace', 'custom', 'builtin'];
       return {
         workspaceTabs: settings.workspaceTabs !== false,
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
+        leadingGroup: leaders.indexOf(settings.leadingGroup) >= 0 ? settings.leadingGroup : 'workspace',
       };
     }
 
@@ -778,8 +944,8 @@ window.__ModuleLoader__.load({
     // ------------------------------------------------------------------ icons
     function icon(name) {
       const base = {
-        width: 12,
-        height: 12,
+        width: 15,
+        height: 15,
         viewBox: '0 0 12 12',
         fill: 'none',
         stroke: 'currentColor',
@@ -932,7 +1098,7 @@ window.__ModuleLoader__.load({
         },
         h(
           'svg',
-          { width: 13, height: 13, viewBox: '0 0 14 14', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
+          { width: 15, height: 15, viewBox: '0 0 14 14', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
           h('circle', { cx: 7, cy: 7, r: 5.5 }),
           h('path', { d: 'M7 4.4v5.2M4.4 7h5.2' }),
         ),
@@ -1058,7 +1224,7 @@ window.__ModuleLoader__.load({
           nodes.push(h('span', { key: 'add-custom', className: 'pp-tab-addwrap' }, renderAdd()));
         }
       });
-      if (!addPlaced) nodes.unshift(h('span', { key: 'add-custom', className: 'pp-tab-addwrap' }, renderAdd()));
+      if (!addPlaced) nodes.push(h('span', { key: 'add-custom', className: 'pp-tab-addwrap' }, renderAdd()));
       return h(React.Fragment, null, nodes);
     }
 
@@ -1176,6 +1342,7 @@ window.__ModuleLoader__.load({
           title: editing.title.trim(),
           body: editing.body,
           categoryId: editing.categoryId || '',
+          pinned: editing.pinned === true,
         });
         setEditing(null);
         flash({ kind: 'ok', text: translate('status.savedToPool') });
@@ -1187,7 +1354,7 @@ window.__ModuleLoader__.load({
         const categoryId = inWorkspace ? wsActive : categoryIdOf(tab) || '';
         const nextKind = tab === 'snippet' ? 'snippet' : 'note';
         // Category and workspace tabs keep their own context; plain tabs land on the kind.
-        if (!inWorkspace && !categoryId) setTab(nextKind);
+        if (!inWorkspace && !categoryId && tab !== 'pinned') setTab(nextKind);
         setQuery('');
         const item = poolActions.add({
           id: uid(),
@@ -1195,10 +1362,11 @@ window.__ModuleLoader__.load({
           title: '',
           body: '',
           categoryId,
+          pinned: tab === 'pinned',
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, kind: nextKind, title: '', body: '', categoryId });
+        setEditing({ id: item.id, kind: nextKind, title: '', body: '', categoryId, pinned: tab === 'pinned' });
       };
 
       const rowOf = (item, index) => {
@@ -1234,13 +1402,14 @@ window.__ModuleLoader__.load({
                 {
                   className: 'pp-input',
                   style: { width: 'auto', maxWidth: '220px' },
-                  value: editing.categoryId || 'kind:' + (editing.kind === 'snippet' ? 'snippet' : 'note'),
+                  value: editing.pinned === true ? 'builtin:pinned' : editing.categoryId || 'kind:' + (editing.kind === 'snippet' ? 'snippet' : 'note'),
                   'aria-label': translate('row.classification'),
                   onChange: (event) => setEditing(withClassification(editing, event.target.value)),
                 },
                 h(
                   'optgroup',
                   { label: translate('row.kindLabel') },
+                  h('option', { value: 'builtin:pinned' }, translate('kind.pinned')),
                   h('option', { value: 'kind:note' }, translate('kind.note')),
                   h('option', { value: 'kind:snippet' }, translate('kind.snippet')),
                 ),
@@ -1268,27 +1437,20 @@ window.__ModuleLoader__.load({
         return h(
           'div',
           { key: item.id, className: 'pp-row pp-page-item' },
+          h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => sendToComposer({ type: 'insert', text: item.body }, translate('status.inserted')) }),
           h(TrayAdd, { label: translate('row.select'), onClick: () => poolActions.addToTray(item.id) }),
           h(
             'div',
-            { className: 'pp-main', onClick: () => setEditing({ id: item.id, kind: item.kind, title: item.title, body: item.body, categoryId: item.categoryId || '' }) },
+            { className: 'pp-main', onClick: () => setEditing({ id: item.id, kind: item.kind, title: item.title, body: item.body, categoryId: item.categoryId || '', pinned: item.pinned === true }) },
             h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || translate('kind.untitled')),
             item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
           ),
-          item.kind === 'snippet'
-            ? h('span', { className: 'pp-kind' }, translate('kind.snippet'))
-            : item.kind === 'skill'
-              ? h('span', { className: 'pp-kind' }, translate('kind.skill'))
-              : null,
+          tab === 'all'
+            ? h('span', { className: 'pp-kind' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
+            : null,
           h(
             'div',
             { className: 'pp-actions' },
-            h(IconButton, {
-              name: item.pinned === true ? 'starFill' : 'star',
-              label: translate(item.pinned === true ? 'row.unpin' : 'row.pin'),
-              active: item.pinned === true,
-              onClick: () => poolActions.togglePin(item.id),
-            }),
             h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.move(item.id, -1) }),
             h(IconButton, {
               name: 'down',
@@ -1296,8 +1458,7 @@ window.__ModuleLoader__.load({
               disabled: index === items.length - 1,
               onClick: () => poolActions.move(item.id, 1),
             }),
-            h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => sendToComposer({ type: 'insert', text: item.body }, translate('status.inserted')) }),
-            h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => setEditing({ id: item.id, kind: item.kind, title: item.title, body: item.body, categoryId: item.categoryId || '' }) }),
+            h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => setEditing({ id: item.id, kind: item.kind, title: item.title, body: item.body, categoryId: item.categoryId || '', pinned: item.pinned === true }) }),
             h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
             h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => poolActions.remove(item.id) }),
           ),
@@ -1372,6 +1533,7 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'pp-foot-head' },
+            h('span', { className: 'pp-foot-title' }, translate('tray.title')),
             h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
             h('span', { className: 'pp-grow' }),
             state.tray.length > 0
@@ -1455,10 +1617,11 @@ window.__ModuleLoader__.load({
       useLocaleTick();
       const state = usePoolState();
       const settings = normalizeSettings(state.settings);
-      const row = (key, label, hint) =>
+      const [section, setSection] = useState('order');
+      const check = (key, label, hint) =>
         h(
           'div',
-          { className: 'pp-set-group' },
+          { className: 'pp-set-item' },
           h(
             'label',
             { className: 'pp-set-row' },
@@ -1476,9 +1639,57 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '6px' } }, translate('settings.desc')),
-        row('workspaceTabs', 'settings.workspaceTabs', 'settings.workspaceTabsHint'),
-        row('currentWorkspaceTab', 'settings.currentWorkspaceTab', 'settings.currentWorkspaceTabHint'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc')),
+        h(
+          'div',
+          { className: 'pp-bar', style: { padding: '0 0 10px' } },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-tab',
+              'data-active': section === 'order' ? 'true' : 'false',
+              onClick: () => setSection('order'),
+            },
+            translate('settings.tab.order'),
+          ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-tab',
+              'data-active': section === 'workspace' ? 'true' : 'false',
+              onClick: () => setSection('workspace'),
+            },
+            translate('settings.tab.workspace'),
+          ),
+        ),
+        h(
+          'div',
+          { className: 'pp-set-group pp-set-card', style: { display: section === 'workspace' ? '' : 'none' } },
+          h('div', { className: 'pp-set-label' }, translate('settings.workspaceCard')),
+          check('workspaceTabs', 'settings.workspaceTabs', 'settings.workspaceTabsHint'),
+          check('currentWorkspaceTab', 'settings.currentWorkspaceTab', 'settings.currentWorkspaceTabHint'),
+        ),
+        h(
+          'div',
+          { className: 'pp-set-group pp-set-card', style: { display: section === 'order' ? '' : 'none' } },
+          h('div', { className: 'pp-set-label' }, translate('settings.leading')),
+          h('div', { className: 'pp-hint pp-set-hint' }, translate('settings.leadingHint')),
+          ['workspace', 'custom', 'builtin'].map((name) =>
+            h(
+              'label',
+              { key: name, className: 'pp-set-row' },
+              h('input', {
+                type: 'radio',
+                name: 'pp-leading-group',
+                checked: settings.leadingGroup === name,
+                onChange: () => poolActions.setSetting('leadingGroup', name),
+              }),
+              h('span', null, translate('settings.leading.' + name)),
+            ),
+          ),
+        ),
       );
     }
 
@@ -1669,20 +1880,21 @@ window.__ModuleLoader__.load({
         const inWorkspace = tab === 'workspace';
         const categoryId = inWorkspace ? wsActive : categoryIdOf(tab) || '';
         // A skill tab holds a fetched catalog, not pool rows: land on the list first.
-        if (!inWorkspace && !categoryId) setTab(nextKind);
+        if (!inWorkspace && !categoryId && tab !== 'pinned') setTab(nextKind);
         const item = poolActions.add({
           id: uid(),
           kind: nextKind,
           title: '',
           body: '',
           categoryId,
+          pinned: tab === 'pinned',
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, kind: nextKind, title: '', body: '', categoryId });
+        setEditing({ id: item.id, kind: nextKind, title: '', body: '', categoryId, pinned: tab === 'pinned' });
       };
 
-      const startEdit = (item) => setEditing({ id: item.id, kind: item.kind, title: item.title, body: item.body, categoryId: item.categoryId || '' });
+      const startEdit = (item) => setEditing({ id: item.id, kind: item.kind, title: item.title, body: item.body, categoryId: item.categoryId || '', pinned: item.pinned === true });
 
       const saveEdit = () => {
         if (!editing) return;
@@ -1695,6 +1907,7 @@ window.__ModuleLoader__.load({
           title: editing.title.trim(),
           body: editing.body,
           categoryId: editing.categoryId || '',
+          pinned: editing.pinned === true,
         });
         setEditing(null);
       };
@@ -1779,13 +1992,14 @@ window.__ModuleLoader__.load({
                 {
                   className: 'pp-input',
                   style: { width: 'auto', maxWidth: '220px' },
-                  value: editing.categoryId || 'kind:' + (editing.kind === 'snippet' ? 'snippet' : 'note'),
+                  value: editing.pinned === true ? 'builtin:pinned' : editing.categoryId || 'kind:' + (editing.kind === 'snippet' ? 'snippet' : 'note'),
                   'aria-label': translate('row.classification'),
                   onChange: (event) => setEditing(withClassification(editing, event.target.value)),
                 },
                 h(
                   'optgroup',
                   { label: translate('row.kindLabel') },
+                  h('option', { value: 'builtin:pinned' }, translate('kind.pinned')),
                   h('option', { value: 'kind:note' }, translate('kind.note')),
                   h('option', { value: 'kind:snippet' }, translate('kind.snippet')),
                 ),
@@ -1813,6 +2027,7 @@ window.__ModuleLoader__.load({
         return h(
           'div',
           { key: item.id, className: 'pp-row' },
+          h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => insertItem(item) }),
           h(TrayAdd, { label: translate('row.select'), onClick: () => poolActions.addToTray(item.id) }),
           h(
             'div',
@@ -1820,20 +2035,12 @@ window.__ModuleLoader__.load({
             h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || translate('kind.untitled')),
             item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
           ),
-          item.kind === 'snippet'
-            ? h('span', { className: 'pp-kind' }, translate('kind.snippet'))
-            : item.kind === 'skill'
-              ? h('span', { className: 'pp-kind' }, translate('kind.skill'))
-              : null,
+          tab === 'all'
+            ? h('span', { className: 'pp-kind' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
+            : null,
           h(
             'div',
             { className: 'pp-actions' },
-            h(IconButton, {
-              name: item.pinned === true ? 'starFill' : 'star',
-              label: translate(item.pinned === true ? 'row.unpin' : 'row.pin'),
-              active: item.pinned === true,
-              onClick: () => poolActions.togglePin(item.id),
-            }),
             h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.move(item.id, -1) }),
             h(IconButton, {
               name: 'down',
@@ -2031,7 +2238,8 @@ window.__ModuleLoader__.load({
               h(
                 'div',
                 { className: 'pp-foot-head' },
-                h('span', { className: 'pp-hint' }, translate('tray.selected', { n: tray.length })),
+                h('span', { className: 'pp-foot-title' }, translate('tray.title')),
+            h('span', { className: 'pp-hint' }, translate('tray.selected', { n: tray.length })),
                 queue.length > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queue.length })) : null,
                 h('span', { className: 'pp-grow' }),
                 h('button', { type: 'button', className: 'pp-link', onClick: () => poolActions.clearTray() }, translate('tray.clear')),
@@ -2168,7 +2376,7 @@ window.__ModuleLoader__.load({
 
     // -------------------------------------------------------------------- css
     const CSS =
-      '.pp-panel,.pp-page,.pp-settings,.pp-root{--pp-accent:var(--dsw-alias-brand-primary);--pp-accent-soft:color-mix(in srgb,var(--dsw-alias-brand-primary) 13%,transparent);--pp-accent-line:color-mix(in srgb,var(--dsw-alias-brand-primary) 55%,transparent);--pp-ink:var(--dsw-alias-label-primary);--pp-ink-2:var(--dsw-alias-label-secondary);--pp-line:var(--dsw-alias-border-l1);--pp-line-2:var(--dsw-alias-border-l2);--pp-surface:var(--dsw-alias-bg-layer-1);--pp-surface-2:var(--dsw-alias-bg-overlay);--pp-hover:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2));--pp-danger:var(--dsw-alias-state-error-primary);--pp-danger-soft:color-mix(in srgb,var(--dsw-alias-state-error-primary) 12%,transparent);--pp-ok:var(--dsw-alias-state-success-primary);--pp-on-accent:#ffffff}' +
+      '.pp-panel,.pp-page,.pp-settings,.pp-root{--pp-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));--pp-accent-soft:color-mix(in srgb,var(--pp-accent) 13%,transparent);--pp-accent-line:color-mix(in srgb,var(--pp-accent) 55%,transparent);--pp-ink:var(--dsw-alias-label-primary);--pp-ink-2:var(--dsw-alias-label-secondary);--pp-line:var(--dsw-alias-border-l1);--pp-line-2:var(--dsw-alias-border-l2);--pp-surface:var(--dsw-alias-bg-layer-1);--pp-surface-2:var(--dsw-alias-bg-overlay);--pp-hover:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2));--pp-danger:var(--dsw-alias-state-error-primary);--pp-danger-soft:color-mix(in srgb,var(--dsw-alias-state-error-primary) 12%,transparent);--pp-ok:var(--dsw-alias-state-success-primary);--pp-on-accent:#ffffff}' +
       '.pp-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;min-width:28px;padding:0 6px;border:0;border-radius:8px;background:transparent;color:var(--pp-ink-2);cursor:pointer;font:inherit;font-size:12px;line-height:1}' +
       '.pp-btn:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-btn[data-open="true"]{background:var(--pp-hover);color:var(--pp-ink)}' +
@@ -2186,19 +2394,21 @@ window.__ModuleLoader__.load({
       '.pp-tab[data-active="true"]{border-color:var(--pp-accent);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
       '.pp-tab-add{padding:0 7px;color:var(--pp-ink-2)}' +
       '.pp-tab-addwrap{display:inline-flex;align-items:center}' +
-      '.pp-tab-sep{flex:none;width:1px;height:14px;margin:0 3px;background:var(--pp-line)}' +
+      '.pp-tab-sep{flex:none;width:1px;height:16px;margin:0 7px;background:color-mix(in srgb, var(--pp-ink-2) 45%, transparent)}' +
       '.pp-tab-x{margin-left:4px;padding:0 2px;border-radius:4px;font-size:11px;line-height:1;color:var(--pp-ink-2)}' +
       '.pp-tab-x:hover{color:var(--pp-danger)}' +
       '.pp-tab-input{height:24px;width:110px;padding:0 7px;border:1px solid var(--pp-accent);border-radius:7px;background:var(--dsw-alias-bg-base);color:inherit;font:inherit;font-size:12px;outline:none}' +
-      '.pp-confirm{display:flex;flex-direction:column;gap:6px;padding:8px 12px;border-bottom:1px solid var(--pp-line);background:var(--pp-surface)}' +
-      '.pp-confirm-text{font-size:12px;line-height:1.6;color:var(--pp-ink)}' +
+      '.pp-modal{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:color-mix(in srgb,var(--pp-ink) 22%,transparent)}' +
+      '.pp-modal-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px;padding:16px 18px;border:1px solid var(--pp-line);border-radius:12px;background:var(--pp-surface-2);box-shadow:0 18px 48px rgba(0,0,0,.24)}' +
+      '.pp-modal-text{font-size:13px;line-height:1.65;color:var(--pp-ink)}' +
+      '.pp-modal-actions{display:flex;justify-content:flex-end;gap:8px}' +
       '.pp-mini{height:24px;padding:0 9px;border-radius:7px;border:1px solid var(--pp-line);background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
       '.pp-mini:hover{background:var(--pp-hover)}' +
       '.pp-set-btn{display:inline-flex;align-items:center;gap:5px;padding:0 9px}' +
       '.pp-set-btn[data-active="true"]{border-color:var(--pp-accent);color:var(--pp-accent)}' +
       '.pp-set-btn-icon{display:inline-flex;align-items:center}' +
       '.pp-list{overflow-y:auto;padding:2px 6px 8px;flex:1;min-height:0}' +
-      '.pp-page{display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
+      '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
       '.pp-page-head{display:flex;align-items:center;gap:8px;padding:12px 12px 8px;border-bottom:1px solid var(--pp-line);flex-wrap:wrap}' +
       '.pp-page-title{font-size:14px;font-weight:600}' +
       '.pp-page-sub{color:var(--pp-ink-2);font-size:12px}' +
@@ -2210,6 +2420,12 @@ window.__ModuleLoader__.load({
       '.pp-set-row{display:flex;align-items:flex-start;gap:8px;cursor:pointer}' +
       '.pp-set-row input{margin:3px 0 0;accent-color:var(--pp-accent);cursor:pointer}' +
       '.pp-set-hint{margin-top:2px;padding-left:22px}' +
+      '.pp-set-label{font-size:12px;color:var(--pp-ink-2);margin:2px 0 4px}' +
+      '.pp-set-card{padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
+      '.pp-set-card .pp-set-label{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
+      '.pp-set-card .pp-set-row{padding:3px 0}' +
+      '.pp-set-card .pp-set-hint{padding-left:0;margin:2px 0 8px}' +
+      '.pp-set-item + .pp-set-item{margin-top:8px}' +
       '.pp-page-body{flex:1;min-height:0;overflow-y:auto;padding:6px 8px 20px}' +
       '.pp-ws{display:flex;flex-direction:column;gap:8px;min-width:0}' +
       '.pp-ws-rail{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}' +
@@ -2219,7 +2435,7 @@ window.__ModuleLoader__.load({
       '.pp-ws-name{min-width:0;max-width:168px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-ws-count{flex:none;font-size:10px;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
       '.pp-ws-body{min-width:0}' +
-      '.pp-page-foot{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-top:1px solid var(--pp-line);background:var(--pp-surface);max-height:55%;overflow-y:auto}' +
+      '.pp-page-foot{display:flex;flex-direction:column;gap:8px;margin:8px 10px 10px;padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface);box-shadow:0 1px 3px rgba(0,0,0,.08);max-height:52%;overflow-y:auto}' +
       '.pp-page-foot .pp-tray{max-height:none}' +
       '.pp-page-item{padding:10px 12px;border-radius:10px;border:1px solid transparent}' +
       '.pp-page-item:hover{background:var(--pp-surface);border-color:var(--pp-line)}' +
@@ -2230,7 +2446,7 @@ window.__ModuleLoader__.load({
       '.pp-row{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:8px}' +
       '.pp-row:hover{background:var(--pp-hover)}' +
       '.pp-check{margin:2px 0 0;accent-color:var(--pp-accent);cursor:pointer;flex:none}' +
-      '.pp-toggle{width:22px;height:22px;flex:none;margin-top:-1px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}' +
+      '.pp-toggle{width:26px;height:26px;flex:none;margin-top:-1px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}' +
       '.pp-toggle:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-toggle[data-selected="true"]{color:var(--pp-accent)}' +
       '.pp-main{flex:1;min-width:0;cursor:pointer}' +
@@ -2239,7 +2455,7 @@ window.__ModuleLoader__.load({
       '.pp-kind{flex:none;margin-top:2px;padding:0 5px;border-radius:5px;border:1px solid var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px;line-height:15px}' +
       '.pp-actions{display:flex;gap:2px;opacity:0;flex:none}' +
       '.pp-row:hover .pp-actions,.pp-row:focus-within .pp-actions{opacity:1}' +
-      '.pp-icon{width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}' +
+      '.pp-icon{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}' +
       '.pp-icon:hover{background:var(--pp-surface);color:var(--pp-ink)}' +
       '.pp-icon:disabled{opacity:.35;cursor:default}' +
       '.pp-icon[data-danger="true"]:hover{color:var(--pp-danger)}' +
@@ -2256,13 +2472,14 @@ window.__ModuleLoader__.load({
       '.pp-link:hover{color:var(--pp-ink)}' +
       '.pp-foot{border-top:1px solid var(--pp-line);padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px;background:var(--pp-surface)}' +
       '.pp-foot-head{display:flex;align-items:center;gap:6px}' +
+      '.pp-foot-title{font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-tray{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}' +
       '.pp-foot .pp-tray{max-height:min(40vh,220px)}' +
       '.pp-chip{display:flex;align-items:flex-start;gap:6px;padding:5px 7px;border-radius:8px;border:1px solid var(--pp-line);background:var(--pp-surface-2);min-width:0}' +
       '.pp-chip-actions{display:flex;gap:2px;flex:none;align-self:flex-start}' +
       '.pp-chip-n{flex:none;padding-top:1px;font-size:11px;line-height:1.55;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
       '.pp-chip-t{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:12px;line-height:1.55;color:var(--pp-ink)}' +
-      '.pp-chip .pp-icon{width:18px;height:18px}' +
+      '.pp-chip .pp-icon{width:22px;height:22px}' +
       '.pp-hint{color:var(--pp-ink-2);font-size:11px}' +
       '.pp-status{padding:0 12px 8px;font-size:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}' +
       '.pp-status[data-kind="error"]{color:var(--pp-danger)}' +
@@ -2329,3 +2546,5 @@ window.__ModuleLoader__.load({
     };
   },
 });
+
+
