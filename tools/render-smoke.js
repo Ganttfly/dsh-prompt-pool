@@ -1,0 +1,151 @@
+// Renders every registered slot component in a stubbed host so a render-time
+// ReferenceError or bad hook order fails here instead of inside the app.
+const fs = require('fs');
+const path = require('path');
+
+const source = fs.readFileSync(path.join(__dirname, '..', 'plugin', 'client.js'), 'utf8');
+
+const store = new Map();
+const registrations = [];
+
+const reactStub = {
+  createElement: (type, props, ...children) => ({ type, props, children }),
+  Fragment: 'Fragment',
+  useState: (initial) => [typeof initial === 'function' ? initial() : initial, () => {}],
+  useEffect: () => {},
+  useRef: (initial) => ({ current: initial }),
+  useMemo: (factory) => factory(),
+  useCallback: (fn) => fn,
+  // The panel only renders its open state, so force the UI store open.
+  useSyncExternalStore: (subscribe, getSnapshot) => {
+    const value = getSnapshot();
+    if (value && typeof value === 'object' && 'open' in value) return { ...value, open: true };
+    return value;
+  },
+};
+
+function requireStub(name) {
+  if (name === 'react') return reactStub;
+  throw new Error('unexpected require: ' + name);
+}
+
+const workspaceSnapshot = {
+  items: [
+    { workspaceId: 'w1', title: 'dsh-prompt-pool', path: 'D:\\Hotpot\\dsh-prompt-pool', sessionIds: ['s1'] },
+    { workspaceId: 'w2', title: 'Working-AT-Fixer', path: 'D:\\Working-AT-Fixer', sessionIds: [] },
+  ],
+};
+
+const inputActions = {
+  captureInsertion: () => ({ start: 0, end: 0, draftRev: 1 }),
+  insertText: () => true,
+  setDraft: () => {},
+  submit: () => {},
+  addAttachments: () => {},
+  removeAttachment: () => {},
+  pruneAttachments: () => {},
+  persistDraft: () => {},
+};
+
+global.window = {
+  __ModuleLoader__: {
+    load(spec) {
+      const mod = spec.factory(requireStub);
+      const ctx = {
+        effect: (fn) => {
+          const dispose = fn();
+          return typeof dispose === 'function' ? dispose : () => {};
+        },
+        get: (name) =>
+          name === 'remote'
+            ? { skills: { list: async () => ({ ok: true, value: { skills: [{ name: 'demo', description: 'demo skill', modelInvocable: true }] } }) } }
+            : undefined,
+        inject: (deps, cb) => {
+          if (typeof cb === 'function') cb({ get: () => undefined });
+          return () => {};
+        },
+        locale: {
+          register: () => () => {},
+          bind: () => (key) => key,
+          subscribe: () => () => {},
+          getLocale: () => ({ id: 'zh' }),
+        },
+        slots: {
+          inject: (key, cb) => {
+            const dispose = cb();
+            return typeof dispose === 'function' ? dispose : () => {};
+          },
+          register: (options, component) => {
+            registrations.push({ slot: options.name, options, component });
+            return () => {};
+          },
+        },
+        layout: { selectPanel: () => {} },
+        betterSidebar: undefined,
+      };
+      // Exercise the right-sidebar tab path too.
+      ctx.get = (name) => {
+        if (name === 'betterSidebar') {
+          return { registerTab: (descriptor) => { registrations.push({ slot: 'betterSidebar.tab', options: descriptor, component: descriptor.component }); return () => {}; } };
+        }
+        if (name === 'remote') {
+          return { skills: { list: async () => ({ ok: true, value: { skills: [{ name: 'demo', description: 'demo skill', modelInvocable: true }] } }) } };
+        }
+        return undefined;
+      };
+      mod.apply(ctx);
+      return mod;
+    },
+  },
+  addEventListener: () => {},
+  location: { reload: () => {} },
+};
+
+global.localStorage = {
+  getItem: (key) => (store.has(key) ? store.get(key) : null),
+  setItem: (key, value) => store.set(key, String(value)),
+};
+
+// Seed one item, one category, a pinned entry and a tray occurrence.
+store.set(
+  'dsh.prompt-pool.v1',
+  JSON.stringify({
+    version: 1,
+    categories: [{ id: 'c1', name: '工作' }],
+    settings: { workspaceTabs: true, currentWorkspaceTab: true },
+    items: [
+      { id: 'i1', kind: 'note', title: '标题一', body: '正文一', pinned: true, categoryId: 'cat:c1' },
+      { id: 'i2', kind: 'snippet', title: '', body: '正文二', categoryId: 'ws:w1' },
+      { id: 'i3', kind: 'note', title: '', body: '正文三', categoryId: '' },
+    ],
+    tray: [{ key: 'k1', itemId: 'i1', body: '正文一' }],
+  }),
+);
+
+const panelProps = {
+  sessionId: 's1',
+  useInput: () => ({ draft: '草稿', phase: 'plain', queue: [], attachmentIds: [] }),
+  inputActions,
+  useWorkspaces: () => workspaceSnapshot,
+  useSession: () => ({}),
+};
+
+new Function('window', 'localStorage', 'require', source)(global.window, global.localStorage, requireStub);
+
+let failures = 0;
+for (const entry of registrations) {
+  const props = entry.slot === 'conversation.input.overlay' ? panelProps : {};
+  try {
+    const tree = entry.component(props);
+    const label = entry.options && (entry.options.id || entry.options.key || entry.options.name);
+    console.log('[ok] render', entry.slot, '#' + label);
+    if (tree === undefined) throw new Error('component returned undefined');
+  } catch (error) {
+    failures += 1;
+    console.error('[fail] render', entry.slot, '#' + (entry.options && (entry.options.id || entry.options.key)));
+    console.error(error && error.stack ? error.stack : error);
+  }
+}
+
+console.log(failures === 0 ? '[ok] all components rendered' : `[fail] ${failures} component(s) failed`);
+if (failures > 0) process.exitCode = 1;

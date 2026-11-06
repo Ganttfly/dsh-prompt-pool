@@ -1,0 +1,5 @@
+# Host half of the prompt-pool bundle: the Client module owns all rendering and
+# all stored data, so the Host row only has to exist for the bundle to mount.
+- insert:
+    - id: dsh-prompt-pool
+      name: dsh-prompt-pool
