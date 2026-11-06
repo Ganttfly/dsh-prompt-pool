@@ -545,11 +545,26 @@ window.__ModuleLoader__.load({
                 type: 'button',
                 className: 'pp-ws-tab',
                 'data-active': workspace.id === props.activeId ? 'true' : 'false',
-                title: workspace.name,
+                title: props.editable ? translate('tab.renameHint') : workspace.name,
                 onClick: () => props.onSelect(workspace.id),
               },
               h('span', { className: 'pp-ws-name' }, workspace.name),
               h('span', { className: 'pp-ws-count' }, String(props.counts[workspace.id] || 0)),
+              props.editable && workspace.id === props.activeId
+                ? h(
+                    'span',
+                    {
+                      className: 'pp-tab-x',
+                      role: 'button',
+                      title: translate('tab.delete'),
+                      onClick: (event) => {
+                        event.stopPropagation();
+                        if (props.onDelete) props.onDelete(workspace.id);
+                      },
+                    },
+                    '×',
+                  )
+                : null,
             ),
           ),
         ),
@@ -1541,6 +1556,8 @@ window.__ModuleLoader__.load({
                 activeId: customActive,
                 onSelect: setCustomPick,
                 counts: customCounts,
+                editable: true,
+                onDelete: (id) => setPendingCategory(id),
                 emptyText: translate('panel.emptyTab'),
                 scoped: state.items.filter((item) => groupOf(item) === customActive),
               }
@@ -1600,6 +1617,8 @@ window.__ModuleLoader__.load({
                   activeId: nestedView.activeId,
                   onSelect: nestedView.onSelect,
                   counts: nestedView.counts,
+                  editable: nestedView.editable,
+                  onDelete: nestedView.onDelete,
                   renderRow: rowOf,
                   emptyText: nestedView.emptyText,
                 })
@@ -2374,6 +2393,8 @@ window.__ModuleLoader__.load({
                 activeId: customActive,
                 onSelect: setCustomPick,
                 counts: customCounts,
+                editable: true,
+                onDelete: (id) => setPendingCategory(id),
                 emptyText: translate('panel.emptyTab'),
                 scoped: state.items.filter((item) => groupOf(item) === customActive),
               }
@@ -2440,6 +2461,8 @@ window.__ModuleLoader__.load({
                   activeId: nestedView.activeId,
                   onSelect: nestedView.onSelect,
                   counts: nestedView.counts,
+                  editable: nestedView.editable,
+                  onDelete: nestedView.onDelete,
                   renderRow: rowOf,
                   emptyText: nestedView.emptyText,
                 })
