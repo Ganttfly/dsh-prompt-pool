@@ -1305,7 +1305,7 @@ window.__ModuleLoader__.load({
     }
 
     // ------------------------------------------------------------- full page
-    function PromptPoolPage() {
+    function PromptPoolPage(props) {
       useLocaleTick();
       const state = usePoolState();
       const workspaces = useWorkspaceDir();
@@ -1448,7 +1448,7 @@ window.__ModuleLoader__.load({
               placeholder: translate('row.bodyPlaceholder'),
               rows: 5,
               autoFocus: true,
-              sessionId: props.sessionId,
+              sessionId: props && props.sessionId,
               onChange: (event) => setEditing({ ...editing, body: event.target.value }),
               onKeyDown: (event) => {
                 if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
