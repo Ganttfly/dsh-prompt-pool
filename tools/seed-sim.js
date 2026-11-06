@@ -39,8 +39,8 @@ const fresh = new Map();
 run(fresh);
 const freshPool = JSON.parse(fresh.get(KEY));
 console.log('fresh install:', freshPool.items.length, 'items, seeded =', freshPool.seeded);
-console.log('  pinned (常用):', freshPool.items.filter((i) => i.pinned).length);
-console.log('  snippets (模板):', freshPool.items.filter((i) => i.kind === 'snippet').length);
+console.log('  pinned (常用):', freshPool.items.filter((i) => i.group === 'builtin:oftenuse').length);
+console.log('  snippets (模板):', freshPool.items.filter((i) => i.group === 'builtin:template').length);
 
 const legacy = new Map();
 legacy.set(
@@ -56,5 +56,5 @@ legacy.set(
 run(legacy);
 const migrated = JSON.parse(legacy.get(KEY));
 console.log('v1 pool:', migrated.items.length, 'items, seeded =', migrated.seeded);
-console.log('  templates added:', migrated.items.filter((i) => i.kind === 'snippet').map((i) => i.title).join(' / '));
-console.log('  prompts untouched:', migrated.items.filter((i) => i.kind === 'note').length);
+console.log('  templates added:', migrated.items.filter((i) => i.group === 'builtin:template').map((i) => i.title).join(' / '));
+console.log('  prompts untouched:', migrated.items.filter((i) => i.group && i.group.startsWith('builtin:')).length);

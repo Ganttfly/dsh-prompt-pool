@@ -29,40 +29,25 @@ window.__ModuleLoader__.load({
       'panel.empty': '池子是空的。写一句，然后点「存下当前草稿」。',
       'panel.emptyTab': '这一栏还没有内容。',
       'tab.all': '全部',
-      'tab.pinned': '常用',
+      'tab.oftenuse': '常用',
       'tab.workspace': '工作区',
       'tab.currentWorkspace': '当前工作区',
       'ws.none': '没有可用的工作区',
       'ws.empty': '这个工作区还没有条目',
       'tab.note': '便签',
-      'tab.snippet': '模板',
-      'tab.skill': '技能',
-      'tab.add': '新建类别',
-      'tab.namePlaceholder': '类别名，回车确认',
+      'tab.template': '模板',
+      'tab.add': '新建分组',
+      'tab.namePlaceholder': '分组名，回车确认',
       'tab.renameHint': '双击重命名',
-      'tab.delete': '删除这个类别（条目会变成未分类）',
-      'tab.deleteConfirm': '确定要删除这个分类么？删除后该分类的提示词条目将会放入【未分类】内。',
+      'tab.delete': '删除这个分组（条目会变成未分组）',
+      'tab.deleteConfirm': '确定要删除这个分组么？删除后该分组的提示词条目将会放入【未分组】内。',
       'tab.deleteAction': '删除',
       'tab.cancelAction': '取消',
-      'kind.note': '便签',
-      'kind.pinned': '常用',
-      'kind.snippet': '模板',
-      'kind.skill': '技能',
-      'kind.untitled': '（未命名）',
-      'skill.group.project': '项目级',
-      'skill.group.global': '全局级',
-      'skill.group.other': '其他',
-      'skill.loading': '正在读取技能目录…',
-      'skill.empty': '没有可用的技能。',
-      'skill.failed': '读取技能失败',
-      'skill.unavailable': '当前环境没有技能目录接口',
-      'skill.refresh': '刷新',
-      'skill.insert': '插入 /{name}',
-      'skill.userOnly': '仅手动',
-      'status.skillInserted': '已插入 /{name}',
+      'group.note': '便签',
+      'group.oftenuse': '常用',
+      'group.template': '模板',
+      'group.untitled': '（未命名）',
       'row.insert': '插入到输入框',
-      'row.pin': '标为常用',
-      'row.unpin': '取消常用',
       'row.select': '加入待发送队列',
       'row.copy': '复制内容',
       'row.duplicate': '复制一份，追加到池子末尾',
@@ -71,7 +56,7 @@ window.__ModuleLoader__.load({
       'page.count': '共 {n} 条',
       'page.search': '搜索标题或内容…',
       'page.empty': '还没有内容。点右上角「＋ 便签」开始。',
-      'page.emptyPinned': '还没有常用项。点条目右侧的 ☆ 标记。',
+      'page.emptyOftenuse': '还没有常用条目。把条目的「分组」改成「常用」即可。',
       'page.noMatch': '没有匹配的条目。',
       'page.trayReady': '已选 {n} 条 · 去对话释放',
       'page.gotoConversation': '去对话',
@@ -84,8 +69,18 @@ window.__ModuleLoader__.load({
       'settings.nav': '提示词池',
       'settings.open': '提示词池设置',
       'settings.button': '设置',
-      'settings.tab.order': '顺序',
+      'settings.tab.order': '分组',
+      'settings.display': '分组怎么显示',
+      'settings.display.builtin': '内置分组',
+      'settings.display.custom': '自定义分组',
+      'settings.display.workspace': '工作区',
+      'settings.mode.tabs': '展开',
+      'settings.mode.nested': '折叠',
+      'settings.mode.hidden': '隐藏',
       'settings.tab.workspace': '工作区',
+      'settings.tab.display': '展示',
+      'settings.customNested': '自定义分组折叠成一个 Tab',
+      'settings.customNestedHint': '分组多时打开：Tab 行只保留一个「自定义」，组内用横排胶囊切换。',
       'settings.workspaceCard': '工作区如何展示',
       'settings.leading': '哪一组排在前面',
       'settings.leading.workspace': '工作区',
@@ -109,11 +104,13 @@ window.__ModuleLoader__.load({
       'row.cancel': '取消',
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
-      'row.kindLabel': '内置分组',
+      'row.familyBuiltin': '内置',
+      'row.familyCustom': '自定义',
+      'row.familyWorkspace': '工作区',
       'row.categoryLabel': '自定义分组',
-      'row.classification': '分类',
+      'row.classification': '分组',
       'page.new': '提示词',
-      'row.noCategory': '未分类',
+      'row.noCategory': '未分组',
       'tray.title': '待发送队列',
       'tray.selected': '已选 {n} 条',
       'tray.release': '发送',
@@ -148,40 +145,25 @@ window.__ModuleLoader__.load({
       'panel.empty': 'The pool is empty. Write something, then press Save draft.',
       'panel.emptyTab': 'Nothing in this tab yet.',
       'tab.all': 'All',
-      'tab.pinned': 'Pinned',
+      'tab.oftenuse': 'Frequent',
       'tab.workspace': 'Workspaces',
       'tab.currentWorkspace': 'Current workspace',
       'ws.none': 'No workspaces available',
       'ws.empty': 'No items in this workspace yet',
       'tab.note': 'Notes',
-      'tab.snippet': 'Templates',
-      'tab.skill': 'Skills',
-      'tab.add': 'New category',
-      'tab.namePlaceholder': 'Category name, Enter to confirm',
+      'tab.template': 'Templates',
+      'tab.add': 'New group',
+      'tab.namePlaceholder': 'Group name, Enter to confirm',
       'tab.renameHint': 'Double-click to rename',
-      'tab.delete': 'Delete this category (its items become uncategorized)',
-      'tab.deleteConfirm': 'Delete this category? Its prompt items will move to Uncategorized.',
+      'tab.delete': 'Delete this group (its items become ungrouped)',
+      'tab.deleteConfirm': 'Delete this group? Its prompt items will move to Ungrouped.',
       'tab.deleteAction': 'Delete',
       'tab.cancelAction': 'Cancel',
-      'kind.note': 'Note',
-      'kind.pinned': 'Pinned',
-      'kind.snippet': 'Template',
-      'kind.skill': 'Skill',
-      'kind.untitled': '(untitled)',
-      'skill.group.project': 'Project',
-      'skill.group.global': 'Global',
-      'skill.group.other': 'Other',
-      'skill.loading': 'Loading the skill catalog…',
-      'skill.empty': 'No skills available.',
-      'skill.failed': 'Could not load skills',
-      'skill.unavailable': 'No skill catalog interface in this build',
-      'skill.refresh': 'Refresh',
-      'skill.insert': 'Insert /{name}',
-      'skill.userOnly': 'Manual only',
-      'status.skillInserted': 'Inserted /{name}',
+      'group.note': 'Note',
+      'group.oftenuse': 'Frequent',
+      'group.template': 'Template',
+      'group.untitled': '(untitled)',
       'row.insert': 'Insert into the composer',
-      'row.pin': 'Mark as pinned',
-      'row.unpin': 'Unpin',
       'row.select': 'Add to the send queue',
       'row.copy': 'Copy the text',
       'row.duplicate': 'Duplicate and append to the pool',
@@ -190,7 +172,7 @@ window.__ModuleLoader__.load({
       'page.count': '{n} items',
       'page.search': 'Search title or text…',
       'page.empty': 'Nothing yet. Use “+ Note” in the top right.',
-      'page.emptyPinned': 'Nothing pinned yet. Use the ☆ control on a row.',
+      'page.emptyOftenuse': 'Nothing here yet. Set an item’s group to Frequent.',
       'page.noMatch': 'No matching item.',
       'page.trayReady': '{n} selected · release in a conversation',
       'page.gotoConversation': 'Open the conversation',
@@ -203,8 +185,18 @@ window.__ModuleLoader__.load({
       'settings.nav': 'Prompt pool',
       'settings.open': 'Prompt-pool settings',
       'settings.button': 'Settings',
-      'settings.tab.order': 'Order',
+      'settings.tab.order': 'Groups',
+      'settings.display': 'How groups show up',
+      'settings.display.builtin': 'Built-in groups',
+      'settings.display.custom': 'Custom groups',
+      'settings.display.workspace': 'Workspaces',
+      'settings.mode.tabs': 'Expanded',
+      'settings.mode.nested': 'Folded',
+      'settings.mode.hidden': 'Hidden',
       'settings.tab.workspace': 'Workspaces',
+      'settings.tab.display': 'Display',
+      'settings.customNested': 'Fold custom groups into one tab',
+      'settings.customNestedHint': 'Useful once you have many groups: one “Custom” tab keeps them as chips inside.',
       'settings.workspaceCard': 'How workspaces appear',
       'settings.leading': 'Which group comes first',
       'settings.leading.workspace': 'Workspaces',
@@ -228,11 +220,13 @@ window.__ModuleLoader__.load({
       'row.cancel': 'Cancel',
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
-      'row.kindLabel': 'Built-in',
+      'row.familyBuiltin': 'Built-in',
+      'row.familyCustom': 'Custom',
+      'row.familyWorkspace': 'Workspaces',
       'row.categoryLabel': 'Custom',
-      'row.classification': 'Classification',
+      'row.classification': 'Group',
       'page.new': 'Prompt',
-      'row.noCategory': 'Uncategorized',
+      'row.noCategory': 'Ungrouped',
       'tray.title': 'Send queue',
       'tray.selected': '{n} selected',
       'tray.release': 'Send',
@@ -261,32 +255,7 @@ window.__ModuleLoader__.load({
     let localeCtx = null;
     let translate = (key, params) => interpolate(EN[key] || key, params);
 
-    /** `ctx.remote.skills`, resolved lazily: the Remote service may mount after this plugin. */
     let pluginCtx = null;
-    let skillRemote = null;
-
-    function resolveSkillRemote() {
-      if (skillRemote) return skillRemote;
-      const ctx = pluginCtx;
-      if (!ctx) return null;
-      try {
-        const remote = typeof ctx.get === 'function' ? ctx.get('remote') : ctx.remote;
-        if (remote && remote.skills && typeof remote.skills.list === 'function') skillRemote = remote.skills;
-      } catch (_error) {
-        skillRemote = null;
-      }
-      return skillRemote;
-    }
-
-    const SKILL_SCOPES = ['project', 'global', 'other'];
-
-    /** A skill summary's `source` encodes where it was discovered. */
-    function scopeOfSkill(skill) {
-      const source = skill && typeof skill.source === 'string' ? skill.source : '';
-      if (source.indexOf('project') === 0) return 'project';
-      if (source.indexOf('user') === 0) return 'global';
-      return 'other';
-    }
 
     /** Stable identity so the composer's selector hook never re-subscribes. */
     function selectAllInput(snapshot) {
@@ -344,14 +313,11 @@ window.__ModuleLoader__.load({
       const body = typeof raw.body === 'string' ? raw.body : '';
       if (!body.trim()) return null;
       const now = Date.now();
-      const kind = raw.kind === 'snippet' ? 'snippet' : raw.kind === 'skill' ? 'skill' : 'note';
       return {
         id: typeof raw.id === 'string' && raw.id ? raw.id : uid(),
-        kind,
+        group: groupOf(raw),
         title: typeof raw.title === 'string' ? raw.title : '',
         body,
-        pinned: raw.pinned === true,
-        categoryId: typeof raw.categoryId === 'string' ? raw.categoryId : '',
         createdAt: Number.isFinite(raw.createdAt) ? raw.createdAt : now,
         updatedAt: Number.isFinite(raw.updatedAt) ? raw.updatedAt : now,
       };
@@ -365,43 +331,72 @@ window.__ModuleLoader__.load({
       return { id: typeof raw.id === 'string' && raw.id ? raw.id : uid(), name };
     }
 
-    function categoryIdOf(tab) {
-      if (typeof tab !== 'string') return '';
-      return tab.indexOf('cat:') === 0 || tab.indexOf('ws:') === 0 ? tab : '';
-    }
-
     /** Workspace tabs are derived from the live workspace list, never persisted. */
     function workspaceTabId(workspaceId) {
       return 'ws:' + workspaceId;
     }
 
     /**
-     * One classification control. Built-in groups (常用 / 便签 / 模板) are
-     * exclusive, so choosing one clears the other two.
+     * Canonical group ids. Family is derived from the prefix, never stored:
+     *   builtin:oftenuse | builtin:note | builtin:template
+     *   custom:<category id>
+     *   workspace:<workspace id>
      */
-    function withClassification(draft, value) {
-      if (value === 'builtin:pinned') return { ...draft, pinned: true, categoryId: '' };
-      if (typeof value === 'string' && value.indexOf('kind:') === 0) {
-        return { ...draft, pinned: false, kind: value === 'kind:snippet' ? 'snippet' : 'note', categoryId: '' };
-      }
-      return { ...draft, pinned: false, categoryId: value };
+    const BUILTIN_GROUP = { oftenuse: 'builtin:oftenuse', note: 'builtin:note', template: 'builtin:template' };
+
+    function familyOf(group) {
+      const value = String(group || '');
+      const cut = value.indexOf(':');
+      if (cut <= 0) return '';
+      const family = value.slice(0, cut);
+      return family === 'builtin' || family === 'custom' || family === 'workspace' ? family : '';
     }
 
-    /** The group an item belongs to, for the badge shown in the mixed view. */
+
+    /** The one read path: item → canonical group id. */
+    function groupOf(item) {
+      const group = item && typeof item.group === 'string' ? item.group : '';
+      return group && familyOf(group) ? group : BUILTIN_GROUP.note;
+    }
+
+    /** The one write path: canonical group id → item. */
+    function withGroup(item, group) {
+      return { ...item, group };
+    }
+
+    /** The group a new item gets from the tab that created it. */
+    function groupForTab(tab, workspaceGroup) {
+      if (tab === 'nested:workspace') return workspaceGroup || BUILTIN_GROUP.note;
+      return familyOf(tab) ? tab : BUILTIN_GROUP.note;
+    }
+
+    /** Canonical group id → display info, or null when the target is gone. */
+    function resolveGroup(group, categories, workspaces) {
+      if (group === BUILTIN_GROUP.oftenuse) return { value: group, label: translate('group.oftenuse'), family: 'builtin' };
+      if (group === BUILTIN_GROUP.template) return { value: group, label: translate('group.template'), family: 'builtin' };
+      if (group === BUILTIN_GROUP.note) return { value: group, label: translate('group.note'), family: 'builtin' };
+      const family = familyOf(group);
+      if (family === 'custom') {
+        const id = group.slice(7);
+        const found = (categories || []).find((category) => category.id === id);
+        return found ? { value: group, label: found.name, family } : null;
+      }
+      if (family === 'workspace') {
+        const id = group.slice(10);
+        const found = (workspaces || []).find((workspace) => workspace.workspaceId === id || workspace.id === 'ws:' + id);
+        return found ? { value: group, label: found.name, family } : null;
+      }
+      return null;
+    }
+
+    /** The badge label for an item, in the same vocabulary as the editor. */
     function groupLabelOf(item, categories, workspaces) {
-      if (item.pinned === true) return translate('kind.pinned');
-      const ref = item.categoryId || '';
-      if (ref.indexOf('cat:') === 0) {
-        const found = (categories || []).find((category) => 'cat:' + category.id === ref);
-        return found ? found.name : translate('row.noCategory');
-      }
-      if (ref.indexOf('ws:') === 0) {
-        const found = (workspaces || []).find((workspace) => workspace.id === ref);
-        return found ? found.name : '';
-      }
-      if (item.kind === 'snippet') return translate('kind.snippet');
-      if (item.kind === 'skill') return translate('kind.skill');
-      return translate('kind.note');
+      const group = groupOf(item);
+      const resolved = resolveGroup(group, categories, workspaces);
+      if (resolved) return resolved.label;
+      // A stale custom id means the group was deleted; an unresolved workspace is
+      // just a view that cannot see the roster yet, so say nothing.
+      return familyOf(group) === 'workspace' ? '' : translate('row.noCategory');
     }
 
     function clipLabel(text, max) {
@@ -413,11 +408,10 @@ window.__ModuleLoader__.load({
     /** Tab filter shared by the composer panel and the sidebar page. */
     function matchesTab(item, tab) {
       if (tab === 'all') return true;
-      if (tab === 'pinned') return item.pinned === true;
-      if (categoryIdOf(tab)) return (item.categoryId || '') === tab;
-      // 常用 is a built-in group of its own, so it does not also list under 便签/模板.
-      if (item.pinned === true) return false;
-      return item.kind === tab;
+      const group = groupOf(item);
+      if (tab === 'nested:workspace') return familyOf(group) === 'workspace';
+      if (tab.indexOf('nested:') === 0) return familyOf(group) === tab.slice(7);
+      return group === tab;
     }
 
     /** Tab actions shared by the composer panel and the sidebar page. */
@@ -426,14 +420,17 @@ window.__ModuleLoader__.load({
         onSelect: (id) => setTab(id),
         onAdd: (name) => {
           const created = poolActions.addCategory(name);
-          if (created) setTab('cat:' + created.id);
+          if (!created) return;
+          // Folded custom groups share one tab, so aim at that tab instead.
+          const folded = normalizeSettings(pool.get().settings).customNested;
+          setTab(folded ? 'nested:custom' : 'custom:' + created.id);
         },
         onRename: (id, name) => {
-          if (id.indexOf('cat:') === 0) poolActions.renameCategory(id.slice(4), name);
+          if (id.indexOf('custom:') === 0) poolActions.renameCategory(id.slice(7), name);
         },
         onDelete: (id) => {
-          if (id.indexOf('cat:') !== 0) return;
-          poolActions.removeCategory(id.slice(4));
+          if (id.indexOf('custom:') !== 0) return;
+          poolActions.removeCategory(id.slice(7));
           if (currentTab === id) setTab('all');
         },
       };
@@ -454,21 +451,30 @@ window.__ModuleLoader__.load({
       return [current, ...list.filter((workspace) => workspace.id !== current.id)];
     }
 
-    /** One 「工作区」 tab replaces the per-workspace tabs; its content is vertical. */
+    /** Every family's tab block, ordered by the leading-group preference. */
     function buildTabs(categories, workspaces, settings, currentWorkspaceId) {
       const flags = normalizeSettings(settings);
-      const showWorkspaceTab = workspaceRail(workspaces, settings, currentWorkspaceId).length > 0;
+      const rail = workspaceRail(workspaces, settings, currentWorkspaceId);
       const blocks = {
-        workspace: showWorkspaceTab
-          ? [{ id: 'workspace', label: translate(flags.workspaceTabs ? 'tab.workspace' : 'tab.currentWorkspace'), group: 'workspace' }]
-          : [],
-        builtin: [
-          { id: 'pinned', label: translate('tab.pinned'), group: 'builtin' },
-          { id: 'note', label: translate('tab.note'), group: 'builtin' },
-          { id: 'snippet', label: translate('tab.snippet'), group: 'builtin' },
-          { id: 'skill', label: translate('tab.skill'), group: 'builtin' },
-        ],
-        custom: categories.map((category) => ({ id: 'cat:' + category.id, label: category.name, category: true, group: 'custom' })),
+        workspace: displayBlock(
+          'workspace',
+          rail.map((workspace) => ({ id: 'workspace:' + workspace.workspaceId, label: workspace.name, group: 'workspace' })),
+          settings,
+        ),
+        builtin: displayBlock(
+          'builtin',
+          [
+            { id: BUILTIN_GROUP.oftenuse, label: translate('tab.oftenuse'), group: 'builtin' },
+            { id: BUILTIN_GROUP.note, label: translate('tab.note'), group: 'builtin' },
+            { id: BUILTIN_GROUP.template, label: translate('tab.template'), group: 'builtin' },
+          ],
+          settings,
+        ),
+        custom: displayBlock(
+          'custom',
+          categories.map((category) => ({ id: 'custom:' + category.id, label: category.name, category: true, group: 'custom' })),
+          settings,
+        ),
       };
       const rest = ['workspace', 'custom', 'builtin'].filter((name) => name !== flags.leadingGroup);
       return [
@@ -571,22 +577,19 @@ window.__ModuleLoader__.load({
 
     function normalizePool(data) {
       const categories = Array.isArray(data && data.categories) ? data.categories.map(normalizeCategory).filter(Boolean) : [];
-      const categoryIds = new Set(categories.map((category) => 'cat:' + category.id));
+      const customIds = new Set(categories.map((category) => 'custom:' + category.id));
       const items = (Array.isArray(data && data.items) ? data.items.map(sanitizeItem).filter(Boolean) : []).map((item) => {
-        const ref = item.categoryId || '';
-        if (!ref) return item;
-        if (ref.indexOf('ws:') === 0) return item;
-        const migrated = ref.indexOf('cat:') === 0 ? ref : 'cat:' + ref;
-        return categoryIds.has(migrated) ? { ...item, categoryId: migrated } : { ...item, categoryId: '' };
+        if (familyOf(item.group) !== 'custom') return item;
+        return customIds.has(item.group) ? item : { ...item, group: BUILTIN_GROUP.note };
       });
       const byId = new Map(items.map((item) => [item.id, item]));
       const rawTray = Array.isArray(data && data.tray) ? data.tray : [];
       const tray = rawTray.map((entry) => normalizeTrayEntry(entry, byId)).filter(Boolean);
-      return { version: 1, categories, items, tray, settings: normalizeSettings(data && data.settings), seeded: Boolean(data && data.seeded === true) };
+      return { version: POOL_VERSION, categories, items, tray, settings: normalizeSettings(data && data.settings), seeded: Boolean(data && data.seeded === true) };
     }
 
     function emptyPool() {
-      return { version: 1, categories: [], items: [], tray: [], settings: normalizeSettings(undefined), seeded: true };
+      return { version: POOL_VERSION, categories: [], items: [], tray: [], settings: normalizeSettings(undefined), seeded: true };
     }
 
     /**
@@ -635,23 +638,26 @@ window.__ModuleLoader__.load({
     ];
 
     /** A build bumps this and adds one batch; older pools receive only the new batch. */
+    /** Bump when the stored item shape changes: older pools are reseeded, not migrated. */
+    const POOL_VERSION = 2;
+
     const SEED_LEVEL = 2;
 
-    function seedItem([id, title, body], kind, pinned, now) {
-      return { id, kind, title, body, pinned, categoryId: '', createdAt: now, updatedAt: now };
+    function seedItem([id, title, body], group, now) {
+      return { id, group, title, body, createdAt: now, updatedAt: now };
     }
 
     function seedsAbove(level, now) {
       const batches = [
-        { level: 1, items: SEED_PROMPTS.map((entry) => seedItem(entry, 'note', true, now)) },
-        { level: 2, items: SEED_TEMPLATES.map((entry) => seedItem(entry, 'snippet', false, now)) },
+        { level: 1, items: SEED_PROMPTS.map((entry) => seedItem(entry, BUILTIN_GROUP.oftenuse, now)) },
+        { level: 2, items: SEED_TEMPLATES.map((entry) => seedItem(entry, BUILTIN_GROUP.template, now)) },
       ];
       return batches.filter((batch) => batch.level > level).reduce((list, batch) => list.concat(batch.items), []);
     }
 
     function seededPool() {
       return {
-        version: 1,
+        version: POOL_VERSION,
         categories: [],
         items: seedsAbove(0, Date.now()),
         tray: [],
@@ -678,7 +684,19 @@ window.__ModuleLoader__.load({
           }
           return seeded;
         }
-        const pool = normalizePool(JSON.parse(raw));
+        const parsed = JSON.parse(raw);
+        const storedVersion = parsed && typeof parsed.version === 'number' ? parsed.version : 1;
+        if (storedVersion < POOL_VERSION) {
+          // The shape changed and this build does not migrate: start from the seeds.
+          const reset = seededPool();
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(reset));
+          } catch (_error) {
+            /* storage unavailable: keep the in-memory copy only */
+          }
+          return reset;
+        }
+        const pool = normalizePool(parsed);
         const level = Number(pool.seeded) || 0;
         if (level >= SEED_LEVEL) return pool;
         const migrated = { ...pool, items: [...pool.items, ...seedItems(pool.items, level)], seeded: SEED_LEVEL };
@@ -757,11 +775,46 @@ window.__ModuleLoader__.load({
     function normalizeSettings(raw) {
       const settings = raw && typeof raw === 'object' ? raw : {};
       const leaders = ['workspace', 'custom', 'builtin'];
+      const modes = ['tabs', 'nested', 'hidden'];
+      const defaults = { builtin: 'tabs', custom: 'tabs', workspace: 'nested' };
+      const stored = settings.display && typeof settings.display === 'object' ? settings.display : {};
+      const display = {};
+      for (const family of ['builtin', 'custom', 'workspace']) {
+        const value = stored[family];
+        // Legacy: the old customNested flag folded custom groups.
+        const legacy = family === 'custom' && settings.customNested === true ? 'nested' : undefined;
+        display[family] = modes.indexOf(value) >= 0 ? value : legacy || defaults[family];
+      }
       return {
         workspaceTabs: settings.workspaceTabs !== false,
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
         leadingGroup: leaders.indexOf(settings.leadingGroup) >= 0 ? settings.leadingGroup : 'workspace',
+        display,
       };
+    }
+
+    /** The three built-in groups, each with its own tab label. */
+    function builtinGroups() {
+      return [
+        { id: BUILTIN_GROUP.oftenuse, name: translate('tab.oftenuse') },
+        { id: BUILTIN_GROUP.note, name: translate('tab.note') },
+        { id: BUILTIN_GROUP.template, name: translate('tab.template') },
+      ];
+    }
+
+    /** One family's tab block: hidden / one folded tab / one tab per group. */
+    function displayBlock(family, groups, settings) {
+      const mode = normalizeSettings(settings).display[family];
+      if (mode === 'hidden' || groups.length === 0) return [];
+      if (mode === 'nested') {
+        const labels = {
+          builtin: translate('row.familyBuiltin'),
+          custom: translate('row.familyCustom'),
+          workspace: normalizeSettings(settings).workspaceTabs ? translate('tab.workspace') : translate('tab.currentWorkspace'),
+        };
+        return [{ id: 'nested:' + family, label: labels[family], group: family }];
+      }
+      return groups;
     }
 
     /**
@@ -831,12 +884,7 @@ window.__ModuleLoader__.load({
           items: state.items.map((item) => (item.id === id ? { ...item, ...fields, updatedAt: Date.now() } : item)),
         }));
       },
-      togglePin(id) {
-        mutate((state) => {
-          if (!state.items.some((item) => item.id === id)) return null;
-          return { ...state, items: state.items.map((item) => (item.id === id ? { ...item, pinned: item.pinned !== true } : item)) };
-        });
-      },
+
       addCategory(name) {
         const clean = String(name || '').trim();
         if (!clean) return null;
@@ -857,15 +905,10 @@ window.__ModuleLoader__.load({
         mutate((state) => ({
           ...state,
           categories: state.categories.filter((category) => category.id !== id),
-          items: state.items.map((item) => (item.categoryId === 'cat:' + id ? { ...item, categoryId: '' } : item)),
+          items: state.items.map((item) => (item.group === 'custom:' + id ? { ...item, group: BUILTIN_GROUP.note } : item)),
         }));
       },
-      setCategory(itemId, categoryId) {
-        mutate((state) => ({
-          ...state,
-          items: state.items.map((item) => (item.id === itemId ? { ...item, categoryId } : item)),
-        }));
-      },
+
       setSetting(key, value) {
         mutate((state) => ({ ...state, settings: { ...normalizeSettings(state.settings), [key]: value } }));
       },
@@ -1256,6 +1299,8 @@ window.__ModuleLoader__.load({
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
       const [wsSelected, setWsSelected] = useState('');
+      const [customPick, setCustomPick] = useState('');
+      const [builtinPick, setBuiltinPick] = useState('');
       const [status, setStatus] = useState(null);
       const statusTimer = useRef(0);
       const flash = useCallback((next) => {
@@ -1268,8 +1313,8 @@ window.__ModuleLoader__.load({
       const confirmCategoryDelete = () => {
         const target = pendingCategory;
         setPendingCategory(null);
-        if (!target || target.indexOf('cat:') !== 0) return;
-        poolActions.removeCategory(target.slice(4));
+        if (!target || target.indexOf('custom:') !== 0) return;
+        poolActions.removeCategory(target.slice(7));
         if (tab === target) setTab('all');
       };
 
@@ -1277,15 +1322,21 @@ window.__ModuleLoader__.load({
       const wsActive = rail.some((entry) => entry.id === wsSelected) ? wsSelected : rail.length > 0 ? rail[0].id : '';
       const wsCounts = useMemo(() => {
         const counts = {};
-        for (const item of state.items) if (item.categoryId) counts[item.categoryId] = (counts[item.categoryId] || 0) + 1;
+        for (const item of state.items) {
+          const group = groupOf(item);
+          if (familyOf(group) === 'workspace') {
+            const key = 'ws:' + group.slice(10);
+            counts[key] = (counts[key] || 0) + 1;
+          }
+        }
         return counts;
       }, [state.items]);
 
       const items = useMemo(() => {
-        if (tab === 'workspace') {
+        if (tab === 'nested:workspace') {
           const needle = query.trim().toLowerCase();
           return state.items.filter((item) => {
-            if (item.categoryId !== wsActive) return false;
+            if (groupOf(item) !== (wsActive ? 'workspace:' + wsActive.slice(3) : '')) return false;
             if (!needle) return true;
             return (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0;
           });
@@ -1338,11 +1389,9 @@ window.__ModuleLoader__.load({
           return;
         }
         poolActions.patch(editing.id, {
-          kind: editing.kind,
+          group: editing.group,
           title: editing.title.trim(),
           body: editing.body,
-          categoryId: editing.categoryId || '',
-          pinned: editing.pinned === true,
         });
         setEditing(null);
         flash({ kind: 'ok', text: translate('status.savedToPool') });
@@ -1350,23 +1399,20 @@ window.__ModuleLoader__.load({
 
       /** One entry point: the current tab decides the new item's classification. */
       const create = () => {
-        const inWorkspace = tab === 'workspace';
-        const categoryId = inWorkspace ? wsActive : categoryIdOf(tab) || '';
-        const nextKind = tab === 'snippet' ? 'snippet' : 'note';
-        // Category and workspace tabs keep their own context; plain tabs land on the kind.
-        if (!inWorkspace && !categoryId && tab !== 'pinned') setTab(nextKind);
+        const inWorkspace = tab === 'nested:workspace';
+        const group = groupForTab(tab, inWorkspace && wsActive ? 'workspace:' + wsActive.slice(3) : '');
+        // Group tabs keep their own context; the neutral views land on the new item's group.
+        if (!inWorkspace && !familyOf(tab)) setTab(group);
         setQuery('');
         const item = poolActions.add({
           id: uid(),
-          kind: nextKind,
+          group,
           title: '',
           body: '',
-          categoryId,
-          pinned: tab === 'pinned',
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, kind: nextKind, title: '', body: '', categoryId, pinned: tab === 'pinned' });
+        setEditing({ id: item.id, group, title: '', body: '' });
       };
 
       const rowOf = (item, index) => {
@@ -1380,12 +1426,12 @@ window.__ModuleLoader__.load({
               placeholder: translate('row.titlePlaceholder'),
               onChange: (event) => setEditing({ ...editing, title: event.target.value }),
             }),
-            h('textarea', {
-              className: 'pp-textarea',
+            h(MentionField, {
               value: editing.body,
               placeholder: translate('row.bodyPlaceholder'),
               rows: 5,
               autoFocus: true,
+              sessionId: props.sessionId,
               onChange: (event) => setEditing({ ...editing, body: event.target.value }),
               onKeyDown: (event) => {
                 if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
@@ -1402,29 +1448,29 @@ window.__ModuleLoader__.load({
                 {
                   className: 'pp-input',
                   style: { width: 'auto', maxWidth: '220px' },
-                  value: editing.pinned === true ? 'builtin:pinned' : editing.categoryId || 'kind:' + (editing.kind === 'snippet' ? 'snippet' : 'note'),
+                  value: groupOf(editing),
                   'aria-label': translate('row.classification'),
-                  onChange: (event) => setEditing(withClassification(editing, event.target.value)),
+                  onChange: (event) => setEditing(withGroup(editing, event.target.value)),
                 },
                 h(
                   'optgroup',
-                  { label: translate('row.kindLabel') },
-                  h('option', { value: 'builtin:pinned' }, translate('kind.pinned')),
-                  h('option', { value: 'kind:note' }, translate('kind.note')),
-                  h('option', { value: 'kind:snippet' }, translate('kind.snippet')),
+                  { label: translate('row.familyBuiltin') },
+                  h('option', { value: BUILTIN_GROUP.oftenuse }, translate('group.oftenuse')),
+                  h('option', { value: BUILTIN_GROUP.note }, translate('group.note')),
+                  h('option', { value: BUILTIN_GROUP.template }, translate('group.template')),
                 ),
                 workspaces.items.length > 0
                   ? h(
                       'optgroup',
-                      { label: translate('tab.workspace') },
-                      workspaces.items.map((workspace) => h('option', { key: workspace.id, value: workspace.id }, workspace.name)),
+                      { label: translate('row.familyWorkspace') },
+                      workspaces.items.map((workspace) => h('option', { key: workspace.id, value: 'workspace:' + workspace.workspaceId }, workspace.name)),
                     )
                   : null,
                 state.categories.length > 0
                   ? h(
                       'optgroup',
-                      { label: translate('row.categoryLabel') },
-                      state.categories.map((category) => h('option', { key: category.id, value: 'cat:' + category.id }, category.name)),
+                      { label: translate('row.familyCustom') },
+                      state.categories.map((category) => h('option', { key: category.id, value: 'custom:' + category.id }, category.name)),
                     )
                   : null,
               ),
@@ -1441,12 +1487,12 @@ window.__ModuleLoader__.load({
           h(TrayAdd, { label: translate('row.select'), onClick: () => poolActions.addToTray(item.id) }),
           h(
             'div',
-            { className: 'pp-main', onClick: () => setEditing({ id: item.id, kind: item.kind, title: item.title, body: item.body, categoryId: item.categoryId || '', pinned: item.pinned === true }) },
-            h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || translate('kind.untitled')),
+            { className: 'pp-main', onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body }) },
+            h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || translate('group.untitled')),
             item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
           ),
           tab === 'all'
-            ? h('span', { className: 'pp-kind' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
+            ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
             : null,
           h(
             'div',
@@ -1458,12 +1504,56 @@ window.__ModuleLoader__.load({
               disabled: index === items.length - 1,
               onClick: () => poolActions.move(item.id, 1),
             }),
-            h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => setEditing({ id: item.id, kind: item.kind, title: item.title, body: item.body, categoryId: item.categoryId || '', pinned: item.pinned === true }) }),
+            h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body }) }),
             h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
             h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => poolActions.remove(item.id) }),
           ),
         );
       };
+
+      // A folded family renders its groups as chips inside one tab.
+      const customGroups = state.categories.map((category) => ({ id: 'custom:' + category.id, name: category.name }));
+      const customActive = customGroups.some((entry) => entry.id === customPick)
+        ? customPick
+        : customGroups.length > 0
+          ? customGroups[0].id
+          : '';
+      const customCounts = {};
+      for (const item of state.items) {
+        const group = groupOf(item);
+        if (familyOf(group) === 'custom') customCounts[group] = (customCounts[group] || 0) + 1;
+      }
+      const builtinList = builtinGroups();
+      const builtinActive = builtinList.some((entry) => entry.id === builtinPick) ? builtinPick : builtinList[0].id;
+      const nestedView =
+        tab === 'nested:workspace'
+          ? {
+              rail: rail,
+              activeId: wsActive,
+              onSelect: setWsSelected,
+              counts: wsCounts,
+              emptyText: translate('ws.empty'),
+              scoped: state.items.filter((item) => groupOf(item) === (wsActive ? 'workspace:' + wsActive.slice(3) : '')),
+            }
+          : tab === 'nested:custom'
+            ? {
+                rail: customGroups,
+                activeId: customActive,
+                onSelect: setCustomPick,
+                counts: customCounts,
+                emptyText: translate('panel.emptyTab'),
+                scoped: state.items.filter((item) => groupOf(item) === customActive),
+              }
+            : tab === 'nested:builtin'
+              ? {
+                  rail: builtinList,
+                  activeId: builtinActive,
+                  onSelect: setBuiltinPick,
+                  counts: {},
+                  emptyText: translate('panel.emptyTab'),
+                  scoped: state.items.filter((item) => groupOf(item) === builtinActive),
+                }
+              : null;
 
       return h(
         'div',
@@ -1503,15 +1593,15 @@ window.__ModuleLoader__.load({
           { className: 'pp-page-body' },
           settingsOpen
             ? h(PromptPoolSettings, null)
-            : tab === 'workspace'
+            : nestedView
               ? renderWorkspacePanes({
-                  rail: rail,
-                  items: items,
-                  activeId: wsActive,
-                  onSelect: setWsSelected,
-                  counts: wsCounts,
+                  rail: nestedView.rail,
+                  items: nestedView.scoped,
+                  activeId: nestedView.activeId,
+                  onSelect: nestedView.onSelect,
+                  counts: nestedView.counts,
                   renderRow: rowOf,
-                  emptyText: translate('ws.empty'),
+                  emptyText: nestedView.emptyText,
                 })
               : items.length === 0
                 ? h(
@@ -1520,8 +1610,8 @@ window.__ModuleLoader__.load({
                     translate(
                       state.items.length === 0
                         ? 'page.empty'
-                        : tab === 'pinned' && !state.items.some((item) => item.pinned === true)
-                          ? 'page.emptyPinned'
+                        : tab === BUILTIN_GROUP.oftenuse && !state.items.some((item) => groupOf(item) === BUILTIN_GROUP.oftenuse)
+                          ? 'page.emptyOftenuse'
                           : 'page.noMatch',
                     ),
                   )
@@ -1690,6 +1780,207 @@ window.__ModuleLoader__.load({
             ),
           ),
         ),
+        h(
+          'div',
+          { className: 'pp-set-group pp-set-card', style: { display: section === 'order' ? '' : 'none' } },
+          h('div', { className: 'pp-set-label' }, translate('settings.display')),
+          ['builtin', 'custom', 'workspace'].map((family) =>
+            h(
+              'div',
+              { key: family, className: 'pp-set-item' },
+              h('div', { className: 'pp-set-sub' }, translate('settings.display.' + family)),
+              h(
+                'div',
+                { className: 'pp-set-row' },
+                ['tabs', 'nested', 'hidden'].map((mode) =>
+                  h(
+                    'label',
+                    { key: mode, className: 'pp-set-inline' },
+                    h('input', {
+                      type: 'radio',
+                      name: 'pp-display-' + family,
+                      checked: settings.display[family] === mode,
+                      onChange: () => poolActions.setSetting('display', { ...settings.display, [family]: mode }),
+                    }),
+                    h('span', null, translate('settings.mode.' + mode)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // ------------------------------------------------------------- completions
+    /** Lazy views of the two data sources; both may mount after this plugin. */
+    function completionService(key) {
+      if (!pluginCtx || typeof pluginCtx.get !== 'function') return null;
+      try {
+        return pluginCtx.get(key) || null;
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    function entriesOfListing(listing) {
+      const list = Array.isArray(listing)
+        ? listing
+        : listing && Array.isArray(listing.entries)
+          ? listing.entries
+          : listing && Array.isArray(listing.items)
+            ? listing.items
+            : [];
+      return list.map((entry) => {
+        if (typeof entry === 'string') return { name: entry, directory: false };
+        const target = entry && typeof entry === 'object' ? entry : {};
+        const name = typeof target.name === 'string' ? target.name : '';
+        const full = typeof target.path === 'string' ? target.path : name;
+        return {
+          name: name || full,
+          directory: target.kind === 'directory' || target.type === 'directory' || target.directory === true,
+        };
+      });
+    }
+
+    /** Textarea with "/" and "@" completion; both insert plain text. */
+    function MentionField(props) {
+      const [items, setItems] = useState([]);
+      const [active, setActive] = useState(0);
+      const [token, setToken] = useState(null);
+      const field = useRef(null);
+
+      const close = () => {
+        setToken(null);
+        setItems([]);
+        setActive(0);
+      };
+
+      const choose = (entry) => {
+        if (!token) return;
+        const text = props.value || '';
+        const head = text.slice(0, token.start);
+        const tail = text.slice(token.end);
+        const insert = token.char + entry.name + ' ';
+        props.onChange({ target: { value: head + insert + tail } });
+        close();
+        const caret = head.length + insert.length;
+        window.setTimeout(() => {
+          const node = field.current;
+          if (!node) return;
+          node.focus();
+          if (typeof node.setSelectionRange === 'function') node.setSelectionRange(caret, caret);
+        }, 0);
+      };
+
+      const apply = (entries, query) => {
+        setItems(entries.filter((entry) => entry.name.toLowerCase().indexOf(query) >= 0).slice(0, 8));
+        setActive(0);
+      };
+
+      const openFor = (value, caret) => {
+        const before = String(value || '').slice(0, caret);
+        const match = /(?:^|\s)([/@])([^\s/@]*)$/.exec(before);
+        if (!match) {
+          close();
+          return;
+        }
+        const char = match[1];
+        const query = match[2].toLowerCase();
+        const lead = match[0].length - match[0].trimStart().length;
+        setToken({ char, start: before.length - match[0].length + lead, end: caret, query });
+        if (char === '/') {
+          const remote = completionService('remote');
+          const skills = remote && remote.skills;
+          if (!skills || typeof skills.list !== 'function') {
+            apply([], query);
+            return;
+          }
+          skills
+            .list({ sessionId: props.sessionId })
+            .then((result) => {
+              const list = result && result.ok === true && result.value && Array.isArray(result.value.skills) ? result.value.skills : [];
+              apply(list.map((entry) => ({ name: String(entry.name || ''), hint: String(entry.description || '') })), query);
+            })
+            .catch(() => apply([], query));
+          return;
+        }
+        const workspace = completionService('uiWorkspace');
+        if (!workspace || typeof workspace.listDirectory !== 'function') {
+          apply([], query);
+          return;
+        }
+        workspace
+          .listDirectory(undefined)
+          .then((listing) => {
+            apply(entriesOfListing(listing).map((entry) => ({ name: entry.name, hint: entry.directory ? '目录' : '' })), query);
+          })
+          .catch(() => apply([], query));
+      };
+
+      return h(
+        'div',
+        { className: 'pp-mention' },
+        h('textarea', {
+          ref: field,
+          className: 'pp-textarea',
+          value: props.value,
+          placeholder: props.placeholder,
+          rows: props.rows || 5,
+          autoFocus: props.autoFocus === true,
+          onChange: (event) => {
+            props.onChange(event);
+            openFor(event.target.value, event.target.selectionStart || 0);
+          },
+          onKeyDown: (event) => {
+            if (token && items.length > 0) {
+              if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                setActive((active + 1) % items.length);
+                return;
+              }
+              if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                setActive((active - 1 + items.length) % items.length);
+                return;
+              }
+              if (event.key === 'Enter' || event.key === 'Tab') {
+                event.preventDefault();
+                choose(items[active]);
+                return;
+              }
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                close();
+                return;
+              }
+            }
+            if (props.onKeyDown) props.onKeyDown(event);
+          },
+        }),
+        token && items.length > 0
+          ? h(
+              'div',
+              { className: 'pp-mention-menu' },
+              items.map((entry, index) =>
+                h(
+                  'button',
+                  {
+                    key: entry.name + index,
+                    type: 'button',
+                    className: 'pp-mention-item',
+                    'data-active': index === active ? 'true' : 'false',
+                    onMouseDown: (event) => {
+                      event.preventDefault();
+                      choose(entry);
+                    },
+                  },
+                  h('span', { className: 'pp-mention-name' }, token.char + entry.name),
+                  entry.hint ? h('span', { className: 'pp-mention-hint' }, entry.hint.slice(0, 60)) : null,
+                ),
+              ),
+            )
+          : null,
       );
     }
 
@@ -1728,40 +2019,11 @@ window.__ModuleLoader__.load({
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
       const [wsSelected, setWsSelected] = useState('');
+      const [customPick, setCustomPick] = useState('');
+      const [builtinPick, setBuiltinPick] = useState('');
       const [confirming, setConfirming] = useState(false);
       const [status, setStatus] = useState(null);
       const [busy, setBusy] = useState(false);
-      const [skills, setSkills] = useState({ status: 'idle', sessionId: undefined, items: [], error: '' });
-
-      const loadSkills = useCallback(async (sessionId) => {
-        const remote = resolveSkillRemote();
-        if (!remote || typeof remote.list !== 'function') {
-          setSkills({ status: 'error', sessionId, items: [], error: translate('skill.unavailable') });
-          return;
-        }
-        setSkills({ status: 'loading', sessionId, items: [], error: '' });
-        try {
-          const result = await remote.list({ sessionId });
-          if (result && result.ok === true) {
-            const value = result.value || {};
-            const list = Array.isArray(value.skills) ? value.skills : [];
-            setSkills({ status: 'ready', sessionId, items: list, error: '' });
-            return;
-          }
-          const failure = (result && result.error) || {};
-          const message = failure.message || failure.code || translate('skill.failed');
-          setSkills({ status: 'error', sessionId, items: [], error: String(message) });
-        } catch (error) {
-          setSkills({ status: 'error', sessionId, items: [], error: String((error && error.message) || error) });
-        }
-      }, []);
-
-      useEffect(() => {
-        if (!view.open || tab !== 'skill') return;
-        if (skills.status === 'loading') return;
-        if (skills.sessionId === props.sessionId && skills.status !== 'idle') return;
-        loadSkills(props.sessionId);
-      }, [view.open, tab, skills.status, skills.sessionId, props.sessionId, loadSkills]);
 
       const statusTimer = useRef(0);
       const flash = useCallback((next) => {
@@ -1774,8 +2036,8 @@ window.__ModuleLoader__.load({
       const confirmCategoryDelete = () => {
         const target = pendingCategory;
         setPendingCategory(null);
-        if (!target || target.indexOf('cat:') !== 0) return;
-        poolActions.removeCategory(target.slice(4));
+        if (!target || target.indexOf('custom:') !== 0) return;
+        poolActions.removeCategory(target.slice(7));
         if (tab === target) setTab('all');
       };
 
@@ -1816,12 +2078,18 @@ window.__ModuleLoader__.load({
       const wsActive = rail.some((entry) => entry.id === wsSelected) ? wsSelected : rail.length > 0 ? rail[0].id : '';
       const wsCounts = useMemo(() => {
         const counts = {};
-        for (const item of state.items) if (item.categoryId) counts[item.categoryId] = (counts[item.categoryId] || 0) + 1;
+        for (const item of state.items) {
+          const group = groupOf(item);
+          if (familyOf(group) === 'workspace') {
+            const key = 'ws:' + group.slice(10);
+            counts[key] = (counts[key] || 0) + 1;
+          }
+        }
         return counts;
       }, [state.items]);
 
       const items = useMemo(
-        () => (tab === 'workspace' ? state.items.filter((item) => item.categoryId === wsActive) : state.items.filter((item) => matchesTab(item, tab))),
+        () => (tab === 'nested:workspace' ? state.items.filter((item) => item.group === 'workspace:' + (wsActive ? wsActive.slice(3) : '')) : state.items.filter((item) => matchesTab(item, tab))),
         [state.items, tab, wsActive],
       );
 
@@ -1865,7 +2133,7 @@ window.__ModuleLoader__.load({
         }
         poolActions.add({
           id: uid(),
-          kind: 'note',
+          group: BUILTIN_GROUP.note,
           title: firstLine(text),
           body: text,
           createdAt: Date.now(),
@@ -1876,25 +2144,22 @@ window.__ModuleLoader__.load({
       };
 
       const newItem = () => {
-        const nextKind = tab === 'snippet' ? 'snippet' : 'note';
-        const inWorkspace = tab === 'workspace';
-        const categoryId = inWorkspace ? wsActive : categoryIdOf(tab) || '';
-        // A skill tab holds a fetched catalog, not pool rows: land on the list first.
-        if (!inWorkspace && !categoryId && tab !== 'pinned') setTab(nextKind);
+        const inWorkspace = tab === 'nested:workspace';
+        const group = groupForTab(tab, inWorkspace && wsActive ? 'workspace:' + wsActive.slice(3) : '');
+        // The new row must land on a visible list, so plain tabs switch to the kind tab.
+        if (!inWorkspace && !familyOf(tab)) setTab(group);
         const item = poolActions.add({
           id: uid(),
-          kind: nextKind,
+          group,
           title: '',
           body: '',
-          categoryId,
-          pinned: tab === 'pinned',
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, kind: nextKind, title: '', body: '', categoryId, pinned: tab === 'pinned' });
+        setEditing({ id: item.id, group, title: '', body: '' });
       };
 
-      const startEdit = (item) => setEditing({ id: item.id, kind: item.kind, title: item.title, body: item.body, categoryId: item.categoryId || '', pinned: item.pinned === true });
+      const startEdit = (item) => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body });
 
       const saveEdit = () => {
         if (!editing) return;
@@ -1903,11 +2168,9 @@ window.__ModuleLoader__.load({
           return;
         }
         poolActions.patch(editing.id, {
-          kind: editing.kind,
+          group: editing.group,
           title: editing.title.trim(),
           body: editing.body,
-          categoryId: editing.categoryId || '',
-          pinned: editing.pinned === true,
         });
         setEditing(null);
       };
@@ -1970,12 +2233,12 @@ window.__ModuleLoader__.load({
               placeholder: translate('row.titlePlaceholder'),
               onChange: (event) => setEditing({ ...editing, title: event.target.value }),
             }),
-            h('textarea', {
-              className: 'pp-textarea',
+            h(MentionField, {
               value: editing.body,
               placeholder: translate('row.bodyPlaceholder'),
               rows: 4,
               autoFocus: true,
+              sessionId: props.sessionId,
               onChange: (event) => setEditing({ ...editing, body: event.target.value }),
               onKeyDown: (event) => {
                 if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
@@ -1992,29 +2255,29 @@ window.__ModuleLoader__.load({
                 {
                   className: 'pp-input',
                   style: { width: 'auto', maxWidth: '220px' },
-                  value: editing.pinned === true ? 'builtin:pinned' : editing.categoryId || 'kind:' + (editing.kind === 'snippet' ? 'snippet' : 'note'),
+                  value: groupOf(editing),
                   'aria-label': translate('row.classification'),
-                  onChange: (event) => setEditing(withClassification(editing, event.target.value)),
+                  onChange: (event) => setEditing(withGroup(editing, event.target.value)),
                 },
                 h(
                   'optgroup',
-                  { label: translate('row.kindLabel') },
-                  h('option', { value: 'builtin:pinned' }, translate('kind.pinned')),
-                  h('option', { value: 'kind:note' }, translate('kind.note')),
-                  h('option', { value: 'kind:snippet' }, translate('kind.snippet')),
+                  { label: translate('row.familyBuiltin') },
+                  h('option', { value: BUILTIN_GROUP.oftenuse }, translate('group.oftenuse')),
+                  h('option', { value: BUILTIN_GROUP.note }, translate('group.note')),
+                  h('option', { value: BUILTIN_GROUP.template }, translate('group.template')),
                 ),
                 workspaces.items.length > 0
                   ? h(
                       'optgroup',
-                      { label: translate('tab.workspace') },
-                      workspaces.items.map((workspace) => h('option', { key: workspace.id, value: workspace.id }, workspace.name)),
+                      { label: translate('row.familyWorkspace') },
+                      workspaces.items.map((workspace) => h('option', { key: workspace.id, value: 'workspace:' + workspace.workspaceId }, workspace.name)),
                     )
                   : null,
                 state.categories.length > 0
                   ? h(
                       'optgroup',
-                      { label: translate('row.categoryLabel') },
-                      state.categories.map((category) => h('option', { key: category.id, value: 'cat:' + category.id }, category.name)),
+                      { label: translate('row.familyCustom') },
+                      state.categories.map((category) => h('option', { key: category.id, value: 'custom:' + category.id }, category.name)),
                     )
                   : null,
               ),
@@ -2032,11 +2295,11 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'pp-main', title: translate('row.insert'), onClick: () => insertItem(item) },
-            h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || translate('kind.untitled')),
+            h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || translate('group.untitled')),
             item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
           ),
           tab === 'all'
-            ? h('span', { className: 'pp-kind' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
+            ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
             : null,
           h(
             'div',
@@ -2079,64 +2342,51 @@ window.__ModuleLoader__.load({
 
       if (!view.open) return null;
 
-      const addSkillToTray = (skill) => {
-        const id = 'skill:' + skill.name;
-        let item = pool.get().items.find((entry) => entry.id === id);
-        if (!item) {
-          item = poolActions.add({
-            id,
-            kind: 'skill',
-            title: '/' + skill.name,
-            body: '/' + skill.name + ' ',
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          });
-        }
-        poolActions.addToTray(item.id);
-      };
+      const panelCount = state.items.length;
 
-      const skillRowOf = (skill) => {
-        const id = 'skill:' + skill.name;
-        return h(
-          'div',
-          { key: id, className: 'pp-row' },
-          h(TrayAdd, { label: translate('row.select'), onClick: () => addSkillToTray(skill) }),
-          h(
-            'div',
-            { className: 'pp-main', title: translate('skill.insert', { name: skill.name }), onClick: () => insertItem({ body: '/' + skill.name + ' ' }) },
-            h('div', { className: 'pp-title' }, '/' + skill.name),
-            skill.description ? h('div', { className: 'pp-body' }, String(skill.description)) : null,
-          ),
-          skill.modelInvocable === false ? h('span', { className: 'pp-kind' }, translate('skill.userOnly')) : null,
-        );
-      };
-
-      const skillGroups = SKILL_SCOPES.map((scope) => [scope, skills.items.filter((skill) => scopeOfSkill(skill) === scope)]).filter(
-        (entry) => entry[1].length > 0,
-      );
-      const skillScoped = skills.items.some((skill) => typeof skill.source === 'string' && skill.source !== '');
-
-      const renderSkillList = () => {
-        if (skills.status === 'idle' || skills.status === 'loading') return h('div', { className: 'pp-empty' }, translate('skill.loading'));
-        if (skills.status === 'error') return h('div', { className: 'pp-empty' }, translate('skill.failed') + '：' + skills.error);
-        if (skills.items.length === 0) return h('div', { className: 'pp-empty' }, translate('skill.empty'));
-        if (!skillScoped) return skills.items.map(skillRowOf);
-        return skillGroups.map((entry) =>
-          h(
-            'div',
-            { key: entry[0] },
-            h(
-              'div',
-              { className: 'pp-group' },
-              translate('skill.group.' + entry[0]),
-              h('span', { className: 'pp-hint' }, String(entry[1].length)),
-            ),
-            entry[1].map(skillRowOf),
-          ),
-        );
-      };
-
-      const panelCount = tab === 'skill' ? skills.items.length : state.items.length;
+      // A folded family renders its groups as chips inside one tab.
+      const customGroups = state.categories.map((category) => ({ id: 'custom:' + category.id, name: category.name }));
+      const customActive = customGroups.some((entry) => entry.id === customPick)
+        ? customPick
+        : customGroups.length > 0
+          ? customGroups[0].id
+          : '';
+      const customCounts = {};
+      for (const item of state.items) {
+        const group = groupOf(item);
+        if (familyOf(group) === 'custom') customCounts[group] = (customCounts[group] || 0) + 1;
+      }
+      const builtinList = builtinGroups();
+      const builtinActive = builtinList.some((entry) => entry.id === builtinPick) ? builtinPick : builtinList[0].id;
+      const nestedView =
+        tab === 'nested:workspace'
+          ? {
+              rail: rail,
+              activeId: wsActive,
+              onSelect: setWsSelected,
+              counts: wsCounts,
+              emptyText: translate('ws.empty'),
+              scoped: state.items.filter((item) => groupOf(item) === (wsActive ? 'workspace:' + wsActive.slice(3) : '')),
+            }
+          : tab === 'nested:custom'
+            ? {
+                rail: customGroups,
+                activeId: customActive,
+                onSelect: setCustomPick,
+                counts: customCounts,
+                emptyText: translate('panel.emptyTab'),
+                scoped: state.items.filter((item) => groupOf(item) === customActive),
+              }
+            : tab === 'nested:builtin'
+              ? {
+                  rail: builtinList,
+                  activeId: builtinActive,
+                  onSelect: setBuiltinPick,
+                  counts: {},
+                  emptyText: translate('panel.emptyTab'),
+                  scoped: state.items.filter((item) => groupOf(item) === builtinActive),
+                }
+              : null;
 
       return h(
         'div',
@@ -2175,9 +2425,7 @@ window.__ModuleLoader__.load({
           }),
           h('span', { className: 'pp-grow' }),
           h('button', { type: 'button', className: 'pp-mini', onClick: captureDraft }, translate('panel.capture')),
-          tab === 'skill'
-            ? h('button', { type: 'button', className: 'pp-mini', onClick: () => loadSkills(props.sessionId) }, translate('skill.refresh'))
-            : h('button', { type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('panel.new')),
+            h('button', { type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('panel.new')),
         ),
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
         h(
@@ -2185,18 +2433,16 @@ window.__ModuleLoader__.load({
           { className: 'pp-list' },
           settingsOpen
             ? h(PromptPoolSettings, null)
-            : tab === 'workspace'
+            : nestedView
               ? renderWorkspacePanes({
-                  rail: rail,
-                  items: items,
-                  activeId: wsActive,
-                  onSelect: setWsSelected,
-                  counts: wsCounts,
+                  rail: nestedView.rail,
+                  items: nestedView.scoped,
+                  activeId: nestedView.activeId,
+                  onSelect: nestedView.onSelect,
+                  counts: nestedView.counts,
                   renderRow: rowOf,
-                  emptyText: translate('ws.empty'),
+                  emptyText: nestedView.emptyText,
                 })
-              : tab === 'skill'
-                ? renderSkillList()
                 : items.length === 0
                   ? h(
                       'div',
@@ -2204,8 +2450,8 @@ window.__ModuleLoader__.load({
                       translate(
                         state.items.length === 0
                           ? 'panel.empty'
-                          : tab === 'pinned' && !state.items.some((item) => item.pinned === true)
-                            ? 'page.emptyPinned'
+                          : tab === BUILTIN_GROUP.oftenuse && !state.items.some((item) => groupOf(item) === BUILTIN_GROUP.oftenuse)
+                            ? 'page.emptyOftenuse'
                             : 'panel.emptyTab',
                       ),
                     )
@@ -2452,7 +2698,7 @@ window.__ModuleLoader__.load({
       '.pp-main{flex:1;min-width:0;cursor:pointer}' +
       '.pp-title{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-body{color:var(--pp-ink-2);font-size:12px;white-space:pre-wrap;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}' +
-      '.pp-kind{flex:none;margin-top:2px;padding:0 5px;border-radius:5px;border:1px solid var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px;line-height:15px}' +
+      '.pp-tag{flex:none;margin-top:2px;padding:0 5px;border-radius:5px;border:1px solid var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px;line-height:15px}' +
       '.pp-actions{display:flex;gap:2px;opacity:0;flex:none}' +
       '.pp-row:hover .pp-actions,.pp-row:focus-within .pp-actions{opacity:1}' +
       '.pp-icon{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}' +
@@ -2463,7 +2709,13 @@ window.__ModuleLoader__.load({
       '.pp-edit{padding:8px;border-radius:8px;background:var(--pp-surface);border:1px solid var(--pp-line);display:flex;flex-direction:column;gap:6px}' +
       '.pp-input,.pp-textarea{width:100%;box-sizing:border-box;border:1px solid var(--pp-line);border-radius:6px;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font:inherit;font-size:12px;padding:5px 7px;outline:none;resize:vertical}' +
       '.pp-input:focus,.pp-textarea:focus{border-color:var(--pp-accent)}' +
-      '.pp-textarea{min-height:64px}' +
+      '.pp-mention{position:relative;flex:1;display:flex}' +
+        '.pp-mention-menu{position:absolute;z-index:6;top:100%;left:0;right:0;margin-top:2px;max-height:180px;overflow:auto;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface);box-shadow:0 8px 24px rgba(0,0,0,.14)}' +
+        '.pp-mention-item{display:flex;gap:8px;align-items:baseline;width:100%;padding:6px 10px;border:0;background:none;text-align:left;font:inherit;color:var(--pp-ink);cursor:pointer}' +
+        '.pp-mention-item[data-active="true"],.pp-mention-item:hover{background:var(--pp-hover)}' +
+        '.pp-mention-name{font-size:12px;white-space:nowrap}' +
+        '.pp-mention-hint{color:var(--pp-ink-2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+        '.pp-textarea{min-height:64px}' +
       '.pp-edit-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}' +
       '.pp-primary{height:28px;padding:0 14px;border-radius:8px;border:1px solid var(--pp-accent);background:var(--pp-accent);color:var(--pp-on-accent);font:inherit;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}' +
       '.pp-primary:hover{filter:brightness(1.06)}' +
@@ -2546,5 +2798,6 @@ window.__ModuleLoader__.load({
     };
   },
 });
+
 
 
