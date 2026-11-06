@@ -1801,18 +1801,16 @@ window.__ModuleLoader__.load({
             ),
           ),
         ),
-        h(
-          'div',
-          { className: 'pp-set-group pp-set-card', style: { display: section === 'order' ? '' : 'none' } },
+          h('div', { className: 'pp-set-divider' }),
           h('div', { className: 'pp-set-label' }, translate('settings.display')),
           ['builtin', 'custom', 'workspace'].map((family) =>
             h(
               'div',
-              { key: family, className: 'pp-set-item' },
-              h('div', { className: 'pp-set-sub' }, translate('settings.display.' + family)),
+              { key: family, className: 'pp-set-line' },
+              h('div', { className: 'pp-set-name' }, translate('settings.display.' + family)),
               h(
                 'div',
-                { className: 'pp-set-row' },
+                { className: 'pp-set-modes' },
                 (family === 'builtin' ? ['tabs', 'nested'] : ['tabs', 'nested', 'hidden']).map((mode) =>
                   h(
                     'label',
@@ -1829,7 +1827,6 @@ window.__ModuleLoader__.load({
               ),
             ),
           ),
-        ),
       );
     }
 
@@ -2691,7 +2688,13 @@ window.__ModuleLoader__.load({
       '.pp-set-row{display:flex;align-items:flex-start;gap:8px;cursor:pointer}' +
       '.pp-set-row input{margin:3px 0 0;accent-color:var(--pp-accent);cursor:pointer}' +
       '.pp-set-hint{margin-top:2px;padding-left:22px}' +
-      '.pp-set-label{font-size:12px;color:var(--pp-ink-2);margin:2px 0 4px}' +
+      '.pp-set-divider{height:1px;background:var(--pp-line-2);margin:14px 0 12px}' +
+        '.pp-set-line{display:flex;align-items:center;gap:12px;padding:4px 0}' +
+        '.pp-set-name{min-width:78px;font-size:12px;color:var(--pp-ink)}' +
+        '.pp-set-modes{display:flex;flex-wrap:wrap;gap:16px}' +
+        '.pp-set-inline{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--pp-ink);cursor:pointer}' +
+        '.pp-set-inline input{margin:0;accent-color:var(--pp-accent);cursor:pointer}' +
+        '.pp-set-label{font-size:12px;color:var(--pp-ink-2);margin:2px 0 4px}' +
       '.pp-set-card{padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
       '.pp-set-card .pp-set-label{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-set-card .pp-set-row{padding:3px 0}' +
