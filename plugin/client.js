@@ -1887,7 +1887,7 @@ window.__ModuleLoader__.load({
     // ------------------------------------------------------------- completions
     /** Lazy views of the two data sources; both may mount after this plugin. */
     function completionService(key) {
-      if (key === 'remote') return remoteFace;
+      if (key === 'remote') return remoteFace || serviceOf(pluginCtx, 'remote');
       if (key === 'uiWorkspace') return workspaceFace || serviceOf(pluginCtx, 'uiWorkspace');
       return null;
     }
@@ -1917,11 +1917,13 @@ window.__ModuleLoader__.load({
       const [items, setItems] = useState([]);
       const [active, setActive] = useState(0);
       const [token, setToken] = useState(null);
+      const [note, setNote] = useState('');
       const field = useRef(null);
 
       const close = () => {
         setToken(null);
         setItems([]);
+        setNote('');
         setActive(0);
       };
 
@@ -1943,7 +1945,9 @@ window.__ModuleLoader__.load({
       };
 
       const apply = (entries, query) => {
-        setItems(entries.filter((entry) => entry.name.toLowerCase().indexOf(query) >= 0).slice(0, 8));
+        const matched = entries.filter((entry) => entry.name.toLowerCase().indexOf(query) >= 0).slice(0, 8);
+        setItems(matched);
+        setNote(matched.length === 0 ? translate('mention.empty') : '');
         setActive(0);
       };
 
@@ -1958,20 +1962,36 @@ window.__ModuleLoader__.load({
         const query = match[2].toLowerCase();
         const lead = match[0].length - match[0].trimStart().length;
         setToken({ char, start: before.length - match[0].length + lead, end: caret, query });
+        setNote(translate('mention.loading'));
         if (char === '/') {
+          if (!props.sessionId) {
+            setItems([]);
+            setNote(translate('mention.noSession'));
+            return;
+          }
           const remote = completionService('remote');
           const skills = remote && remote.skills;
           if (!skills || typeof skills.list !== 'function') {
-            apply([], query);
+            setItems([]);
+            setNote(translate('mention.noSkillService'));
             return;
           }
           skills
             .list({ sessionId: props.sessionId })
             .then((result) => {
-              const list = result && result.ok === true && result.value && Array.isArray(result.value.skills) ? result.value.skills : [];
+              if (!result || result.ok !== true) {
+                const reason = result && result.error ? result.error.message || result.error.code : '';
+                setItems([]);
+                setNote(translate('mention.failed', ) + (reason ? '：' + String(reason).slice(0, 80) : ''));
+                return;
+              }
+              const list = result.value && Array.isArray(result.value.skills) ? result.value.skills : [];
               apply(list.map((entry) => ({ name: String(entry.name || ''), hint: String(entry.description || '') })), query);
             })
-            .catch(() => apply([], query));
+            .catch((error) => {
+              setItems([]);
+              setNote(translate('mention.failed') + '：' + String((error && error.message) || error).slice(0, 80));
+            });
           return;
         }
         const workspace = completionService('uiWorkspace');
@@ -2027,27 +2047,29 @@ window.__ModuleLoader__.load({
             if (props.onKeyDown) props.onKeyDown(event);
           },
         }),
-        token && items.length > 0
+        token && (items.length > 0 || note)
           ? h(
               'div',
               { className: 'pp-mention-menu' },
-              items.map((entry, index) =>
-                h(
-                  'button',
-                  {
-                    key: entry.name + index,
-                    type: 'button',
-                    className: 'pp-mention-item',
-                    'data-active': index === active ? 'true' : 'false',
-                    onMouseDown: (event) => {
-                      event.preventDefault();
-                      choose(entry);
-                    },
-                  },
-                  h('span', { className: 'pp-mention-name' }, token.char + entry.name),
-                  entry.hint ? h('span', { className: 'pp-mention-hint' }, entry.hint.slice(0, 60)) : null,
-                ),
-              ),
+              items.length === 0
+                ? h('div', { className: 'pp-mention-note' }, note)
+                : items.map((entry, index) =>
+                    h(
+                      'button',
+                      {
+                        key: entry.name + index,
+                        type: 'button',
+                        className: 'pp-mention-item',
+                        'data-active': index === active ? 'true' : 'false',
+                        onMouseDown: (event) => {
+                          event.preventDefault();
+                          choose(entry);
+                        },
+                      },
+                      h('span', { className: 'pp-mention-name' }, token.char + entry.name),
+                      entry.hint ? h('span', { className: 'pp-mention-hint' }, entry.hint.slice(0, 60)) : null,
+                    ),
+                  ),
             )
           : null,
       );
@@ -2795,6 +2817,7 @@ window.__ModuleLoader__.load({
       '.pp-input:focus,.pp-textarea:focus{border-color:var(--pp-accent)}' +
       '.pp-mention{position:relative;flex:1;display:flex}' +
         '.pp-mention-menu{position:absolute;z-index:6;top:100%;left:0;right:0;margin-top:2px;max-height:180px;overflow:auto;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface);box-shadow:0 8px 24px rgba(0,0,0,.14)}' +
+        '.pp-mention-note{padding:8px 10px;font-size:11px;color:var(--pp-ink-2)}' +
         '.pp-mention-item{display:flex;gap:8px;align-items:baseline;width:100%;padding:6px 10px;border:0;background:none;text-align:left;font:inherit;color:var(--pp-ink);cursor:pointer}' +
         '.pp-mention-item[data-active="true"],.pp-mention-item:hover{background:var(--pp-hover)}' +
         '.pp-mention-name{font-size:12px;white-space:nowrap}' +
