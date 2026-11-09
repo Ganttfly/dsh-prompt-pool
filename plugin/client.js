@@ -47,6 +47,12 @@ window.__ModuleLoader__.load({
       'group.oftenuse': '常用',
       'group.template': '模板',
       'group.untitled': '（未命名）',
+      'mention.loading': '正在读取…',
+      'mention.empty': '没有匹配项',
+      'mention.noSession': '当前没有会话，无法读取技能目录',
+      'mention.noSkillService': '读不到技能目录（remote 服务未绑定）',
+      'mention.noDirectoryService': '读不到目录服务（uiWorkspace 未绑定）',
+      'mention.failed': '读取失败',
       'row.insert': '插入到输入框',
       'row.select': '加入待发送队列',
       'row.copy': '复制内容',
@@ -166,6 +172,12 @@ window.__ModuleLoader__.load({
       'group.oftenuse': 'Frequent',
       'group.template': 'Template',
       'group.untitled': '(untitled)',
+      'mention.loading': 'Loading…',
+      'mention.empty': 'No matches',
+      'mention.noSession': 'No active session, so the skill catalog is unavailable',
+      'mention.noSkillService': 'Skill catalog unavailable (remote service not bound)',
+      'mention.noDirectoryService': 'Directory service unavailable (uiWorkspace not bound)',
+      'mention.failed': 'Failed to load',
       'row.insert': 'Insert into the composer',
       'row.select': 'Add to the send queue',
       'row.copy': 'Copy the text',
@@ -782,6 +794,12 @@ window.__ModuleLoader__.load({
      * workspace in both views.
      */
     const workspaceDir = createStore({ items: [] });
+    /** The composer panel knows the active session; the sidebar page does not. */
+    const sessionDir = createStore({ sessionId: '' });
+
+    function useSessionDir() {
+      return useSyncExternalStore(sessionDir.subscribe, sessionDir.get, sessionDir.get);
+    }
 
     function useWorkspaceDir() {
       return useSyncExternalStore(workspaceDir.subscribe, workspaceDir.get, workspaceDir.get);
@@ -1333,6 +1351,7 @@ window.__ModuleLoader__.load({
       useLocaleTick();
       const state = usePoolState();
       const workspaces = useWorkspaceDir();
+      const sessionHint = useSessionDir().sessionId;
       const [tab, setTab] = useState('all');
       const [query, setQuery] = useState('');
       const [editing, setEditing] = useState(null);
@@ -1964,11 +1983,6 @@ window.__ModuleLoader__.load({
         setToken({ char, start: before.length - match[0].length + lead, end: caret, query });
         setNote(translate('mention.loading'));
         if (char === '/') {
-          if (!props.sessionId) {
-            setItems([]);
-            setNote(translate('mention.noSession'));
-            return;
-          }
           const remote = completionService('remote');
           const skills = remote && remote.skills;
           if (!skills || typeof skills.list !== 'function') {
@@ -2081,9 +2095,13 @@ window.__ModuleLoader__.load({
       const state = usePoolState();
       const view = useUiState();
       const workspaces = useWorkspaceDir();
+      const sessionHint = useSessionDir().sessionId;
 
       // This view can read the workspace roster; publish it for both views.
       const wsSnapshot = typeof props.useWorkspaces === 'function' ? props.useWorkspaces(selectAllInput) : undefined;
+      useEffect(() => {
+        sessionDir.set({ sessionId: props.sessionId || '' });
+      }, [props.sessionId]);
       const wsEntries = workspaceEntriesOf(wsSnapshot);
       const wsCurrent = currentWorkspaceOf(wsSnapshot, props.sessionId);
       const wsSignature = useRef('');
