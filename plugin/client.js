@@ -80,6 +80,12 @@
       'settings.button': '设置',
       'settings.tab.order': '分组',
       'settings.display': '分组怎么显示',
+      'settings.table': '分组的顺序与显示',
+      'settings.tableHint': '箭头调整先后顺序；右侧三列决定这一组怎么显示。',
+      'settings.tableGroup': '分组',
+      'settings.tableOrder': '顺序',
+      'settings.moveUp': '上移',
+      'settings.moveDown': '下移',
       'settings.display.builtin': '内置分组',
       'settings.display.custom': '自定义分组',
       'settings.display.workspace': '工作区',
@@ -208,6 +214,12 @@
       'settings.button': 'Settings',
       'settings.tab.order': 'Groups',
       'settings.display': 'How groups show up',
+      'settings.table': 'Group order and display',
+      'settings.tableHint': 'Use the arrows to reorder; the three columns decide how each family shows up.',
+      'settings.tableGroup': 'Group',
+      'settings.tableOrder': 'Order',
+      'settings.moveUp': 'Move up',
+      'settings.moveDown': 'Move down',
       'settings.display.builtin': 'Built-in groups',
       'settings.display.custom': 'Custom groups',
       'settings.display.workspace': 'Workspaces',
@@ -517,11 +529,11 @@
           settings,
         ),
       };
-      const rest = ['workspace', 'custom', 'builtin'].filter((name) => name !== flags.leadingGroup);
+      const rest = flags.order;
       return [
         // 全部 always anchors the row; the chosen block leads the rest.
         { id: 'all', label: translate('tab.all'), group: 'all' },
-        ...[flags.leadingGroup, ...rest].reduce((list, name) => list.concat(blocks[name]), []),
+        ...rest.reduce((list, name) => list.concat(blocks[name]), []),
       ];
     }
 
@@ -855,7 +867,11 @@
           ? settings.hiddenWorkspaces.filter((value) => typeof value === 'string' && value !== '')
           : [],
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
-        leadingGroup: leaders.indexOf(settings.leadingGroup) >= 0 ? settings.leadingGroup : 'workspace',
+        order: (() => {
+          const stored = Array.isArray(settings.order) ? settings.order.filter((name) => leaders.indexOf(name) >= 0) : [];
+          const seed = stored.length > 0 ? stored : leaders.indexOf(settings.leadingGroup) >= 0 ? [settings.leadingGroup] : [];
+          return [...seed, ...leaders.filter((name) => seed.indexOf(name) < 0)];
+        })(),
         display,
       };
     }
@@ -1818,7 +1834,7 @@
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.46'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.47'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -1873,43 +1889,57 @@
         h(
           'div',
           { className: 'pp-set-group pp-set-card', style: { display: section === 'order' ? '' : 'none' } },
-          h('div', { className: 'pp-set-label' }, translate('settings.leading')),
-          h('div', { className: 'pp-hint pp-set-hint' }, translate('settings.leadingHint')),
-          ['workspace', 'custom', 'builtin'].map((name) =>
-            h(
-              'label',
-              { key: name, className: 'pp-set-row' },
-              h('input', {
-                type: 'radio',
-                name: 'pp-leading-group',
-                checked: settings.leadingGroup === name,
-                onChange: () => poolActions.setSetting('leadingGroup', name),
-              }),
-              h('span', null, translate('settings.leading.' + name)),
-            ),
+          h('div', { className: 'pp-set-label' }, translate('settings.table')),
+          h('div', { className: 'pp-hint pp-set-hint' }, translate('settings.tableHint')),
+          h(
+            'div',
+            { className: 'pp-set-tr pp-set-th' },
+            h('span', null, translate('settings.tableGroup')),
+            ['tabs', 'nested', 'hidden'].map((mode) => h('span', { key: mode }, translate('settings.mode.' + mode))),
+            h('span', null, translate('settings.tableOrder')),
           ),
-          h('div', { className: 'pp-set-divider' }),
-          h('div', { className: 'pp-set-label' }, translate('settings.display')),
-          ['builtin', 'custom', 'workspace'].map((family) =>
+          settings.order.map((family, index) =>
             h(
               'div',
-              { key: family, className: 'pp-set-line' },
-              h('div', { className: 'pp-set-name' }, translate('settings.display.' + family)),
+              { key: family, className: 'pp-set-tr' },
+              h('span', { className: 'pp-set-td-name' }, translate('settings.display.' + family)),
+              ['tabs', 'nested', 'hidden'].map((mode) =>
+                h(
+                  'span',
+                  { key: mode, className: 'pp-set-td-cell' },
+                  h('input', {
+                    type: 'radio',
+                    name: 'pp-display-' + family,
+                    checked: settings.display[family] === mode,
+                    disabled: family === 'builtin' && mode === 'hidden',
+                    onChange: () => poolActions.setSetting('display', { ...settings.display, [family]: mode }),
+                  }),
+                ),
+              ),
               h(
-                'div',
-                { className: 'pp-set-modes' },
-                (family === 'builtin' ? ['tabs', 'nested'] : ['tabs', 'nested', 'hidden']).map((mode) =>
-                  h(
-                    'label',
-                    { key: mode, className: 'pp-set-inline' },
-                    h('input', {
-                      type: 'radio',
-                      name: 'pp-display-' + family,
-                      checked: settings.display[family] === mode,
-                      onChange: () => poolActions.setSetting('display', { ...settings.display, [family]: mode }),
-                    }),
-                    h('span', null, translate('settings.mode.' + mode)),
-                  ),
+                'span',
+                { className: 'pp-set-td-order' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'pp-mini',
+                    disabled: index === 0,
+                    title: translate('settings.moveUp'),
+                    onClick: () => moveOrder(index, -1),
+                  },
+                  '↑',
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'pp-mini',
+                    disabled: index === settings.order.length - 1,
+                    title: translate('settings.moveDown'),
+                    onClick: () => moveOrder(index, 1),
+                  },
+                  '↓',
                 ),
               ),
             ),
@@ -2845,7 +2875,12 @@
       '.pp-set-row{display:flex;align-items:flex-start;gap:8px;cursor:pointer}' +
       '.pp-set-row input{margin:3px 0 0;accent-color:var(--pp-accent);cursor:pointer}' +
       '.pp-set-hint{margin-top:2px;padding-left:22px}' +
-      '.pp-set-divider{height:1px;background:var(--pp-line-2);margin:14px 0 12px}' +
+      '.pp-set-tr{display:grid;grid-template-columns:1fr 64px 64px 64px 76px;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--pp-line-2)}' +
+        '.pp-set-tr.pp-set-th{border-top:0;padding-bottom:2px;font-size:11px;color:var(--pp-ink-2)}' +
+        '.pp-set-td-name{font-size:12px;color:var(--pp-ink)}' +
+        '.pp-set-td-cell{display:flex;justify-content:center}' +
+        '.pp-set-td-order{display:flex;justify-content:flex-end;gap:4px}' +
+        '.pp-set-divider{height:1px;background:var(--pp-line-2);margin:14px 0 12px}' +
         '.pp-set-line{display:flex;align-items:center;gap:12px;padding:4px 0}' +
         '.pp-set-ws{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;min-width:0}' +
         '.pp-set-ws input{margin:0;accent-color:var(--pp-accent);cursor:pointer}' +
