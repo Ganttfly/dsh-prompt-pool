@@ -293,6 +293,7 @@
 
     let pluginCtx = null;
     let remoteFace = null;
+    let skillsFace = null;
     let workspaceFace = null;
     let sessionsFace = null;
 
@@ -1837,7 +1838,7 @@
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.48'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.49'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -1957,6 +1958,14 @@
       if (key === 'remote') return remoteFace || serviceOf(pluginCtx, 'remote');
       if (key === 'uiWorkspace') return workspaceFace || serviceOf(pluginCtx, 'uiWorkspace');
       if (key === 'sessions') return sessionsFace || serviceOf(pluginCtx, 'sessions');
+      if (key === 'skills') {
+        if (skillsFace) return skillsFace;
+        try {
+          return remoteFace && remoteFace.skills ? remoteFace.skills : null;
+        } catch (_error) {
+          return null;
+        }
+      }
       return null;
     }
 
@@ -2034,8 +2043,7 @@
         setToken({ char, start: before.length - match[0].length + lead, end: caret, query });
         setNote(translate('mention.loading'));
         if (char === '/') {
-          const remote = completionService('remote');
-          const skills = remote && remote.skills;
+          const skills = completionService('skills');
           const sessions = completionService('sessions');
           if (!skills || typeof skills.list !== 'function') {
             setItems([]);
@@ -2984,8 +2992,15 @@
           run(ctx);
           if (typeof ctx.inject === 'function') ctx.inject(names, (serviceCtx) => run(serviceCtx));
         };
-        bindOptional(['remote'], (target) => {
+        bindOptional(['remote', 'remote.skills'], (target) => {
           remoteFace = serviceOf(target, 'remote');
+          skillsFace = null;
+          try {
+            skillsFace = remoteFace && remoteFace.skills ? remoteFace.skills : null;
+          } catch (_error) {
+            // remote.skills needs its own inject; stay quiet until it is granted.
+            skillsFace = null;
+          }
         });
         bindOptional(['uiWorkspace'], (target) => {
           workspaceFace = serviceOf(target, 'uiWorkspace');
