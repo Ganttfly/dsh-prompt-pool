@@ -262,6 +262,20 @@ window.__ModuleLoader__.load({
     let translate = (key, params) => interpolate(EN[key] || key, params);
 
     let pluginCtx = null;
+    let remoteFace = null;
+    let workspaceFace = null;
+
+    /** Read one service from a context that has it mounted. */
+    function serviceOf(target, key) {
+      if (!target) return null;
+      try {
+        const viaGet = typeof target.get === 'function' ? target.get(key) : undefined;
+        if (viaGet) return viaGet;
+      } catch (_error) {
+        /* fall through to the property access */
+      }
+      return target[key] || null;
+    }
 
     /** Stable identity so the composer's selector hook never re-subscribes. */
     function selectAllInput(snapshot) {
@@ -1873,12 +1887,9 @@ window.__ModuleLoader__.load({
     // ------------------------------------------------------------- completions
     /** Lazy views of the two data sources; both may mount after this plugin. */
     function completionService(key) {
-      if (!pluginCtx || typeof pluginCtx.get !== 'function') return null;
-      try {
-        return pluginCtx.get(key) || null;
-      } catch (_error) {
-        return null;
-      }
+      if (key === 'remote') return remoteFace;
+      if (key === 'uiWorkspace') return workspaceFace || serviceOf(pluginCtx, 'uiWorkspace');
+      return null;
     }
 
     function entriesOfListing(listing) {
@@ -2816,6 +2827,24 @@ window.__ModuleLoader__.load({
       apply(ctx) {
         localeCtx = ctx.locale;
         pluginCtx = ctx;
+        // Optional services: bind late, and stay idle when they never mount.
+        const bindOptional = (names, assign) => {
+          const run = (target) => {
+            try {
+              assign(target);
+            } catch (_error) {
+              /* a missing service is not an error */
+            }
+          };
+          run(ctx);
+          if (typeof ctx.inject === 'function') ctx.inject(names, (serviceCtx) => run(serviceCtx));
+        };
+        bindOptional(['remote'], (target) => {
+          remoteFace = serviceOf(target, 'remote');
+        });
+        bindOptional(['uiWorkspace'], (target) => {
+          workspaceFace = serviceOf(target, 'uiWorkspace');
+        });
         if (ctx.locale && typeof ctx.locale.register === 'function' && typeof ctx.locale.bind === 'function') {
           ctx.effect(() => ctx.locale.register(NS, { zh: ZH, en: EN }));
           translate = ctx.locale.bind(NS);
