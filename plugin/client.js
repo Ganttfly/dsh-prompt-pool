@@ -1813,7 +1813,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.43'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.44'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -1980,6 +1980,8 @@ window.__ModuleLoader__.load({
         setActive(0);
       };
 
+      const sessionTag = () => (props.sessionId ? 'session=' + String(props.sessionId).slice(-8) : 'session 为空');
+
       const openFor = (value, caret) => {
         const before = String(value || '').slice(0, caret);
         const match = /(?:^|\s)([/@])([^\s/@]*)$/.exec(before);
@@ -1997,7 +1999,7 @@ window.__ModuleLoader__.load({
           const skills = remote && remote.skills;
           if (!skills || typeof skills.list !== 'function') {
             setItems([]);
-            setNote(translate('mention.noSkillService'));
+            setNote(translate('mention.noSkillService') + ' · ' + sessionTag());
             return;
           }
           const timeout = new Promise((resolve) => {
@@ -2017,7 +2019,7 @@ window.__ModuleLoader__.load({
             .then((result) => {
               if (result && result.timeout === true) {
                 setItems([]);
-                setNote(translate('mention.timeout'));
+                setNote(translate('mention.timeout') + ' · ' + sessionTag());
                 return;
               }
               if (!result || result.ok !== true) {
