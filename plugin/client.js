@@ -88,7 +88,7 @@
       'settings.moveDown': '下移',
       'settings.display.builtin': '内置分组',
       'settings.display.custom': '自定义分组',
-      'settings.display.workspace': '工作区',
+      'settings.display.workspace': '工作区分组',
       'settings.mode.tabs': '展开',
       'settings.mode.nested': '折叠',
       'settings.mode.hidden': '隐藏',
@@ -124,7 +124,7 @@
       'row.bodyPlaceholder': '提示词内容',
       'row.familyBuiltin': '内置',
       'row.familyCustom': '自定义',
-      'row.familyWorkspace': '工作区',
+      'row.familyWorkspace': '工作区分组',
       'row.categoryLabel': '自定义分组',
       'row.classification': '分组',
       'page.new': '提示词',
@@ -222,7 +222,7 @@
       'settings.moveDown': 'Move down',
       'settings.display.builtin': 'Built-in groups',
       'settings.display.custom': 'Custom groups',
-      'settings.display.workspace': 'Workspaces',
+      'settings.display.workspace': 'Workspace groups',
       'settings.mode.tabs': 'Expanded',
       'settings.mode.nested': 'Folded',
       'settings.mode.hidden': 'Hidden',
@@ -258,7 +258,7 @@
       'row.bodyPlaceholder': 'Prompt text',
       'row.familyBuiltin': 'Built-in',
       'row.familyCustom': 'Custom',
-      'row.familyWorkspace': 'Workspaces',
+      'row.familyWorkspace': 'Workspace groups',
       'row.categoryLabel': 'Custom',
       'row.classification': 'Group',
       'page.new': 'Prompt',
@@ -849,7 +849,7 @@
 
     function normalizeSettings(raw) {
       const settings = raw && typeof raw === 'object' ? raw : {};
-      const leaders = ['workspace', 'custom', 'builtin'];
+      const leaders = ['builtin', 'workspace', 'custom'];
       const modes = ['tabs', 'nested', 'hidden'];
       const defaults = { builtin: 'tabs', custom: 'tabs', workspace: 'nested' };
       const stored = settings.display && typeof settings.display === 'object' ? settings.display : {};
@@ -869,7 +869,10 @@
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
         order: (() => {
           const stored = Array.isArray(settings.order) ? settings.order.filter((name) => leaders.indexOf(name) >= 0) : [];
-          const seed = stored.length > 0 ? stored : leaders.indexOf(settings.leadingGroup) >= 0 ? [settings.leadingGroup] : [];
+          // The pre-table default (workspace, custom, builtin) is replaced once by the
+          // new default; any order the user picked in the table is kept.
+          const legacyDefault = stored.length === 3 && stored[0] === 'workspace' && stored[1] === 'custom' && stored[2] === 'builtin';
+          const seed = stored.length === 3 && !legacyDefault ? stored : leaders;
           return [...seed, ...leaders.filter((name) => seed.indexOf(name) < 0)];
         })(),
         display,
@@ -893,7 +896,7 @@
         const labels = {
           builtin: translate('row.familyBuiltin'),
           custom: translate('row.familyCustom'),
-          workspace: translate('tab.workspace'),
+          workspace: translate('row.familyWorkspace'),
         };
         return [{ id: 'nested:' + family, label: labels[family], group: family }];
       }
@@ -1834,7 +1837,7 @@
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.47'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.48'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
