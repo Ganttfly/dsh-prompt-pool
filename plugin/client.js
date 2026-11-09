@@ -1818,7 +1818,7 @@
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.45'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.46'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2025,18 +2025,30 @@
           }, 4000);
           // The catalog is only served inside a retained, open session — the same
           // gate the built-in skills view uses.
-          const request = Promise.resolve(
-            sessions.using(sessionId, { source: 'promptPool', signal: abort.signal }, async (reference) => {
-              const state = reference && reference.binding && reference.binding.session ? reference.binding.session.getSnapshot() : null;
-              if (state && state.openState !== 'open') throw new Error(translate('mention.sessionClosed'));
-              const result = await skills.list({ sessionId }, abort.signal);
-              if (!result || result.ok !== true) {
-                const reason = result && result.error ? result.error.message || result.error.code : '';
-                throw new Error(reason || translate('mention.failed'));
-              }
-              return result.value && Array.isArray(result.value.skills) ? result.value.skills : [];
-            }),
-          );
+          // A synchronous throw here used to escape the handler and leave the menu
+          // parked on "loading", so every failure is converted into a visible note.
+          let request;
+          try {
+            request = Promise.resolve(
+              sessions.using(sessionId, { source: 'promptPool', signal: abort.signal }, async (reference) => {
+                const state = reference && reference.binding && reference.binding.session ? reference.binding.session.getSnapshot() : null;
+                if (state && state.openState !== 'open') throw new Error(translate('mention.sessionClosed'));
+                const result = await skills.list({ sessionId }, abort.signal);
+                if (!result || result.ok !== true) {
+                  const reason = result && result.error ? result.error.message || result.error.code : '';
+                  throw new Error(reason || translate('mention.failed'));
+                }
+                return result.value && Array.isArray(result.value.skills) ? result.value.skills : [];
+              }),
+            );
+          } catch (error) {
+            window.clearTimeout(timer);
+            setItems([]);
+            setNote(
+              translate('mention.failed') + '：' + String((error && error.message) || error).slice(0, 90) + ' · ' + sessionTag(),
+            );
+            return;
+          }
           request
             .then((list) => {
               window.clearTimeout(timer);
@@ -2082,7 +2094,12 @@
           autoFocus: props.autoFocus === true,
           onChange: (event) => {
             props.onChange(event);
-            openFor(event.target.value, event.target.selectionStart || 0);
+            try {
+              openFor(event.target.value, event.target.selectionStart || 0);
+            } catch (error) {
+              setItems([]);
+              setNote(translate('mention.failed') + '：' + String((error && error.message) || error).slice(0, 90));
+            }
           },
           onKeyDown: (event) => {
             if (token && items.length > 0) {
