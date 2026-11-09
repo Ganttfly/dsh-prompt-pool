@@ -53,6 +53,7 @@ window.__ModuleLoader__.load({
       'mention.noSkillService': '读不到技能目录（remote 服务未绑定）',
       'mention.noDirectoryService': '读不到目录服务（uiWorkspace 未绑定）',
       'mention.failed': '读取失败',
+      'mention.timeout': '读取超时：宿主没有响应（可能没有活跃会话）',
       'row.insert': '插入到输入框',
       'row.select': '加入待发送队列',
       'row.copy': '复制内容',
@@ -178,6 +179,7 @@ window.__ModuleLoader__.load({
       'mention.noSkillService': 'Skill catalog unavailable (remote service not bound)',
       'mention.noDirectoryService': 'Directory service unavailable (uiWorkspace not bound)',
       'mention.failed': 'Failed to load',
+      'mention.timeout': 'Timed out: the host did not answer (no live session?)',
       'row.insert': 'Insert into the composer',
       'row.select': 'Add to the send queue',
       'row.copy': 'Copy the text',
@@ -814,7 +816,8 @@ window.__ModuleLoader__.load({
           const path = typeof workspace.path === 'string' ? workspace.path : '';
           const tail = path.split(/[\\/]/).filter(Boolean).pop() || '';
           const name = (typeof workspace.title === 'string' && workspace.title.trim()) || tail || workspaceId;
-          return { id: workspaceTabId(workspaceId), workspaceId, name, path };
+          const sessionIds = Array.isArray(workspace.sessionIds) ? workspace.sessionIds.filter((id) => typeof id === 'string') : [];
+          return { id: workspaceTabId(workspaceId), workspaceId, name, path, sessionIds };
         })
         .filter(Boolean);
     }
@@ -1352,6 +1355,13 @@ window.__ModuleLoader__.load({
       const state = usePoolState();
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
+      // No panel mounted, so no published session: borrow one from this workspace.
+      const workspaceSession = (() => {
+        const list = workspaces && Array.isArray(workspaces.items) ? workspaces.items : [];
+        const current = list.find((entry) => entry.workspaceId === (workspaces && workspaces.currentId));
+        const pool = current && Array.isArray(current.sessionIds) ? current.sessionIds : [];
+        return pool.length > 0 ? pool[pool.length - 1] : '';
+      })();
       const [tab, setTab] = useState('all');
       const [query, setQuery] = useState('');
       const [editing, setEditing] = useState(null);
@@ -1491,7 +1501,7 @@ window.__ModuleLoader__.load({
               placeholder: translate('row.bodyPlaceholder'),
               rows: 5,
               autoFocus: true,
-              sessionId: props && props.sessionId,
+              sessionId: (props && props.sessionId) || sessionHint || workspaceSession || '',
               onChange: (event) => setEditing({ ...editing, body: event.target.value }),
               onKeyDown: (event) => {
                 if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
@@ -1990,9 +2000,16 @@ window.__ModuleLoader__.load({
             setNote(translate('mention.noSkillService'));
             return;
           }
-          skills
-            .list({ sessionId: props.sessionId })
+          const timeout = new Promise((resolve) => {
+            window.setTimeout(() => resolve({ timeout: true }), 4000);
+          });
+          Promise.race([skills.list({ sessionId: props.sessionId }), timeout])
             .then((result) => {
+              if (result && result.timeout === true) {
+                setItems([]);
+                setNote(translate('mention.timeout'));
+                return;
+              }
               if (!result || result.ok !== true) {
                 const reason = result && result.error ? result.error.message || result.error.code : '';
                 setItems([]);
