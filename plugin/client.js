@@ -2003,7 +2003,17 @@ window.__ModuleLoader__.load({
           const timeout = new Promise((resolve) => {
             window.setTimeout(() => resolve({ timeout: true }), 4000);
           });
-          Promise.race([skills.list({ sessionId: props.sessionId }), timeout])
+          // The Remote face can throw synchronously when the call is not ready;
+          // that must not leave the menu parked on "loading".
+          let request;
+          try {
+            request = Promise.resolve(skills.list({ sessionId: props.sessionId }));
+          } catch (error) {
+            setItems([]);
+            setNote(translate('mention.failed') + '：' + String((error && error.message) || error).slice(0, 80));
+            return;
+          }
+          Promise.race([request, timeout])
             .then((result) => {
               if (result && result.timeout === true) {
                 setItems([]);
