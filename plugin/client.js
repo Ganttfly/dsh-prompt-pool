@@ -1,4 +1,4 @@
-window.__ModuleLoader__.load({
+﻿window.__ModuleLoader__.load({
   id: 'dsh-prompt-pool',
   factory(require) {
     'use strict';
@@ -52,6 +52,8 @@ window.__ModuleLoader__.load({
       'mention.noSession': '当前没有会话，无法读取技能目录',
       'mention.noSkillService': '读不到技能目录（remote 服务未绑定）',
       'mention.noDirectoryService': '读不到目录服务（uiWorkspace 未绑定）',
+      'mention.noSessionService': '读不到会话服务（sessions 未绑定）',
+      'mention.sessionClosed': '会话未打开，无法读取技能目录',
       'mention.failed': '读取失败',
       'mention.timeout': '读取超时：宿主没有响应（可能没有活跃会话）',
       'row.insert': '插入到输入框',
@@ -178,6 +180,8 @@ window.__ModuleLoader__.load({
       'mention.noSession': 'No active session, so the skill catalog is unavailable',
       'mention.noSkillService': 'Skill catalog unavailable (remote service not bound)',
       'mention.noDirectoryService': 'Directory service unavailable (uiWorkspace not bound)',
+      'mention.noSessionService': 'Session service unavailable (sessions not bound)',
+      'mention.sessionClosed': 'The session is not open, so the catalog is unavailable',
       'mention.failed': 'Failed to load',
       'mention.timeout': 'Timed out: the host did not answer (no live session?)',
       'row.insert': 'Insert into the composer',
@@ -278,6 +282,7 @@ window.__ModuleLoader__.load({
     let pluginCtx = null;
     let remoteFace = null;
     let workspaceFace = null;
+    let sessionsFace = null;
 
     /** Read one service from a context that has it mounted. */
     function serviceOf(target, key) {
@@ -1813,7 +1818,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.44'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.45'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -1918,6 +1923,7 @@ window.__ModuleLoader__.load({
     function completionService(key) {
       if (key === 'remote') return remoteFace || serviceOf(pluginCtx, 'remote');
       if (key === 'uiWorkspace') return workspaceFace || serviceOf(pluginCtx, 'uiWorkspace');
+      if (key === 'sessions') return sessionsFace || serviceOf(pluginCtx, 'sessions');
       return null;
     }
 
@@ -1997,43 +2003,57 @@ window.__ModuleLoader__.load({
         if (char === '/') {
           const remote = completionService('remote');
           const skills = remote && remote.skills;
+          const sessions = completionService('sessions');
           if (!skills || typeof skills.list !== 'function') {
             setItems([]);
             setNote(translate('mention.noSkillService') + ' · ' + sessionTag());
             return;
           }
-          const timeout = new Promise((resolve) => {
-            window.setTimeout(() => resolve({ timeout: true }), 4000);
-          });
-          // The Remote face can throw synchronously when the call is not ready;
-          // that must not leave the menu parked on "loading".
-          let request;
-          try {
-            request = Promise.resolve(skills.list({ sessionId: props.sessionId }));
-          } catch (error) {
+          if (!sessions || typeof sessions.using !== 'function') {
             setItems([]);
-            setNote(translate('mention.failed') + '：' + String((error && error.message) || error).slice(0, 80));
+            setNote(translate('mention.noSessionService') + ' · ' + sessionTag());
             return;
           }
-          Promise.race([request, timeout])
-            .then((result) => {
-              if (result && result.timeout === true) {
-                setItems([]);
-                setNote(translate('mention.timeout') + ' · ' + sessionTag());
-                return;
-              }
+          const sessionId = props.sessionId;
+          const abort = new AbortController();
+          const timer = window.setTimeout(() => {
+            try {
+              abort.abort();
+            } catch (_error) {
+              /* already aborted */
+            }
+          }, 4000);
+          // The catalog is only served inside a retained, open session — the same
+          // gate the built-in skills view uses.
+          const request = Promise.resolve(
+            sessions.using(sessionId, { source: 'promptPool', signal: abort.signal }, async (reference) => {
+              const state = reference && reference.binding && reference.binding.session ? reference.binding.session.getSnapshot() : null;
+              if (state && state.openState !== 'open') throw new Error(translate('mention.sessionClosed'));
+              const result = await skills.list({ sessionId }, abort.signal);
               if (!result || result.ok !== true) {
                 const reason = result && result.error ? result.error.message || result.error.code : '';
-                setItems([]);
-                setNote(translate('mention.failed', ) + (reason ? '：' + String(reason).slice(0, 80) : ''));
-                return;
+                throw new Error(reason || translate('mention.failed'));
               }
-              const list = result.value && Array.isArray(result.value.skills) ? result.value.skills : [];
-              apply(list.map((entry) => ({ name: String(entry.name || ''), hint: String(entry.description || '') })), query);
+              return result.value && Array.isArray(result.value.skills) ? result.value.skills : [];
+            }),
+          );
+          request
+            .then((list) => {
+              window.clearTimeout(timer);
+              apply(
+                list.map((entry) => ({ name: String(entry.name || ''), hint: String(entry.description || '') })),
+                query,
+              );
             })
             .catch((error) => {
+              window.clearTimeout(timer);
               setItems([]);
-              setNote(translate('mention.failed') + '：' + String((error && error.message) || error).slice(0, 80));
+              const message = String((error && error.message) || error).slice(0, 90);
+              setNote(
+                (abort.signal.aborted ? translate('mention.timeout') : translate('mention.failed') + '：' + message) +
+                  ' · ' +
+                  sessionTag(),
+              );
             });
           return;
         }
