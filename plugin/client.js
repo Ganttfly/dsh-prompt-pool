@@ -82,6 +82,9 @@ window.__ModuleLoader__.load({
       'settings.customNested': '自定义分组折叠成一个 Tab',
       'settings.customNestedHint': '分组多时打开：Tab 行只保留一个「自定义」，组内用横排胶囊切换。',
       'settings.workspaceCard': '工作区如何展示',
+        'settings.workspacesVisible': '显示哪些工作区',
+        'settings.workspacesCurrent': '当前',
+        'settings.workspacesEmpty': '还没有读到工作区列表。打开一次提示词池页面后，这里会列出全部工作区。',
       'settings.leading': '哪一组排在前面',
       'settings.leading.workspace': '工作区',
       'settings.leading.custom': '自定义分组',
@@ -198,6 +201,9 @@ window.__ModuleLoader__.load({
       'settings.customNested': 'Fold custom groups into one tab',
       'settings.customNestedHint': 'Useful once you have many groups: one “Custom” tab keeps them as chips inside.',
       'settings.workspaceCard': 'How workspaces appear',
+        'settings.workspacesVisible': 'Workspaces to show',
+        'settings.workspacesCurrent': 'current',
+        'settings.workspacesEmpty': 'No workspace roster yet. Open the prompt pool page once and every workspace will be listed here.',
       'settings.leading': 'Which group comes first',
       'settings.leading.workspace': 'Workspaces',
       'settings.leading.custom': 'Custom groups',
@@ -442,11 +448,13 @@ window.__ModuleLoader__.load({
      */
     function workspaceRail(workspaces, settings, currentWorkspaceId) {
       const flags = normalizeSettings(settings);
-      const list = workspaces || [];
-      const current = currentWorkspaceId ? list.find((workspace) => workspace.workspaceId === currentWorkspaceId) : undefined;
-      // "List every workspace" off: only the current one remains, so the tab survives.
-      if (!flags.workspaceTabs) return current ? [current] : list.slice(0, 1);
-      // The other toggle only decides whether the current workspace leads the list.
+      const all = workspaces || [];
+      const hidden = new Set(flags.hiddenWorkspaces);
+      const current = currentWorkspaceId ? all.find((workspace) => workspace.workspaceId === currentWorkspaceId) : undefined;
+      // The current workspace is never hidden: its items would be unreachable otherwise.
+      const visible = all.filter((workspace) => workspace.workspaceId === currentWorkspaceId || !hidden.has(workspace.workspaceId));
+      // Everything hidden still shows the current workspace, so the tab never disappears.
+      const list = visible.length > 0 ? visible : current ? [current] : all.slice(0, 1);
       if (!flags.currentWorkspaceTab || !current) return list.slice();
       return [current, ...list.filter((workspace) => workspace.id !== current.id)];
     }
@@ -774,7 +782,7 @@ window.__ModuleLoader__.load({
           const path = typeof workspace.path === 'string' ? workspace.path : '';
           const tail = path.split(/[\\/]/).filter(Boolean).pop() || '';
           const name = (typeof workspace.title === 'string' && workspace.title.trim()) || tail || workspaceId;
-          return { id: workspaceTabId(workspaceId), workspaceId, name };
+          return { id: workspaceTabId(workspaceId), workspaceId, name, path };
         })
         .filter(Boolean);
     }
@@ -803,7 +811,9 @@ window.__ModuleLoader__.load({
         if (family === 'builtin' && display[family] === 'hidden') display[family] = 'tabs';
       }
       return {
-        workspaceTabs: settings.workspaceTabs !== false,
+        hiddenWorkspaces: Array.isArray(settings.hiddenWorkspaces)
+          ? settings.hiddenWorkspaces.filter((value) => typeof value === 'string' && value !== '')
+          : [],
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
         leadingGroup: leaders.indexOf(settings.leadingGroup) >= 0 ? settings.leadingGroup : 'workspace',
         display,
@@ -827,7 +837,7 @@ window.__ModuleLoader__.load({
         const labels = {
           builtin: translate('row.familyBuiltin'),
           custom: translate('row.familyCustom'),
-          workspace: normalizeSettings(settings).workspaceTabs ? translate('tab.workspace') : translate('tab.currentWorkspace'),
+          workspace: translate('tab.workspace'),
         };
         return [{ id: 'nested:' + family, label: labels[family], group: family }];
       }
@@ -1728,6 +1738,16 @@ window.__ModuleLoader__.load({
       useLocaleTick();
       const state = usePoolState();
       const settings = normalizeSettings(state.settings);
+      const wsDir = useWorkspaceDir();
+      const wsItems = wsDir && Array.isArray(wsDir.items) ? wsDir.items : [];
+      const wsCurrentId = wsDir && typeof wsDir.currentId === 'string' ? wsDir.currentId : '';
+      const hiddenWorkspaces = settings.hiddenWorkspaces;
+      const toggleWorkspace = (workspaceId) => {
+        const next = hiddenWorkspaces.indexOf(workspaceId) >= 0
+          ? hiddenWorkspaces.filter((value) => value !== workspaceId)
+          : [...hiddenWorkspaces, workspaceId];
+        poolActions.setSetting('hiddenWorkspaces', next);
+      };
       const [section, setSection] = useState('order');
       const check = (key, label, hint) =>
         h(
@@ -1779,8 +1799,28 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-set-group pp-set-card', style: { display: section === 'workspace' ? '' : 'none' } },
           h('div', { className: 'pp-set-label' }, translate('settings.workspaceCard')),
-          check('workspaceTabs', 'settings.workspaceTabs', 'settings.workspaceTabsHint'),
           check('currentWorkspaceTab', 'settings.currentWorkspaceTab', 'settings.currentWorkspaceTabHint'),
+          h('div', { className: 'pp-set-divider' }),
+          h('div', { className: 'pp-set-label' }, translate('settings.workspacesVisible')),
+          wsItems.length === 0
+            ? h('div', { className: 'pp-hint' }, translate('settings.workspacesEmpty'))
+            : wsItems.map((workspace) =>
+                h(
+                  'label',
+                  { key: workspace.workspaceId, className: 'pp-set-ws' },
+                  h('input', {
+                    type: 'checkbox',
+                    disabled: workspace.workspaceId === wsCurrentId,
+                    checked: workspace.workspaceId === wsCurrentId || hiddenWorkspaces.indexOf(workspace.workspaceId) < 0,
+                    onChange: () => toggleWorkspace(workspace.workspaceId),
+                  }),
+                  h('span', { className: 'pp-set-ws-name' },
+                    workspace.name,
+                    workspace.workspaceId === wsCurrentId ? h('span', { className: 'pp-set-ws-tag' }, translate('settings.workspacesCurrent')) : null,
+                  ),
+                  workspace.path ? h('span', { className: 'pp-set-ws-path' }, workspace.path) : null,
+                ),
+              ),
         ),
         h(
           'div',
@@ -2690,6 +2730,11 @@ window.__ModuleLoader__.load({
       '.pp-set-hint{margin-top:2px;padding-left:22px}' +
       '.pp-set-divider{height:1px;background:var(--pp-line-2);margin:14px 0 12px}' +
         '.pp-set-line{display:flex;align-items:center;gap:12px;padding:4px 0}' +
+        '.pp-set-ws{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;min-width:0}' +
+        '.pp-set-ws input{margin:0;accent-color:var(--pp-accent);cursor:pointer}' +
+        '.pp-set-ws-name{font-size:12px;color:var(--pp-ink);white-space:nowrap}' +
+        '.pp-set-ws-tag{margin-left:6px;padding:0 5px;border-radius:5px;background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px}' +
+        '.pp-set-ws-path{margin-left:auto;color:var(--pp-ink-2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px}' +
         '.pp-set-name{min-width:78px;font-size:12px;color:var(--pp-ink)}' +
         '.pp-set-modes{display:flex;flex-wrap:wrap;gap:16px}' +
         '.pp-set-inline{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--pp-ink);cursor:pointer}' +
