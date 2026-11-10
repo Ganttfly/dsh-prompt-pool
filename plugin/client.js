@@ -2675,7 +2675,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.86'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.87'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -3174,7 +3174,6 @@ window.__ModuleLoader__.load({
       const [wsSelected, setWsSelected] = useState('');
       const [customPick, setCustomPick] = useState('');
       const [builtinPick, setBuiltinPick] = useState('');
-      const [confirming, setConfirming] = useState(false);
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
       const [pendingRemove, setPendingRemove] = useState(null);
@@ -3250,8 +3249,6 @@ window.__ModuleLoader__.load({
           if (event.key !== 'Escape') return;
           if (editing) {
             setEditing(null);
-          } else if (confirming) {
-            setConfirming(false);
           } else {
             ui.set({ open: false });
           }
@@ -3260,7 +3257,7 @@ window.__ModuleLoader__.load({
         };
         window.addEventListener('keydown', onKey, true);
         return () => window.removeEventListener('keydown', onKey, true);
-      }, [view.open, editing, confirming, preview]);
+      }, [view.open, editing, preview]);
 
       const rail = workspaceRail(workspaces.items, state.settings, currentWorkspaceId);
       const wsActive = rail.some((entry) => entry.id === wsSelected) ? wsSelected : rail.length > 0 ? rail[0].id : '';
@@ -3456,12 +3453,10 @@ window.__ModuleLoader__.load({
         const entries = state.tray.slice();
         if (entries.length === 0) return;
         if (draftRef.current.trim() !== '') {
-          setConfirming(false);
           flash({ kind: 'error', text: translate('status.draftBusy') });
           return;
         }
         busyRef.current = true;
-        setConfirming(false);
         setBusy(true);
         setStatus({ kind: 'info', text: translate('status.releasing', { n: entries.length }) });
         let sent = 0;
@@ -3876,6 +3871,9 @@ window.__ModuleLoader__.load({
                 queue.length > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queue.length })) : null,
                 h('span', { className: 'pp-grow' }),
                 tray.length > 0 ? h('button', { type: 'button', className: 'pp-link', onClick: () => setConfirmClear(true) }, translate('tray.clear')) : null,
+                tray.length > 0
+                  ? h('button', { type: 'button', className: 'pp-primary', disabled: busy, onClick: release }, translate('tray.release'))
+                  : null,
               ),
               h(
                 'div',
@@ -3943,36 +3941,6 @@ window.__ModuleLoader__.load({
                   );
                 }),
               ),
-              tray.length === 0
-                ? null
-                : confirming
-                ? h(
-                    'div',
-                    null,
-                    h('div', { className: 'pp-hint', style: { marginBottom: '6px' } }, translate('confirm.title', { n: tray.length })),
-                    h(
-                      'div',
-                      { className: 'pp-edit-actions' },
-                      h('button', { type: 'button', className: 'pp-mini', onClick: () => setConfirming(false) }, translate('confirm.cancel')),
-                      h('button', { type: 'button', className: 'pp-primary', onClick: release }, translate('confirm.ok')),
-                    ),
-                  )
-                : h(
-                    'div',
-                    null,
-                    h('div', { className: 'pp-hint', style: { marginBottom: '6px' } }, translate('tray.hint')),
-                    h(
-                      'button',
-                      {
-                        type: 'button',
-                        className: 'pp-primary',
-                        style: { width: '100%' },
-                        disabled: busy,
-                        onClick: () => setConfirming(true),
-                      },
-                      translate('tray.release'),
-                    ),
-                  ),
             )
           : null,
         ),
