@@ -138,6 +138,9 @@ window.__ModuleLoader__.load({
       'tray.duplicate': '复制一份，追加到末尾',
       'tray.hint': '释放后会按这个顺序排队，当前这轮结束后自动接着执行。',
       'tray.queue': '队列中 {n}',
+      'tray.expand': '展开',
+      'tray.collapseTitle': '收起待发送队列',
+      'tray.expandTitle': '展开待发送队列',
       'confirm.title': '将按此顺序排队 {n} 条：',
       'confirm.ok': '确认释放',
       'confirm.cancel': '再想想',
@@ -272,6 +275,9 @@ window.__ModuleLoader__.load({
       'tray.duplicate': 'Duplicate and append to the end',
       'tray.hint': 'Released items queue up in this order and run as soon as the current turn ends.',
       'tray.queue': '{n} in queue',
+      'tray.expand': 'Expand',
+      'tray.collapseTitle': 'Collapse the send queue',
+      'tray.expandTitle': 'Expand the send queue',
       'confirm.title': 'Queue {n} in this order:',
       'confirm.ok': 'Queue them',
       'confirm.cancel': 'Not yet',
@@ -868,6 +874,7 @@ window.__ModuleLoader__.load({
           ? settings.hiddenWorkspaces.filter((value) => typeof value === 'string' && value !== '')
           : [],
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
+        queueCollapsed: settings.queueCollapsed === true,
         order: (() => {
           const stored = Array.isArray(settings.order) ? settings.order.filter((name) => leaders.indexOf(name) >= 0) : [];
           // The pre-table default (workspace, custom, builtin) is replaced once by the
@@ -1104,6 +1111,10 @@ window.__ModuleLoader__.load({
           return h('svg', base, h('path', { d: 'M1.8 3.4v5.2M2 6h5.2M5.4 3.9L7.6 6 5.4 8.1' }), h('path', { d: 'M9.2 2.2h.8v7.6h-.8' }));
         case 'close':
           return h('svg', base, h('path', { d: 'M3 3l6 6M9 3l-6 6' }));
+        case 'chevronDown':
+          return h('svg', base, h('path', { d: 'M3 4.5L6 7.5l3-3' }));
+        case 'chevronUp':
+          return h('svg', base, h('path', { d: 'M3 7.5L6 4.5l3 3' }));
         case 'gear':
           return h(
             'svg',
@@ -1383,6 +1394,7 @@ window.__ModuleLoader__.load({
     function PromptPoolPage(props) {
       useLocaleTick();
       const state = usePoolState();
+      const queueCollapsed = state.settings && state.settings.queueCollapsed === true;
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
       // No panel mounted, so no published session: borrow one from this workspace.
@@ -1723,7 +1735,24 @@ window.__ModuleLoader__.load({
         ),
         settingsOpen
           ? null
-          : h(
+          : queueCollapsed
+            ? h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'pp-queue-strip',
+                  title: translate('tray.expandTitle'),
+                  'aria-label': translate('tray.expandTitle'),
+                  'aria-expanded': 'false',
+                  onClick: () => poolActions.setSetting('queueCollapsed', false),
+                },
+                h('span', { className: 'pp-queue-strip-title' }, translate('tray.title')),
+                h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
+                h('span', { className: 'pp-grow' }),
+                h('span', { className: 'pp-queue-strip-action' }, translate('tray.expand')),
+                h('span', { className: 'pp-queue-strip-icon' }, icon('chevronUp')),
+              )
+            : h(
               'div',
               { className: 'pp-page-foot' },
               h(
@@ -1732,6 +1761,11 @@ window.__ModuleLoader__.load({
                 h('span', { className: 'pp-foot-title' }, translate('tray.title')),
                 h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
                 h('span', { className: 'pp-grow' }),
+                h(IconButton, {
+                  name: 'chevronDown',
+                  label: translate('tray.collapseTitle'),
+                  onClick: () => poolActions.setSetting('queueCollapsed', true),
+                }),
                 state.tray.length > 0
                   ? h('button', { type: 'button', className: 'pp-link', onClick: () => poolActions.clearTray() }, translate('tray.clear'))
                   : null,
@@ -1849,7 +1883,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.56'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.57'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2934,6 +2968,13 @@ window.__ModuleLoader__.load({
       '.pp-page-foot{display:flex;flex-direction:column;gap:8px;margin:8px 10px 10px;padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08);max-height:52%;overflow-y:auto}' +
       '.pp-page-foot .pp-tray{max-height:none;min-height:calc(10 * 1.55 * 12px)}' +
       '.pp-tray-empty{justify-content:center;align-items:center;padding:0 12px;text-align:center}' +
+      '.pp-queue-strip{display:flex;align-items:center;gap:8px;height:34px;flex:none;margin:0 10px 10px;padding:0 12px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-queue-head-bg);font:inherit;font-size:12px;color:var(--pp-ink-2);cursor:pointer;text-align:left}' +
+      '.pp-queue-strip:hover{background:color-mix(in srgb,var(--pp-accent) 18%,var(--dsw-alias-bg-base,var(--pp-surface)))}' +
+      '.pp-queue-strip:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
+      '.pp-queue-strip-title{font-weight:600;color:var(--pp-ink)}' +
+      '.pp-queue-strip-action{font-size:11px;color:var(--pp-accent)}' +
+      '.pp-queue-strip-icon{display:inline-flex;align-items:center;color:var(--pp-ink-2)}' +
+      '.pp-queue-strip svg{width:13px;height:13px;stroke-width:1.2}' +
       '.pp-page-item{padding:10px 12px;border-radius:10px;border:1px solid transparent}' +
       '.pp-page-item:hover{background:var(--pp-surface);border-color:var(--pp-line)}' +
       '.pp-page-item .pp-actions{opacity:.35}' +
