@@ -2675,7 +2675,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.85'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.86'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -4025,7 +4025,10 @@ window.__ModuleLoader__.load({
       '.pp-grip-bar{width:44px;height:4px;border-radius:2px;background:var(--pp-line-2);transition:background .12s ease}' +
       '.pp-panel-grip:hover .pp-grip-bar{background:var(--pp-accent)}' +
       '.pp-panel .pp-page-foot{max-height:45%;min-height:0}' +
-      '.pp-panel .pp-page-foot .pp-tray{max-height:none;min-height:0;flex:1}' +
+      // flex:1 would collapse an auto-height card to zero and clip the empty hint;
+      // the tray sizes to its content and only shrinks (then scrolls) at the cap.
+      '.pp-panel .pp-page-foot .pp-tray{max-height:none;min-height:0;flex:0 1 auto}' +
+      '.pp-panel .pp-foot-head{flex:none}' +
       '.pp-head{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}' +
       '.pp-head-title{font-weight:600;font-size:13px}' +
       '.pp-head-count{color:var(--pp-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +
