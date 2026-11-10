@@ -2553,7 +2553,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.77'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.78'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -3651,10 +3651,10 @@ window.__ModuleLoader__.load({
                 : null,
             )
           : null,
-        tray.length > 0 && !settingsOpen
+        !settingsOpen
           ? h(
               'div',
-              { className: 'pp-foot' },
+              { className: 'pp-page-foot' },
               h(
                 'div',
                 { className: 'pp-foot-head' },
@@ -3662,12 +3662,14 @@ window.__ModuleLoader__.load({
             h('span', { className: 'pp-hint' }, translate('tray.selected', { n: tray.length })),
                 queue.length > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queue.length })) : null,
                 h('span', { className: 'pp-grow' }),
-                h('button', { type: 'button', className: 'pp-link', onClick: () => setConfirmClear(true) }, translate('tray.clear')),
+                tray.length > 0 ? h('button', { type: 'button', className: 'pp-link', onClick: () => setConfirmClear(true) }, translate('tray.clear')) : null,
               ),
               h(
                 'div',
-                { className: 'pp-tray' },
-                tray.map((entry, index) => {
+                { className: tray.length === 0 ? 'pp-tray pp-tray-empty' : 'pp-tray' },
+                tray.length === 0
+                  ? h('div', { className: 'pp-hint' }, translate('tray.empty'))
+                  : tray.map((entry, index) => {
                   if (trayEditing && trayEditing.key === entry.key) {
                     return h(
                       'div',
@@ -3728,7 +3730,9 @@ window.__ModuleLoader__.load({
                   );
                 }),
               ),
-              confirming
+              tray.length === 0
+                ? null
+                : confirming
                 ? h(
                     'div',
                     null,
@@ -3795,7 +3799,7 @@ window.__ModuleLoader__.load({
       '.pp-btn:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-btn[data-open="true"]{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-badge{min-width:15px;height:15px;padding:0 4px;border-radius:8px;border:1px solid var(--pp-line-2);color:var(--pp-ink-2);font-size:10px;line-height:13px;text-align:center;font-variant-numeric:tabular-nums}' +
-      '.pp-panel{position:absolute;left:6px;right:6px;bottom:0;margin:0 auto;max-width:920px;z-index:40;display:flex;flex-direction:column;max-height:min(70vh,720px);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--pp-surface-2);box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
+      '.pp-panel{position:absolute;left:6px;right:6px;bottom:0;margin:0 auto;max-width:920px;z-index:40;display:flex;flex-direction:column;height:min(70vh,720px);max-height:min(70vh,720px);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
       '.pp-head{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}' +
       '.pp-head-title{font-weight:600;font-size:13px}' +
       '.pp-head-count{color:var(--pp-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +

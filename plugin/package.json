@@ -1,6 +1,6 @@
 {
   "name": "dsh-prompt-pool",
-  "version": "0.1.77",
+  "version": "0.1.78",
   "private": true,
   "description": "A prompt staging pool beside the DSH composer: capture drafts, arrange a playlist, release it into the queue.",
   "type": "module",
