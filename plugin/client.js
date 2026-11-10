@@ -139,6 +139,7 @@ window.__ModuleLoader__.load({
       'tray.hint': '释放后会按这个顺序排队，当前这轮结束后自动接着执行。',
       'tray.queue': '队列中 {n}',
       'tray.expand': '展开',
+      'tray.collapse': '收起',
       'tray.collapseTitle': '收起待发送队列',
       'tray.expandTitle': '展开待发送队列',
       'confirm.title': '将按此顺序排队 {n} 条：',
@@ -276,6 +277,7 @@ window.__ModuleLoader__.load({
       'tray.hint': 'Released items queue up in this order and run as soon as the current turn ends.',
       'tray.queue': '{n} in queue',
       'tray.expand': 'Expand',
+      'tray.collapse': 'Collapse',
       'tray.collapseTitle': 'Collapse the send queue',
       'tray.expandTitle': 'Expand the send queue',
       'confirm.title': 'Queue {n} in this order:',
@@ -1746,11 +1748,10 @@ window.__ModuleLoader__.load({
                   'aria-expanded': 'false',
                   onClick: () => poolActions.setSetting('queueCollapsed', false),
                 },
+                h('span', { className: 'pp-queue-strip-action' }, icon('chevronUp'), translate('tray.expand')),
                 h('span', { className: 'pp-queue-strip-title' }, translate('tray.title')),
                 h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
                 h('span', { className: 'pp-grow' }),
-                h('span', { className: 'pp-queue-strip-action' }, translate('tray.expand')),
-                h('span', { className: 'pp-queue-strip-icon' }, icon('chevronUp')),
               )
             : h(
               'div',
@@ -1758,14 +1759,22 @@ window.__ModuleLoader__.load({
               h(
                 'div',
                 { className: 'pp-foot-head' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'pp-queue-toggle',
+                    title: translate('tray.collapseTitle'),
+                    'aria-label': translate('tray.collapseTitle'),
+                    'aria-expanded': 'true',
+                    onClick: () => poolActions.setSetting('queueCollapsed', true),
+                  },
+                  h('span', { className: 'pp-queue-toggle-icon' }, icon('chevronDown')),
+                  translate('tray.collapse'),
+                ),
                 h('span', { className: 'pp-foot-title' }, translate('tray.title')),
                 h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
                 h('span', { className: 'pp-grow' }),
-                h(IconButton, {
-                  name: 'chevronDown',
-                  label: translate('tray.collapseTitle'),
-                  onClick: () => poolActions.setSetting('queueCollapsed', true),
-                }),
                 state.tray.length > 0
                   ? h('button', { type: 'button', className: 'pp-link', onClick: () => poolActions.clearTray() }, translate('tray.clear'))
                   : null,
@@ -1883,7 +1892,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.57'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.58'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2968,12 +2977,16 @@ window.__ModuleLoader__.load({
       '.pp-page-foot{display:flex;flex-direction:column;gap:8px;margin:8px 10px 10px;padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08);max-height:52%;overflow-y:auto}' +
       '.pp-page-foot .pp-tray{max-height:none;min-height:calc(10 * 1.55 * 12px)}' +
       '.pp-tray-empty{justify-content:center;align-items:center;padding:0 12px;text-align:center}' +
+      '.pp-queue-toggle{display:inline-flex;align-items:center;gap:3px;height:22px;margin-left:-6px;padding:0 6px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;cursor:pointer}' +
+      '.pp-queue-toggle:hover{background:color-mix(in srgb,var(--pp-accent) 10%,transparent);color:var(--pp-accent)}' +
+      '.pp-queue-toggle:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
+      '.pp-queue-toggle-icon{display:inline-flex;align-items:center}' +
+      '.pp-queue-toggle svg{width:13px;height:13px;stroke-width:1.2}' +
       '.pp-queue-strip{display:flex;align-items:center;gap:8px;height:34px;flex:none;margin:0 10px 10px;padding:0 12px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-queue-head-bg);font:inherit;font-size:12px;color:var(--pp-ink-2);cursor:pointer;text-align:left}' +
       '.pp-queue-strip:hover{background:color-mix(in srgb,var(--pp-accent) 18%,var(--dsw-alias-bg-base,var(--pp-surface)))}' +
       '.pp-queue-strip:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
       '.pp-queue-strip-title{font-weight:600;color:var(--pp-ink)}' +
-      '.pp-queue-strip-action{font-size:11px;color:var(--pp-accent)}' +
-      '.pp-queue-strip-icon{display:inline-flex;align-items:center;color:var(--pp-ink-2)}' +
+      '.pp-queue-strip-action{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--pp-accent)}' +
       '.pp-queue-strip svg{width:13px;height:13px;stroke-width:1.2}' +
       '.pp-page-item{padding:10px 12px;border-radius:10px;border:1px solid transparent}' +
       '.pp-page-item:hover{background:var(--pp-surface);border-color:var(--pp-line)}' +
