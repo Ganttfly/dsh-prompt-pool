@@ -1916,8 +1916,15 @@ window.__ModuleLoader__.load({
           flash({ kind: 'error', text: translate('status.emptyBody') });
           return;
         }
-        poolActions.patchTray(trayEditing.key, { body: trayEditing.body });
+        poolActions.patchTray(trayEditing.key, { body: trayEditing.body, images: trayEditing.images || [] });
         setTrayEditing(null);
+      };
+
+      const pasteTrayImages = (files) => {
+        const key = trayEditing && trayEditing.key;
+        appendImageAssets(files, trayEditing && trayEditing.images ? trayEditing.images : [], (text) => flash({ kind: 'error', text })).then((images) => {
+          setTrayEditing((current) => (current && current.key === key ? { ...current, images } : current));
+        });
       };
 
       const sendToComposer = async (command, okText) => {
@@ -2269,13 +2276,15 @@ window.__ModuleLoader__.load({
                         return h(
                           'div',
                           { key: entry.key, className: 'pp-edit', style: { margin: '4px 0' } },
-                          h('textarea', {
-                            className: 'pp-textarea',
+                          h(MentionField, {
                             value: trayEditing.body,
                             placeholder: translate('row.bodyPlaceholder'),
                             rows: 4,
                             autoFocus: true,
-                            onChange: (event) => setTrayEditing({ ...trayEditing, body: event.target.value }),
+                            menuUp: true,
+                            sessionId: (props && props.sessionId) || sessionHint || workspaceSession || '',
+                            onChange: (event) => setTrayEditing((current) => (current ? { ...current, body: event.target.value } : current)),
+                            onPasteImages: pasteTrayImages,
                             onKeyDown: (event) => {
                               if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
                                 event.preventDefault();
@@ -2283,7 +2292,12 @@ window.__ModuleLoader__.load({
                               }
                             },
                           }),
-                          h(ImageStrip, { images: trayEditing.images, compact: true, onOpen: openImage }),
+                          h(ImagePicker, {
+                            images: trayEditing.images || [],
+                            onChange: (images) => setTrayEditing((current) => (current ? { ...current, images } : current)),
+                            onError: (text) => flash({ kind: 'error', text }),
+                            onOpen: openImage,
+                          }),
                           h(
                             'div',
                             { className: 'pp-edit-actions' },
@@ -2362,7 +2376,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.62'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.63'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2716,7 +2730,10 @@ window.__ModuleLoader__.load({
         token && (items.length > 0 || note)
           ? h(
               'div',
-              { className: 'pp-mention-menu' },
+              {
+                className: 'pp-mention-menu',
+                style: props.menuUp ? { top: 'auto', bottom: '100%', marginTop: 0, marginBottom: '2px' } : undefined,
+              },
               items.length === 0
                 ? h('div', { className: 'pp-mention-note' }, note)
                 : items.map((entry, index) =>
@@ -2924,8 +2941,15 @@ window.__ModuleLoader__.load({
           flash({ kind: 'error', text: translate('status.emptyBody') });
           return;
         }
-        poolActions.patchTray(trayEditing.key, { body: trayEditing.body });
+        poolActions.patchTray(trayEditing.key, { body: trayEditing.body, images: trayEditing.images || [] });
         setTrayEditing(null);
+      };
+
+      const pasteTrayImages = (files) => {
+        const key = trayEditing && trayEditing.key;
+        appendImageAssets(files, trayEditing && trayEditing.images ? trayEditing.images : [], (text) => flash({ kind: 'error', text })).then((images) => {
+          setTrayEditing((current) => (current && current.key === key ? { ...current, images } : current));
+        });
       };
 
       const captureDraft = () => {
@@ -3334,13 +3358,15 @@ window.__ModuleLoader__.load({
                     return h(
                       'div',
                       { key: entry.key, className: 'pp-edit', style: { margin: '4px 0' } },
-                      h('textarea', {
-                        className: 'pp-textarea',
+                      h(MentionField, {
                         value: trayEditing.body,
                         placeholder: translate('row.bodyPlaceholder'),
                         rows: 4,
                         autoFocus: true,
-                        onChange: (event) => setTrayEditing({ ...trayEditing, body: event.target.value }),
+                        menuUp: true,
+                        sessionId: props.sessionId,
+                        onChange: (event) => setTrayEditing((current) => (current ? { ...current, body: event.target.value } : current)),
+                        onPasteImages: pasteTrayImages,
                         onKeyDown: (event) => {
                           if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
                             event.preventDefault();
@@ -3348,7 +3374,12 @@ window.__ModuleLoader__.load({
                           }
                         },
                       }),
-                      h(ImageStrip, { images: trayEditing.images, compact: true, onOpen: openImage }),
+                      h(ImagePicker, {
+                        images: trayEditing.images || [],
+                        onChange: (images) => setTrayEditing((current) => (current ? { ...current, images } : current)),
+                        onError: (text) => flash({ kind: 'error', text }),
+                        onOpen: openImage,
+                      }),
                       h(
                         'div',
                         { className: 'pp-edit-actions' },
