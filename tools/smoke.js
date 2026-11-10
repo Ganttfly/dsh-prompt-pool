@@ -65,6 +65,13 @@ global.window = {
       const retitled = sidebar.updates.some((call) => call.id === 'prompt-pool:pool' && call.patch && call.patch.title === 'page.title');
       if (!retitled) throw new Error('the sidebar tab was not retitled on a language switch');
       console.log('[ok] sidebar tab retitled on locale change');
+
+      // The settings about card repeats the version, so it must track the manifest.
+      const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'plugin', 'package.json'), 'utf8'));
+      if (!source.includes("const PLUGIN_VERSION = '" + pkg.version + "'")) {
+        throw new Error(`the about card version does not match package.json (${pkg.version})`);
+      }
+      console.log('[ok] about card version matches package.json');
       return mod;
     },
   },

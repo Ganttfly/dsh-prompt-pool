@@ -186,3 +186,25 @@ const triggerBadge = triggerNodes.some((node) => node.type === 'span' && hasClas
 const queued = trigger && trigger.props['data-queued'] === 'true';
 console.log(`[check] trigger label=${triggerLabel} queued=${queued} badge=${triggerBadge}`);
 if (!trigger || !triggerLabel || !queued || !triggerBadge) process.exitCode = 1;
+
+// The settings page names the plugin and its author.
+const settingsEntry = registrations.find((entry) => entry.slot === 'settings.section');
+const settingsTree = settingsEntry.component({});
+const settingsNodes = [];
+walkTree(settingsTree, (node) => settingsNodes.push(node));
+const aboutName = settingsNodes.some((node) => node.props && String(node.props.className || '').indexOf('pp-about-name') >= 0);
+const settingsText = [];
+const collectText = (node) => {
+  if (!node || typeof node !== 'object') return;
+  if (Array.isArray(node)) { node.forEach(collectText); return; }
+  if (Array.isArray(node.children)) {
+    node.children.forEach((child) => {
+      if (typeof child === 'string') settingsText.push(child);
+      else collectText(child);
+    });
+  }
+};
+collectText(settingsTree);
+const aboutAuthor = settingsText.indexOf('RobinShen') >= 0;
+console.log(`[check] settings about name=${aboutName} author=${aboutAuthor}`);
+if (!aboutName || !aboutAuthor) process.exitCode = 1;
