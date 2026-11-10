@@ -2553,7 +2553,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.76'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.77'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -4015,12 +4015,11 @@ window.__ModuleLoader__.load({
           ctx.effect(() => ctx.locale.register(NS, { zh: ZH, en: EN }));
           translate = ctx.locale.bind(NS);
         }
-        ctx.slots.inject('conversation.input.right', () =>
-          ctx.slots.register(
-            { name: 'conversation.input.right', id: 'prompt-pool', order: 10, label: () => translate('button.label') },
-            PromptPoolButton,
-          ),
-        );
+        // The composer trigger is off for now: the panel it opened still reads
+        // worse than the sidebar page, so that page is the supported entry. The
+        // overlay below stays mounted even while closed, which is what keeps the
+        // page's insert/release commands working through the bridge; re-adding
+        // this registration brings the trigger back.
         ctx.slots.inject('conversation.input.overlay', () =>
           ctx.slots.register(
             { name: 'conversation.input.overlay', id: 'prompt-pool-panel', order: 12, label: () => translate('panel.title') },
