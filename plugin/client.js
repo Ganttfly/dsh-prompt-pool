@@ -2281,7 +2281,6 @@ window.__ModuleLoader__.load({
                             placeholder: translate('row.bodyPlaceholder'),
                             rows: 4,
                             autoFocus: true,
-                            menuUp: true,
                             sessionId: (props && props.sessionId) || sessionHint || workspaceSession || '',
                             onChange: (event) => setTrayEditing((current) => (current ? { ...current, body: event.target.value } : current)),
                             onPasteImages: pasteTrayImages,
@@ -2376,7 +2375,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.63'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.64'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2535,6 +2534,7 @@ window.__ModuleLoader__.load({
       const [active, setActive] = useState(0);
       const [token, setToken] = useState(null);
       const [note, setNote] = useState('');
+      const [menuFrame, setMenuFrame] = useState(null);
       const field = useRef(null);
 
       const close = () => {
@@ -2543,6 +2543,39 @@ window.__ModuleLoader__.load({
         setNote('');
         setActive(0);
       };
+
+      /** The menu is fixed-positioned so a scrolling queue tray cannot clip it. */
+      const placeMenu = () => {
+        const node = field.current;
+        if (!node || typeof node.getBoundingClientRect !== 'function' || typeof window === 'undefined') {
+          setMenuFrame(null);
+          return;
+        }
+        const rect = node.getBoundingClientRect();
+        const gap = 4;
+        const roomBelow = window.innerHeight - rect.bottom - gap;
+        const roomAbove = rect.top - gap;
+        const openUp = roomBelow < 140 && roomAbove > roomBelow;
+        const width = Math.max(160, Math.min(rect.width || 220, window.innerWidth - 16));
+        const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+        const maxHeight = Math.max(90, Math.min(220, (openUp ? roomAbove : roomBelow) - 8));
+        if (openUp) {
+          setMenuFrame({ left, width, maxHeight, bottom: window.innerHeight - rect.top + gap, top: undefined });
+        } else {
+          setMenuFrame({ left, width, maxHeight, top: rect.bottom + gap, bottom: undefined });
+        }
+      };
+
+      useEffect(() => {
+        if (!token) return undefined;
+        const update = () => placeMenu();
+        window.addEventListener('resize', update);
+        document.addEventListener('scroll', update, true);
+        return () => {
+          window.removeEventListener('resize', update);
+          document.removeEventListener('scroll', update, true);
+        };
+      }, [token]);
 
       const choose = (entry) => {
         if (!token) return;
@@ -2581,6 +2614,7 @@ window.__ModuleLoader__.load({
         const query = match[2].toLowerCase();
         const lead = match[0].length - match[0].trimStart().length;
         setToken({ char, start: before.length - match[0].length + lead, end: caret, query });
+        placeMenu();
         setNote(translate('mention.loading'));
         if (char === '/') {
           const skills = completionService('skills');
@@ -2732,7 +2766,20 @@ window.__ModuleLoader__.load({
               'div',
               {
                 className: 'pp-mention-menu',
-                style: props.menuUp ? { top: 'auto', bottom: '100%', marginTop: 0, marginBottom: '2px' } : undefined,
+                style: menuFrame
+                  ? {
+                      position: 'fixed',
+                      left: menuFrame.left,
+                      width: menuFrame.width,
+                      maxHeight: menuFrame.maxHeight,
+                      right: 'auto',
+                      top: typeof menuFrame.top === 'number' ? menuFrame.top : 'auto',
+                      bottom: typeof menuFrame.bottom === 'number' ? menuFrame.bottom : 'auto',
+                      marginTop: 0,
+                      marginBottom: 0,
+                      zIndex: 2147482000,
+                    }
+                  : { position: 'fixed', left: -9999, top: -9999 },
               },
               items.length === 0
                 ? h('div', { className: 'pp-mention-note' }, note)
@@ -3363,7 +3410,6 @@ window.__ModuleLoader__.load({
                         placeholder: translate('row.bodyPlaceholder'),
                         rows: 4,
                         autoFocus: true,
-                        menuUp: true,
                         sessionId: props.sessionId,
                         onChange: (event) => setTrayEditing((current) => (current ? { ...current, body: event.target.value } : current)),
                         onPasteImages: pasteTrayImages,
