@@ -35,7 +35,7 @@ dsh plugin add dsh-prompt-pool --profile <profile>
 A tarball works the same way:
 
 ```powershell
-dsh plugin add ./dsh-prompt-pool-0.1.96.tgz --profile <profile>
+dsh plugin add ./dsh-prompt-pool-<version>.tgz --profile <profile>
 ```
 
 Then enable the bundle in **Settings → Plugins**. The plugin is a bundle; installing the package alone

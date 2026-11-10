@@ -28,7 +28,7 @@ dsh plugin add dsh-prompt-pool --profile <profile>
 用 tarball 也一样：
 
 ```powershell
-dsh plugin add ./dsh-prompt-pool-0.1.96.tgz --profile <profile>
+dsh plugin add ./dsh-prompt-pool-<version>.tgz --profile <profile>
 ```
 
 装完要在 **设置 → 插件** 里启用这个 bundle——它是个 bundle，只装包不会自动开启。
