@@ -1735,7 +1735,13 @@ window.__ModuleLoader__.load({
                   )
                 : items.map(rowOf),
         ),
-        settingsOpen
+        h(
+          'div',
+          { className: 'pp-queue-dock' },
+          status
+            ? h('div', { className: 'pp-status pp-status-float', 'data-kind': status.kind || 'info' }, h('span', null, status.text))
+            : null,
+          settingsOpen
           ? null
           : queueCollapsed
             ? h(
@@ -1849,9 +1855,7 @@ window.__ModuleLoader__.load({
                     }),
                   ),
             ),
-        status
-          ? h('div', { className: 'pp-status', 'data-kind': status.kind || 'info', style: { padding: '0 12px 10px' } }, h('span', null, status.text))
-          : null,
+        ),
       );
     }
 
@@ -1892,7 +1896,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.58'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.59'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2733,10 +2737,13 @@ window.__ModuleLoader__.load({
                     )
                   : items.map(rowOf),
         ),
-        status
+        h(
+          'div',
+          { className: 'pp-panel-dock' },
+          status
           ? h(
               'div',
-              { className: 'pp-status', 'data-kind': status.kind || 'info' },
+              { className: 'pp-status pp-status-float', 'data-kind': status.kind || 'info' },
               h('span', null, status.text),
               status.undo
                 ? h(
@@ -2852,6 +2859,7 @@ window.__ModuleLoader__.load({
                   ),
             )
           : null,
+        ),
       );
     }
 
@@ -3047,7 +3055,11 @@ window.__ModuleLoader__.load({
       '.pp-hint{color:var(--pp-ink-2);font-size:11px}' +
       '.pp-status{padding:0 12px 8px;font-size:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}' +
       '.pp-status[data-kind="error"]{color:var(--pp-danger)}' +
-      '.pp-status[data-kind="ok"]{color:var(--pp-ok)}';
+      '.pp-status[data-kind="ok"]{color:var(--pp-ok)}' +
+      '.pp-queue-dock,.pp-panel-dock{position:relative;flex:none;display:flex;flex-direction:column}' +
+      '.pp-status-float{position:absolute;left:10px;right:auto;width:max-content;max-width:calc(100% - 20px);bottom:100%;margin-bottom:6px;padding:6px 12px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface);box-shadow:0 4px 14px rgba(0,0,0,.10);z-index:5;pointer-events:none;animation:pp-status-in .16s ease}' +
+      '.pp-panel .pp-status-float{pointer-events:auto}' +
+      '@keyframes pp-status-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}';
 
     // ------------------------------------------------------------------- plugin
     return {
