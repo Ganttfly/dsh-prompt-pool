@@ -24,11 +24,10 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '0.1.89';
-    const PLUGIN_AUTHOR = 'RobinShen';
-    /** Left empty until the public repository exists; the row hides while it is. */
-    const PLUGIN_REPO = '';
-    const TESTED_DSH = '0.2.2-rc.1';
+    const PLUGIN_VERSION = '0.1.90';
+    const PLUGIN_AUTHOR = 'GanttShen';
+    /** Replace once the public repository exists; the row hides while it is empty. */
+    const PLUGIN_REPO = 'https://github.com/ganttfly/dsh-prompt-pool';
     /** The sidebar service, kept so the page can correct a restored tab title. */
     let sidebarService = null;
     const IMAGE_DB = 'dsh-prompt-pool-images.v1';
@@ -120,11 +119,9 @@ window.__ModuleLoader__.load({
       'settings.keepInsertHint': '关闭后，插入成功的条目会从池子移出；提示条上的「撤销」可以恢复。',
       'settings.keepQueue': '加入待发送队列后，仍旧保留在池子中',
       'settings.keepQueueHint': '关闭后，条目一加入队列就从池子移出；队列里的那一条不受影响。',
-      'settings.about': '关于',
+      'settings.about': '插件信息',
       'settings.aboutAuthor': '作者',
-      'settings.aboutRepo': '源码',
-      'settings.aboutCompat': '验证环境',
-      'settings.aboutCompatValue': 'DSH {version}',
+      'settings.aboutRepo': '仓库',
       'settings.tab.display': '展示',
       'settings.customNested': '自定义分组折叠成一个 Tab',
       'settings.customNestedHint': '分组多时打开：Tab 行只保留一个「自定义」，组内用横排胶囊切换。',
@@ -291,11 +288,9 @@ window.__ModuleLoader__.load({
       'settings.keepInsertHint': 'Turned off, an inserted item leaves the pool; the toast offers an undo.',
       'settings.keepQueue': 'Keep it in the pool after adding it to the send queue',
       'settings.keepQueueHint': 'Turned off, the item leaves the pool as soon as it is queued; the queued copy stays.',
-      'settings.about': 'About',
+      'settings.about': 'Plugin info',
       'settings.aboutAuthor': 'Author',
-      'settings.aboutRepo': 'Source',
-      'settings.aboutCompat': 'Tested with',
-      'settings.aboutCompatValue': 'DSH {version}',
+      'settings.aboutRepo': 'Repository',
       'settings.tab.display': 'Display',
       'settings.customNested': 'Fold custom groups into one tab',
       'settings.customNestedHint': 'Useful once you have many groups: one “Custom” tab keeps them as chips inside.',
@@ -2847,12 +2842,6 @@ window.__ModuleLoader__.load({
                 h('a', { className: 'pp-link', href: PLUGIN_REPO, target: '_blank', rel: 'noreferrer' }, PLUGIN_REPO.replace(/^https?:\/\//, '')),
               )
             : null,
-          h(
-            'div',
-            { className: 'pp-about-row' },
-            h('span', { className: 'pp-about-key' }, translate('settings.aboutCompat')),
-            h('span', null, translate('settings.aboutCompatValue', { version: TESTED_DSH })),
-          ),
         ),
       );
     }

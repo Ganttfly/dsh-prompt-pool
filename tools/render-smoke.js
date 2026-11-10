@@ -206,6 +206,9 @@ const collectText = (node) => {
   }
 };
 collectText(settingsTree);
-const aboutAuthor = settingsText.indexOf('RobinShen') >= 0;
-console.log(`[check] settings about name=${aboutName} author=${aboutAuthor}`);
-if (!aboutName || !aboutAuthor) process.exitCode = 1;
+const aboutAuthor = settingsText.indexOf('GanttShen') >= 0;
+const aboutRepo = settingsNodes.some(
+  (node) => node.type === 'a' && node.props && String(node.props.href || '').indexOf('github.com/') >= 0,
+);
+console.log(`[check] settings about name=${aboutName} author=${aboutAuthor} repo=${aboutRepo}`);
+if (!aboutName || !aboutAuthor || !aboutRepo) process.exitCode = 1;
