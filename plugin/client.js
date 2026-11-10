@@ -39,6 +39,7 @@ window.__ModuleLoader__.load({
       'panel.title': '提示池',
       'panel.close': '关闭',
       'panel.capture': '存草稿',
+      'panel.captureHint': '把输入框里的内容复制一份存进池子；输入框里的字会保留',
       'panel.resize': '拖动调整高度，双击还原',
       'panel.empty': '池子是空的。写一句，然后点「存下当前草稿」。',
       'panel.emptyTab': '这一栏还没有内容。',
@@ -204,6 +205,7 @@ window.__ModuleLoader__.load({
       'panel.title': 'Prompt pool',
       'panel.close': 'Close',
       'panel.capture': 'Save draft',
+      'panel.captureHint': 'Copy the composer draft into the pool; the composer keeps its text',
       'panel.resize': 'Drag to resize, double-click to reset',
       'panel.empty': 'The pool is empty. Write something, then press Save draft.',
       'panel.emptyTab': 'Nothing in this tab yet.',
@@ -2381,7 +2383,7 @@ window.__ModuleLoader__.load({
             onChange: (event) => setQuery(event.target.value),
           }),
           h('button', { type: 'button', className: 'pp-mini', onClick: create }, '＋ ', translate('page.new')),
-          h('button', { type: 'button', className: 'pp-mini', onClick: captureDraft }, translate('panel.capture')),
+          h('button', { type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: captureDraft }, translate('panel.capture')),
           h(SettingsButton, { active: settingsOpen, onClick: () => setSettingsOpen(!settingsOpen) }),
         ),
         h(
@@ -2673,7 +2675,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.84'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.85'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -3756,7 +3758,7 @@ window.__ModuleLoader__.load({
             onChange: (event) => setQuery(event.target.value),
           }),
           h('button', { type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('page.new')),
-          h('button', { type: 'button', className: 'pp-mini', onClick: captureDraft }, translate('panel.capture')),
+          h('button', { type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: captureDraft }, translate('panel.capture')),
           h(SettingsButton, { active: settingsOpen, onClick: () => setSettingsOpen(!settingsOpen) }),
           h(
             'button',
