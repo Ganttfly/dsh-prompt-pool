@@ -1849,7 +1849,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.54'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.55'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2988,6 +2988,7 @@ window.__ModuleLoader__.load({
       '.pp-chip-n{flex:none;padding-top:1px;font-size:11px;line-height:1.55;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
       '.pp-chip-t{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:12px;line-height:1.55;color:var(--pp-ink)}' +
       '.pp-chip .pp-icon{width:22px;height:22px}' +
+      '.pp-actions .pp-icon svg,.pp-chip-actions .pp-icon svg{width:13px;height:13px;stroke-width:1.2}' +
       '.pp-hint{color:var(--pp-ink-2);font-size:11px}' +
       '.pp-status{padding:0 12px 8px;font-size:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}' +
       '.pp-status[data-kind="error"]{color:var(--pp-danger)}' +
