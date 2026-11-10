@@ -20,6 +20,9 @@ window.__ModuleLoader__.load({
     const STORAGE_KEY = 'dsh.prompt-pool.v1';
     /** The sidebar tool tab this plugin owns; it also names the open tab. */
     const SIDEBAR_TAB_ID = 'prompt-pool:pool';
+    /** Native right-sidebar registry identity (DSH 0.2) and the page kind it opens. */
+    const NATIVE_TAB_ID = 'dsh-prompt-pool';
+    const NATIVE_TAB_KIND = 'prompt-pool';
     /** The sidebar service, kept so the page can correct a restored tab title. */
     let sidebarService = null;
     const IMAGE_DB = 'dsh-prompt-pool-images.v1';
@@ -2608,6 +2611,23 @@ window.__ModuleLoader__.load({
       );
     }
 
+    /** Body of the native right-sidebar tab (DSH 0.2); the slot forwards the session. */
+    function PromptPoolSidebarTab(props) {
+      const sessionId = (props && props.sessionId) || (props && props.tab && props.tab.sessionId) || '';
+      return h(PromptPoolPage, { ...props, scope: { sessionId }, sessionId });
+    }
+
+    /** Live chip title for the native tab, so a language switch is not frozen in. */
+    function PromptPoolSidebarTitle() {
+      useLocaleTick();
+      return h(
+        'span',
+        { style: { display: 'inline-flex', alignItems: 'center', gap: '5px' } },
+        h(PromptPoolIcon, { size: 14 }),
+        translate('page.title'),
+      );
+    }
+
     // --------------------------------------------------------------- settings
     function PromptPoolSettings(props) {
       useLocaleTick();
@@ -2653,7 +2673,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.83'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.84'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -4249,10 +4269,15 @@ window.__ModuleLoader__.load({
         // Right-sidebar tool page: `dsh-better-sidebar` owns the tools list and
         // the tab strip. It is an optional dependency, so a profile without it
         // keeps the composer panel only.
+        // Two possible homes for the sidebar page: the native right-sidebar tab
+        // registry that DSH 0.2 ships, or dsh-better-sidebar on older hosts.
+        let betterTabDispose = null;
+        let nativeTabDispose = null;
+
         const mountSidebarTab = (service) => {
-          if (!service || typeof service.registerTab !== 'function') return;
+          if (!service || typeof service.registerTab !== 'function' || betterTabDispose) return;
           sidebarService = service;
-          service.registerTab({
+          const off = service.registerTab({
             id: SIDEBAR_TAB_ID,
             title: () => translate('page.title'),
             description: () => translate('tab.description'),
@@ -4261,32 +4286,81 @@ window.__ModuleLoader__.load({
             single: true,
             component: (props) => h(PromptPoolPage, props),
           });
+          betterTabDispose = typeof off === 'function' ? off : () => {};
           // The sidebar snapshots a tab's title when the tab opens, so a language
           // switch would leave the old label behind. Retitle the open tab too.
           if (typeof service.updateTab === 'function' && ctx.locale && typeof ctx.locale.subscribe === 'function') {
             ctx.effect(() => {
-              const off = ctx.locale.subscribe(() => {
+              const offTitle = ctx.locale.subscribe(() => {
                 try {
                   service.updateTab(SIDEBAR_TAB_ID, { title: translate('page.title') });
                 } catch (_error) {
                   /* closed tabs are a no-op for the sidebar; nothing to repair here */
                 }
               });
-              return typeof off === 'function' ? off : undefined;
+              return typeof offTitle === 'function' ? offTitle : undefined;
             });
           }
         };
-        try {
-          const sidebar = typeof ctx.get === 'function' ? ctx.get('betterSidebar') : ctx.betterSidebar;
-          if (sidebar) {
-            mountSidebarTab(sidebar);
-          } else if (typeof ctx.inject === 'function') {
-            ctx.inject(['betterSidebar'], (sidebarCtx) => {
-              mountSidebarTab(typeof sidebarCtx.get === 'function' ? sidebarCtx.get('betterSidebar') : sidebarCtx.betterSidebar);
-            });
+
+        /** Registers the page as a native right-sidebar tab type, with its guide entry. */
+        const mountNativeSidebarTab = (scope) => {
+          const tabs = scope && scope.sidebarRightTabs;
+          if (!tabs || typeof tabs.register !== 'function' || nativeTabDispose) return;
+          if (betterTabDispose) {
+            try { betterTabDispose(); } catch (_error) { /* already gone */ }
+            betterTabDispose = null;
           }
-        } catch (_error) {
-          /* the sidebar plugin is optional */
+          nativeTabDispose = ctx.effect(() => {
+            const disposers = [];
+            const keep = (fn) => { if (typeof fn === 'function') disposers.push(fn); };
+            keep(tabs.register({
+              id: NATIVE_TAB_ID,
+              kind: NATIVE_TAB_KIND,
+              title: () => translate('page.title'),
+              guide: [{
+                order: 80,
+                title: () => translate('page.title'),
+                description: () => translate('tab.description'),
+                icon: () => h(PromptPoolIcon, { size: 17 }),
+              }],
+            }));
+            keep(ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register(
+              { name: 'sidebar.right.pane.tab', key: NATIVE_TAB_ID },
+              PromptPoolSidebarTab,
+            )));
+            keep(ctx.slots.inject('sidebar.right.pane.tab.title', () => ctx.slots.register(
+              { name: 'sidebar.right.pane.tab.title', key: NATIVE_TAB_ID },
+              PromptPoolSidebarTitle,
+            )));
+            return () => {
+              while (disposers.length > 0) {
+                const dispose = disposers.pop();
+                try { dispose(); } catch (_error) { /* plugin already torn down */ }
+              }
+            };
+          });
+        };
+
+        const nativeTabs = typeof ctx.get === 'function' ? ctx.get('sidebarRightTabs') : ctx.sidebarRightTabs;
+        if (nativeTabs) {
+          mountNativeSidebarTab({ sidebarRightTabs: nativeTabs });
+        } else {
+          // The native registry may still arrive; if it does it takes over and the
+          // better-sidebar tab below is disposed inside mountNativeSidebarTab.
+          if (typeof ctx.inject === 'function') ctx.inject(['sidebarRightTabs'], (scope) => mountNativeSidebarTab(scope));
+          try {
+            const sidebar = typeof ctx.get === 'function' ? ctx.get('betterSidebar') : ctx.betterSidebar;
+            if (sidebar) {
+              mountSidebarTab(sidebar);
+            } else if (typeof ctx.inject === 'function') {
+              ctx.inject(['betterSidebar'], (sidebarCtx) => {
+                mountSidebarTab(typeof sidebarCtx.get === 'function' ? sidebarCtx.get('betterSidebar') : sidebarCtx.betterSidebar);
+              });
+            }
+          } catch (_error) {
+            /* the sidebar plugin is optional */
+          }
         }
       },
     };
