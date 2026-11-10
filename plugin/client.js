@@ -1101,11 +1101,17 @@ window.__ModuleLoader__.load({
           : [],
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
         queueCollapsed: settings.queueCollapsed === true,
+        orderExplicit: settings.orderExplicit === true,
         order: (() => {
           const stored = Array.isArray(settings.order) ? settings.order.filter((name) => leaders.indexOf(name) >= 0) : [];
           // The pre-table default (workspace, custom, builtin) is replaced once by the
           // new default; any order the user picked in the table is kept.
-          const legacyDefault = stored.length === 3 && stored[0] === 'workspace' && stored[1] === 'custom' && stored[2] === 'builtin';
+          const legacyDefault =
+            settings.orderExplicit !== true &&
+            stored.length === 3 &&
+            stored[0] === 'workspace' &&
+            stored[1] === 'custom' &&
+            stored[2] === 'builtin';
           const seed = stored.length === 3 && !legacyDefault ? stored : leaders;
           return [...seed, ...leaders.filter((name) => seed.indexOf(name) < 0)];
         })(),
@@ -1230,7 +1236,14 @@ window.__ModuleLoader__.load({
       },
 
       setSetting(key, value) {
-        mutate((state) => ({ ...state, settings: { ...normalizeSettings(state.settings), [key]: value } }));
+        mutate((state) => ({
+          ...state,
+          settings: {
+            ...normalizeSettings(state.settings),
+            [key]: value,
+            ...(key === 'order' ? { orderExplicit: true } : {}),
+          },
+        }));
       },
       remove(id) {
         mutate((state) => ({ ...state, items: state.items.filter((item) => item.id !== id) }));
@@ -2367,6 +2380,14 @@ window.__ModuleLoader__.load({
         poolActions.setSetting('hiddenWorkspaces', next);
       };
       const [section, setSection] = useState('order');
+      const moveOrder = (index, delta) => {
+        const order = settings.order.slice();
+        const to = index + delta;
+        if (to < 0 || to >= order.length) return;
+        const [moved] = order.splice(index, 1);
+        order.splice(to, 0, moved);
+        poolActions.setSetting('order', order);
+      };
       const check = (key, label, hint) =>
         h(
           'div',
@@ -2388,7 +2409,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.65'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.66'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
