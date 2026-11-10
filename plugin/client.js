@@ -1825,13 +1825,20 @@ window.__ModuleLoader__.load({
       const queueCollapsed = state.settings && state.settings.queueCollapsed === true;
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
+      const pageSessionId = (props && ((props.scope && props.scope.sessionId) || props.sessionId)) || '';
+      const workspaceList = workspaces && Array.isArray(workspaces.items) ? workspaces.items : [];
+      const pageWorkspace = pageSessionId
+        ? workspaceList.find((entry) => Array.isArray(entry.sessionIds) && entry.sessionIds.indexOf(pageSessionId) >= 0)
+        : null;
+      const pageWorkspaceId = pageWorkspace ? pageWorkspace.workspaceId : '';
+      const currentWorkspaceId = pageWorkspaceId || (workspaces && workspaces.currentId) || '';
       // No panel mounted, so no published session: borrow one from this workspace.
       const workspaceSession = (() => {
-        const list = workspaces && Array.isArray(workspaces.items) ? workspaces.items : [];
-        const current = list.find((entry) => entry.workspaceId === (workspaces && workspaces.currentId));
+        const current = workspaceList.find((entry) => entry.workspaceId === currentWorkspaceId);
         const pool = current && Array.isArray(current.sessionIds) ? current.sessionIds : [];
         return pool.length > 0 ? pool[pool.length - 1] : '';
       })();
+      const activeSessionId = pageSessionId || sessionHint || workspaceSession || '';
       const [tab, setTab] = useState('all');
       const [query, setQuery] = useState('');
       const [editing, setEditing] = useState(null);
@@ -1860,6 +1867,12 @@ window.__ModuleLoader__.load({
         }
         lastTrayCount.current = trayCount;
       }, [trayCount]);
+      useEffect(() => {
+        if (!pageWorkspaceId) return;
+        const snapshot = workspaceDir.get();
+        if (snapshot.currentId === pageWorkspaceId) return;
+        workspaceDir.set({ ...snapshot, currentId: pageWorkspaceId });
+      }, [pageWorkspaceId]);
 
       const confirmCategoryDelete = () => {
         const target = pendingCategory;
@@ -1869,7 +1882,7 @@ window.__ModuleLoader__.load({
         if (tab === target) setTab('all');
       };
 
-      const rail = workspaceRail(workspaces.items, state.settings, workspaces.currentId);
+      const rail = workspaceRail(workspaces.items, state.settings, currentWorkspaceId);
       const wsActive = rail.some((entry) => entry.id === wsSelected) ? wsSelected : rail.length > 0 ? rail[0].id : '';
       const wsCounts = useMemo(() => {
         const counts = {};
@@ -2005,7 +2018,7 @@ window.__ModuleLoader__.load({
               placeholder: translate('row.bodyPlaceholder'),
               rows: 5,
               autoFocus: true,
-              sessionId: (props && props.sessionId) || sessionHint || workspaceSession || '',
+              sessionId: activeSessionId,
               onChange: (event) => setEditing({ ...editing, body: event.target.value }),
               onPasteImages: pasteImages,
               onKeyDown: (event) => {
@@ -2162,7 +2175,7 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-bar', style: { padding: '8px 12px 2px' } },
           h(TabBar, {
-            tabs: buildTabs(state.categories, workspaces.items, state.settings, workspaces.currentId),
+            tabs: buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId),
             active: tab,
             ...tabHandlers((next) => {
               setSettingsOpen(false);
@@ -2176,7 +2189,7 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-page-body' },
           settingsOpen
-            ? h(PromptPoolSettings, null)
+            ? h(PromptPoolSettings, { currentWorkspaceId })
             : nestedView
               ? renderWorkspacePanes({
                   rail: nestedView.rail,
@@ -2281,7 +2294,7 @@ window.__ModuleLoader__.load({
                             placeholder: translate('row.bodyPlaceholder'),
                             rows: 4,
                             autoFocus: true,
-                            sessionId: (props && props.sessionId) || sessionHint || workspaceSession || '',
+                            sessionId: activeSessionId,
                             onChange: (event) => setTrayEditing((current) => (current ? { ...current, body: event.target.value } : current)),
                             onPasteImages: pasteTrayImages,
                             onKeyDown: (event) => {
@@ -2339,13 +2352,13 @@ window.__ModuleLoader__.load({
     }
 
     // --------------------------------------------------------------- settings
-    function PromptPoolSettings() {
+    function PromptPoolSettings(props) {
       useLocaleTick();
       const state = usePoolState();
       const settings = normalizeSettings(state.settings);
       const wsDir = useWorkspaceDir();
       const wsItems = wsDir && Array.isArray(wsDir.items) ? wsDir.items : [];
-      const wsCurrentId = wsDir && typeof wsDir.currentId === 'string' ? wsDir.currentId : '';
+      const wsCurrentId = (props && typeof props.currentWorkspaceId === 'string' && props.currentWorkspaceId) || (wsDir && typeof wsDir.currentId === 'string' ? wsDir.currentId : '');
       const hiddenWorkspaces = settings.hiddenWorkspaces;
       const toggleWorkspace = (workspaceId) => {
         const next = hiddenWorkspaces.indexOf(workspaceId) >= 0
@@ -2375,7 +2388,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.64'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.65'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2820,6 +2833,7 @@ window.__ModuleLoader__.load({
       }, [props.sessionId]);
       const wsEntries = workspaceEntriesOf(wsSnapshot);
       const wsCurrent = currentWorkspaceOf(wsSnapshot, props.sessionId);
+      const currentWorkspaceId = wsCurrent;
       const wsSignature = useRef('');
       useEffect(() => {
         const signature = JSON.stringify(wsEntries) + '|' + wsCurrent;
@@ -2900,7 +2914,7 @@ window.__ModuleLoader__.load({
         return () => window.removeEventListener('keydown', onKey, true);
       }, [view.open, editing, confirming, preview]);
 
-      const rail = workspaceRail(workspaces.items, state.settings, workspaces.currentId);
+      const rail = workspaceRail(workspaces.items, state.settings, currentWorkspaceId);
       const wsActive = rail.some((entry) => entry.id === wsSelected) ? wsSelected : rail.length > 0 ? rail[0].id : '';
       const wsCounts = useMemo(() => {
         const counts = {};
@@ -3317,7 +3331,7 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-bar' },
           h(TabBar, {
-            tabs: buildTabs(state.categories, workspaces.items, state.settings, workspaces.currentId),
+            tabs: buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId),
             active: tab,
             ...tabHandlers((next) => {
               setSettingsOpen(false);
@@ -3334,7 +3348,7 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-list' },
           settingsOpen
-            ? h(PromptPoolSettings, null)
+            ? h(PromptPoolSettings, { currentWorkspaceId })
             : nestedView
               ? renderWorkspacePanes({
                   rail: nestedView.rail,
@@ -3792,7 +3806,7 @@ window.__ModuleLoader__.load({
             icon: (size) => h(PromptPoolIcon, { size, active: false }),
             order: 80,
             single: true,
-            component: () => h(PromptPoolPage, null),
+            component: (props) => h(PromptPoolPage, props),
           });
         };
         try {
