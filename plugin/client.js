@@ -36,6 +36,7 @@ window.__ModuleLoader__.load({
       'panel.title': '提示池',
       'panel.close': '关闭',
       'panel.capture': '存草稿',
+      'panel.resize': '拖动调整高度，双击还原',
       'panel.empty': '池子是空的。写一句，然后点「存下当前草稿」。',
       'panel.emptyTab': '这一栏还没有内容。',
       'tab.all': '全部',
@@ -192,6 +193,7 @@ window.__ModuleLoader__.load({
       'panel.title': 'Prompt pool',
       'panel.close': 'Close',
       'panel.capture': 'Save draft',
+      'panel.resize': 'Drag to resize, double-click to reset',
       'panel.empty': 'The pool is empty. Write something, then press Save draft.',
       'panel.emptyTab': 'Nothing in this tab yet.',
       'tab.all': 'All',
@@ -1181,6 +1183,11 @@ window.__ModuleLoader__.load({
           : [],
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
         queueCollapsed: settings.queueCollapsed === true,
+        // 0 keeps the default height; anything else is a dragged height in px.
+        panelHeight: (() => {
+          const value = Number(settings.panelHeight);
+          return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
+        })(),
         orderExplicit: settings.orderExplicit === true,
         order: (() => {
           const stored = Array.isArray(settings.order) ? settings.order.filter((name) => leaders.indexOf(name) >= 0) : [];
@@ -2574,7 +2581,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.80'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.81'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -3081,6 +3088,37 @@ window.__ModuleLoader__.load({
 
       const panelRef = useRef(null);
 
+      // The panel can be dragged taller or shorter; 0 means the CSS default.
+      const [dragHeight, setDragHeight] = useState(0);
+      const panelHeight = dragHeight || normalizeSettings(state.settings).panelHeight;
+      const panelHeightRef = useRef(panelHeight);
+      panelHeightRef.current = panelHeight;
+      const startResize = (event) => {
+        if (event.button !== undefined && event.button !== 0) return;
+        event.preventDefault();
+        const startY = event.clientY;
+        const startHeight = panelRef.current ? panelRef.current.getBoundingClientRect().height : panelHeightRef.current;
+        const apply = (clientY) => {
+          const limit = Math.max(360, window.innerHeight - 96);
+          setDragHeight(Math.round(Math.min(limit, Math.max(320, startHeight + (startY - clientY)))));
+        };
+        const onMove = (moveEvent) => {
+          moveEvent.preventDefault();
+          apply(moveEvent.clientY);
+        };
+        const onUp = () => {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+          poolActions.setSetting('panelHeight', Math.round(panelHeightRef.current));
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      };
+      const resetResize = () => {
+        setDragHeight(0);
+        poolActions.setSetting('panelHeight', 0);
+      };
+
       useEffect(() => {
         if (!view.open) return undefined;
         const onPointerDown = (event) => {
@@ -3549,9 +3587,23 @@ window.__ModuleLoader__.load({
           role: 'dialog',
           'aria-label': translate('panel.title'),
           ref: panelRef,
+          style: panelHeight ? { height: 'min(' + panelHeight + 'px, 90vh)', maxHeight: 'none' } : undefined,
           onMouseDown: (event) => event.stopPropagation(),
         },
         h('style', null, CSS),
+        h(
+          'div',
+          {
+            key: 'grip',
+            className: 'pp-panel-grip',
+            role: 'separator',
+            'aria-orientation': 'horizontal',
+            title: translate('panel.resize'),
+            onPointerDown: startResize,
+            onDoubleClick: resetResize,
+          },
+          h('span', { className: 'pp-grip-bar' }),
+        ),
         // Same header and tab strip as the sidebar page, so both views read alike.
         h(
           'div',
@@ -3827,7 +3879,13 @@ window.__ModuleLoader__.load({
       '.pp-trigger[data-queued="true"]{border-color:var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
       '.pp-trigger[data-queued="true"]:hover{background:color-mix(in srgb,var(--pp-accent) 20%,transparent);color:var(--pp-accent)}' +
       '.pp-trigger[data-queued="true"] .pp-badge{border-color:var(--pp-accent);background:var(--pp-accent);color:var(--pp-on-accent);font-weight:600}' +
-      '.pp-panel{position:absolute;left:6px;right:6px;bottom:0;margin:0 auto;max-width:920px;z-index:40;display:flex;flex-direction:column;height:min(70vh,720px);max-height:min(70vh,720px);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
+      '.pp-panel{position:absolute;left:auto;right:0;bottom:0;margin:0;max-width:min(920px,100%);z-index:40;display:flex;flex-direction:column;height:min(70vh,720px);max-height:min(70vh,720px);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
+      // The grip above the header resizes the panel; a long queue may keep half the list.
+      '.pp-panel-grip{flex:none;display:flex;align-items:center;justify-content:center;height:11px;cursor:ns-resize;touch-action:none}' +
+      '.pp-grip-bar{width:44px;height:4px;border-radius:2px;background:var(--pp-line-2);transition:background .12s ease}' +
+      '.pp-panel-grip:hover .pp-grip-bar{background:var(--pp-accent)}' +
+      '.pp-panel .pp-page-foot{max-height:45%;min-height:0}' +
+      '.pp-panel .pp-page-foot .pp-tray{max-height:none;min-height:0;flex:1}' +
       '.pp-head{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}' +
       '.pp-head-title{font-weight:600;font-size:13px}' +
       '.pp-head-count{color:var(--pp-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +

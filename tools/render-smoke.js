@@ -168,8 +168,9 @@ const hasClass = (node, name) => node.props && String(node.props.className || ''
 const panelSearch = panelNodes.some((node) => node.type === 'input' && hasClass(node, 'pp-search'));
 const panelClose = panelNodes.some((node) => node.type === 'button' && node.props && node.props.title === 'panel.close');
 const panelRows = panelNodes.filter((node) => hasClass(node, 'pp-page-item')).length;
-console.log(`[check] panel header search=${panelSearch} close=${panelClose} page-item rows=${panelRows}`);
-if (!panelSearch || !panelClose || panelRows === 0) process.exitCode = 1;
+const panelGrip = panelNodes.some((node) => hasClass(node, 'pp-panel-grip'));
+console.log(`[check] panel header search=${panelSearch} close=${panelClose} grip=${panelGrip} page-item rows=${panelRows}`);
+if (!panelSearch || !panelClose || !panelGrip || panelRows === 0) process.exitCode = 1;
 
 // The composer trigger names itself, and flags the queue with an accent badge.
 const triggerEntry = registrations.find((entry) => entry.slot === 'conversation.input.right');
