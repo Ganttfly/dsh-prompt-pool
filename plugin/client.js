@@ -128,6 +128,7 @@ window.__ModuleLoader__.load({
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
       'image.add': '添加图片',
+      'image.pasteHint': '或直接 Ctrl+V 粘贴',
       'image.remove': '移除图片',
       'image.only': '图片',
       'image.inserted': '已插入图片',
@@ -273,6 +274,7 @@ window.__ModuleLoader__.load({
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
       'image.add': 'Add image',
+      'image.pasteHint': 'or paste with Ctrl+V',
       'image.remove': 'Remove image',
       'image.only': 'Image',
       'image.inserted': 'Image inserted',
@@ -565,6 +567,26 @@ window.__ModuleLoader__.load({
       };
       await putImageBlob(asset.id, file);
       return asset;
+    }
+
+    async function appendImageAssets(files, existing, onError) {
+      const list = Array.isArray(existing) ? existing.slice() : [];
+      const incoming = Array.isArray(files) ? files : [];
+      if (incoming.length === 0) return list;
+      const room = MAX_IMAGES - list.length;
+      if (room <= 0) {
+        if (onError) onError(translate('image.tooMany', { n: MAX_IMAGES }));
+        return list;
+      }
+      if (incoming.length > room && onError) onError(translate('image.tooMany', { n: MAX_IMAGES }));
+      for (const file of incoming.slice(0, room)) {
+        try {
+          list.push(await createImageAsset(file));
+        } catch (error) {
+          if (onError) onError(String((error && error.message) || error));
+        }
+      }
+      return list;
     }
 
     function sanitizeItem(raw) {
@@ -1475,7 +1497,28 @@ window.__ModuleLoader__.load({
         visible.map((image) =>
           h(
             'span',
-            { key: image.id, className: 'pp-image', title: image.name || image.path || '' },
+            {
+              key: image.id,
+              className: 'pp-image',
+              title: image.name || image.path || '',
+              role: props.onOpen ? 'button' : undefined,
+              tabIndex: props.onOpen ? 0 : undefined,
+              onClick: props.onOpen
+                ? (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    props.onOpen(image);
+                  }
+                : undefined,
+              onKeyDown: props.onOpen
+                ? (event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    props.onOpen(image);
+                  }
+                : undefined,
+            },
             image.thumb
               ? h('img', { src: image.thumb, alt: image.name || '', draggable: false })
               : h('span', { className: 'pp-image-empty' }, icon('image')),
@@ -1509,23 +1552,13 @@ window.__ModuleLoader__.load({
       const list = Array.isArray(props.images) ? props.images : [];
       const addFiles = async (files) => {
         if (!files || files.length === 0) return;
-        const room = MAX_IMAGES - list.length;
-        if (room <= 0) {
-          if (props.onError) props.onError(translate('image.tooMany', { n: MAX_IMAGES }));
-          return;
-        }
-        if (files.length > room && props.onError) props.onError(translate('image.tooMany', { n: MAX_IMAGES }));
         setBusy(true);
-        const next = list.slice();
-        for (const file of files.slice(0, room)) {
-          try {
-            next.push(await createImageAsset(file));
-          } catch (error) {
-            if (props.onError) props.onError(String((error && error.message) || error));
-          }
+        try {
+          const next = await appendImageAssets(files, list, props.onError);
+          props.onChange(next);
+        } finally {
+          setBusy(false);
         }
-        props.onChange(next);
-        setBusy(false);
       };
       return h(
         'div',
@@ -1533,6 +1566,7 @@ window.__ModuleLoader__.load({
         h(ImageStrip, {
           images: list,
           onRemove: (image) => props.onChange(list.filter((entry) => entry.id !== image.id)),
+          onOpen: props.onOpen,
         }),
         h(
           'button',
@@ -1547,6 +1581,7 @@ window.__ModuleLoader__.load({
           '＋ ',
           translate('image.add'),
         ),
+        h('span', { className: 'pp-hint' }, translate('image.pasteHint')),
         h('input', {
           ref: inputRef,
           type: 'file',
@@ -1559,6 +1594,88 @@ window.__ModuleLoader__.load({
             addFiles(files);
           },
         }),
+      );
+    }
+
+    /** Full-size preview state for one thumbnail click. */
+    function useImagePreview() {
+      const [preview, setPreview] = useState(null);
+      const token = useRef(0);
+      const objectUrl = useRef('');
+      const openImage = (image) => {
+        if (!image) return;
+        const current = ++token.current;
+        setPreview({ url: image.thumb || '', name: image.name || '' });
+        getImageBlob(image.id)
+          .then((blob) => {
+            if (!blob || current !== token.current) return;
+            const next = URL.createObjectURL(blob);
+            if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
+            objectUrl.current = next;
+            setPreview({ url: next, name: image.name || '' });
+          })
+          .catch(() => {
+            /* keep the thumbnail */
+          });
+      };
+      const closeImage = () => {
+        token.current += 1;
+        if (objectUrl.current) {
+          URL.revokeObjectURL(objectUrl.current);
+          objectUrl.current = '';
+        }
+        setPreview(null);
+      };
+      useEffect(
+        () => () => {
+          token.current += 1;
+          if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
+        },
+        [],
+      );
+      useEffect(() => {
+        if (!preview) return undefined;
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return;
+          event.preventDefault();
+          event.stopPropagation();
+          closeImage();
+        };
+        window.addEventListener('keydown', onKey, true);
+        return () => window.removeEventListener('keydown', onKey, true);
+      }, [preview]);
+      return { preview, openImage, closeImage };
+    }
+
+    function ImageLightbox(props) {
+      if (!props.preview) return null;
+      const name = props.preview.name || translate('image.only');
+      return h(
+        'div',
+        { className: 'pp-lightbox', role: 'dialog', 'aria-modal': 'true', onClick: props.onClose },
+        h(
+          'div',
+          { className: 'pp-lightbox-body', onClick: (event) => event.stopPropagation() },
+          props.preview.url
+            ? h('img', { src: props.preview.url, alt: name })
+            : h('div', { className: 'pp-lightbox-empty' }, translate('image.missing')),
+          h(
+            'div',
+            { className: 'pp-lightbox-bar' },
+            h('span', { className: 'pp-lightbox-name' }, name),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'pp-lightbox-close',
+                title: translate('panel.close'),
+                'aria-label': translate('panel.close'),
+                onClick: props.onClose,
+              },
+              '✕',
+            ),
+          ),
+        ),
       );
     }
 
@@ -1725,6 +1842,7 @@ window.__ModuleLoader__.load({
       const [customPick, setCustomPick] = useState('');
       const [builtinPick, setBuiltinPick] = useState('');
       const [status, setStatus] = useState(null);
+      const { preview, openImage, closeImage } = useImagePreview();
       const statusTimer = useRef(0);
       const flash = useCallback((next) => {
         setStatus(next);
@@ -1838,6 +1956,13 @@ window.__ModuleLoader__.load({
         flash({ kind: 'ok', text: translate('status.savedToPool') });
       };
 
+      const pasteImages = (files) => {
+        const id = editing && editing.id;
+        appendImageAssets(files, editing && editing.images ? editing.images : [], (text) => flash({ kind: 'error', text })).then((images) => {
+          setEditing((current) => (current && current.id === id ? { ...current, images } : current));
+        });
+      };
+
       /** One entry point: the current tab decides the new item's classification. */
       const create = () => {
         const inWorkspace = tab === 'nested:workspace';
@@ -1875,6 +2000,7 @@ window.__ModuleLoader__.load({
               autoFocus: true,
               sessionId: (props && props.sessionId) || sessionHint || workspaceSession || '',
               onChange: (event) => setEditing({ ...editing, body: event.target.value }),
+              onPasteImages: pasteImages,
               onKeyDown: (event) => {
                 if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
                   event.preventDefault();
@@ -1886,6 +2012,7 @@ window.__ModuleLoader__.load({
               images: editing.images || [],
               onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
               onError: (text) => flash({ kind: 'error', text }),
+              onOpen: openImage,
             }),
             h(
               'div',
@@ -1937,7 +2064,7 @@ window.__ModuleLoader__.load({
             { className: 'pp-main', onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body, images: normalizeImages(item.images) }) },
             h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || (item.images && item.images[0] && (item.images[0].name || translate('image.only'))) || translate('group.untitled')),
             item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
-            h(ImageStrip, { images: item.images, compact: true }),
+            h(ImageStrip, { images: item.images, compact: true, onOpen: openImage }),
           ),
           tab === 'all'
             ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
@@ -2156,7 +2283,7 @@ window.__ModuleLoader__.load({
                               }
                             },
                           }),
-                          h(ImageStrip, { images: trayEditing.images, compact: true }),
+                          h(ImageStrip, { images: trayEditing.images, compact: true, onOpen: openImage }),
                           h(
                             'div',
                             { className: 'pp-edit-actions' },
@@ -2170,7 +2297,7 @@ window.__ModuleLoader__.load({
                         { key: entry.key, className: 'pp-chip' },
                         h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
                         h('div', { className: 'pp-chip-t' }, entry.body),
-                        h(ImageStrip, { images: entry.images, compact: true, max: 4 }),
+                        h(ImageStrip, { images: entry.images, compact: true, max: 4, onOpen: openImage }),
                         h(
                           'div',
                           { className: 'pp-chip-actions' },
@@ -2193,6 +2320,7 @@ window.__ModuleLoader__.load({
                     }),
                   ),
             ),
+        h(ImageLightbox, { preview, onClose: closeImage }),
         ),
       );
     }
@@ -2234,7 +2362,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.61'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.62'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2540,6 +2668,25 @@ window.__ModuleLoader__.load({
               setNote(translate('mention.failed') + '：' + String((error && error.message) || error).slice(0, 90));
             }
           },
+          onPaste: (event) => {
+            if (props.onPaste) props.onPaste(event);
+            const data = event.clipboardData;
+            if (!data || typeof props.onPasteImages !== 'function') return;
+            const files = [];
+            if (data.items) {
+              for (const item of Array.from(data.items)) {
+                if (item.kind !== 'file') continue;
+                const file = item.getAsFile();
+                if (file && imageTypeOf(file)) files.push(file);
+              }
+            }
+            if (files.length === 0 && data.files) {
+              for (const file of Array.from(data.files)) if (imageTypeOf(file)) files.push(file);
+            }
+            if (files.length === 0) return;
+            event.preventDefault();
+            props.onPasteImages(files);
+          },
           onKeyDown: (event) => {
             if (token && items.length > 0) {
               if (event.key === 'ArrowDown') {
@@ -2638,6 +2785,7 @@ window.__ModuleLoader__.load({
       const [confirming, setConfirming] = useState(false);
       const [status, setStatus] = useState(null);
       const [busy, setBusy] = useState(false);
+      const { preview, openImage, closeImage } = useImagePreview();
 
       const statusTimer = useRef(0);
       const flash = useCallback((next) => {
@@ -2671,7 +2819,7 @@ window.__ModuleLoader__.load({
       }, [view.open]);
 
       useEffect(() => {
-        if (!view.open) return undefined;
+        if (!view.open || preview) return undefined;
         const onKey = (event) => {
           if (event.key !== 'Escape') return;
           if (editing) {
@@ -2686,7 +2834,7 @@ window.__ModuleLoader__.load({
         };
         window.addEventListener('keydown', onKey, true);
         return () => window.removeEventListener('keydown', onKey, true);
-      }, [view.open, editing, confirming]);
+      }, [view.open, editing, confirming, preview]);
 
       const rail = workspaceRail(workspaces.items, state.settings, workspaces.currentId);
       const wsActive = rail.some((entry) => entry.id === wsSelected) ? wsSelected : rail.length > 0 ? rail[0].id : '';
@@ -2833,6 +2981,13 @@ window.__ModuleLoader__.load({
         setEditing(null);
       };
 
+      const pasteImages = (files) => {
+        const id = editing && editing.id;
+        appendImageAssets(files, editing && editing.images ? editing.images : [], (text) => flash({ kind: 'error', text })).then((images) => {
+          setEditing((current) => (current && current.id === id ? { ...current, images } : current));
+        });
+      };
+
       const deleteItem = (item) => {
         const index = pool.get().items.findIndex((entry) => entry.id === item.id);
         poolActions.remove(item.id);
@@ -2905,6 +3060,7 @@ window.__ModuleLoader__.load({
               autoFocus: true,
               sessionId: props.sessionId,
               onChange: (event) => setEditing({ ...editing, body: event.target.value }),
+              onPasteImages: pasteImages,
               onKeyDown: (event) => {
                 if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
                   event.preventDefault();
@@ -2916,6 +3072,7 @@ window.__ModuleLoader__.load({
               images: editing.images || [],
               onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
               onError: (text) => flash({ kind: 'error', text }),
+              onOpen: openImage,
             }),
             h(
               'div',
@@ -2967,7 +3124,7 @@ window.__ModuleLoader__.load({
             { className: 'pp-main', title: translate('row.insert'), onClick: () => insertItem(item) },
             h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || (item.images && item.images[0] && (item.images[0].name || translate('image.only'))) || translate('group.untitled')),
             item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
-            h(ImageStrip, { images: item.images, compact: true }),
+            h(ImageStrip, { images: item.images, compact: true, onOpen: openImage }),
           ),
           tab === 'all'
             ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
@@ -3191,7 +3348,7 @@ window.__ModuleLoader__.load({
                           }
                         },
                       }),
-                      h(ImageStrip, { images: trayEditing.images, compact: true }),
+                      h(ImageStrip, { images: trayEditing.images, compact: true, onOpen: openImage }),
                       h(
                         'div',
                         { className: 'pp-edit-actions' },
@@ -3205,7 +3362,7 @@ window.__ModuleLoader__.load({
                     { key: entry.key, className: 'pp-chip' },
                     h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
                     h('div', { className: 'pp-chip-t' }, entry.body),
-                    h(ImageStrip, { images: entry.images, compact: true, max: 4 }),
+                    h(ImageStrip, { images: entry.images, compact: true, max: 4, onOpen: openImage }),
                     h(
                       'div',
                       { className: 'pp-chip-actions' },
@@ -3258,6 +3415,7 @@ window.__ModuleLoader__.load({
             )
           : null,
         ),
+        h(ImageLightbox, { preview, onClose: closeImage }),
       );
     }
 
@@ -3431,7 +3589,7 @@ window.__ModuleLoader__.load({
       '.pp-edit-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}' +
       '.pp-images{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px}' +
       '.pp-images-compact{gap:3px;margin-top:3px}' +
-      '.pp-image{position:relative;display:inline-flex;width:44px;height:44px;flex:none;border:1px solid var(--pp-line);border-radius:6px;background:var(--pp-surface-2);overflow:hidden}' +
+      '.pp-image{position:relative;display:inline-flex;width:44px;height:44px;flex:none;border:1px solid var(--pp-line);border-radius:6px;background:var(--pp-surface-2);overflow:hidden;cursor:zoom-in}' +
       '.pp-images-compact .pp-image{width:32px;height:32px}' +
       '.pp-image img{width:100%;height:100%;object-fit:cover;display:block}' +
       '.pp-image-empty{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--pp-ink-2)}' +
@@ -3443,6 +3601,14 @@ window.__ModuleLoader__.load({
       '.pp-image-add{height:26px}' +
       '.pp-chip .pp-images{flex:none;margin-top:0;align-self:center;max-width:150px}' +
       '.pp-chip .pp-image{width:28px;height:28px}' +
+      '.pp-lightbox{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:28px;background:rgba(0,0,0,.72)}' +
+      '.pp-lightbox-body{display:flex;flex-direction:column;align-items:center;gap:8px;max-width:min(92vw,1200px);max-height:92vh}' +
+      '.pp-lightbox-body img{max-width:100%;max-height:calc(92vh - 48px);object-fit:contain;border-radius:8px;background:var(--pp-surface);box-shadow:0 18px 48px rgba(0,0,0,.35)}' +
+      '.pp-lightbox-empty{display:flex;align-items:center;justify-content:center;min-width:180px;min-height:120px;padding:16px;border:1px dashed rgba(255,255,255,.35);border-radius:8px;color:#fff;font-size:12px}' +
+      '.pp-lightbox-bar{display:flex;align-items:center;gap:12px;max-width:100%;color:#fff;font-size:12px}' +
+      '.pp-lightbox-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.9}' +
+      '.pp-lightbox-close{width:26px;height:26px;border:1px solid rgba(255,255,255,.35);border-radius:50%;background:rgba(0,0,0,.35);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;font:inherit}' +
+      '.pp-lightbox-close:hover{background:rgba(0,0,0,.6)}' +
       '.pp-primary{height:28px;padding:0 14px;border-radius:8px;border:1px solid var(--pp-accent);background:var(--pp-accent);color:var(--pp-on-accent);font:inherit;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}' +
       '.pp-primary:hover{filter:brightness(1.06)}' +
       '.pp-primary:disabled{opacity:.5;cursor:default}' +
