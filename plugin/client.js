@@ -3672,9 +3672,11 @@ window.__ModuleLoader__.load({
       '.pp-ws-name{min-width:0;max-width:168px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-ws-count{flex:none;font-size:10px;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
       '.pp-ws-body{min-width:0}' +
-      '.pp-page-foot{display:flex;flex-direction:column;gap:8px;min-height:264px;margin:8px 10px 10px;padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08);max-height:min(640px,66vh);overflow:hidden}' +
-      '.pp-page-foot .pp-tray{max-height:none;min-height:0;flex:1;overflow-y:auto}' +
-      '.pp-tray-empty{justify-content:center;align-items:center;padding:0 12px;text-align:center}' +
+      '.pp-page-foot{display:flex;flex-direction:column;gap:8px;margin:8px 10px 10px;padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08);max-height:min(640px,66vh);overflow:hidden}' +
+      // The card sizes itself to the queue: an empty tray is one hint row, a full
+      // one stops at half the page so the pool above keeps the room it needs.
+      '.pp-page-foot .pp-tray{max-height:min(520px,52vh);min-height:0;flex:0 1 auto;overflow-y:auto}' +
+      '.pp-tray-empty{justify-content:flex-start;align-items:flex-start;padding:2px 2px 4px;text-align:left}' +
       '.pp-queue-toggle{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:-4px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;cursor:pointer}' +
       '.pp-queue-toggle:hover{background:color-mix(in srgb,var(--pp-accent) 10%,transparent);color:var(--pp-accent)}' +
       '.pp-queue-toggle:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
