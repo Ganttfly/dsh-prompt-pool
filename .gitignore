@@ -1,3 +1,6 @@
 
 # One-off rewrite scripts kept for reference, never committed
 tools/oneshot/
+
+# Build artifacts
+*.tgz

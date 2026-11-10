@@ -11,7 +11,7 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
-## [0.1.96] — 2026-11-10
+## [1.0.0] — 2026-11-10
 
 First public release.
 
@@ -40,5 +40,5 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v0.1.96...HEAD
-[0.1.96]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v0.1.96
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.0

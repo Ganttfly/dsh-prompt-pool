@@ -5,12 +5,12 @@
 
 ---
 
-## 0. 现状盘点（2026-11-10，0.1.93）
+## 0. 现状盘点（2026-11-10，1.0.0）
 
 | 项目 | 现状 | 结论 |
 |---|---|---|
 | npm 包名 | `dsh-prompt-pool` 在 registry 返回 404 | 名字可用 |
-| 版本 | `plugin/package.json` = 0.1.93，界面 `PLUGIN_VERSION` 同步 | smoke 已强制一致 |
+| 版本 | `plugin/package.json` = 1.0.0，界面 `PLUGIN_VERSION` 同步 | smoke 已强制一致 |
 | 打包产物 | `npm pack --dry-run` = 7 个文件、约 43 kB | 内容正确 |
 | `private` | `true` | **必须去掉，否则 npm 拒绝发布** |
 | license / author / repository / keywords / engines | 全部缺失 | 必须补齐 |
@@ -52,7 +52,7 @@ git push -u origin main
 ```json
 {
   "name": "dsh-prompt-pool",
-  "version": "0.1.94",
+  "version": "1.0.0",
   "private": false,
   "license": "MIT",
   "author": "GanttShen",
@@ -175,8 +175,8 @@ dsh plugin add dsh-prompt-pool --profile scratch   # 发布前可用 npm pack �
 cd plugin
 npm whoami                 # 确认登录的是正确账号
 npm publish --access public
-git tag v0.1.94
-git push origin v0.1.94
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 然后在 GitHub 上建 Release，正文抄 CHANGELOG 对应段落。
