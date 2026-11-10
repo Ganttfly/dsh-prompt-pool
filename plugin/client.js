@@ -149,6 +149,9 @@ window.__ModuleLoader__.load({
       'tray.selected': '已选 {n} 条',
       'tray.release': '发送',
       'tray.clear': '清空',
+      'tray.clearTitle': '清空待发送队列',
+      'tray.clearConfirm': '队列里的 {n} 条会被一起移出，这个操作不能撤销。',
+      'tray.clearAction': '清空',
       'tray.empty': '还没选中任何条目，点左侧「＋」加入',
       'tray.remove': '移出',
       'tray.duplicate': '复制一份，追加到末尾',
@@ -295,6 +298,9 @@ window.__ModuleLoader__.load({
       'tray.selected': '{n} selected',
       'tray.release': 'Send',
       'tray.clear': 'Clear',
+      'tray.clearTitle': 'Clear the send queue',
+      'tray.clearConfirm': 'All {n} queued items are removed at once. This cannot be undone.',
+      'tray.clearAction': 'Clear',
       'tray.empty': 'Nothing selected yet — use the ＋ control on a row',
       'tray.remove': 'Remove',
       'tray.duplicate': 'Duplicate and append to the end',
@@ -770,8 +776,8 @@ window.__ModuleLoader__.load({
       ];
     }
 
-    /** Confirmation for deleting one of the user's own tabs, as a modal. */
-    function CategoryDeleteConfirm(props) {
+    /** Shared confirm modal: backdrop click and Escape both cancel. */
+    function ConfirmModal(props) {
       useEffect(() => {
         const onKeyDown = (event) => {
           if (event.key !== 'Escape') return;
@@ -793,16 +799,40 @@ window.__ModuleLoader__.load({
         },
         h(
           'div',
-          { className: 'pp-modal-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': translate('tab.delete') },
-          h('div', { className: 'pp-modal-text' }, translate('tab.deleteConfirm')),
+          { className: 'pp-modal-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': props.label },
+          h('div', { className: 'pp-modal-text' }, props.text),
           h(
             'div',
             { className: 'pp-modal-actions' },
-            h('button', { type: 'button', className: 'pp-mini', onClick: props.onCancel }, translate('tab.cancelAction')),
-            h('button', { type: 'button', className: 'pp-primary', autoFocus: true, onClick: props.onConfirm }, translate('tab.deleteAction')),
+            h('button', { type: 'button', className: 'pp-mini', onClick: props.onCancel }, props.cancelText),
+            h('button', { type: 'button', className: 'pp-primary', autoFocus: true, onClick: props.onConfirm }, props.confirmText),
           ),
         ),
       );
+    }
+
+    /** Confirmation for deleting one of the user's own tabs, as a modal. */
+    function CategoryDeleteConfirm(props) {
+      return h(ConfirmModal, {
+        label: translate('tab.delete'),
+        text: translate('tab.deleteConfirm'),
+        cancelText: translate('tab.cancelAction'),
+        confirmText: translate('tab.deleteAction'),
+        onCancel: props.onCancel,
+        onConfirm: props.onConfirm,
+      });
+    }
+
+    /** Confirmation before the queue is dropped in one click. */
+    function TrayClearConfirm(props) {
+      return h(ConfirmModal, {
+        label: translate('tray.clearTitle'),
+        text: translate('tray.clearConfirm', { n: props.count }),
+        cancelText: translate('row.cancel'),
+        confirmText: translate('tray.clearAction'),
+        onCancel: props.onCancel,
+        onConfirm: props.onConfirm,
+      });
     }
 
     /** The workspace rail, or just its items when there is nothing to switch between. */
@@ -1857,6 +1887,7 @@ window.__ModuleLoader__.load({
       const [trayEditing, setTrayEditing] = useState(null);
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
+      const [confirmClear, setConfirmClear] = useState(false);
       const [wsSelected, setWsSelected] = useState('');
       const [customPick, setCustomPick] = useState('');
       const [builtinPick, setBuiltinPick] = useState('');
@@ -1878,6 +1909,11 @@ window.__ModuleLoader__.load({
           if (node) node.scrollTop = node.scrollHeight;
         }
         lastTrayCount.current = trayCount;
+      }, [trayCount]);
+      // A release can empty the queue while the confirm is up; drop the prompt
+      // with it so it cannot pop back when the next item is queued.
+      useEffect(() => {
+        if (trayCount === 0) setConfirmClear(false);
       }, [trayCount]);
       useEffect(() => {
         if (!pageWorkspaceId) return;
@@ -2197,6 +2233,16 @@ window.__ModuleLoader__.load({
           }),
         ),
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
+        confirmClear && state.tray.length > 0
+          ? h(TrayClearConfirm, {
+              count: state.tray.length,
+              onConfirm: () => {
+                poolActions.clearTray();
+                setConfirmClear(false);
+              },
+              onCancel: () => setConfirmClear(false),
+            })
+          : null,
         h(
           'div',
           { className: 'pp-page-body' },
@@ -2274,7 +2320,7 @@ window.__ModuleLoader__.load({
                 h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
                 h('span', { className: 'pp-grow' }),
                 state.tray.length > 0
-                  ? h('button', { type: 'button', className: 'pp-link', onClick: () => poolActions.clearTray() }, translate('tray.clear'))
+                  ? h('button', { type: 'button', className: 'pp-link', onClick: () => setConfirmClear(true) }, translate('tray.clear'))
                   : null,
                 state.tray.length > 0
                   ? h(
@@ -2408,7 +2454,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.70'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.71'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2889,6 +2935,7 @@ window.__ModuleLoader__.load({
       const [customPick, setCustomPick] = useState('');
       const [builtinPick, setBuiltinPick] = useState('');
       const [confirming, setConfirming] = useState(false);
+      const [confirmClear, setConfirmClear] = useState(false);
       const [status, setStatus] = useState(null);
       const [busy, setBusy] = useState(false);
       const { preview, openImage, closeImage } = useImagePreview();
@@ -3291,6 +3338,11 @@ window.__ModuleLoader__.load({
 
       const tray = state.tray;
 
+      // Same rule as the page: an emptied queue dismisses the confirmation.
+      useEffect(() => {
+        if (tray.length === 0) setConfirmClear(false);
+      }, [tray.length]);
+
       // The sidebar tab has no composer access, so it posts commands here.
       const bridgeRef = useRef(null);
       bridgeRef.current = { insert: insertItem, release };
@@ -3403,6 +3455,16 @@ window.__ModuleLoader__.load({
             h('button', { type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('panel.new')),
         ),
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
+        confirmClear && tray.length > 0
+          ? h(TrayClearConfirm, {
+              count: tray.length,
+              onConfirm: () => {
+                poolActions.clearTray();
+                setConfirmClear(false);
+              },
+              onCancel: () => setConfirmClear(false),
+            })
+          : null,
         h(
           'div',
           { className: 'pp-list' },
@@ -3468,7 +3530,7 @@ window.__ModuleLoader__.load({
             h('span', { className: 'pp-hint' }, translate('tray.selected', { n: tray.length })),
                 queue.length > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queue.length })) : null,
                 h('span', { className: 'pp-grow' }),
-                h('button', { type: 'button', className: 'pp-link', onClick: () => poolActions.clearTray() }, translate('tray.clear')),
+                h('button', { type: 'button', className: 'pp-link', onClick: () => setConfirmClear(true) }, translate('tray.clear')),
               ),
               h(
                 'div',
