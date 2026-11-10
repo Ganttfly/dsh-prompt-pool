@@ -24,7 +24,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '0.1.88';
+    const PLUGIN_VERSION = '0.1.89';
     const PLUGIN_AUTHOR = 'RobinShen';
     /** Left empty until the public repository exists; the row hides while it is. */
     const PLUGIN_REPO = '';
@@ -3671,6 +3671,7 @@ window.__ModuleLoader__.load({
       };
 
       const tray = state.tray;
+      const queueCollapsed = normalizeSettings(state.settings).queueCollapsed;
 
       // A capture appends to the end of the list; keep the new row in view.
       const listRef = useRef(null);
@@ -3909,12 +3910,40 @@ window.__ModuleLoader__.load({
             )
           : null,
         !settingsOpen
-          ? h(
+          ? queueCollapsed
+            ? h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'pp-queue-strip',
+                  title: translate('tray.expandTitle'),
+                  'aria-label': translate('tray.expandTitle'),
+                  'aria-expanded': 'false',
+                  onClick: () => poolActions.setSetting('queueCollapsed', false),
+                },
+                h('span', { className: 'pp-queue-strip-action' }, icon('chevronUp')),
+                h('span', { className: 'pp-queue-strip-title' }, translate('tray.title')),
+                h('span', { className: 'pp-hint' }, translate('tray.selected', { n: tray.length })),
+                h('span', { className: 'pp-grow' }),
+              )
+            : h(
               'div',
               { className: 'pp-page-foot' },
               h(
                 'div',
                 { className: 'pp-foot-head' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'pp-queue-toggle',
+                    title: translate('tray.collapseTitle'),
+                    'aria-label': translate('tray.collapseTitle'),
+                    'aria-expanded': 'true',
+                    onClick: () => poolActions.setSetting('queueCollapsed', true),
+                  },
+                  h('span', { className: 'pp-queue-toggle-icon' }, icon('chevronDown')),
+                ),
                 h('span', { className: 'pp-foot-title' }, translate('tray.title')),
             h('span', { className: 'pp-hint' }, translate('tray.selected', { n: tray.length })),
                 queue.length > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queue.length })) : null,
@@ -4041,7 +4070,9 @@ window.__ModuleLoader__.load({
       '.pp-panel-grip{flex:none;display:flex;align-items:center;justify-content:center;height:11px;cursor:ns-resize;touch-action:none}' +
       '.pp-grip-bar{width:44px;height:4px;border-radius:2px;background:var(--pp-line-2);transition:background .12s ease}' +
       '.pp-panel-grip:hover .pp-grip-bar{background:var(--pp-accent)}' +
-      '.pp-panel .pp-page-foot{max-height:45%;min-height:0}' +
+      // flex:none keeps the card at its content height (or its cap) instead of
+      // shrinking until the chips clip inside the panel.
+      '.pp-panel .pp-page-foot{flex:none;max-height:45%;min-height:0}' +
       // flex:1 would collapse an auto-height card to zero and clip the empty hint;
       // the tray sizes to its content and only shrinks (then scrolls) at the cap.
       '.pp-panel .pp-page-foot .pp-tray{max-height:none;min-height:0;flex:0 1 auto}' +

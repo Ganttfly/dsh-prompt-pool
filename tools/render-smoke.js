@@ -169,12 +169,13 @@ const panelSearch = panelNodes.some((node) => node.type === 'input' && hasClass(
 const panelClose = panelNodes.some((node) => node.type === 'button' && node.props && node.props.title === 'panel.close');
 const panelRows = panelNodes.filter((node) => hasClass(node, 'pp-page-item')).length;
 const panelGrip = panelNodes.some((node) => hasClass(node, 'pp-panel-grip'));
+const panelQueueToggle = panelNodes.some((node) => node.type === 'button' && hasClass(node, 'pp-queue-toggle'));
 const panelCapture = panelNodes.some(
   (node) => node.type === 'button' && node.props && node.props.title === 'panel.captureHint'
     && Array.isArray(node.children) && node.children.indexOf('panel.capture') >= 0,
 );
-console.log(`[check] panel header search=${panelSearch} close=${panelClose} grip=${panelGrip} captureHint=${panelCapture} page-item rows=${panelRows}`);
-if (!panelSearch || !panelClose || !panelGrip || !panelCapture || panelRows === 0) process.exitCode = 1;
+console.log(`[check] panel header search=${panelSearch} close=${panelClose} grip=${panelGrip} queueToggle=${panelQueueToggle} captureHint=${panelCapture} page-item rows=${panelRows}`);
+if (!panelSearch || !panelClose || !panelGrip || !panelQueueToggle || !panelCapture || panelRows === 0) process.exitCode = 1;
 
 // The composer trigger names itself, and flags the queue with an accent badge.
 const triggerEntry = registrations.find((entry) => entry.slot === 'conversation.input.right');
