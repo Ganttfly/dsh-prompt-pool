@@ -104,6 +104,12 @@ window.__ModuleLoader__.load({
       'settings.mode.nested': '折叠',
       'settings.mode.hidden': '隐藏',
       'settings.tab.workspace': '工作区',
+      'settings.tab.prompts': '提示词',
+      'settings.keep': '用过之后，条目留在池子里吗',
+      'settings.keepInsert': '插入输入框后，仍旧保留在池子中',
+      'settings.keepInsertHint': '关闭后，插入成功的条目会从池子移出；提示条上的「撤销」可以恢复。',
+      'settings.keepQueue': '加入待发送队列后，仍旧保留在池子中',
+      'settings.keepQueueHint': '关闭后，条目一加入队列就从池子移出；队列里的那一条不受影响。',
       'settings.tab.display': '展示',
       'settings.customNested': '自定义分组折叠成一个 Tab',
       'settings.customNestedHint': '分组多时打开：Tab 行只保留一个「自定义」，组内用横排胶囊切换。',
@@ -178,6 +184,8 @@ window.__ModuleLoader__.load({
       'status.nothing': '草稿是空的，先写点什么',
       'status.emptyBody': '内容不能是空的',
       'status.inserted': '已插入到输入框',
+      'status.insertedAndRemoved': '已插入到输入框，并从池子移出',
+      'status.queuedAndRemoved': '已加入待发送队列，并从池子移出',
       'status.insertFailed': '输入框刚被改动，请重试',
       'status.released': '已释放 {n} 条',
       'status.releaseStopped': '已释放 {n} 条，其余 {rest} 条没发出去：输入框繁忙或内容被改动',
@@ -261,6 +269,12 @@ window.__ModuleLoader__.load({
       'settings.mode.nested': 'Folded',
       'settings.mode.hidden': 'Hidden',
       'settings.tab.workspace': 'Workspaces',
+      'settings.tab.prompts': 'Prompts',
+      'settings.keep': 'What happens to an item once it is used',
+      'settings.keepInsert': 'Keep it in the pool after inserting it into the composer',
+      'settings.keepInsertHint': 'Turned off, an inserted item leaves the pool; the toast offers an undo.',
+      'settings.keepQueue': 'Keep it in the pool after adding it to the send queue',
+      'settings.keepQueueHint': 'Turned off, the item leaves the pool as soon as it is queued; the queued copy stays.',
       'settings.tab.display': 'Display',
       'settings.customNested': 'Fold custom groups into one tab',
       'settings.customNestedHint': 'Useful once you have many groups: one “Custom” tab keeps them as chips inside.',
@@ -335,6 +349,8 @@ window.__ModuleLoader__.load({
       'status.nothing': 'The composer is empty',
       'status.emptyBody': 'The content cannot be empty',
       'status.inserted': 'Inserted into the composer',
+      'status.insertedAndRemoved': 'Inserted, and removed from the pool',
+      'status.queuedAndRemoved': 'Queued, and removed from the pool',
       'status.insertFailed': 'The composer changed underneath; try again',
       'status.released': 'Released {n}',
       'status.releaseStopped': 'Released {n}; {rest} left because the composer was busy or edited',
@@ -970,7 +986,9 @@ window.__ModuleLoader__.load({
       const byId = new Map(items.map((item) => [item.id, item]));
       const rawTray = Array.isArray(data && data.tray) ? data.tray : [];
       const tray = rawTray.map((entry) => normalizeTrayEntry(entry, byId)).filter(Boolean);
-      return { version: POOL_VERSION, categories, items, tray, settings: normalizeSettings(data && data.settings), seeded: Boolean(data && data.seeded === true) };
+      // Keep the stored seed level: `Boolean(...)` collapsed 2 to false, so a
+      // reload re-added every seed item the user had deleted.
+      return { version: POOL_VERSION, categories, items, tray, settings: normalizeSettings(data && data.settings), seeded: Number(data && data.seeded) || 0 };
     }
 
     function emptyPool() {
@@ -1183,6 +1201,9 @@ window.__ModuleLoader__.load({
           : [],
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
         queueCollapsed: settings.queueCollapsed === true,
+        // Whether an item leaves the pool after it is used.
+        keepAfterInsert: settings.keepAfterInsert !== false,
+        keepAfterQueue: settings.keepAfterQueue !== false,
         // 0 keeps the default height; anything else is a dragged height in px.
         panelHeight: (() => {
           const value = Number(settings.panelHeight);
@@ -2074,7 +2095,7 @@ window.__ModuleLoader__.load({
         });
       };
 
-      const sendToComposer = async (command, okText) => {
+      const sendToComposer = async (command, okText, onSuccess) => {
         let result;
         try {
           result = await bridge.request(command);
@@ -2083,6 +2104,7 @@ window.__ModuleLoader__.load({
         }
         if (result && result.ok) {
           flash({ kind: 'ok', text: okText });
+          if (typeof onSuccess === 'function') onSuccess();
           return;
         }
         const reason = result && result.reason;
@@ -2139,17 +2161,25 @@ window.__ModuleLoader__.load({
       };
 
       /** The confirmed delete: drop the item, then offer the same undo as the panel. */
-      const removeItem = (item) => {
+      const removeItem = (item, text) => {
         const index = pool.get().items.findIndex((entry) => entry.id === item.id);
         poolActions.remove(item.id);
         flash({
           kind: 'info',
-          text: translate('status.deleted', { title: itemLabel(item) }),
+          text: text || translate('status.deleted', { title: itemLabel(item) }),
           undo: () => {
             poolActions.restore(item, index);
             setStatus(null);
           },
         });
+      };
+
+      /** Queue one occurrence, dropping it from the pool when retention is off. */
+      const queueItem = (item) => {
+        const before = pool.get().tray.length;
+        poolActions.addToTray(item.id);
+        if (pool.get().tray.length === before) return;
+        if (!normalizeSettings(state.settings).keepAfterQueue) removeItem(item, translate('status.queuedAndRemoved'));
       };
 
       /** One entry point: the current tab decides the new item's classification. */
@@ -2246,8 +2276,18 @@ window.__ModuleLoader__.load({
         return h(
           'div',
           { key: item.id, className: 'pp-row pp-page-item' },
-          h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => sendToComposer({ type: 'insert', text: item.body, images: normalizeImages(item.images) }, item.body.trim() ? translate('status.inserted') : translate('image.inserted')) }),
-          h(TrayAdd, { label: translate('row.select'), onClick: () => poolActions.addToTray(item.id) }),
+          h(IconButton, {
+            name: 'insert',
+            label: translate('row.insert'),
+            onClick: () => sendToComposer(
+              { type: 'insert', text: item.body, images: normalizeImages(item.images) },
+              item.body.trim() ? translate('status.inserted') : translate('image.inserted'),
+              () => {
+                if (!normalizeSettings(state.settings).keepAfterInsert) removeItem(item, translate('status.insertedAndRemoved'));
+              },
+            ),
+          }),
+          h(TrayAdd, { label: translate('row.select'), onClick: () => queueItem(item) }),
           h(
             'div',
             { className: 'pp-main', onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body, images: normalizeImages(item.images) }) },
@@ -2613,7 +2653,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.82'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.83'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2637,6 +2677,24 @@ window.__ModuleLoader__.load({
             },
             translate('settings.tab.workspace'),
           ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-tab',
+              'data-active': section === 'prompts' ? 'true' : 'false',
+              onClick: () => setSection('prompts'),
+            },
+            translate('settings.tab.prompts'),
+          ),
+        ),
+        h(
+          'div',
+          { className: 'pp-set-group pp-set-card', style: { display: section === 'prompts' ? '' : 'none' } },
+          h('div', { className: 'pp-set-label' }, translate('settings.keep')),
+          check('keepAfterInsert', 'settings.keepInsert', 'settings.keepInsertHint'),
+          h('div', { className: 'pp-set-divider' }),
+          check('keepAfterQueue', 'settings.keepQueue', 'settings.keepQueueHint'),
         ),
         h(
           'div',
@@ -3261,6 +3319,7 @@ window.__ModuleLoader__.load({
             }
           }
           flash({ kind: 'ok', text: added > 0 && !body.trim() ? translate('image.inserted') : translate('status.inserted') });
+          if (!normalizeSettings(state.settings).keepAfterInsert) deleteItem(item, translate('status.insertedAndRemoved'));
           return { ok: true };
         } catch (error) {
           flash({ kind: 'error', text: String((error && error.message) || error) });
@@ -3349,17 +3408,25 @@ window.__ModuleLoader__.load({
         });
       };
 
-      const deleteItem = (item) => {
+      const deleteItem = (item, text) => {
         const index = pool.get().items.findIndex((entry) => entry.id === item.id);
         poolActions.remove(item.id);
         flash({
           kind: 'info',
-          text: translate('status.deleted', { title: item.title || firstLine(item.body) || (item.images && item.images[0] && item.images[0].name) || translate('image.only') }),
+          text: text || translate('status.deleted', { title: itemLabel(item) }),
           undo: () => {
             poolActions.restore(item, index);
             setStatus(null);
           },
         });
+      };
+
+      /** Queue one occurrence, dropping it from the pool when retention is off. */
+      const queueItem = (item) => {
+        const before = pool.get().tray.length;
+        poolActions.addToTray(item.id);
+        if (pool.get().tray.length === before) return;
+        if (!normalizeSettings(state.settings).keepAfterQueue) deleteItem(item, translate('status.queuedAndRemoved'));
       };
 
       const release = async () => {
@@ -3510,7 +3577,7 @@ window.__ModuleLoader__.load({
           'div',
           { key: item.id, className: 'pp-row pp-page-item' },
           h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => insertItem(item) }),
-          h(TrayAdd, { label: translate('row.select'), onClick: () => poolActions.addToTray(item.id) }),
+          h(TrayAdd, { label: translate('row.select'), onClick: () => queueItem(item) }),
           h(
             'div',
             { className: 'pp-main', title: translate('row.insert'), onClick: () => insertItem(item) },
