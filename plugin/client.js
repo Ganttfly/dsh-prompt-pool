@@ -1844,7 +1844,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.51'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.52'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -1905,8 +1905,10 @@ window.__ModuleLoader__.load({
             'div',
             { className: 'pp-set-tr pp-set-th' },
             h('span', null, translate('settings.tableGroup')),
-            ['tabs', 'nested', 'hidden'].map((mode) => h('span', { key: mode }, translate('settings.mode.' + mode))),
-            h('span', null, translate('settings.tableOrder')),
+            ['tabs', 'nested', 'hidden'].map((mode) =>
+              h('span', { key: mode, className: 'pp-set-th-cell' }, translate('settings.mode.' + mode)),
+            ),
+            h('span', { className: 'pp-set-th-cell' }, translate('settings.tableOrder')),
           ),
           settings.order.map((family, index) =>
             h(
@@ -2896,7 +2898,8 @@ window.__ModuleLoader__.load({
         '.pp-set-tr.pp-set-th{border-top:0;padding-bottom:2px;font-size:11px;color:var(--pp-ink-2)}' +
         '.pp-set-td-name{font-size:12px;color:var(--pp-ink)}' +
         '.pp-set-td-cell{display:flex;justify-content:center}' +
-        '.pp-set-td-order{display:flex;justify-content:flex-end;gap:4px}' +
+        '.pp-set-th-cell{text-align:center}' +
+        '.pp-set-td-order{display:flex;justify-content:center;gap:4px}' +
         '.pp-set-divider{height:1px;background:var(--pp-line-2);margin:14px 0 12px}' +
         '.pp-set-line{display:flex;align-items:center;gap:12px;padding:4px 0}' +
         '.pp-set-ws{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;min-width:0}' +
