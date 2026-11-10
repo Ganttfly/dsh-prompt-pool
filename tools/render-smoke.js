@@ -149,3 +149,23 @@ for (const entry of registrations) {
 
 console.log(failures === 0 ? '[ok] all components rendered' : `[fail] ${failures} component(s) failed`);
 if (failures > 0) process.exitCode = 1;
+
+// The composer panel mirrors the sidebar page: same header controls and rows.
+const walkTree = (node, visit) => {
+  if (!node || typeof node !== 'object') return;
+  if (Array.isArray(node)) { node.forEach((child) => walkTree(child, visit)); return; }
+  visit(node);
+  if (Array.isArray(node.children)) node.children.forEach((child) => walkTree(child, visit));
+};
+
+const overlayEntry = registrations.find((entry) => entry.slot === 'conversation.input.overlay');
+const overlayTree = overlayEntry.component(panelProps);
+const panelNodes = [];
+walkTree(overlayTree, (node) => panelNodes.push(node));
+const hasClass = (node, name) => node.props && String(node.props.className || '').split(' ').indexOf(name) >= 0;
+
+const panelSearch = panelNodes.some((node) => node.type === 'input' && hasClass(node, 'pp-search'));
+const panelClose = panelNodes.some((node) => node.type === 'button' && node.props && node.props.title === 'panel.close');
+const panelRows = panelNodes.filter((node) => hasClass(node, 'pp-page-item')).length;
+console.log(`[check] panel header search=${panelSearch} close=${panelClose} page-item rows=${panelRows}`);
+if (!panelSearch || !panelClose || panelRows === 0) process.exitCode = 1;

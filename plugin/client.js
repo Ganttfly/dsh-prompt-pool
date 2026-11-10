@@ -30,8 +30,7 @@ window.__ModuleLoader__.load({
       'button.label': '提示池',
       'panel.title': '提示池',
       'panel.close': '关闭',
-      'panel.capture': '存下当前草稿',
-      'panel.new': '新建',
+      'panel.capture': '存草稿',
       'panel.empty': '池子是空的。写一句，然后点「存下当前草稿」。',
       'panel.emptyTab': '这一栏还没有内容。',
       'tab.all': '全部',
@@ -187,7 +186,6 @@ window.__ModuleLoader__.load({
       'panel.title': 'Prompt pool',
       'panel.close': 'Close',
       'panel.capture': 'Save draft',
-      'panel.new': 'New',
       'panel.empty': 'The pool is empty. Write something, then press Save draft.',
       'panel.emptyTab': 'Nothing in this tab yet.',
       'tab.all': 'All',
@@ -2555,7 +2553,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.75'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.76'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -3028,6 +3026,7 @@ window.__ModuleLoader__.load({
       const busyRef = useRef(false);
 
       const [tab, setTab] = useState('all');
+      const [query, setQuery] = useState('');
       const [editing, setEditing] = useState(null);
       const [trayEditing, setTrayEditing] = useState(null);
       const [settingsOpen, setSettingsOpen] = useState(false);
@@ -3106,10 +3105,14 @@ window.__ModuleLoader__.load({
         return counts;
       }, [state.items]);
 
-      const items = useMemo(
-        () => (tab === 'nested:workspace' ? state.items.filter((item) => item.group === 'workspace:' + (wsActive ? wsActive.slice(3) : '')) : state.items.filter((item) => matchesTab(item, tab))),
-        [state.items, tab, wsActive],
-      );
+      const items = useMemo(() => {
+        const needle = query.trim().toLowerCase();
+        const scoped = tab === 'nested:workspace'
+          ? state.items.filter((item) => groupOf(item) === (wsActive ? 'workspace:' + wsActive.slice(3) : ''))
+          : state.items.filter((item) => matchesTab(item, tab));
+        if (!needle) return scoped;
+        return scoped.filter((item) => (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0);
+      }, [state.items, tab, wsActive, query]);
 
       const actions = props.inputActions;
       const canAct = actions && typeof actions.setDraft === 'function';
@@ -3410,7 +3413,7 @@ window.__ModuleLoader__.load({
         }
         return h(
           'div',
-          { key: item.id, className: 'pp-row' },
+          { key: item.id, className: 'pp-row pp-page-item' },
           h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => insertItem(item) }),
           h(TrayAdd, { label: translate('row.select'), onClick: () => poolActions.addToTray(item.id) }),
           h(
@@ -3528,12 +3531,21 @@ window.__ModuleLoader__.load({
           onMouseDown: (event) => event.stopPropagation(),
         },
         h('style', null, CSS),
+        // Same header and tab strip as the sidebar page, so both views read alike.
         h(
           'div',
-          { className: 'pp-head' },
-          h('span', { className: 'pp-head-title' }, translate('panel.title')),
-          h('span', { className: 'pp-head-count' }, String(panelCount)),
+          { className: 'pp-page-head' },
+          h('span', { className: 'pp-page-title' }, translate('panel.title')),
+          h('span', { className: 'pp-page-sub' }, translate('page.count', { n: panelCount })),
           h('span', { className: 'pp-grow' }),
+          h('input', {
+            className: 'pp-search',
+            value: query,
+            placeholder: translate('page.search'),
+            onChange: (event) => setQuery(event.target.value),
+          }),
+          h('button', { type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('page.new')),
+          h('button', { type: 'button', className: 'pp-mini', onClick: captureDraft }, translate('panel.capture')),
           h(SettingsButton, { active: settingsOpen, onClick: () => setSettingsOpen(!settingsOpen) }),
           h(
             'button',
@@ -3543,7 +3555,7 @@ window.__ModuleLoader__.load({
         ),
         h(
           'div',
-          { className: 'pp-bar' },
+          { className: 'pp-bar', style: { padding: '8px 12px 2px' } },
           h(TabBar, {
             tabs: buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId),
             active: tab,
@@ -3553,9 +3565,6 @@ window.__ModuleLoader__.load({
             }, tab),
             onDelete: (id) => setPendingCategory(id),
           }),
-          h('span', { className: 'pp-grow' }),
-          h('button', { type: 'button', className: 'pp-mini', onClick: captureDraft }, translate('panel.capture')),
-            h('button', { type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('panel.new')),
         ),
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
         confirmClear && tray.length > 0
@@ -3786,7 +3795,7 @@ window.__ModuleLoader__.load({
       '.pp-btn:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-btn[data-open="true"]{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-badge{min-width:15px;height:15px;padding:0 4px;border-radius:8px;border:1px solid var(--pp-line-2);color:var(--pp-ink-2);font-size:10px;line-height:13px;text-align:center;font-variant-numeric:tabular-nums}' +
-      '.pp-panel{position:absolute;left:6px;right:6px;bottom:0;margin:0 auto;max-width:760px;z-index:40;display:flex;flex-direction:column;max-height:min(58vh,520px);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--pp-surface-2);box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
+      '.pp-panel{position:absolute;left:6px;right:6px;bottom:0;margin:0 auto;max-width:920px;z-index:40;display:flex;flex-direction:column;max-height:min(70vh,720px);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--pp-surface-2);box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
       '.pp-head{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}' +
       '.pp-head-title{font-weight:600;font-size:13px}' +
       '.pp-head-count{color:var(--pp-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +
@@ -3812,7 +3821,7 @@ window.__ModuleLoader__.load({
       '.pp-set-btn{display:inline-flex;align-items:center;gap:5px;padding:0 9px}' +
       '.pp-set-btn[data-active="true"]{border-color:var(--pp-accent);color:var(--pp-accent)}' +
       '.pp-set-btn-icon{display:inline-flex;align-items:center}' +
-      '.pp-list{overflow-y:auto;padding:2px 6px 8px;flex:1;min-height:0}' +
+      '.pp-list{overflow-y:auto;padding:6px 8px 20px;flex:1;min-height:0}' +
       '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
       '.pp-page-head{display:flex;align-items:center;gap:8px;padding:12px 12px 8px;border-bottom:1px solid var(--pp-line);flex-wrap:wrap}' +
       '.pp-page-title{font-size:14px;font-weight:600}' +
