@@ -24,7 +24,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '0.1.93';
+    const PLUGIN_VERSION = '0.1.94';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/ganttfly/dsh-prompt-pool';
@@ -4135,7 +4135,10 @@ window.__ModuleLoader__.load({
       '.pp-panel-grip:hover .pp-grip-bar{background:var(--pp-accent)}' +
       // flex:none keeps the card at its content height (or its cap) instead of
       // shrinking until the chips clip inside the panel.
-      '.pp-panel .pp-page-foot{flex:none;max-height:45%;min-height:0}' +
+      // A short panel used to cap the card at 45% of itself, so even two chips
+      // scrolled; a generous share of the panel keeps a few rows whole, and only a
+      // genuinely long queue scrolls inside the card.
+      '.pp-panel .pp-page-foot{flex:none;max-height:min(70%,320px);min-height:0}' +
       // flex:1 would collapse an auto-height card to zero and clip the empty hint;
       // the tray sizes to its content and only shrinks (then scrolls) at the cap.
       '.pp-panel .pp-page-foot .pp-tray{max-height:none;min-height:0;flex:0 1 auto}' +
