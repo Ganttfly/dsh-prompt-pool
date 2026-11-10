@@ -110,15 +110,16 @@ global.localStorage = {
 store.set(
   'dsh.prompt-pool.v1',
   JSON.stringify({
-    version: 1,
+    version: 2,
+    seeded: 2,
     categories: [{ id: 'c1', name: '工作' }],
-    settings: { workspaceTabs: true, currentWorkspaceTab: true },
+    settings: { currentWorkspaceTab: true },
     items: [
-      { id: 'i1', kind: 'note', title: '标题一', body: '正文一', pinned: true, categoryId: 'cat:c1' },
-      { id: 'i2', kind: 'snippet', title: '', body: '正文二', categoryId: 'ws:w1' },
-      { id: 'i3', kind: 'note', title: '', body: '正文三', categoryId: '' },
+      { id: 'i1', group: 'builtin:oftenuse', title: '标题一', body: '正文一', images: [] },
+      { id: 'i2', group: 'workspace:w1', title: '', body: '正文二', images: [] },
+      { id: 'i3', group: 'builtin:note', title: '', body: '正文三', images: [] },
     ],
-    tray: [{ key: 'k1', itemId: 'i1', body: '正文一' }],
+    tray: [{ key: 'k1', itemId: 'i1', body: '正文一', images: [] }],
   }),
 );
 
@@ -169,3 +170,14 @@ const panelClose = panelNodes.some((node) => node.type === 'button' && node.prop
 const panelRows = panelNodes.filter((node) => hasClass(node, 'pp-page-item')).length;
 console.log(`[check] panel header search=${panelSearch} close=${panelClose} page-item rows=${panelRows}`);
 if (!panelSearch || !panelClose || panelRows === 0) process.exitCode = 1;
+
+// The composer trigger names itself, and flags the queue with an accent badge.
+const triggerEntry = registrations.find((entry) => entry.slot === 'conversation.input.right');
+const triggerNodes = [];
+walkTree(triggerEntry.component({}), (node) => triggerNodes.push(node));
+const trigger = triggerNodes.find((node) => node.type === 'button' && hasClass(node, 'pp-trigger'));
+const triggerLabel = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-trigger-label') && node.children[0] === 'button.label');
+const triggerBadge = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-badge') && node.children[0] === '1');
+const queued = trigger && trigger.props['data-queued'] === 'true';
+console.log(`[check] trigger label=${triggerLabel} queued=${queued} badge=${triggerBadge}`);
+if (!trigger || !triggerLabel || !queued || !triggerBadge) process.exitCode = 1;

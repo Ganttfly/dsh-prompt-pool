@@ -32,6 +32,7 @@ window.__ModuleLoader__.load({
     // ---------------------------------------------------------------- locale
     const ZH = {
       'button.label': '提示池',
+      'button.pending': '待发送 {n} 条',
       'panel.title': '提示池',
       'panel.close': '关闭',
       'panel.capture': '存草稿',
@@ -187,6 +188,7 @@ window.__ModuleLoader__.load({
 
     const EN = {
       'button.label': 'Prompt pool',
+      'button.pending': '{n} waiting to send',
       'panel.title': 'Prompt pool',
       'panel.close': 'Close',
       'panel.capture': 'Save draft',
@@ -1506,6 +1508,8 @@ window.__ModuleLoader__.load({
       const view = useUiState();
       const label = translate('button.label');
       const count = state.tray.length;
+      const queued = count > 0;
+      const hint = queued ? translate('button.pending', { n: count }) : label;
       return h(
         React.Fragment,
         null,
@@ -1515,18 +1519,20 @@ window.__ModuleLoader__.load({
           {
             key: 'btn',
             type: 'button',
-            className: 'pp-btn pp-root',
+            className: 'pp-btn pp-root pp-trigger',
             'data-pp-trigger': 'true',
             'data-open': view.open ? 'true' : 'false',
-            title: label,
-            'aria-label': label,
+            'data-queued': queued ? 'true' : 'false',
+            title: hint,
+            'aria-label': hint,
             'aria-haspopup': 'dialog',
             'aria-expanded': view.open ? 'true' : 'false',
             onMouseDown: (event) => event.preventDefault(),
             onClick: () => ui.set({ open: !ui.get().open }),
           },
           icon('pool'),
-          count > 0 ? h('span', { className: 'pp-badge' }, String(count)) : null,
+          h('span', { className: 'pp-trigger-label' }, label),
+          queued ? h('span', { className: 'pp-badge' }, String(count)) : null,
         ),
       );
     }
@@ -2568,7 +2574,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.79'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.80'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -3814,6 +3820,13 @@ window.__ModuleLoader__.load({
       '.pp-btn:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-btn[data-open="true"]{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-badge{min-width:15px;height:15px;padding:0 4px;border-radius:8px;border:1px solid var(--pp-line-2);color:var(--pp-ink-2);font-size:10px;line-height:13px;text-align:center;font-variant-numeric:tabular-nums}' +
+      // The composer trigger names itself, and switches to the accent colour once
+      // something is queued so the pending count is hard to miss.
+      '.pp-trigger{gap:6px;padding:0 9px;border:1px solid transparent}' +
+      '.pp-trigger-label{white-space:nowrap}' +
+      '.pp-trigger[data-queued="true"]{border-color:var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
+      '.pp-trigger[data-queued="true"]:hover{background:color-mix(in srgb,var(--pp-accent) 20%,transparent);color:var(--pp-accent)}' +
+      '.pp-trigger[data-queued="true"] .pp-badge{border-color:var(--pp-accent);background:var(--pp-accent);color:var(--pp-on-accent);font-weight:600}' +
       '.pp-panel{position:absolute;left:6px;right:6px;bottom:0;margin:0 auto;max-width:920px;z-index:40;display:flex;flex-direction:column;height:min(70vh,720px);max-height:min(70vh,720px);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
       '.pp-head{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}' +
       '.pp-head-title{font-weight:600;font-size:13px}' +
@@ -4034,11 +4047,15 @@ window.__ModuleLoader__.load({
           ctx.effect(() => ctx.locale.register(NS, { zh: ZH, en: EN }));
           translate = ctx.locale.bind(NS);
         }
-        // The composer trigger is off for now: the panel it opened still reads
-        // worse than the sidebar page, so that page is the supported entry. The
-        // overlay below stays mounted even while closed, which is what keeps the
-        // page's insert/release commands working through the bridge; re-adding
-        // this registration brings the trigger back.
+        // The composer keeps two pieces: the trigger beside the input, and the
+        // overlay panel. The overlay stays mounted even while closed, which is
+        // what lets the sidebar page post insert/release through the bridge.
+        ctx.slots.inject('conversation.input.right', () =>
+          ctx.slots.register(
+            { name: 'conversation.input.right', id: 'prompt-pool', order: 10, label: () => translate('button.label') },
+            PromptPoolButton,
+          ),
+        );
         ctx.slots.inject('conversation.input.overlay', () =>
           ctx.slots.register(
             { name: 'conversation.input.overlay', id: 'prompt-pool-panel', order: 12, label: () => translate('panel.title') },
