@@ -24,7 +24,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '0.1.90';
+    const PLUGIN_VERSION = '0.1.91';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/ganttfly/dsh-prompt-pool';
@@ -193,6 +193,7 @@ window.__ModuleLoader__.load({
       'confirm.ok': '确认释放',
       'confirm.cancel': '再想想',
       'status.saved': '已存入池子',
+      'status.savedTextOnly': '已存入池子，但这 {n} 个附件没有一起保存',
       'status.nothing': '草稿是空的，先写点什么',
       'status.emptyBody': '内容不能是空的',
       'status.inserted': '已插入到输入框',
@@ -362,6 +363,7 @@ window.__ModuleLoader__.load({
       'confirm.ok': 'Queue them',
       'confirm.cancel': 'Not yet',
       'status.saved': 'Saved to the pool',
+      'status.savedTextOnly': 'Saved to the pool; {n} attachment(s) were not captured',
       'status.nothing': 'The composer is empty',
       'status.emptyBody': 'The content cannot be empty',
       'status.inserted': 'Inserted into the composer',
@@ -456,6 +458,24 @@ window.__ModuleLoader__.load({
         || firstLine(item.body)
         || (image && (image.name || translate('image.only')))
         || translate('group.untitled');
+    }
+
+    /**
+     * A readable title for a captured draft. The composer publishes chips in their
+     * clipboard form (`@name(dsh-session:…)`, `@C:\dir\file.docx`), which is far
+     * too long for a row title; only the human part survives. The body keeps the
+     * original text so inserting it back still sends the same reference.
+     */
+    function draftTitle(text) {
+      const cleaned = String(text || '')
+        // Chip references: drop the machine id, keep the display name.
+        .replace(/\((?:dsh-[a-z0-9-]+):[^)]*\)/gi, '')
+        // File chips: drop the directory chain, keep the file name.
+        .replace(/(^|\s)@[A-Za-z]:\\(?:[^\\\n]*\\)+/g, (match, lead) => lead + '@')
+        .replace(/(^|\s)@(?:[^\s\\\n]*\/)+/g, (match, lead) => lead + '@')
+        .replace(/[ \t]{2,}/g, ' ')
+        .trim();
+      return firstLine(cleaned || text);
     }
 
     // ------------------------------------------------------------- local images
@@ -2143,7 +2163,10 @@ window.__ModuleLoader__.load({
         Promise.resolve(result).then(
           (value) => {
             if (value && value.ok) {
-              flash({ kind: 'ok', text: translate('status.saved') });
+              const skipped = Number(value.skipped) || 0;
+              flash(skipped > 0
+                ? { kind: 'info', text: translate('status.savedTextOnly', { n: skipped }) }
+                : { kind: 'ok', text: translate('status.saved') });
               return;
             }
             const reason = value && value.reason;
@@ -2595,7 +2618,7 @@ window.__ModuleLoader__.load({
                         'div',
                         { key: entry.key, className: 'pp-chip' },
                         h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
-                        h('div', { className: 'pp-chip-t' }, entry.body),
+                        h('div', { className: 'pp-chip-t', title: entry.body }, entry.body),
                         h(ImageStrip, { images: entry.images, compact: true, max: 4, onOpen: openImage }),
                         h(
                           'div',
@@ -3188,9 +3211,13 @@ window.__ModuleLoader__.load({
       const draft = input && typeof input.draft === 'string' ? input.draft : '';
       const phase = input && typeof input.phase === 'string' ? input.phase : 'plain';
       const queue = input && Array.isArray(input.queue) ? input.queue : [];
+      // Attachments are browser-owned ids, not text, so a capture cannot keep them.
+      const attachmentCount = input && Array.isArray(input.attachmentIds) ? input.attachmentIds.length : 0;
 
       const draftRef = useRef('');
       draftRef.current = draft;
+      const attachmentRef = useRef(0);
+      attachmentRef.current = attachmentCount;
       const phaseRef = useRef('plain');
       phaseRef.current = phase;
       const queueRef = useRef([]);
@@ -3406,12 +3433,12 @@ window.__ModuleLoader__.load({
         const text = draftRef.current;
         if (!text || !text.trim()) {
           flash({ kind: 'error', text: translate('status.nothing') });
-          return false;
+          return { ok: false, reason: 'empty' };
         }
         const item = {
           id: uid(),
           group: BUILTIN_GROUP.note,
-          title: firstLine(text),
+          title: draftTitle(text),
           body: text,
           images: [],
           createdAt: Date.now(),
@@ -3420,8 +3447,11 @@ window.__ModuleLoader__.load({
         poolActions.add(item);
         // The copy lands in 便签, which a folded/workspace tab cannot show.
         if (!matchesTab(item, tab)) setTab('all');
-        flash({ kind: 'ok', text: translate('status.saved') });
-        return true;
+        const skipped = attachmentRef.current;
+        flash(skipped > 0
+          ? { kind: 'info', text: translate('status.savedTextOnly', { n: skipped }) }
+          : { kind: 'ok', text: translate('status.saved') });
+        return { ok: true, skipped };
       };
 
       const newItem = () => {
@@ -3698,7 +3728,9 @@ window.__ModuleLoader__.load({
           }
           // The sidebar page cannot read the composer, so it asks for the capture.
           if (command.type === 'capture') {
-            return api.capture() ? { ok: true } : { ok: false, reason: 'empty' };
+            const result = api.capture();
+            if (result && result.ok) return result;
+            return { ok: false, reason: (result && result.reason) || 'empty' };
           }
           return { ok: false, reason: 'unknown' };
         });
@@ -3985,7 +4017,7 @@ window.__ModuleLoader__.load({
                     'div',
                     { key: entry.key, className: 'pp-chip' },
                     h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
-                    h('div', { className: 'pp-chip-t' }, entry.body),
+                    h('div', { className: 'pp-chip-t', title: entry.body }, entry.body),
                     h(ImageStrip, { images: entry.images, compact: true, max: 4, onOpen: openImage }),
                     h(
                       'div',
@@ -4234,7 +4266,7 @@ window.__ModuleLoader__.load({
       '.pp-chip:hover .pp-chip-actions,.pp-chip:focus-within .pp-chip-actions{opacity:1}' +
       '@media (hover:none){.pp-chip-actions{opacity:1}}' +
       '.pp-chip-n{flex:none;padding-top:1px;font-size:11px;line-height:1.55;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
-      '.pp-chip-t{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:12px;line-height:1.55;color:var(--pp-ink)}' +
+      '.pp-chip-t{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:12px;line-height:1.55;color:var(--pp-ink);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}' +
       '.pp-chip .pp-icon{width:22px;height:22px}' +
       '.pp-actions .pp-icon svg,.pp-chip-actions .pp-icon svg{width:13px;height:13px;stroke-width:1.2}' +
       '.pp-hint{color:var(--pp-ink-2);font-size:11px}' +
