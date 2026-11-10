@@ -23,6 +23,7 @@ window.__ModuleLoader__.load({
     const MAX_IMAGES = 6;
     const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
     const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+    const EMPTY_PENDING = [];
 
     // ---------------------------------------------------------------- locale
     const ZH = {
@@ -2409,7 +2410,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.67'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.68'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2872,6 +2873,15 @@ window.__ModuleLoader__.load({
       draftRef.current = draft;
       const phaseRef = useRef('plain');
       phaseRef.current = phase;
+      const queueRef = useRef([]);
+      queueRef.current = queue;
+      const sessionSelector = typeof props.useSession === 'function' ? props.useSession : null;
+      const pendingSubmissions = sessionSelector
+        ? sessionSelector((snapshot) => (snapshot && Array.isArray(snapshot.pendingSubmissions) ? snapshot.pendingSubmissions : EMPTY_PENDING))
+        : EMPTY_PENDING;
+      const pendingRef = useRef([]);
+      pendingRef.current = Array.isArray(pendingSubmissions) ? pendingSubmissions : EMPTY_PENDING;
+      const busyRef = useRef(false);
 
       const [tab, setTab] = useState('all');
       const [editing, setEditing] = useState(null);
@@ -3108,6 +3118,7 @@ window.__ModuleLoader__.load({
       };
 
       const release = async () => {
+        if (busyRef.current) return;
         const entries = state.tray.slice();
         if (entries.length === 0) return;
         if (draftRef.current.trim() !== '') {
@@ -3115,31 +3126,61 @@ window.__ModuleLoader__.load({
           flash({ kind: 'error', text: translate('status.draftBusy') });
           return;
         }
+        busyRef.current = true;
         setConfirming(false);
         setBusy(true);
         setStatus({ kind: 'info', text: translate('status.releasing', { n: entries.length }) });
         let sent = 0;
-        for (const entry of entries) {
-          const body = typeof entry.body === 'string' ? entry.body : '';
-          const images = normalizeImages(entry.images);
-          if (!body.trim() && images.length === 0) continue;
-          const clear = await waitFor(() => draftRef.current.trim() === '' && phaseRef.current === 'plain', 2500);
-          if (!clear) break;
-          try {
-            if (images.length > 0) await addImages(images);
-          } catch (error) {
-            flash({ kind: 'error', text: String((error && error.message) || error) });
-            break;
+        try {
+          for (const entry of entries) {
+            const body = typeof entry.body === 'string' ? entry.body : '';
+            const images = normalizeImages(entry.images);
+            if (!body.trim() && images.length === 0) continue;
+            const clear = await waitFor(() => draftRef.current.trim() === '' && phaseRef.current === 'plain', 2500);
+            if (!clear) break;
+            try {
+              if (images.length > 0) await addImages(images);
+            } catch (error) {
+              flash({ kind: 'error', text: String((error && error.message) || error) });
+              break;
+            }
+            if (typeof actions.submit !== 'function') break;
+            const queuedBefore = queueRef.current.length;
+            const pendingBefore = pendingRef.current.length;
+            try {
+              setDraft(body);
+            } catch (error) {
+              flash({ kind: 'error', text: String((error && error.message) || error) });
+              break;
+            }
+            // Wait until the editor really holds this occurrence before submitting it.
+            const loaded = await waitFor(() => draftRef.current.trim() === body.trim(), 2500);
+            if (!loaded) break;
+            try {
+              actions.submit();
+            } catch (error) {
+              flash({ kind: 'error', text: String((error && error.message) || error) });
+              break;
+            }
+            const accepted = await waitFor(
+              () =>
+                (queueRef.current.length > queuedBefore || pendingRef.current.length > pendingBefore) &&
+                draftRef.current.trim() === '',
+              3000,
+            );
+            if (!accepted) {
+              // The first send of an idle session becomes the live turn, not a queue row.
+              if (!(sent === 0 && draftRef.current.trim() === '')) break;
+            }
+            await waitFor(() => phaseRef.current === 'plain', 1500);
+            sent += 1;
           }
-          setDraft(body);
-          await frames(2);
-          if (typeof actions.submit === 'function') actions.submit();
-          sent += 1;
-          const consumed = await waitFor(() => draftRef.current.trim() === '', 2000);
-          if (!consumed) break;
-          await waitFor(() => phaseRef.current === 'plain', 1500);
+        } catch (error) {
+          flash({ kind: 'error', text: String((error && error.message) || error) });
+        } finally {
+          busyRef.current = false;
+          setBusy(false);
         }
-        setBusy(false);
         poolActions.setTray(entries.slice(sent));
         flash(
           sent === entries.length
@@ -3532,22 +3573,6 @@ window.__ModuleLoader__.load({
     }
 
     // ----------------------------------------------------------------- helpers
-    function frames(count) {
-      return new Promise((resolve) => {
-        let left = count;
-        const step = () => {
-          if (left <= 0) {
-            resolve();
-            return;
-          }
-          left -= 1;
-          if (typeof requestAnimationFrame === 'function') requestAnimationFrame(step);
-          else setTimeout(step, 16);
-        };
-        step();
-      });
-    }
-
     function waitFor(check, timeoutMs) {
       return new Promise((resolve) => {
         const started = Date.now();
