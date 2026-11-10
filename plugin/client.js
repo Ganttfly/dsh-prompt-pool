@@ -18,6 +18,11 @@ window.__ModuleLoader__.load({
 
     const NS = 'prompt-pool';
     const STORAGE_KEY = 'dsh.prompt-pool.v1';
+    const IMAGE_DB = 'dsh-prompt-pool-images.v1';
+    const IMAGE_STORE = 'images';
+    const MAX_IMAGES = 6;
+    const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
+    const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 
     // ---------------------------------------------------------------- locale
     const ZH = {
@@ -122,6 +127,15 @@ window.__ModuleLoader__.load({
       'row.cancel': '取消',
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
+      'image.add': '添加图片',
+      'image.remove': '移除图片',
+      'image.only': '图片',
+      'image.inserted': '已插入图片',
+      'image.insertFailed': '图片插入失败',
+      'image.missing': '有图片已丢失，请重新添加',
+      'image.tooMany': '最多只能添加 {n} 张图片',
+      'image.badType': '只支持 PNG / JPEG / WebP / GIF 图片',
+      'image.tooLarge': '图片不能超过 {n} MB',
       'row.familyBuiltin': '内置',
       'row.familyCustom': '自定义',
       'row.familyWorkspace': '工作区分组',
@@ -258,6 +272,15 @@ window.__ModuleLoader__.load({
       'row.cancel': 'Cancel',
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
+      'image.add': 'Add image',
+      'image.remove': 'Remove image',
+      'image.only': 'Image',
+      'image.inserted': 'Image inserted',
+      'image.insertFailed': 'Could not insert the image',
+      'image.missing': 'An image is missing; add it again',
+      'image.tooMany': 'At most {n} images',
+      'image.badType': 'Only PNG / JPEG / WebP / GIF images are supported',
+      'image.tooLarge': 'Each image must be under {n} MB',
       'row.familyBuiltin': 'Built-in',
       'row.familyCustom': 'Custom',
       'row.familyWorkspace': 'Workspace groups',
@@ -300,6 +323,7 @@ window.__ModuleLoader__.load({
     let skillsFace = null;
     let workspaceFace = null;
     let sessionsFace = null;
+    let conversationFace = null;
 
     /** Read one service from a context that has it mounted. */
     function serviceOf(target, key) {
@@ -364,16 +388,197 @@ window.__ModuleLoader__.load({
       return line.length > 48 ? line.slice(0, 48) + '…' : line;
     }
 
+    // ------------------------------------------------------------- local images
+    function isImageType(type) {
+      return IMAGE_TYPES.indexOf(String(type || '').toLowerCase()) >= 0;
+    }
+
+    function imageTypeOf(file) {
+      const type = String((file && file.type) || '').toLowerCase();
+      if (isImageType(type)) return type;
+      const name = String((file && file.name) || '').toLowerCase();
+      if (/\.png$/.test(name)) return 'image/png';
+      if (/\.jpe?g$/.test(name)) return 'image/jpeg';
+      if (/\.webp$/.test(name)) return 'image/webp';
+      if (/\.gif$/.test(name)) return 'image/gif';
+      return '';
+    }
+
+    function imagePathOf(file) {
+      try {
+        const bridge = typeof window !== 'undefined' ? window.__DSH_HOST_PATHS__ : null;
+        if (bridge && typeof bridge.pathFor === 'function') {
+          const value = bridge.pathFor(file);
+          if (typeof value === 'string') return value;
+        }
+      } catch (_error) {
+        /* the desktop path bridge is optional */
+      }
+      return typeof (file && file.path) === 'string' ? file.path : '';
+    }
+
+    /** Only metadata enters localStorage; the bytes live in IndexedDB. */
+    function normalizeImages(raw) {
+      if (!Array.isArray(raw)) return [];
+      return raw
+        .slice(0, MAX_IMAGES)
+        .map((entry) => {
+          if (!entry || typeof entry !== 'object') return null;
+          const id = typeof entry.id === 'string' ? entry.id : '';
+          const type = String(entry.type || '').toLowerCase();
+          if (!id || !isImageType(type)) return null;
+          const thumb =
+            typeof entry.thumb === 'string' && entry.thumb.length <= 200000 && /^data:image\//.test(entry.thumb) ? entry.thumb : '';
+          return {
+            id,
+            type,
+            name: typeof entry.name === 'string' ? entry.name : '',
+            path: typeof entry.path === 'string' ? entry.path : '',
+            size: Number.isFinite(entry.size) ? entry.size : 0,
+            thumb,
+          };
+        })
+        .filter(Boolean);
+    }
+
+    let imageDbPromise = null;
+
+    function openImageDb() {
+      if (typeof indexedDB === 'undefined') return Promise.reject(new Error('image-store-unavailable'));
+      if (!imageDbPromise) {
+        imageDbPromise = new Promise((resolve, reject) => {
+          const request = indexedDB.open(IMAGE_DB, 1);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains(IMAGE_STORE)) db.createObjectStore(IMAGE_STORE);
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error || new Error('image-store-unavailable'));
+          request.onblocked = () => reject(new Error('image-store-blocked'));
+        });
+      }
+      return imageDbPromise;
+    }
+
+    function putImageBlob(id, blob) {
+      return openImageDb().then(
+        (db) =>
+          new Promise((resolve, reject) => {
+            const tx = db.transaction(IMAGE_STORE, 'readwrite');
+            tx.objectStore(IMAGE_STORE).put(blob, id);
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => reject(tx.error || new Error('image-store-failed'));
+            tx.onabort = () => reject(tx.error || new Error('image-store-failed'));
+          }),
+      );
+    }
+
+    function getImageBlob(id) {
+      return openImageDb().then(
+        (db) =>
+          new Promise((resolve, reject) => {
+            const tx = db.transaction(IMAGE_STORE, 'readonly');
+            const request = tx.objectStore(IMAGE_STORE).get(id);
+            request.onsuccess = () => resolve(request.result || null);
+            request.onerror = () => reject(request.error || new Error('image-read-failed'));
+          }),
+      );
+    }
+
+    /** A small data-URL thumbnail keeps the list rendering synchronous. */
+    function makeImageThumb(file) {
+      return new Promise((resolve) => {
+        let settled = false;
+        const finish = (value) => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+        const render = (source, width, height) => {
+          try {
+            const scale = Math.min(1, 128 / Math.max(width || 1, height || 1));
+            const w = Math.max(1, Math.round((width || 1) * scale));
+            const h = Math.max(1, Math.round((height || 1) * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const context = canvas.getContext('2d');
+            if (!context) {
+              finish('');
+              return;
+            }
+            context.drawImage(source, 0, 0, w, h);
+            let data = '';
+            try {
+              data = canvas.toDataURL('image/webp', 0.72);
+            } catch (_error) {
+              data = '';
+            }
+            if (!data) data = canvas.toDataURL('image/jpeg', 0.72);
+            finish(data);
+          } catch (_error) {
+            finish('');
+          }
+        };
+        const viaUrl = () => {
+          try {
+            const url = URL.createObjectURL(file);
+            const image = new Image();
+            image.onload = () => {
+              URL.revokeObjectURL(url);
+              render(image, image.naturalWidth, image.naturalHeight);
+            };
+            image.onerror = () => {
+              URL.revokeObjectURL(url);
+              finish('');
+            };
+            image.src = url;
+          } catch (_error) {
+            finish('');
+          }
+        };
+        if (typeof createImageBitmap === 'function') {
+          createImageBitmap(file)
+            .then((bitmap) => {
+              render(bitmap, bitmap.width, bitmap.height);
+              if (typeof bitmap.close === 'function') bitmap.close();
+            })
+            .catch(viaUrl);
+        } else {
+          viaUrl();
+        }
+      });
+    }
+
+    async function createImageAsset(file) {
+      const type = imageTypeOf(file);
+      if (!type) throw new Error(translate('image.badType'));
+      if (Number(file.size) > MAX_IMAGE_BYTES) throw new Error(translate('image.tooLarge', { n: Math.round(MAX_IMAGE_BYTES / (1024 * 1024)) }));
+      const thumb = await makeImageThumb(file);
+      const asset = {
+        id: uid(),
+        name: typeof file.name === 'string' && file.name ? file.name : 'image',
+        type,
+        path: imagePathOf(file),
+        size: Number(file.size) || 0,
+        thumb,
+      };
+      await putImageBlob(asset.id, file);
+      return asset;
+    }
+
     function sanitizeItem(raw) {
       if (!raw || typeof raw !== 'object') return null;
       const body = typeof raw.body === 'string' ? raw.body : '';
-      if (!body.trim()) return null;
+      const images = normalizeImages(raw.images);
+      if (!body.trim() && images.length === 0) return null;
       const now = Date.now();
       return {
         id: typeof raw.id === 'string' && raw.id ? raw.id : uid(),
         group: groupOf(raw),
         title: typeof raw.title === 'string' ? raw.title : '',
         body,
+        images,
         createdAt: Number.isFinite(raw.createdAt) ? raw.createdAt : now,
         updatedAt: Number.isFinite(raw.updatedAt) ? raw.updatedAt : now,
       };
@@ -638,14 +843,15 @@ window.__ModuleLoader__.load({
     function normalizeTrayEntry(raw, byId) {
       if (typeof raw === 'string') {
         const item = byId.get(raw);
-        return item ? { key: uid(), itemId: raw, body: item.body } : null;
+        return item ? { key: uid(), itemId: raw, body: item.body, images: normalizeImages(item.images) } : null;
       }
       if (!raw || typeof raw !== 'object') return null;
       const itemId = typeof raw.itemId === 'string' ? raw.itemId : '';
       const source = byId.get(itemId);
       const body = typeof raw.body === 'string' ? raw.body : source ? source.body : '';
-      if (!body.trim()) return null;
-      return { key: typeof raw.key === 'string' && raw.key ? raw.key : uid(), itemId, body };
+      const images = normalizeImages(Array.isArray(raw.images) ? raw.images : source ? source.images : []);
+      if (!body.trim() && images.length === 0) return null;
+      return { key: typeof raw.key === 'string' && raw.key ? raw.key : uid(), itemId, body, images };
     }
 
     function normalizePool(data) {
@@ -1029,7 +1235,7 @@ window.__ModuleLoader__.load({
         mutate((state) => {
           const item = state.items.find((candidate) => candidate.id === itemId);
           if (!item) return null;
-          return { ...state, tray: [...state.tray, { key: uid(), itemId, body: item.body }] };
+          return { ...state, tray: [...state.tray, { key: uid(), itemId, body: item.body, images: normalizeImages(item.images) }] };
         });
       },
       patchTray(key, fields) {
@@ -1113,6 +1319,14 @@ window.__ModuleLoader__.load({
           return h('svg', base, h('path', { d: 'M3 4.5L6 7.5l3-3' }));
         case 'chevronUp':
           return h('svg', base, h('path', { d: 'M3 7.5L6 4.5l3 3' }));
+        case 'image':
+          return h(
+            'svg',
+            base,
+            h('rect', { x: 1.6, y: 2.2, width: 8.8, height: 7.6, rx: 1.2 }),
+            h('circle', { cx: 4.2, cy: 4.8, r: 0.9 }),
+            h('path', { d: 'M2.2 8.4l2.6-2.4 2.2 1.9 1.7-1.5 1.7 1.7' }),
+          );
         case 'gear':
           return h(
             'svg',
@@ -1246,6 +1460,105 @@ window.__ModuleLoader__.load({
           h('circle', { cx: 7, cy: 7, r: 5.5 }),
           h('path', { d: 'M7 4.4v5.2M4.4 7h5.2' }),
         ),
+      );
+    }
+
+    /** Small thumbnail row for an item, a queue chip, or the image editor. */
+    function ImageStrip(props) {
+      const list = Array.isArray(props.images) ? props.images : [];
+      const limit = typeof props.max === 'number' ? props.max : list.length;
+      const visible = list.slice(0, limit);
+      if (visible.length === 0) return null;
+      return h(
+        'div',
+        { className: 'pp-images' + (props.compact === true ? ' pp-images-compact' : '') },
+        visible.map((image) =>
+          h(
+            'span',
+            { key: image.id, className: 'pp-image', title: image.name || image.path || '' },
+            image.thumb
+              ? h('img', { src: image.thumb, alt: image.name || '', draggable: false })
+              : h('span', { className: 'pp-image-empty' }, icon('image')),
+            props.onRemove
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'pp-image-x',
+                    title: translate('image.remove'),
+                    'aria-label': translate('image.remove'),
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      props.onRemove(image);
+                    },
+                  },
+                  '×',
+                )
+              : null,
+          ),
+        ),
+        list.length > visible.length ? h('span', { className: 'pp-image-more' }, '+' + String(list.length - visible.length)) : null,
+      );
+    }
+
+    /** Pick local images, write the bytes to IndexedDB, keep a small thumb in the item. */
+    function ImagePicker(props) {
+      const inputRef = useRef(null);
+      const [busy, setBusy] = useState(false);
+      const list = Array.isArray(props.images) ? props.images : [];
+      const addFiles = async (files) => {
+        if (!files || files.length === 0) return;
+        const room = MAX_IMAGES - list.length;
+        if (room <= 0) {
+          if (props.onError) props.onError(translate('image.tooMany', { n: MAX_IMAGES }));
+          return;
+        }
+        if (files.length > room && props.onError) props.onError(translate('image.tooMany', { n: MAX_IMAGES }));
+        setBusy(true);
+        const next = list.slice();
+        for (const file of files.slice(0, room)) {
+          try {
+            next.push(await createImageAsset(file));
+          } catch (error) {
+            if (props.onError) props.onError(String((error && error.message) || error));
+          }
+        }
+        props.onChange(next);
+        setBusy(false);
+      };
+      return h(
+        'div',
+        { className: 'pp-image-picker' },
+        h(ImageStrip, {
+          images: list,
+          onRemove: (image) => props.onChange(list.filter((entry) => entry.id !== image.id)),
+        }),
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'pp-mini pp-image-add',
+            disabled: busy,
+            onClick: () => {
+              if (inputRef.current) inputRef.current.click();
+            },
+          },
+          '＋ ',
+          translate('image.add'),
+        ),
+        h('input', {
+          ref: inputRef,
+          type: 'file',
+          accept: IMAGE_TYPES.join(','),
+          multiple: true,
+          style: { display: 'none' },
+          onChange: (event) => {
+            const files = Array.from(event.target.files || []);
+            event.target.value = '';
+            addFiles(files);
+          },
+        }),
       );
     }
 
@@ -1481,7 +1794,7 @@ window.__ModuleLoader__.load({
 
       const saveTrayEdit = () => {
         if (!trayEditing) return;
-        if (!trayEditing.body.trim()) {
+        if (!trayEditing.body.trim() && !(trayEditing.images && trayEditing.images.length)) {
           flash({ kind: 'error', text: translate('status.emptyBody') });
           return;
         }
@@ -1489,22 +1802,29 @@ window.__ModuleLoader__.load({
         setTrayEditing(null);
       };
 
-      const sendToComposer = (command, okText) => {
-        const result = bridge.request(command);
+      const sendToComposer = async (command, okText) => {
+        let result;
+        try {
+          result = await bridge.request(command);
+        } catch (error) {
+          result = { ok: false, reason: String((error && error.message) || error) };
+        }
         if (result && result.ok) {
           flash({ kind: 'ok', text: okText });
           return;
         }
         const reason = result && result.reason;
-        flash({
-          kind: 'error',
-          text: reason === 'draft-busy' ? translate('status.draftBusy') : translate('status.noComposer'),
-        });
+        let text = command && command.type === 'insert' ? translate('status.insertFailed') : translate('status.noComposer');
+        if (reason === 'draft-busy') text = translate('status.draftBusy');
+        else if (reason === 'empty') text = translate('status.emptyBody');
+        else if (command && command.type === 'insert' && reason === 'unavailable') text = translate('status.noComposer');
+        else if (command && command.type === 'insert' && typeof reason === 'string' && reason !== 'insert-failed' && reason !== 'bad-command') text = reason;
+        flash({ kind: 'error', text });
       };
 
       const save = () => {
         if (!editing) return;
-        if (!editing.body.trim()) {
+        if (!editing.body.trim() && (!editing.images || editing.images.length === 0)) {
           flash({ kind: 'error', text: translate('status.emptyBody') });
           return;
         }
@@ -1512,6 +1832,7 @@ window.__ModuleLoader__.load({
           group: editing.group,
           title: editing.title.trim(),
           body: editing.body,
+          images: editing.images || [],
         });
         setEditing(null);
         flash({ kind: 'ok', text: translate('status.savedToPool') });
@@ -1529,10 +1850,11 @@ window.__ModuleLoader__.load({
           group,
           title: '',
           body: '',
+          images: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '' });
+        setEditing({ id: item.id, group, title: '', body: '', images: [] });
       };
 
       const rowOf = (item, index) => {
@@ -1559,6 +1881,11 @@ window.__ModuleLoader__.load({
                   save();
                 }
               },
+            }),
+            h(ImagePicker, {
+              images: editing.images || [],
+              onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
+              onError: (text) => flash({ kind: 'error', text }),
             }),
             h(
               'div',
@@ -1603,13 +1930,14 @@ window.__ModuleLoader__.load({
         return h(
           'div',
           { key: item.id, className: 'pp-row pp-page-item' },
-          h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => sendToComposer({ type: 'insert', text: item.body }, translate('status.inserted')) }),
+          h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => sendToComposer({ type: 'insert', text: item.body, images: normalizeImages(item.images) }, item.body.trim() ? translate('status.inserted') : translate('image.inserted')) }),
           h(TrayAdd, { label: translate('row.select'), onClick: () => poolActions.addToTray(item.id) }),
           h(
             'div',
-            { className: 'pp-main', onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body }) },
-            h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || translate('group.untitled')),
+            { className: 'pp-main', onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body, images: normalizeImages(item.images) }) },
+            h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || (item.images && item.images[0] && (item.images[0].name || translate('image.only'))) || translate('group.untitled')),
             item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
+            h(ImageStrip, { images: item.images, compact: true }),
           ),
           tab === 'all'
             ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
@@ -1624,7 +1952,7 @@ window.__ModuleLoader__.load({
               disabled: index === items.length - 1,
               onClick: () => poolActions.move(item.id, 1),
             }),
-            h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body }) }),
+            h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body, images: normalizeImages(item.images) }) }),
             h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
             h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => poolActions.remove(item.id) }),
           ),
@@ -1828,6 +2156,7 @@ window.__ModuleLoader__.load({
                               }
                             },
                           }),
+                          h(ImageStrip, { images: trayEditing.images, compact: true }),
                           h(
                             'div',
                             { className: 'pp-edit-actions' },
@@ -1841,6 +2170,7 @@ window.__ModuleLoader__.load({
                         { key: entry.key, className: 'pp-chip' },
                         h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
                         h('div', { className: 'pp-chip-t' }, entry.body),
+                        h(ImageStrip, { images: entry.images, compact: true, max: 4 }),
                         h(
                           'div',
                           { className: 'pp-chip-actions' },
@@ -1854,7 +2184,7 @@ window.__ModuleLoader__.load({
                           h(IconButton, {
                             name: 'edit',
                             label: translate('row.edit'),
-                            onClick: () => setTrayEditing({ key: entry.key, body: entry.body || '' }),
+                            onClick: () => setTrayEditing({ key: entry.key, body: entry.body || '', images: normalizeImages(entry.images) }),
                           }),
                           h(IconButton, { name: 'copy', label: translate('tray.duplicate'), onClick: () => poolActions.duplicateTray(entry.key) }),
                           h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => poolActions.removeTray(entry.key) }),
@@ -1904,7 +2234,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.60'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.61'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2385,23 +2715,64 @@ window.__ModuleLoader__.load({
         actions.setDraft(text);
       };
 
-      const insertItem = (item) => {
+      const addImages = async (images) => {
+        const list = normalizeImages(images);
+        if (list.length === 0) return 0;
+        if (!actions || typeof actions.addAttachments !== 'function') throw new Error(translate('image.insertFailed'));
+        const api = conversationFace || serviceOf(pluginCtx, 'conversation');
+        if (!api || typeof api.createDrafts !== 'function' || !props.sessionId) throw new Error(translate('image.insertFailed'));
+        const files = [];
+        for (const image of list) {
+          const blob = await getImageBlob(image.id);
+          if (!blob) throw new Error(translate('image.missing'));
+          files.push(new File([blob], image.name || 'image', { type: image.type || blob.type || 'image/png' }));
+        }
+        const drafts = api.createDrafts(props.sessionId, files);
+        if (!Array.isArray(drafts) || drafts.length !== files.length) throw new Error(translate('image.insertFailed'));
+        try {
+          actions.addAttachments(drafts.map((draft) => draft.id));
+        } catch (error) {
+          try {
+            if (typeof api.releaseDraftAttachments === 'function') api.releaseDraftAttachments(drafts);
+          } catch (_cleanupError) {
+            /* the draft attachment owner may already be gone */
+          }
+          throw error;
+        }
+        return drafts.length;
+      };
+
+      const insertItem = async (item) => {
         if (!actions || typeof actions.captureInsertion !== 'function' || typeof actions.insertText !== 'function') {
           flash({ kind: 'error', text: translate('status.insertFailed') });
-          return;
+          return { ok: false, reason: 'insert-failed' };
+        }
+        const body = typeof item.body === 'string' ? item.body : '';
+        const images = normalizeImages(item.images);
+        if (!body.trim() && images.length === 0) {
+          flash({ kind: 'error', text: translate('status.emptyBody') });
+          return { ok: false, reason: 'empty' };
         }
         try {
-          const span = actions.captureInsertion();
-          const ok = actions.insertText(item.body, span);
-          flash(ok ? { kind: 'ok', text: translate('status.inserted') } : { kind: 'error', text: translate('status.insertFailed') });
+          const added = images.length > 0 ? await addImages(images) : 0;
+          if (body.trim()) {
+            const span = actions.captureInsertion();
+            if (!actions.insertText(body, span)) {
+              flash({ kind: 'error', text: translate('status.insertFailed') });
+              return { ok: false, reason: 'insert-failed' };
+            }
+          }
+          flash({ kind: 'ok', text: added > 0 && !body.trim() ? translate('image.inserted') : translate('status.inserted') });
+          return { ok: true };
         } catch (error) {
           flash({ kind: 'error', text: String((error && error.message) || error) });
+          return { ok: false, reason: String((error && error.message) || error) };
         }
       };
 
       const saveTrayEdit = () => {
         if (!trayEditing) return;
-        if (!trayEditing.body.trim()) {
+        if (!trayEditing.body.trim() && !(trayEditing.images && trayEditing.images.length)) {
           flash({ kind: 'error', text: translate('status.emptyBody') });
           return;
         }
@@ -2420,6 +2791,7 @@ window.__ModuleLoader__.load({
           group: BUILTIN_GROUP.note,
           title: firstLine(text),
           body: text,
+          images: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
@@ -2437,17 +2809,18 @@ window.__ModuleLoader__.load({
           group,
           title: '',
           body: '',
+          images: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '' });
+        setEditing({ id: item.id, group, title: '', body: '', images: [] });
       };
 
-      const startEdit = (item) => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body });
+      const startEdit = (item) => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body, images: normalizeImages(item.images) });
 
       const saveEdit = () => {
         if (!editing) return;
-        if (!editing.body.trim()) {
+        if (!editing.body.trim() && (!editing.images || editing.images.length === 0)) {
           flash({ kind: 'error', text: translate('status.emptyBody') });
           return;
         }
@@ -2455,6 +2828,7 @@ window.__ModuleLoader__.load({
           group: editing.group,
           title: editing.title.trim(),
           body: editing.body,
+          images: editing.images || [],
         });
         setEditing(null);
       };
@@ -2464,7 +2838,7 @@ window.__ModuleLoader__.load({
         poolActions.remove(item.id);
         flash({
           kind: 'info',
-          text: translate('status.deleted', { title: item.title || firstLine(item.body) }),
+          text: translate('status.deleted', { title: item.title || firstLine(item.body) || (item.images && item.images[0] && item.images[0].name) || translate('image.only') }),
           undo: () => {
             poolActions.restore(item, index);
             setStatus(null);
@@ -2486,9 +2860,16 @@ window.__ModuleLoader__.load({
         let sent = 0;
         for (const entry of entries) {
           const body = typeof entry.body === 'string' ? entry.body : '';
-          if (!body.trim()) continue;
+          const images = normalizeImages(entry.images);
+          if (!body.trim() && images.length === 0) continue;
           const clear = await waitFor(() => draftRef.current.trim() === '' && phaseRef.current === 'plain', 2500);
           if (!clear) break;
+          try {
+            if (images.length > 0) await addImages(images);
+          } catch (error) {
+            flash({ kind: 'error', text: String((error && error.message) || error) });
+            break;
+          }
           setDraft(body);
           await frames(2);
           if (typeof actions.submit === 'function') actions.submit();
@@ -2530,6 +2911,11 @@ window.__ModuleLoader__.load({
                   saveEdit();
                 }
               },
+            }),
+            h(ImagePicker, {
+              images: editing.images || [],
+              onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
+              onError: (text) => flash({ kind: 'error', text }),
             }),
             h(
               'div',
@@ -2579,8 +2965,9 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'pp-main', title: translate('row.insert'), onClick: () => insertItem(item) },
-            h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || translate('group.untitled')),
+            h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || (item.images && item.images[0] && (item.images[0].name || translate('image.only'))) || translate('group.untitled')),
             item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
+            h(ImageStrip, { images: item.images, compact: true }),
           ),
           tab === 'all'
             ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
@@ -2612,8 +2999,9 @@ window.__ModuleLoader__.load({
           if (!api || !command) return { ok: false, reason: 'unavailable' };
           if (command.type === 'insert') {
             if (typeof command.text !== 'string') return { ok: false, reason: 'bad-command' };
-            api.insert({ body: command.text });
-            return { ok: true };
+            return Promise.resolve(api.insert({ body: command.text, images: normalizeImages(command.images) }))
+              .then((result) => result || { ok: true })
+              .catch((error) => ({ ok: false, reason: String((error && error.message) || error) }));
           }
           if (command.type === 'release') {
             if (draftRef.current.trim() !== '') return { ok: false, reason: 'draft-busy' };
@@ -2803,6 +3191,7 @@ window.__ModuleLoader__.load({
                           }
                         },
                       }),
+                      h(ImageStrip, { images: trayEditing.images, compact: true }),
                       h(
                         'div',
                         { className: 'pp-edit-actions' },
@@ -2816,6 +3205,7 @@ window.__ModuleLoader__.load({
                     { key: entry.key, className: 'pp-chip' },
                     h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
                     h('div', { className: 'pp-chip-t' }, entry.body),
+                    h(ImageStrip, { images: entry.images, compact: true, max: 4 }),
                     h(
                       'div',
                       { className: 'pp-chip-actions' },
@@ -2829,7 +3219,7 @@ window.__ModuleLoader__.load({
                       h(IconButton, {
                         name: 'edit',
                         label: translate('row.edit'),
-                        onClick: () => setTrayEditing({ key: entry.key, body: entry.body || '' }),
+                        onClick: () => setTrayEditing({ key: entry.key, body: entry.body || '', images: normalizeImages(entry.images) }),
                       }),
                       h(IconButton, { name: 'copy', label: translate('tray.duplicate'), onClick: () => poolActions.duplicateTray(entry.key) }),
                       h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => poolActions.removeTray(entry.key) }),
@@ -3039,6 +3429,20 @@ window.__ModuleLoader__.load({
         '.pp-mention-hint{color:var(--pp-ink-2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
         '.pp-textarea{min-height:64px}' +
       '.pp-edit-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}' +
+      '.pp-images{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px}' +
+      '.pp-images-compact{gap:3px;margin-top:3px}' +
+      '.pp-image{position:relative;display:inline-flex;width:44px;height:44px;flex:none;border:1px solid var(--pp-line);border-radius:6px;background:var(--pp-surface-2);overflow:hidden}' +
+      '.pp-images-compact .pp-image{width:32px;height:32px}' +
+      '.pp-image img{width:100%;height:100%;object-fit:cover;display:block}' +
+      '.pp-image-empty{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--pp-ink-2)}' +
+      '.pp-image-empty svg{width:16px;height:16px}' +
+      '.pp-image-x{position:absolute;top:1px;right:1px;width:15px;height:15px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font:inherit;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}' +
+      '.pp-image-x:hover{background:var(--pp-danger)}' +
+      '.pp-image-more{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 4px;border-radius:6px;border:1px dashed var(--pp-line-2);color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-image-picker{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:2px}' +
+      '.pp-image-add{height:26px}' +
+      '.pp-chip .pp-images{flex:none;margin-top:0;align-self:center;max-width:150px}' +
+      '.pp-chip .pp-image{width:28px;height:28px}' +
       '.pp-primary{height:28px;padding:0 14px;border-radius:8px;border:1px solid var(--pp-accent);background:var(--pp-accent);color:var(--pp-on-accent);font:inherit;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}' +
       '.pp-primary:hover{filter:brightness(1.06)}' +
       '.pp-primary:disabled{opacity:.5;cursor:default}' +
@@ -3085,7 +3489,13 @@ window.__ModuleLoader__.load({
             }
           };
           run(ctx);
-          if (typeof ctx.inject === 'function') ctx.inject(names, (serviceCtx) => run(serviceCtx));
+          if (typeof ctx.inject === 'function') {
+            try {
+              ctx.inject(names, (serviceCtx) => run(serviceCtx));
+            } catch (_error) {
+              /* an optional service that is not installed */
+            }
+          }
         };
         bindOptional(['remote', 'remote.skills'], (target) => {
           remoteFace = serviceOf(target, 'remote');
@@ -3099,6 +3509,9 @@ window.__ModuleLoader__.load({
         });
         bindOptional(['uiWorkspace'], (target) => {
           workspaceFace = serviceOf(target, 'uiWorkspace');
+        });
+        bindOptional(['conversation'], (target) => {
+          conversationFace = serviceOf(target, 'conversation');
         });
         if (ctx.locale && typeof ctx.locale.register === 'function' && typeof ctx.locale.bind === 'function') {
           ctx.effect(() => ctx.locale.register(NS, { zh: ZH, en: EN }));
