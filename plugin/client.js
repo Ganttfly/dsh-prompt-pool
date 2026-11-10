@@ -24,7 +24,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '0.1.95';
+    const PLUGIN_VERSION = '0.1.96';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/ganttfly/dsh-prompt-pool';
@@ -1201,9 +1201,15 @@ window.__ModuleLoader__.load({
     const workspaceDir = createStore({ items: [] });
     /** The composer panel knows the active session; the sidebar page does not. */
     const sessionDir = createStore({ sessionId: '' });
+    /** The composer knows how many submissions are still waiting; the page does not. */
+    const queueDir = createStore({ pending: 0 });
 
     function useSessionDir() {
       return useSyncExternalStore(sessionDir.subscribe, sessionDir.get, sessionDir.get);
+    }
+
+    function useQueueDir() {
+      return useSyncExternalStore(queueDir.subscribe, queueDir.get, queueDir.get);
     }
 
     function useWorkspaceDir() {
@@ -2002,6 +2008,7 @@ window.__ModuleLoader__.load({
       const queueCollapsed = state.settings && state.settings.queueCollapsed === true;
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
+      const queuePending = useQueueDir().pending;
       const pageSessionId = (props && ((props.scope && props.scope.sessionId) || props.sessionId)) || '';
       const workspaceList = workspaces && Array.isArray(workspaces.items) ? workspaces.items : [];
       const pageWorkspace = pageSessionId
@@ -2571,6 +2578,7 @@ window.__ModuleLoader__.load({
                 ),
                 h('span', { className: 'pp-foot-title' }, translate('tray.title')),
                 h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
+                queuePending > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queuePending })) : null,
                 h('span', { className: 'pp-grow' }),
                 state.tray.length > 0
                   ? h('button', { type: 'button', className: 'pp-link', onClick: () => setConfirmClear(true) }, translate('tray.clear'))
@@ -3241,6 +3249,11 @@ window.__ModuleLoader__.load({
       phaseRef.current = phase;
       const queueRef = useRef([]);
       queueRef.current = queue;
+      // The sidebar page shows the same count from this shared value.
+      useEffect(() => {
+        if (queueDir.get().pending === queue.length) return;
+        queueDir.set({ pending: queue.length });
+      }, [queue.length]);
       const sessionSelector = typeof props.useSession === 'function' ? props.useSession : null;
       const pendingSubmissions = sessionSelector
         ? sessionSelector((snapshot) => (snapshot && Array.isArray(snapshot.pendingSubmissions) ? snapshot.pendingSubmissions : EMPTY_PENDING))
