@@ -24,7 +24,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '0.1.91';
+    const PLUGIN_VERSION = '0.1.92';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/ganttfly/dsh-prompt-pool';
@@ -463,19 +463,34 @@ window.__ModuleLoader__.load({
     /**
      * A readable title for a captured draft. The composer publishes chips in their
      * clipboard form (`@name(dsh-session:…)`, `@C:\dir\file.docx`), which is far
-     * too long for a row title; only the human part survives. The body keeps the
+     * too long for a row title; only the display name survives. The body keeps the
      * original text so inserting it back still sends the same reference.
+     * `occurrences` carries the exact chip ranges when the host publishes them.
      */
-    function draftTitle(text) {
-      const cleaned = String(text || '')
-        // Chip references: drop the machine id, keep the display name.
+    function draftTitle(text, occurrences) {
+      const source = String(text || '');
+      let cleaned = source;
+      const chips = Array.isArray(occurrences) ? occurrences.slice() : [];
+      if (chips.length > 0) {
+        // Replace from the end so the earlier offsets stay valid.
+        chips.sort((left, right) => Number(right.offset) - Number(left.offset));
+        for (const chip of chips) {
+          const start = Number(chip.offset);
+          const length = Number(chip.length);
+          const label = String(chip.label || '').trim();
+          if (!Number.isFinite(start) || !Number.isFinite(length) || !label) continue;
+          if (start < 0 || start + length > cleaned.length) continue;
+          cleaned = cleaned.slice(0, start) + '@' + label + cleaned.slice(start + length);
+        }
+      }
+      cleaned = cleaned
+        // Hosts without chip metadata: drop the machine id and the directory chain.
         .replace(/\((?:dsh-[a-z0-9-]+):[^)]*\)/gi, '')
-        // File chips: drop the directory chain, keep the file name.
         .replace(/(^|\s)@[A-Za-z]:\\(?:[^\\\n]*\\)+/g, (match, lead) => lead + '@')
         .replace(/(^|\s)@(?:[^\s\\\n]*\/)+/g, (match, lead) => lead + '@')
         .replace(/[ \t]{2,}/g, ' ')
         .trim();
-      return firstLine(cleaned || text);
+      return firstLine(cleaned || source);
     }
 
     // ------------------------------------------------------------- local images
@@ -3213,11 +3228,14 @@ window.__ModuleLoader__.load({
       const queue = input && Array.isArray(input.queue) ? input.queue : [];
       // Attachments are browser-owned ids, not text, so a capture cannot keep them.
       const attachmentCount = input && Array.isArray(input.attachmentIds) ? input.attachmentIds.length : 0;
+      const occurrences = input && Array.isArray(input.occurrences) ? input.occurrences : [];
 
       const draftRef = useRef('');
       draftRef.current = draft;
       const attachmentRef = useRef(0);
       attachmentRef.current = attachmentCount;
+      const occurrenceRef = useRef([]);
+      occurrenceRef.current = occurrences;
       const phaseRef = useRef('plain');
       phaseRef.current = phase;
       const queueRef = useRef([]);
@@ -3438,7 +3456,7 @@ window.__ModuleLoader__.load({
         const item = {
           id: uid(),
           group: BUILTIN_GROUP.note,
-          title: draftTitle(text),
+          title: draftTitle(text, occurrenceRef.current),
           body: text,
           images: [],
           createdAt: Date.now(),
