@@ -144,6 +144,7 @@ window.__ModuleLoader__.load({
       'row.familyBuiltin': '内置',
       'row.familyCustom': '自定义',
       'row.familyWorkspace': '工作区分组',
+      'tab.familyBuiltin': '内置分组',
       'row.categoryLabel': '自定义分组',
       'row.classification': '分组',
       'page.new': '提示词',
@@ -299,6 +300,7 @@ window.__ModuleLoader__.load({
       'row.familyBuiltin': 'Built-in',
       'row.familyCustom': 'Custom',
       'row.familyWorkspace': 'Workspace groups',
+      'tab.familyBuiltin': 'Built-in groups',
       'row.categoryLabel': 'Custom',
       'row.classification': 'Group',
       'page.new': 'Prompt',
@@ -1208,7 +1210,8 @@ window.__ModuleLoader__.load({
       if (mode === 'hidden' || groups.length === 0) return [];
       if (mode === 'nested') {
         const labels = {
-          builtin: translate('row.familyBuiltin'),
+          // The folded built-in tab names the whole family, like the settings table does.
+          builtin: translate('tab.familyBuiltin'),
           custom: translate('row.familyCustom'),
           workspace: translate('row.familyWorkspace'),
         };
@@ -2552,7 +2555,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.73'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.74'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
