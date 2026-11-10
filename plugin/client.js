@@ -157,6 +157,9 @@ window.__ModuleLoader__.load({
       'tray.clearAction': '清空',
       'tray.empty': '还没选中任何条目，点左侧「＋」加入',
       'tray.remove': '移出',
+      'tray.removeTitle': '移出这一条',
+      'tray.removeConfirm': '「{title}」会从待发送队列移出；这条如果在队列里改过，改动不会保留。',
+      'tray.removeAction': '移出',
       'tray.duplicate': '复制一份，追加到末尾',
       'tray.hint': '释放后会按这个顺序排队，当前这轮结束后自动接着执行。',
       'tray.queue': '队列中 {n}',
@@ -309,6 +312,9 @@ window.__ModuleLoader__.load({
       'tray.clearAction': 'Clear',
       'tray.empty': 'Nothing selected yet — use the ＋ control on a row',
       'tray.remove': 'Remove',
+      'tray.removeTitle': 'Remove this queued item',
+      'tray.removeConfirm': '{title} will be removed from the send queue. Edits made to this queued copy are lost.',
+      'tray.removeAction': 'Remove',
       'tray.duplicate': 'Duplicate and append to the end',
       'tray.hint': 'Released items queue up in this order and run as soon as the current turn ends.',
       'tray.queue': '{n} in queue',
@@ -857,6 +863,18 @@ window.__ModuleLoader__.load({
         text: translate('row.deleteConfirm', { title: props.title }),
         cancelText: translate('row.cancel'),
         confirmText: translate('row.deleteAction'),
+        onCancel: props.onCancel,
+        onConfirm: props.onConfirm,
+      });
+    }
+
+    /** Confirmation before one queued occurrence leaves the send queue. */
+    function TrayRemoveConfirm(props) {
+      return h(ConfirmModal, {
+        label: translate('tray.removeTitle'),
+        text: translate('tray.removeConfirm', { title: props.title }),
+        cancelText: translate('row.cancel'),
+        confirmText: translate('tray.removeAction'),
         onCancel: props.onCancel,
         onConfirm: props.onConfirm,
       });
@@ -1916,6 +1934,7 @@ window.__ModuleLoader__.load({
       const [pendingCategory, setPendingCategory] = useState(null);
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
+      const [pendingRemove, setPendingRemove] = useState(null);
       const [wsSelected, setWsSelected] = useState('');
       const [customPick, setCustomPick] = useState('');
       const [builtinPick, setBuiltinPick] = useState('');
@@ -2295,6 +2314,16 @@ window.__ModuleLoader__.load({
               },
             })
           : null,
+        pendingRemove && state.tray.some((entry) => entry.key === pendingRemove.key)
+          ? h(TrayRemoveConfirm, {
+              title: itemLabel(pendingRemove),
+              onCancel: () => setPendingRemove(null),
+              onConfirm: () => {
+                poolActions.removeTray(pendingRemove.key);
+                setPendingRemove(null);
+              },
+            })
+          : null,
         h(
           'div',
           { className: 'pp-page-body' },
@@ -2467,7 +2496,7 @@ window.__ModuleLoader__.load({
                             onClick: () => setTrayEditing({ key: entry.key, body: entry.body || '', images: normalizeImages(entry.images) }),
                           }),
                           h(IconButton, { name: 'copy', label: translate('tray.duplicate'), onClick: () => poolActions.duplicateTray(entry.key) }),
-                          h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => poolActions.removeTray(entry.key) }),
+                          h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => setPendingRemove(entry) }),
                         ),
                       );
                     }),
@@ -2523,7 +2552,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.72'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.73'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -3006,6 +3035,7 @@ window.__ModuleLoader__.load({
       const [confirming, setConfirming] = useState(false);
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
+      const [pendingRemove, setPendingRemove] = useState(null);
       const [status, setStatus] = useState(null);
       const [busy, setBusy] = useState(false);
       const { preview, openImage, closeImage } = useImagePreview();
@@ -3545,6 +3575,16 @@ window.__ModuleLoader__.load({
               },
             })
           : null,
+        pendingRemove && tray.some((entry) => entry.key === pendingRemove.key)
+          ? h(TrayRemoveConfirm, {
+              title: itemLabel(pendingRemove),
+              onCancel: () => setPendingRemove(null),
+              onConfirm: () => {
+                poolActions.removeTray(pendingRemove.key);
+                setPendingRemove(null);
+              },
+            })
+          : null,
         h(
           'div',
           { className: 'pp-list' },
@@ -3671,7 +3711,7 @@ window.__ModuleLoader__.load({
                         onClick: () => setTrayEditing({ key: entry.key, body: entry.body || '', images: normalizeImages(entry.images) }),
                       }),
                       h(IconButton, { name: 'copy', label: translate('tray.duplicate'), onClick: () => poolActions.duplicateTray(entry.key) }),
-                      h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => poolActions.removeTray(entry.key) }),
+                      h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => setPendingRemove(entry) }),
                     ),
                   );
                 }),
