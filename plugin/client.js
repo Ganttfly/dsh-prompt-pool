@@ -1980,6 +1980,16 @@ window.__ModuleLoader__.load({
       useEffect(() => {
         if (trayCount === 0) setConfirmClear(false);
       }, [trayCount]);
+      // A capture appends to the end of the list; keep the new row in view.
+      const pageListRef = useRef(null);
+      const pageItemCount = state.items.length;
+      const lastPageItemCount = useRef(pageItemCount);
+      useEffect(() => {
+        if (pageItemCount > lastPageItemCount.current && pageListRef.current) {
+          pageListRef.current.scrollTop = pageListRef.current.scrollHeight;
+        }
+        lastPageItemCount.current = pageItemCount;
+      }, [pageItemCount]);
       useEffect(() => {
         if (!pageWorkspaceId) return;
         const snapshot = workspaceDir.get();
@@ -2082,6 +2092,27 @@ window.__ModuleLoader__.load({
         else if (command && command.type === 'insert' && reason === 'unavailable') text = translate('status.noComposer');
         else if (command && command.type === 'insert' && typeof reason === 'string' && reason !== 'insert-failed' && reason !== 'bad-command') text = reason;
         flash({ kind: 'error', text });
+      };
+
+      /** The page cannot read the composer, so the mounted panel performs it. */
+      const captureDraft = () => {
+        let result;
+        try {
+          result = bridge.request({ type: 'capture' });
+        } catch (error) {
+          result = { ok: false, reason: String((error && error.message) || error) };
+        }
+        Promise.resolve(result).then(
+          (value) => {
+            if (value && value.ok) {
+              flash({ kind: 'ok', text: translate('status.saved') });
+              return;
+            }
+            const reason = value && value.reason;
+            flash({ kind: 'error', text: translate(reason === 'empty' ? 'status.nothing' : 'status.noComposer') });
+          },
+          () => flash({ kind: 'error', text: translate('status.noComposer') }),
+        );
       };
 
       const save = () => {
@@ -2307,6 +2338,7 @@ window.__ModuleLoader__.load({
             onChange: (event) => setQuery(event.target.value),
           }),
           h('button', { type: 'button', className: 'pp-mini', onClick: create }, '＋ ', translate('page.new')),
+          h('button', { type: 'button', className: 'pp-mini', onClick: captureDraft }, translate('panel.capture')),
           h(SettingsButton, { active: settingsOpen, onClick: () => setSettingsOpen(!settingsOpen) }),
         ),
         h(
@@ -2355,7 +2387,7 @@ window.__ModuleLoader__.load({
           : null,
         h(
           'div',
-          { className: 'pp-page-body' },
+          { className: 'pp-page-body', ref: pageListRef },
           settingsOpen
             ? h(PromptPoolSettings, { currentWorkspaceId })
             : nestedView
@@ -2581,7 +2613,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.81'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.82'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -3253,13 +3285,14 @@ window.__ModuleLoader__.load({
         });
       };
 
+      /** Copies the composer draft into the pool; the draft itself is left alone. */
       const captureDraft = () => {
         const text = draftRef.current;
         if (!text || !text.trim()) {
           flash({ kind: 'error', text: translate('status.nothing') });
-          return;
+          return false;
         }
-        poolActions.add({
+        const item = {
           id: uid(),
           group: BUILTIN_GROUP.note,
           title: firstLine(text),
@@ -3267,9 +3300,12 @@ window.__ModuleLoader__.load({
           images: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
-        });
-        setDraft('');
+        };
+        poolActions.add(item);
+        // The copy lands in 便签, which a folded/workspace tab cannot show.
+        if (!matchesTab(item, tab)) setTab('all');
         flash({ kind: 'ok', text: translate('status.saved') });
+        return true;
       };
 
       const newItem = () => {
@@ -3503,6 +3539,17 @@ window.__ModuleLoader__.load({
 
       const tray = state.tray;
 
+      // A capture appends to the end of the list; keep the new row in view.
+      const listRef = useRef(null);
+      const itemCount = state.items.length;
+      const lastItemCount = useRef(itemCount);
+      useEffect(() => {
+        if (itemCount > lastItemCount.current && listRef.current) {
+          listRef.current.scrollTop = listRef.current.scrollHeight;
+        }
+        lastItemCount.current = itemCount;
+      }, [itemCount]);
+
       // Same rule as the page: an emptied queue dismisses the confirmation.
       useEffect(() => {
         if (tray.length === 0) setConfirmClear(false);
@@ -3510,7 +3557,7 @@ window.__ModuleLoader__.load({
 
       // The sidebar tab has no composer access, so it posts commands here.
       const bridgeRef = useRef(null);
-      bridgeRef.current = { insert: insertItem, release };
+      bridgeRef.current = { insert: insertItem, release, capture: captureDraft };
       useEffect(() => {
         return bridge.listen((command) => {
           const api = bridgeRef.current;
@@ -3525,6 +3572,10 @@ window.__ModuleLoader__.load({
             if (draftRef.current.trim() !== '') return { ok: false, reason: 'draft-busy' };
             api.release();
             return { ok: true };
+          }
+          // The sidebar page cannot read the composer, so it asks for the capture.
+          if (command.type === 'capture') {
+            return api.capture() ? { ok: true } : { ok: false, reason: 'empty' };
           }
           return { ok: false, reason: 'unknown' };
         });
@@ -3672,7 +3723,7 @@ window.__ModuleLoader__.load({
           : null,
         h(
           'div',
-          { className: 'pp-list' },
+          { className: 'pp-list', ref: listRef },
           settingsOpen
             ? h(PromptPoolSettings, { currentWorkspaceId })
             : nestedView
