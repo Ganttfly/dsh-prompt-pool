@@ -1093,8 +1093,6 @@ window.__ModuleLoader__.load({
         // Legacy: the old customNested flag folded custom groups.
         const legacy = family === 'custom' && settings.customNested === true ? 'nested' : undefined;
         display[family] = modes.indexOf(value) >= 0 ? value : legacy || defaults[family];
-        // Built-in groups are the backbone of the pool, so they cannot be hidden.
-        if (family === 'builtin' && display[family] === 'hidden') display[family] = 'tabs';
       }
       return {
         hiddenWorkspaces: Array.isArray(settings.hiddenWorkspaces)
@@ -2410,7 +2408,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.68'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.70'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2489,7 +2487,6 @@ window.__ModuleLoader__.load({
                     type: 'radio',
                     name: 'pp-display-' + family,
                     checked: settings.display[family] === mode,
-                    disabled: family === 'builtin' && mode === 'hidden',
                     onChange: () => poolActions.setSetting('display', { ...settings.display, [family]: mode }),
                   }),
                 ),
