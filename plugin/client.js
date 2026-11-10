@@ -24,7 +24,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '0.1.92';
+    const PLUGIN_VERSION = '0.1.93';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/ganttfly/dsh-prompt-pool';
@@ -44,7 +44,7 @@ window.__ModuleLoader__.load({
       'panel.title': '提示池',
       'panel.close': '关闭',
       'panel.capture': '存草稿',
-      'panel.captureHint': '把输入框里的内容复制一份存进池子；输入框里的字会保留',
+      'panel.captureHint': '把输入框里的内容复制一份存进池子（图片附件一起存）；输入框里的字会保留',
       'panel.resize': '拖动调整高度，双击还原',
       'panel.empty': '池子是空的。写一句，然后点「存下当前草稿」。',
       'panel.emptyTab': '这一栏还没有内容。',
@@ -193,7 +193,7 @@ window.__ModuleLoader__.load({
       'confirm.ok': '确认释放',
       'confirm.cancel': '再想想',
       'status.saved': '已存入池子',
-      'status.savedTextOnly': '已存入池子，但这 {n} 个附件没有一起保存',
+      'status.savedPartial': '已存入池子，但这 {n} 个附件没有一起保存',
       'status.nothing': '草稿是空的，先写点什么',
       'status.emptyBody': '内容不能是空的',
       'status.inserted': '已插入到输入框',
@@ -363,7 +363,7 @@ window.__ModuleLoader__.load({
       'confirm.ok': 'Queue them',
       'confirm.cancel': 'Not yet',
       'status.saved': 'Saved to the pool',
-      'status.savedTextOnly': 'Saved to the pool; {n} attachment(s) were not captured',
+      'status.savedPartial': 'Saved to the pool; {n} attachment(s) were not captured',
       'status.nothing': 'The composer is empty',
       'status.emptyBody': 'The content cannot be empty',
       'status.inserted': 'Inserted into the composer',
@@ -2180,7 +2180,7 @@ window.__ModuleLoader__.load({
             if (value && value.ok) {
               const skipped = Number(value.skipped) || 0;
               flash(skipped > 0
-                ? { kind: 'info', text: translate('status.savedTextOnly', { n: skipped }) }
+                ? { kind: 'info', text: translate('status.savedPartial', { n: skipped }) }
                 : { kind: 'ok', text: translate('status.saved') });
               return;
             }
@@ -3226,14 +3226,15 @@ window.__ModuleLoader__.load({
       const draft = input && typeof input.draft === 'string' ? input.draft : '';
       const phase = input && typeof input.phase === 'string' ? input.phase : 'plain';
       const queue = input && Array.isArray(input.queue) ? input.queue : [];
-      // Attachments are browser-owned ids, not text, so a capture cannot keep them.
-      const attachmentCount = input && Array.isArray(input.attachmentIds) ? input.attachmentIds.length : 0;
+      // Attachments are browser-owned ids; their files only come back through the
+      // conversation service, so the ids are kept for the capture path.
+      const attachmentIds = input && Array.isArray(input.attachmentIds) ? input.attachmentIds : [];
       const occurrences = input && Array.isArray(input.occurrences) ? input.occurrences : [];
 
       const draftRef = useRef('');
       draftRef.current = draft;
-      const attachmentRef = useRef(0);
-      attachmentRef.current = attachmentCount;
+      const attachmentIdsRef = useRef([]);
+      attachmentIdsRef.current = attachmentIds;
       const occurrenceRef = useRef([]);
       occurrenceRef.current = occurrences;
       const phaseRef = useRef('plain');
@@ -3446,28 +3447,51 @@ window.__ModuleLoader__.load({
         });
       };
 
-      /** Copies the composer draft into the pool; the draft itself is left alone. */
-      const captureDraft = () => {
+      /** The composer's draft attachments as descriptors, when the host exposes them. */
+      const resolveAttachments = () => {
+        const api = conversationFace || serviceOf(pluginCtx, 'conversation');
+        if (!api || typeof api.resolveDraftAttachments !== 'function') return [];
+        try {
+          const list = api.resolveDraftAttachments(attachmentIdsRef.current);
+          return Array.isArray(list) ? list : [];
+        } catch (_error) {
+          return [];
+        }
+      };
+
+      /**
+       * Copies the composer content into the pool; the composer keeps its text.
+       * Attached images come along (their browser files are copied into the pool's
+       * image store); other files have no local copy to keep, so they are counted.
+       */
+      const captureDraft = async () => {
         const text = draftRef.current;
         if (!text || !text.trim()) {
           flash({ kind: 'error', text: translate('status.nothing') });
           return { ok: false, reason: 'empty' };
+        }
+        const drafts = resolveAttachments();
+        const images = drafts.filter((draft) => draft.kind === 'image' && draft.file);
+        const others = drafts.filter((draft) => draft.kind !== 'image');
+        let stored = [];
+        if (images.length > 0) {
+          stored = await appendImageAssets(images.map((draft) => draft.file), [], (text) => flash({ kind: 'error', text }));
         }
         const item = {
           id: uid(),
           group: BUILTIN_GROUP.note,
           title: draftTitle(text, occurrenceRef.current),
           body: text,
-          images: [],
+          images: normalizeImages(stored),
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
         poolActions.add(item);
         // The copy lands in 便签, which a folded/workspace tab cannot show.
         if (!matchesTab(item, tab)) setTab('all');
-        const skipped = attachmentRef.current;
+        const skipped = others.length + (images.length - item.images.length);
         flash(skipped > 0
-          ? { kind: 'info', text: translate('status.savedTextOnly', { n: skipped }) }
+          ? { kind: 'info', text: translate('status.savedPartial', { n: skipped }) }
           : { kind: 'ok', text: translate('status.saved') });
         return { ok: true, skipped };
       };
