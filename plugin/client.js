@@ -122,6 +122,9 @@ window.__ModuleLoader__.load({
       'settings.label': '提示词池',
       'row.edit': '编辑',
       'row.delete': '删除',
+      'row.deleteTitle': '删除这条提示词',
+      'row.deleteConfirm': '「{title}」会从池子里移出。',
+      'row.deleteAction': '删除',
       'row.up': '上移',
       'row.down': '下移',
       'row.save': '保存',
@@ -271,6 +274,9 @@ window.__ModuleLoader__.load({
       'settings.label': 'Prompt pool',
       'row.edit': 'Edit',
       'row.delete': 'Delete',
+      'row.deleteTitle': 'Delete this prompt',
+      'row.deleteConfirm': '{title} will be removed from the pool.',
+      'row.deleteAction': 'Delete',
       'row.up': 'Move up',
       'row.down': 'Move down',
       'row.save': 'Save',
@@ -395,6 +401,15 @@ window.__ModuleLoader__.load({
     function firstLine(text) {
       const line = String(text).split('\n').map((part) => part.trim()).find(Boolean) || '';
       return line.length > 48 ? line.slice(0, 48) + '…' : line;
+    }
+
+    /** The name an item shows under, also used when a confirmation names it. */
+    function itemLabel(item) {
+      const image = item.images && item.images[0];
+      return item.title
+        || firstLine(item.body)
+        || (image && (image.name || translate('image.only')))
+        || translate('group.untitled');
     }
 
     // ------------------------------------------------------------- local images
@@ -830,6 +845,18 @@ window.__ModuleLoader__.load({
         text: translate('tray.clearConfirm', { n: props.count }),
         cancelText: translate('row.cancel'),
         confirmText: translate('tray.clearAction'),
+        onCancel: props.onCancel,
+        onConfirm: props.onConfirm,
+      });
+    }
+
+    /** Confirmation before one pool item is deleted. */
+    function ItemDeleteConfirm(props) {
+      return h(ConfirmModal, {
+        label: translate('row.deleteTitle'),
+        text: translate('row.deleteConfirm', { title: props.title }),
+        cancelText: translate('row.cancel'),
+        confirmText: translate('row.deleteAction'),
         onCancel: props.onCancel,
         onConfirm: props.onConfirm,
       });
@@ -1888,6 +1915,7 @@ window.__ModuleLoader__.load({
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
       const [confirmClear, setConfirmClear] = useState(false);
+      const [pendingDelete, setPendingDelete] = useState(null);
       const [wsSelected, setWsSelected] = useState('');
       const [customPick, setCustomPick] = useState('');
       const [builtinPick, setBuiltinPick] = useState('');
@@ -2031,6 +2059,20 @@ window.__ModuleLoader__.load({
         });
       };
 
+      /** The confirmed delete: drop the item, then offer the same undo as the panel. */
+      const removeItem = (item) => {
+        const index = pool.get().items.findIndex((entry) => entry.id === item.id);
+        poolActions.remove(item.id);
+        flash({
+          kind: 'info',
+          text: translate('status.deleted', { title: itemLabel(item) }),
+          undo: () => {
+            poolActions.restore(item, index);
+            setStatus(null);
+          },
+        });
+      };
+
       /** One entry point: the current tab decides the new item's classification. */
       const create = () => {
         const inWorkspace = tab === 'nested:workspace';
@@ -2149,7 +2191,7 @@ window.__ModuleLoader__.load({
             }),
             h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body, images: normalizeImages(item.images) }) }),
             h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
-            h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => poolActions.remove(item.id) }),
+            h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => setPendingDelete(item) }),
           ),
         );
       };
@@ -2243,6 +2285,16 @@ window.__ModuleLoader__.load({
               onCancel: () => setConfirmClear(false),
             })
           : null,
+        pendingDelete
+          ? h(ItemDeleteConfirm, {
+              title: itemLabel(pendingDelete),
+              onCancel: () => setPendingDelete(null),
+              onConfirm: () => {
+                removeItem(pendingDelete);
+                setPendingDelete(null);
+              },
+            })
+          : null,
         h(
           'div',
           { className: 'pp-page-body' },
@@ -2278,7 +2330,24 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-queue-dock' },
           status
-            ? h('div', { className: 'pp-status pp-status-float', 'data-kind': status.kind || 'info' }, h('span', null, status.text))
+            ? h(
+                'div',
+                { className: 'pp-status pp-status-float', 'data-kind': status.kind || 'info' },
+                h('span', null, status.text),
+                status.undo
+                  ? h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'pp-link',
+                        onClick: () => {
+                          status.undo();
+                        },
+                      },
+                      translate('status.undo'),
+                    )
+                  : null,
+              )
             : null,
           settingsOpen
           ? null
@@ -2454,7 +2523,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.71'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.72'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2936,6 +3005,7 @@ window.__ModuleLoader__.load({
       const [builtinPick, setBuiltinPick] = useState('');
       const [confirming, setConfirming] = useState(false);
       const [confirmClear, setConfirmClear] = useState(false);
+      const [pendingDelete, setPendingDelete] = useState(null);
       const [status, setStatus] = useState(null);
       const [busy, setBusy] = useState(false);
       const { preview, openImage, closeImage } = useImagePreview();
@@ -3331,7 +3401,7 @@ window.__ModuleLoader__.load({
               onClick: () => poolActions.move(item.id, 1),
             }),
             h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => startEdit(item) }),
-            h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => deleteItem(item) }),
+            h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => setPendingDelete(item) }),
           ),
         );
       };
@@ -3463,6 +3533,16 @@ window.__ModuleLoader__.load({
                 setConfirmClear(false);
               },
               onCancel: () => setConfirmClear(false),
+            })
+          : null,
+        pendingDelete
+          ? h(ItemDeleteConfirm, {
+              title: itemLabel(pendingDelete),
+              onCancel: () => setPendingDelete(null),
+              onConfirm: () => {
+                deleteItem(pendingDelete);
+                setPendingDelete(null);
+              },
             })
           : null,
         h(
@@ -3835,6 +3915,8 @@ window.__ModuleLoader__.load({
       '.pp-queue-dock,.pp-panel-dock{position:relative;flex:none;display:flex;flex-direction:column}' +
       '.pp-status-float{position:absolute;left:10px;right:auto;width:max-content;max-width:calc(100% - 20px);bottom:100%;margin-bottom:6px;padding:6px 12px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface);box-shadow:0 4px 14px rgba(0,0,0,.10);z-index:5;pointer-events:none;animation:pp-status-in .16s ease}' +
       '.pp-panel .pp-status-float{pointer-events:auto}' +
+      // The page's status float stays click-through, so only the undo link takes clicks.
+      '.pp-status-float .pp-link{pointer-events:auto}' +
       '@keyframes pp-status-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}';
 
     // ------------------------------------------------------------------- plugin
