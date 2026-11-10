@@ -17,12 +17,19 @@ global.window = {
       if (typeof mod.apply !== 'function') throw new Error('apply is not a function');
       console.log('[ok] inject:', JSON.stringify(mod.inject));
       const registrations = [];
+      const localeListeners = [];
+      const sidebar = {
+        tabs: [],
+        updates: [],
+        registerTab: (descriptor) => { sidebar.tabs.push(descriptor); return () => {}; },
+        updateTab: (id, patch) => { sidebar.updates.push({ id, patch }); },
+      };
       const ctx = {
         effect: (fn) => {
           const dispose = fn();
           return typeof dispose === 'function' ? dispose : () => {};
         },
-        get: (name) => (name === 'remote' ? { skills: { list: async () => ({ ok: true, value: { skills: [] } }) } } : name === 'betterSidebar' ? undefined : undefined),
+        get: (name) => (name === 'remote' ? { skills: { list: async () => ({ ok: true, value: { skills: [] } }) } } : name === 'betterSidebar' ? sidebar : undefined),
         inject: (deps, cb) => {
           if (typeof cb === 'function') cb({ get: () => undefined, betterSidebar: undefined });
           return () => {};
@@ -30,7 +37,7 @@ global.window = {
         locale: {
           register: () => () => {},
           bind: () => (key) => key,
-          subscribe: () => () => {},
+          subscribe: (fn) => { localeListeners.push(fn); return () => {}; },
           getLocale: () => ({ id: 'zh' }),
         },
         slots: {
@@ -49,6 +56,15 @@ global.window = {
       };
       mod.apply(ctx);
       console.log('[ok] slots registered:', registrations.join(', '));
+
+      // The sidebar tab must exist and follow a language switch.
+      const tab = sidebar.tabs[0];
+      if (!tab || tab.id !== 'prompt-pool:pool') throw new Error('the sidebar tab was not registered');
+      if (localeListeners.length === 0) throw new Error('the locale switch is not observed');
+      localeListeners.forEach((fn) => fn());
+      const retitled = sidebar.updates.some((call) => call.id === 'prompt-pool:pool' && call.patch && call.patch.title === 'page.title');
+      if (!retitled) throw new Error('the sidebar tab was not retitled on a language switch');
+      console.log('[ok] sidebar tab retitled on locale change');
       return mod;
     },
   },

@@ -18,6 +18,10 @@ window.__ModuleLoader__.load({
 
     const NS = 'prompt-pool';
     const STORAGE_KEY = 'dsh.prompt-pool.v1';
+    /** The sidebar tool tab this plugin owns; it also names the open tab. */
+    const SIDEBAR_TAB_ID = 'prompt-pool:pool';
+    /** The sidebar service, kept so the page can correct a restored tab title. */
+    let sidebarService = null;
     const IMAGE_DB = 'dsh-prompt-pool-images.v1';
     const IMAGE_STORE = 'images';
     const MAX_IMAGES = 6;
@@ -1969,6 +1973,17 @@ window.__ModuleLoader__.load({
         if (snapshot.currentId === pageWorkspaceId) return;
         workspaceDir.set({ ...snapshot, currentId: pageWorkspaceId });
       }, [pageWorkspaceId]);
+      // A tab restored from the stored sidebar layout keeps the title saved with
+      // it, so an old label would survive both a reload and a language switch.
+      useEffect(() => {
+        const service = sidebarService;
+        if (!service || typeof service.updateTab !== 'function') return;
+        try {
+          service.updateTab(SIDEBAR_TAB_ID, { title: translate('page.title') }, pageSessionId || undefined);
+        } catch (_error) {
+          /* a closed tab is a no-op for the sidebar */
+        }
+      }, [pageSessionId]);
 
       const confirmCategoryDelete = () => {
         const target = pendingCategory;
@@ -2553,7 +2568,7 @@ window.__ModuleLoader__.load({
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.78'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.79'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -4043,8 +4058,9 @@ window.__ModuleLoader__.load({
         // keeps the composer panel only.
         const mountSidebarTab = (service) => {
           if (!service || typeof service.registerTab !== 'function') return;
+          sidebarService = service;
           service.registerTab({
-            id: 'prompt-pool:pool',
+            id: SIDEBAR_TAB_ID,
             title: () => translate('page.title'),
             description: () => translate('tab.description'),
             icon: (size) => h(PromptPoolIcon, { size, active: false }),
@@ -4052,6 +4068,20 @@ window.__ModuleLoader__.load({
             single: true,
             component: (props) => h(PromptPoolPage, props),
           });
+          // The sidebar snapshots a tab's title when the tab opens, so a language
+          // switch would leave the old label behind. Retitle the open tab too.
+          if (typeof service.updateTab === 'function' && ctx.locale && typeof ctx.locale.subscribe === 'function') {
+            ctx.effect(() => {
+              const off = ctx.locale.subscribe(() => {
+                try {
+                  service.updateTab(SIDEBAR_TAB_ID, { title: translate('page.title') });
+                } catch (_error) {
+                  /* closed tabs are a no-op for the sidebar; nothing to repair here */
+                }
+              });
+              return typeof off === 'function' ? off : undefined;
+            });
+          }
         };
         try {
           const sidebar = typeof ctx.get === 'function' ? ctx.get('betterSidebar') : ctx.betterSidebar;
