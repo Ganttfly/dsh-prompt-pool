@@ -24,7 +24,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '0.1.94';
+    const PLUGIN_VERSION = '0.1.95';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/ganttfly/dsh-prompt-pool';
@@ -3770,9 +3770,12 @@ window.__ModuleLoader__.load({
           }
           // The sidebar page cannot read the composer, so it asks for the capture.
           if (command.type === 'capture') {
-            const result = api.capture();
-            if (result && result.ok) return result;
-            return { ok: false, reason: (result && result.reason) || 'empty' };
+            // The capture is async (it copies attachments), so the answer is a promise;
+            // reading `.ok` off it always failed and reported an empty composer.
+            return Promise.resolve(api.capture()).then(
+              (result) => (result && result.ok ? result : { ok: false, reason: (result && result.reason) || 'empty' }),
+              (error) => ({ ok: false, reason: String((error && error.message) || error) }),
+            );
           }
           return { ok: false, reason: 'unknown' };
         });
