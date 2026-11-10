@@ -17,8 +17,8 @@ enable it in Settings → Plugins.
 dsh plugin add dsh-prompt-pool --profile <profile>
 ```
 
-Full documentation: <https://github.com/ganttfly/dsh-prompt-pool#readme> ·
-[中文说明](https://github.com/ganttfly/dsh-prompt-pool/blob/main/README.zh.md)
+Full documentation: <https://github.com/Ganttfly/dsh-prompt-pool#readme> ·
+[中文说明](https://github.com/Ganttfly/dsh-prompt-pool/blob/main/README.zh.md)
 
 ## Known limitations
 

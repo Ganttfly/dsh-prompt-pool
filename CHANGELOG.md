@@ -40,5 +40,5 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/ganttfly/dsh-prompt-pool/compare/v0.1.96...HEAD
-[0.1.96]: https://github.com/ganttfly/dsh-prompt-pool/releases/tag/v0.1.96
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v0.1.96...HEAD
+[0.1.96]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v0.1.96

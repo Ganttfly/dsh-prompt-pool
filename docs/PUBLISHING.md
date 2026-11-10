@@ -16,7 +16,7 @@
 | license / author / repository / keywords / engines | 全部缺失 | 必须补齐 |
 | git remote | 指向 `github.com/ganttfly/dsh-to-chinese` | **错误仓库，必须替换** |
 | GitHub 账号 | `ganttfly` 存在；`GanttShen` 不存在（是显示名） | 仓库应建在 `ganttfly` 下 |
-| 插件信息卡里的仓库地址 | 暂填 `ganttfly/dsh-prompt-pool`（尚未创建） | 仓库建好后核对 |
+| 插件信息卡里的仓库地址 | 暂填 `Ganttfly/dsh-prompt-pool`（尚未创建） | 仓库建好后核对 |
 | 宿主实测版本 | DSH 0.2.2-rc.1 | 写进 README 的兼容性一节 |
 
 ---
@@ -25,7 +25,7 @@
 
 **要做什么**
 
-1. 在 GitHub 建一个只属于这个插件的仓库（建议 `ganttfly/dsh-prompt-pool`）。
+1. 在 GitHub 建一个只属于这个插件的仓库（建议 `Ganttfly/dsh-prompt-pool`）。
 2. 把现有历史推上去，并把 `origin` 改成新仓库。
 3. 确认 `plugin/package.json` 的 `repository` 与它一致。
 
@@ -37,7 +37,7 @@
 **怎么做**
 
 ```powershell
-git remote set-url origin https://github.com/ganttfly/dsh-prompt-pool.git
+git remote set-url origin https://github.com/Ganttfly/dsh-prompt-pool.git
 git push -u origin main
 ```
 
@@ -56,9 +56,9 @@ git push -u origin main
   "private": false,
   "license": "MIT",
   "author": "GanttShen",
-  "repository": { "type": "git", "url": "git+https://github.com/ganttfly/dsh-prompt-pool.git" },
-  "homepage": "https://github.com/ganttfly/dsh-prompt-pool#readme",
-  "bugs": { "url": "https://github.com/ganttfly/dsh-prompt-pool/issues" },
+  "repository": { "type": "git", "url": "git+https://github.com/Ganttfly/dsh-prompt-pool.git" },
+  "homepage": "https://github.com/Ganttfly/dsh-prompt-pool#readme",
+  "bugs": { "url": "https://github.com/Ganttfly/dsh-prompt-pool/issues" },
   "keywords": ["deepseek-harness", "dsh", "cordis", "plugin", "prompt", "queue", "composer"],
   "engines": { "node": ">=22", "dsh": ">=0.2.0-rc.1" }
 }

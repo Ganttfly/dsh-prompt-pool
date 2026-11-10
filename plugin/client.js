@@ -27,7 +27,7 @@ window.__ModuleLoader__.load({
     const PLUGIN_VERSION = '0.1.96';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
-    const PLUGIN_REPO = 'https://github.com/ganttfly/dsh-prompt-pool';
+    const PLUGIN_REPO = 'https://github.com/Ganttfly/dsh-prompt-pool';
     /** The sidebar service, kept so the page can correct a restored tab title. */
     let sidebarService = null;
     const IMAGE_DB = 'dsh-prompt-pool-images.v1';

@@ -7,13 +7,13 @@
   "author": "GanttShen",
   "type": "module",
   "icon": "icon.svg",
-  "homepage": "https://github.com/ganttfly/dsh-prompt-pool#readme",
+  "homepage": "https://github.com/Ganttfly/dsh-prompt-pool#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ganttfly/dsh-prompt-pool.git"
+    "url": "git+https://github.com/Ganttfly/dsh-prompt-pool.git"
   },
   "bugs": {
-    "url": "https://github.com/ganttfly/dsh-prompt-pool/issues"
+    "url": "https://github.com/Ganttfly/dsh-prompt-pool/issues"
   },
   "keywords": [
     "deepseek-harness",
