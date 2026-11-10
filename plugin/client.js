@@ -1,4 +1,4 @@
-﻿window.__ModuleLoader__.load({
+window.__ModuleLoader__.load({
   id: 'dsh-prompt-pool',
   factory(require) {
     'use strict';
@@ -1716,85 +1716,87 @@
                   )
                 : items.map(rowOf),
         ),
-        h(
-          'div',
-          { className: 'pp-page-foot' },
-          h(
-            'div',
-            { className: 'pp-foot-head' },
-            h('span', { className: 'pp-foot-title' }, translate('tray.title')),
-            h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
-            h('span', { className: 'pp-grow' }),
-            state.tray.length > 0
-              ? h('button', { type: 'button', className: 'pp-link', onClick: () => poolActions.clearTray() }, translate('tray.clear'))
-              : null,
-            state.tray.length > 0
-              ? h(
-                  'button',
-                  { type: 'button', className: 'pp-primary', onClick: () => sendToComposer({ type: 'release' }, translate('status.releaseSent')) },
-                  translate('tray.release'),
-                )
-              : null,
-          ),
-          state.tray.length === 0
-            ? h('div', { className: 'pp-hint' }, translate('tray.empty'))
-            : h(
+        settingsOpen
+          ? null
+          : h(
+              'div',
+              { className: 'pp-page-foot' },
+              h(
                 'div',
-                { className: 'pp-tray' },
-                state.tray.map((entry, index) => {
-                  if (trayEditing && trayEditing.key === entry.key) {
-                    return h(
-                      'div',
-                      { key: entry.key, className: 'pp-edit', style: { margin: '4px 0' } },
-                      h('textarea', {
-                        className: 'pp-textarea',
-                        value: trayEditing.body,
-                        placeholder: translate('row.bodyPlaceholder'),
-                        rows: 4,
-                        autoFocus: true,
-                        onChange: (event) => setTrayEditing({ ...trayEditing, body: event.target.value }),
-                        onKeyDown: (event) => {
-                          if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-                            event.preventDefault();
-                            saveTrayEdit();
-                          }
-                        },
-                      }),
-                      h(
-                        'div',
-                        { className: 'pp-edit-actions' },
-                        h('button', { type: 'button', className: 'pp-mini', onClick: () => setTrayEditing(null) }, translate('row.cancel')),
-                        h('button', { type: 'button', className: 'pp-primary', onClick: saveTrayEdit }, translate('row.save')),
-                      ),
-                    );
-                  }
-                  return h(
-                    'div',
-                    { key: entry.key, className: 'pp-chip' },
-                    h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
-                    h('div', { className: 'pp-chip-t' }, entry.body),
-                    h(
-                      'div',
-                      { className: 'pp-chip-actions' },
-                      h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.moveTray(entry.key, -1) }),
-                      h(IconButton, {
-                        name: 'down',
-                        label: translate('row.down'),
-                        disabled: index === state.tray.length - 1,
-                        onClick: () => poolActions.moveTray(entry.key, 1),
-                      }),
-                      h(IconButton, {
-                        name: 'edit',
-                        label: translate('row.edit'),
-                        onClick: () => setTrayEditing({ key: entry.key, body: entry.body || '' }),
-                      }),
-                      h(IconButton, { name: 'copy', label: translate('tray.duplicate'), onClick: () => poolActions.duplicateTray(entry.key) }),
-                      h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => poolActions.removeTray(entry.key) }),
-                    ),
-                  );
-                }),
+                { className: 'pp-foot-head' },
+                h('span', { className: 'pp-foot-title' }, translate('tray.title')),
+                h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
+                h('span', { className: 'pp-grow' }),
+                state.tray.length > 0
+                  ? h('button', { type: 'button', className: 'pp-link', onClick: () => poolActions.clearTray() }, translate('tray.clear'))
+                  : null,
+                state.tray.length > 0
+                  ? h(
+                      'button',
+                      { type: 'button', className: 'pp-primary', onClick: () => sendToComposer({ type: 'release' }, translate('status.releaseSent')) },
+                      translate('tray.release'),
+                    )
+                  : null,
               ),
-        ),
+              state.tray.length === 0
+                ? h('div', { className: 'pp-hint' }, translate('tray.empty'))
+                : h(
+                    'div',
+                    { className: 'pp-tray' },
+                    state.tray.map((entry, index) => {
+                      if (trayEditing && trayEditing.key === entry.key) {
+                        return h(
+                          'div',
+                          { key: entry.key, className: 'pp-edit', style: { margin: '4px 0' } },
+                          h('textarea', {
+                            className: 'pp-textarea',
+                            value: trayEditing.body,
+                            placeholder: translate('row.bodyPlaceholder'),
+                            rows: 4,
+                            autoFocus: true,
+                            onChange: (event) => setTrayEditing({ ...trayEditing, body: event.target.value }),
+                            onKeyDown: (event) => {
+                              if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                                event.preventDefault();
+                                saveTrayEdit();
+                              }
+                            },
+                          }),
+                          h(
+                            'div',
+                            { className: 'pp-edit-actions' },
+                            h('button', { type: 'button', className: 'pp-mini', onClick: () => setTrayEditing(null) }, translate('row.cancel')),
+                            h('button', { type: 'button', className: 'pp-primary', onClick: saveTrayEdit }, translate('row.save')),
+                          ),
+                        );
+                      }
+                      return h(
+                        'div',
+                        { key: entry.key, className: 'pp-chip' },
+                        h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
+                        h('div', { className: 'pp-chip-t' }, entry.body),
+                        h(
+                          'div',
+                          { className: 'pp-chip-actions' },
+                          h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.moveTray(entry.key, -1) }),
+                          h(IconButton, {
+                            name: 'down',
+                            label: translate('row.down'),
+                            disabled: index === state.tray.length - 1,
+                            onClick: () => poolActions.moveTray(entry.key, 1),
+                          }),
+                          h(IconButton, {
+                            name: 'edit',
+                            label: translate('row.edit'),
+                            onClick: () => setTrayEditing({ key: entry.key, body: entry.body || '' }),
+                          }),
+                          h(IconButton, { name: 'copy', label: translate('tray.duplicate'), onClick: () => poolActions.duplicateTray(entry.key) }),
+                          h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => poolActions.removeTray(entry.key) }),
+                        ),
+                      );
+                    }),
+                  ),
+            ),
         status
           ? h('div', { className: 'pp-status', 'data-kind': status.kind || 'info', style: { padding: '0 12px 10px' } }, h('span', null, status.text))
           : null,
@@ -1838,7 +1840,7 @@
         { className: 'pp-settings' },
         h('style', null, CSS),
         h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.49'),
+        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc'), ' · v0.1.50'),
         h(
           'div',
           { className: 'pp-bar', style: { padding: '0 0 10px' } },
@@ -2697,7 +2699,7 @@
                 : null,
             )
           : null,
-        tray.length > 0
+        tray.length > 0 && !settingsOpen
           ? h(
               'div',
               { className: 'pp-foot' },
