@@ -2,6 +2,10 @@
 # One-off rewrite scripts kept for reference, never committed
 tools/oneshot/
 
+# Host bundles and asar listings extracted for reading, never committed
+_ref/
+asar-files.tsv
+
 # Local screenshot scratch; the readme images live in docs/images/
 _shots/
 
