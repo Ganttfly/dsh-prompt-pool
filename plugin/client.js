@@ -19,7 +19,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '1.0.4';
+    const PLUGIN_VERSION = '1.1.0';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/Ganttfly/dsh-prompt-pool';
@@ -1644,6 +1644,248 @@ window.__ModuleLoader__.load({
       return { editing, setEditing, startEdit, save, cancelEdit, pasteImages };
     }
 
+    /** Editor state for a queued copy; the queue card is shared by both views. */
+    function useTrayEditor(flash) {
+      const [trayEditing, setTrayEditing] = useState(null);
+
+      const saveTrayEdit = () => {
+        if (!trayEditing) return;
+        if (!trayEditing.body.trim() && (!trayEditing.images || trayEditing.images.length === 0)) {
+          flash({ kind: 'error', text: translate('status.emptyBody') });
+          return;
+        }
+        poolActions.patchTray(trayEditing.key, { body: trayEditing.body, images: trayEditing.images || [] });
+        setTrayEditing(null);
+      };
+
+      const pasteTrayImages = (files) => {
+        const key = trayEditing && trayEditing.key;
+        appendImageAssets(files, trayEditing && trayEditing.images ? trayEditing.images : [], (text) => flash({ kind: 'error', text })).then((images) => {
+          setTrayEditing((current) => (current && current.key === key ? { ...current, images } : current));
+        });
+      };
+
+      return { trayEditing, setTrayEditing, saveTrayEdit, pasteTrayImages };
+    }
+
+    /** One pool row (or its editor), shared by the panel and the page. */
+    function renderPoolRow(props) {
+      const {
+        item, index, total, editing, setEditing, categories, workspaces, sessionId,
+        editRows, editStyle, mainTitle, showTag, onInsert, onMain, onStartEdit,
+        onQueue, onDelete, onSave, onCancel, onPasteImages, onOpenImage, onError,
+      } = props;
+
+      if (editing && editing.id === item.id) {
+        return h(
+          'div',
+          { key: item.id, className: 'pp-edit', ...(editStyle ? { style: editStyle } : {}) },
+          h('input', {
+            className: 'pp-input',
+            value: editing.title,
+            placeholder: translate('row.titlePlaceholder'),
+            onChange: (event) => setEditing({ ...editing, title: event.target.value }),
+          }),
+          h(MentionField, {
+            value: editing.body,
+            placeholder: translate('row.bodyPlaceholder'),
+            rows: editRows || 4,
+            autoFocus: true,
+            sessionId,
+            onChange: (event) => setEditing({ ...editing, body: event.target.value }),
+            onPasteImages,
+            onKeyDown: (event) => {
+              if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                event.preventDefault();
+                onSave();
+              }
+            },
+          }),
+          h(ImagePicker, {
+            images: editing.images || [],
+            onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
+            onError,
+            onOpen: onOpenImage,
+          }),
+          h(
+            'div',
+            { className: 'pp-edit-actions' },
+            h(
+              'select',
+              {
+                className: 'pp-input',
+                style: { width: 'auto', maxWidth: '220px' },
+                value: groupOf(editing),
+                'aria-label': translate('row.classification'),
+                onChange: (event) => setEditing(withGroup(editing, event.target.value)),
+              },
+              h(
+                'optgroup',
+                { label: translate('row.familyBuiltin') },
+                h('option', { value: BUILTIN_GROUP.oftenuse }, translate('group.oftenuse')),
+                h('option', { value: BUILTIN_GROUP.note }, translate('group.note')),
+                h('option', { value: BUILTIN_GROUP.template }, translate('group.template')),
+              ),
+              workspaces.length > 0
+                ? h(
+                    'optgroup',
+                    { label: translate('row.familyWorkspace') },
+                    workspaces.map((workspace) => h('option', { key: workspace.id, value: 'workspace:' + workspace.workspaceId }, workspace.name)),
+                  )
+                : null,
+              categories.length > 0
+                ? h(
+                    'optgroup',
+                    { label: translate('row.familyCustom') },
+                    categories.map((category) => h('option', { key: category.id, value: 'custom:' + category.id }, category.name)),
+                  )
+                : null,
+            ),
+            h('span', { className: 'pp-grow' }),
+            h('button', { type: 'button', className: 'pp-mini', onClick: onCancel }, translate('row.cancel')),
+            h('button', { type: 'button', className: 'pp-primary', onClick: onSave }, translate('row.save')),
+          ),
+        );
+      }
+
+      return h(
+        'div',
+        { key: item.id, className: 'pp-row pp-page-item' },
+        h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => onInsert(item) }),
+        h(TrayAdd, { label: translate('row.select'), onClick: () => onQueue(item) }),
+        h(
+          'div',
+          { className: 'pp-main', ...(mainTitle ? { title: mainTitle } : {}), onClick: () => (onMain || onStartEdit)(item) },
+          h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || (item.images && item.images[0] && (item.images[0].name || translate('image.only'))) || translate('group.untitled')),
+          item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
+          h(ImageStrip, { images: item.images, compact: true, onOpen: onOpenImage }),
+        ),
+        showTag ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, categories, workspaces))) : null,
+        h(
+          'div',
+          { className: 'pp-actions' },
+          h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.move(item.id, -1) }),
+          h(IconButton, { name: 'down', label: translate('row.down'), disabled: index === total - 1, onClick: () => poolActions.move(item.id, 1) }),
+          h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => onStartEdit(item) }),
+          h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
+          h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => onDelete(item) }),
+        ),
+      );
+    }
+
+    /** The send-queue card, shared by the panel and the page. */
+    function renderTrayCard(props) {
+      const {
+        entries, queuePending, collapsed, busy, sessionId, trayRef,
+        editing, setEditing, onSaveEdit, onPasteImages, onClear, onRelease,
+        onRemove, onOpenImage, onError,
+      } = props;
+
+      if (collapsed) {
+        return h(
+          'button',
+          {
+            type: 'button',
+            className: 'pp-queue-strip',
+            title: translate('tray.expandTitle'),
+            'aria-label': translate('tray.expandTitle'),
+            'aria-expanded': 'false',
+            onClick: () => poolActions.setSetting('queueCollapsed', false),
+          },
+          h('span', { className: 'pp-queue-strip-action' }, icon('chevronUp')),
+          h('span', { className: 'pp-queue-strip-title' }, translate('tray.title')),
+          h('span', { className: 'pp-hint' }, translate('tray.selected', { n: entries.length })),
+          h('span', { className: 'pp-grow' }),
+        );
+      }
+
+      return h(
+        'div',
+        { className: 'pp-page-foot' },
+        h(
+          'div',
+          { className: 'pp-foot-head' },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-queue-toggle',
+              title: translate('tray.collapseTitle'),
+              'aria-label': translate('tray.collapseTitle'),
+              'aria-expanded': 'true',
+              onClick: () => poolActions.setSetting('queueCollapsed', true),
+            },
+            h('span', { className: 'pp-queue-toggle-icon' }, icon('chevronDown')),
+          ),
+          h('span', { className: 'pp-foot-title' }, translate('tray.title')),
+          h('span', { className: 'pp-hint' }, translate('tray.selected', { n: entries.length })),
+          queuePending > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queuePending })) : null,
+          h('span', { className: 'pp-grow' }),
+          entries.length > 0 ? h('button', { type: 'button', className: 'pp-link', onClick: onClear }, translate('tray.clear')) : null,
+          entries.length > 0
+            ? h('button', { type: 'button', className: 'pp-primary', disabled: busy, onClick: onRelease }, translate('tray.release'))
+            : null,
+        ),
+        h(
+          'div',
+          { className: entries.length === 0 ? 'pp-tray pp-tray-empty' : 'pp-tray', ref: trayRef },
+          entries.length === 0
+            ? h('div', { className: 'pp-hint' }, translate('tray.empty'))
+            : entries.map((entry, index) => {
+              if (editing && editing.key === entry.key) {
+                return h(
+                  'div',
+                  { key: entry.key, className: 'pp-edit', style: { margin: '4px 0' } },
+                  h(MentionField, {
+                    value: editing.body,
+                    placeholder: translate('row.bodyPlaceholder'),
+                    rows: 4,
+                    autoFocus: true,
+                    sessionId,
+                    onChange: (event) => setEditing((current) => (current ? { ...current, body: event.target.value } : current)),
+                    onPasteImages,
+                    onKeyDown: (event) => {
+                      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                        event.preventDefault();
+                        onSaveEdit();
+                      }
+                    },
+                  }),
+                  h(ImagePicker, {
+                    images: editing.images || [],
+                    onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
+                    onError,
+                    onOpen: onOpenImage,
+                  }),
+                  h(
+                    'div',
+                    { className: 'pp-edit-actions' },
+                    h('button', { type: 'button', className: 'pp-mini', onClick: () => setEditing(null) }, translate('row.cancel')),
+                    h('button', { type: 'button', className: 'pp-primary', onClick: onSaveEdit }, translate('row.save')),
+                  ),
+                );
+              }
+              return h(
+                'div',
+                { key: entry.key, className: 'pp-chip' },
+                h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
+                h('div', { className: 'pp-chip-t', title: entry.body }, entry.body),
+                h(ImageStrip, { images: entry.images, compact: true, max: 4, onOpen: onOpenImage }),
+                h(
+                  'div',
+                  { className: 'pp-chip-actions' },
+                  h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.moveTray(entry.key, -1) }),
+                  h(IconButton, { name: 'down', label: translate('row.down'), disabled: index === entries.length - 1, onClick: () => poolActions.moveTray(entry.key, 1) }),
+                  h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => setEditing({ key: entry.key, body: entry.body || '', images: normalizeImages(entry.images) }) }),
+                  h(IconButton, { name: 'copy', label: translate('tray.duplicate'), onClick: () => poolActions.duplicateTray(entry.key) }),
+                  h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => onRemove(entry) }),
+                ),
+              );
+            }),
+        ),
+      );
+    }
+
     function useUiState() {
       return useSyncExternalStore(ui.subscribe, ui.get, ui.get);
     }
@@ -2198,7 +2440,6 @@ window.__ModuleLoader__.load({
       const activeSessionId = pageSessionId || sessionHint || workspaceSession || '';
       const [tab, setTab] = useState('all');
       const [query, setQuery] = useState('');
-      const [trayEditing, setTrayEditing] = useState(null);
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
       const [confirmClear, setConfirmClear] = useState(false);
@@ -2217,6 +2458,7 @@ window.__ModuleLoader__.load({
       }, []);
       useEffect(() => () => window.clearTimeout(statusTimer.current), []);
       const { editing, setEditing, startEdit, save, cancelEdit, pasteImages } = usePoolEditor(flash);
+      const { trayEditing, setTrayEditing, saveTrayEdit, pasteTrayImages } = useTrayEditor(flash);
       // A failed write outranks a transient toast: the change is not saved.
       const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
       const trayRef = useRef(null);
@@ -2311,23 +2553,6 @@ window.__ModuleLoader__.load({
         }
       };
 
-      const saveTrayEdit = () => {
-        if (!trayEditing) return;
-        if (!trayEditing.body.trim() && !(trayEditing.images && trayEditing.images.length)) {
-          flash({ kind: 'error', text: translate('status.emptyBody') });
-          return;
-        }
-        poolActions.patchTray(trayEditing.key, { body: trayEditing.body, images: trayEditing.images || [] });
-        setTrayEditing(null);
-      };
-
-      const pasteTrayImages = (files) => {
-        const key = trayEditing && trayEditing.key;
-        appendImageAssets(files, trayEditing && trayEditing.images ? trayEditing.images : [], (text) => flash({ kind: 'error', text })).then((images) => {
-          setTrayEditing((current) => (current && current.key === key ? { ...current, images } : current));
-        });
-      };
-
       const sendToComposer = async (command, okText, onSuccess) => {
         let result;
         try {
@@ -2414,119 +2639,36 @@ window.__ModuleLoader__.load({
         setEditing({ id: item.id, group, title: '', body: '', images: [] });
       };
 
-      const rowOf = (item, index) => {
-        if (editing && editing.id === item.id) {
-          return h(
-            'div',
-            { key: item.id, className: 'pp-edit', style: { margin: '6px 0' } },
-            h('input', {
-              className: 'pp-input',
-              value: editing.title,
-              placeholder: translate('row.titlePlaceholder'),
-              onChange: (event) => setEditing({ ...editing, title: event.target.value }),
-            }),
-            h(MentionField, {
-              value: editing.body,
-              placeholder: translate('row.bodyPlaceholder'),
-              rows: 5,
-              autoFocus: true,
-              sessionId: activeSessionId,
-              onChange: (event) => setEditing({ ...editing, body: event.target.value }),
-              onPasteImages: pasteImages,
-              onKeyDown: (event) => {
-                if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-                  event.preventDefault();
-                  save();
-                }
-              },
-            }),
-            h(ImagePicker, {
-              images: editing.images || [],
-              onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
-              onError: (text) => flash({ kind: 'error', text }),
-              onOpen: openImage,
-            }),
-            h(
-              'div',
-              { className: 'pp-edit-actions' },
-              h(
-                'select',
-                {
-                  className: 'pp-input',
-                  style: { width: 'auto', maxWidth: '220px' },
-                  value: groupOf(editing),
-                  'aria-label': translate('row.classification'),
-                  onChange: (event) => setEditing(withGroup(editing, event.target.value)),
-                },
-                h(
-                  'optgroup',
-                  { label: translate('row.familyBuiltin') },
-                  h('option', { value: BUILTIN_GROUP.oftenuse }, translate('group.oftenuse')),
-                  h('option', { value: BUILTIN_GROUP.note }, translate('group.note')),
-                  h('option', { value: BUILTIN_GROUP.template }, translate('group.template')),
-                ),
-                workspaces.items.length > 0
-                  ? h(
-                      'optgroup',
-                      { label: translate('row.familyWorkspace') },
-                      workspaces.items.map((workspace) => h('option', { key: workspace.id, value: 'workspace:' + workspace.workspaceId }, workspace.name)),
-                    )
-                  : null,
-                state.categories.length > 0
-                  ? h(
-                      'optgroup',
-                      { label: translate('row.familyCustom') },
-                      state.categories.map((category) => h('option', { key: category.id, value: 'custom:' + category.id }, category.name)),
-                    )
-                  : null,
-              ),
-              h('span', { className: 'pp-grow' }),
-              h('button', { type: 'button', className: 'pp-mini', onClick: cancelEdit }, translate('row.cancel')),
-              h('button', { type: 'button', className: 'pp-primary', onClick: save }, translate('row.save')),
-            ),
-          );
-        }
-        return h(
-          'div',
-          { key: item.id, className: 'pp-row pp-page-item' },
-          h(IconButton, {
-            name: 'insert',
-            label: translate('row.insert'),
-            onClick: () => sendToComposer(
-              { type: 'insert', text: item.body, images: normalizeImages(item.images) },
-              item.body.trim() ? translate('status.inserted') : translate('image.inserted'),
-              () => {
-                if (!normalizeSettings(state.settings).keepAfterInsert) removeItem(item, translate('status.insertedAndRemoved'));
-              },
-            ),
-          }),
-          h(TrayAdd, { label: translate('row.select'), onClick: () => queueItem(item) }),
-          h(
-            'div',
-            { className: 'pp-main', onClick: () => startEdit(item) },
-            h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || (item.images && item.images[0] && (item.images[0].name || translate('image.only'))) || translate('group.untitled')),
-            item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
-            h(ImageStrip, { images: item.images, compact: true, onOpen: openImage }),
-          ),
-          tab === 'all'
-            ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
-            : null,
-          h(
-            'div',
-            { className: 'pp-actions' },
-            h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.move(item.id, -1) }),
-            h(IconButton, {
-              name: 'down',
-              label: translate('row.down'),
-              disabled: index === items.length - 1,
-              onClick: () => poolActions.move(item.id, 1),
-            }),
-            h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => startEdit(item) }),
-            h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
-            h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => setPendingDelete(item) }),
-          ),
-        );
-      };
+      const rowOf = (item, index) => renderPoolRow({
+        key: item.id,
+        item,
+        index,
+        total: items.length,
+        editing,
+        setEditing,
+        categories: state.categories,
+        workspaces: workspaces.items,
+        sessionId: activeSessionId,
+        editRows: 5,
+        editStyle: { margin: '6px 0' },
+        showTag: tab === 'all',
+        onInsert: (entry) => sendToComposer(
+          { type: 'insert', text: entry.body, images: normalizeImages(entry.images) },
+          entry.body.trim() ? translate('status.inserted') : translate('image.inserted'),
+          () => {
+            if (!normalizeSettings(state.settings).keepAfterInsert) removeItem(entry, translate('status.insertedAndRemoved'));
+          },
+        ),
+        onMain: startEdit,
+        onStartEdit: startEdit,
+        onQueue: queueItem,
+        onDelete: setPendingDelete,
+        onSave: save,
+        onCancel: cancelEdit,
+        onPasteImages: pasteImages,
+        onOpenImage: openImage,
+        onError: (text) => flash({ kind: 'error', text }),
+      });
 
       // A folded family renders its groups as chips inside one tab.
       const customGroups = state.categories.map((category) => ({ id: 'custom:' + category.id, name: category.name }));
@@ -2704,130 +2846,23 @@ window.__ModuleLoader__.load({
               )
             : null,
           settingsOpen
-          ? null
-          : queueCollapsed
-            ? h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'pp-queue-strip',
-                  title: translate('tray.expandTitle'),
-                  'aria-label': translate('tray.expandTitle'),
-                  'aria-expanded': 'false',
-                  onClick: () => poolActions.setSetting('queueCollapsed', false),
-                },
-                h('span', { className: 'pp-queue-strip-action' }, icon('chevronUp')),
-                h('span', { className: 'pp-queue-strip-title' }, translate('tray.title')),
-                h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
-                h('span', { className: 'pp-grow' }),
-              )
-            : h(
-              'div',
-              { className: 'pp-page-foot' },
-              h(
-                'div',
-                { className: 'pp-foot-head' },
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'pp-queue-toggle',
-                    title: translate('tray.collapseTitle'),
-                    'aria-label': translate('tray.collapseTitle'),
-                    'aria-expanded': 'true',
-                    onClick: () => poolActions.setSetting('queueCollapsed', true),
-                  },
-                  h('span', { className: 'pp-queue-toggle-icon' }, icon('chevronDown')),
-                ),
-                h('span', { className: 'pp-foot-title' }, translate('tray.title')),
-                h('span', { className: 'pp-hint' }, translate('tray.selected', { n: state.tray.length })),
-                queuePending > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queuePending })) : null,
-                h('span', { className: 'pp-grow' }),
-                state.tray.length > 0
-                  ? h('button', { type: 'button', className: 'pp-link', onClick: () => setConfirmClear(true) }, translate('tray.clear'))
-                  : null,
-                state.tray.length > 0
-                  ? h(
-                      'button',
-                      { type: 'button', className: 'pp-primary', onClick: () => sendToComposer({ type: 'release' }, translate('status.releaseSent')) },
-                      translate('tray.release'),
-                    )
-                  : null,
-              ),
-              state.tray.length === 0
-                ? h(
-                    'div',
-                    { className: 'pp-tray pp-tray-empty', ref: trayRef },
-                    h('div', { className: 'pp-hint' }, translate('tray.empty')),
-                  )
-                : h(
-                    'div',
-                    {
-                      className: 'pp-tray',
-                      ref: trayRef,
-                    },
-                    state.tray.map((entry, index) => {
-                      if (trayEditing && trayEditing.key === entry.key) {
-                        return h(
-                          'div',
-                          { key: entry.key, className: 'pp-edit', style: { margin: '4px 0' } },
-                          h(MentionField, {
-                            value: trayEditing.body,
-                            placeholder: translate('row.bodyPlaceholder'),
-                            rows: 4,
-                            autoFocus: true,
-                            sessionId: activeSessionId,
-                            onChange: (event) => setTrayEditing((current) => (current ? { ...current, body: event.target.value } : current)),
-                            onPasteImages: pasteTrayImages,
-                            onKeyDown: (event) => {
-                              if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-                                event.preventDefault();
-                                saveTrayEdit();
-                              }
-                            },
-                          }),
-                          h(ImagePicker, {
-                            images: trayEditing.images || [],
-                            onChange: (images) => setTrayEditing((current) => (current ? { ...current, images } : current)),
-                            onError: (text) => flash({ kind: 'error', text }),
-                            onOpen: openImage,
-                          }),
-                          h(
-                            'div',
-                            { className: 'pp-edit-actions' },
-                            h('button', { type: 'button', className: 'pp-mini', onClick: () => setTrayEditing(null) }, translate('row.cancel')),
-                            h('button', { type: 'button', className: 'pp-primary', onClick: saveTrayEdit }, translate('row.save')),
-                          ),
-                        );
-                      }
-                      return h(
-                        'div',
-                        { key: entry.key, className: 'pp-chip' },
-                        h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
-                        h('div', { className: 'pp-chip-t', title: entry.body }, entry.body),
-                        h(ImageStrip, { images: entry.images, compact: true, max: 4, onOpen: openImage }),
-                        h(
-                          'div',
-                          { className: 'pp-chip-actions' },
-                          h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.moveTray(entry.key, -1) }),
-                          h(IconButton, {
-                            name: 'down',
-                            label: translate('row.down'),
-                            disabled: index === state.tray.length - 1,
-                            onClick: () => poolActions.moveTray(entry.key, 1),
-                          }),
-                          h(IconButton, {
-                            name: 'edit',
-                            label: translate('row.edit'),
-                            onClick: () => setTrayEditing({ key: entry.key, body: entry.body || '', images: normalizeImages(entry.images) }),
-                          }),
-                          h(IconButton, { name: 'copy', label: translate('tray.duplicate'), onClick: () => poolActions.duplicateTray(entry.key) }),
-                          h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => setPendingRemove(entry) }),
-                        ),
-                      );
-                    }),
-                  ),
-            ),
+            ? null
+            : renderTrayCard({
+                entries: state.tray,
+                queuePending,
+                collapsed: queueCollapsed,
+                sessionId: activeSessionId,
+                trayRef,
+                editing: trayEditing,
+                setEditing: setTrayEditing,
+                onSaveEdit: saveTrayEdit,
+                onPasteImages: pasteTrayImages,
+                onClear: () => setConfirmClear(true),
+                onRelease: () => sendToComposer({ type: 'release' }, translate('status.releaseSent')),
+                onRemove: setPendingRemove,
+                onOpenImage: openImage,
+                onError: (text) => flash({ kind: 'error', text }),
+              }),
         h(ImageLightbox, { preview, onClose: closeImage }),
         ),
       );
@@ -3428,7 +3463,6 @@ window.__ModuleLoader__.load({
 
       const [tab, setTab] = useState('all');
       const [query, setQuery] = useState('');
-      const [trayEditing, setTrayEditing] = useState(null);
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
       const [wsSelected, setWsSelected] = useState('');
@@ -3450,6 +3484,7 @@ window.__ModuleLoader__.load({
       useEffect(() => () => window.clearTimeout(statusTimer.current), []);
 
       const { editing, setEditing, startEdit, save, cancelEdit, pasteImages } = usePoolEditor(flash);
+      const { trayEditing, setTrayEditing, saveTrayEdit, pasteTrayImages } = useTrayEditor(flash);
 
       // A failed write outranks a transient toast: the change is not saved.
       const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
@@ -3649,23 +3684,6 @@ window.__ModuleLoader__.load({
         }
       };
 
-      const saveTrayEdit = () => {
-        if (!trayEditing) return;
-        if (!trayEditing.body.trim() && !(trayEditing.images && trayEditing.images.length)) {
-          flash({ kind: 'error', text: translate('status.emptyBody') });
-          return;
-        }
-        poolActions.patchTray(trayEditing.key, { body: trayEditing.body, images: trayEditing.images || [] });
-        setTrayEditing(null);
-      };
-
-      const pasteTrayImages = (files) => {
-        const key = trayEditing && trayEditing.key;
-        appendImageAssets(files, trayEditing && trayEditing.images ? trayEditing.images : [], (text) => flash({ kind: 'error', text })).then((images) => {
-          setTrayEditing((current) => (current && current.key === key ? { ...current, images } : current));
-        });
-      };
-
       /** The composer's draft attachments as descriptors, when the host exposes them. */
       const resolveAttachments = () => {
         const api = conversationFace || serviceOf(pluginCtx, 'conversation');
@@ -3832,109 +3850,30 @@ window.__ModuleLoader__.load({
         );
       };
 
-      const rowOf = (item, index) => {
-        if (editing && editing.id === item.id) {
-          return h(
-            'div',
-            { key: item.id, className: 'pp-edit' },
-            h('input', {
-              className: 'pp-input',
-              value: editing.title,
-              placeholder: translate('row.titlePlaceholder'),
-              onChange: (event) => setEditing({ ...editing, title: event.target.value }),
-            }),
-            h(MentionField, {
-              value: editing.body,
-              placeholder: translate('row.bodyPlaceholder'),
-              rows: 4,
-              autoFocus: true,
-              sessionId: props.sessionId,
-              onChange: (event) => setEditing({ ...editing, body: event.target.value }),
-              onPasteImages: pasteImages,
-              onKeyDown: (event) => {
-                if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-                  event.preventDefault();
-                  save();
-                }
-              },
-            }),
-            h(ImagePicker, {
-              images: editing.images || [],
-              onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
-              onError: (text) => flash({ kind: 'error', text }),
-              onOpen: openImage,
-            }),
-            h(
-              'div',
-              { className: 'pp-edit-actions' },
-              h(
-                'select',
-                {
-                  className: 'pp-input',
-                  style: { width: 'auto', maxWidth: '220px' },
-                  value: groupOf(editing),
-                  'aria-label': translate('row.classification'),
-                  onChange: (event) => setEditing(withGroup(editing, event.target.value)),
-                },
-                h(
-                  'optgroup',
-                  { label: translate('row.familyBuiltin') },
-                  h('option', { value: BUILTIN_GROUP.oftenuse }, translate('group.oftenuse')),
-                  h('option', { value: BUILTIN_GROUP.note }, translate('group.note')),
-                  h('option', { value: BUILTIN_GROUP.template }, translate('group.template')),
-                ),
-                workspaces.items.length > 0
-                  ? h(
-                      'optgroup',
-                      { label: translate('row.familyWorkspace') },
-                      workspaces.items.map((workspace) => h('option', { key: workspace.id, value: 'workspace:' + workspace.workspaceId }, workspace.name)),
-                    )
-                  : null,
-                state.categories.length > 0
-                  ? h(
-                      'optgroup',
-                      { label: translate('row.familyCustom') },
-                      state.categories.map((category) => h('option', { key: category.id, value: 'custom:' + category.id }, category.name)),
-                    )
-                  : null,
-              ),
-              h('span', { className: 'pp-grow' }),
-              h('button', { type: 'button', className: 'pp-mini', onClick: cancelEdit }, translate('row.cancel')),
-              h('button', { type: 'button', className: 'pp-primary', onClick: save }, translate('row.save')),
-            ),
-          );
-        }
-        return h(
-          'div',
-          { key: item.id, className: 'pp-row pp-page-item' },
-          h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => insertItem(item) }),
-          h(TrayAdd, { label: translate('row.select'), onClick: () => queueItem(item) }),
-          h(
-            'div',
-            { className: 'pp-main', title: translate('row.insert'), onClick: () => insertItem(item) },
-            h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || (item.images && item.images[0] && (item.images[0].name || translate('image.only'))) || translate('group.untitled')),
-            item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
-            h(ImageStrip, { images: item.images, compact: true, onOpen: openImage }),
-          ),
-          tab === 'all'
-            ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, state.categories, workspaces.items)))
-            : null,
-          h(
-            'div',
-            { className: 'pp-actions' },
-            h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.move(item.id, -1) }),
-            h(IconButton, {
-              name: 'down',
-              label: translate('row.down'),
-              disabled: index === items.length - 1,
-              onClick: () => poolActions.move(item.id, 1),
-            }),
-            h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => startEdit(item) }),
-            h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
-            h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => setPendingDelete(item) }),
-          ),
-        );
-      };
+      const rowOf = (item, index) => renderPoolRow({
+        key: item.id,
+        item,
+        index,
+        total: items.length,
+        editing,
+        setEditing,
+        categories: state.categories,
+        workspaces: workspaces.items,
+        sessionId: props.sessionId,
+        editRows: 4,
+        mainTitle: translate('row.insert'),
+        showTag: tab === 'all',
+        onInsert: insertItem,
+        onMain: insertItem,
+        onStartEdit: startEdit,
+        onQueue: queueItem,
+        onDelete: setPendingDelete,
+        onSave: save,
+        onCancel: cancelEdit,
+        onPasteImages: pasteImages,
+        onOpenImage: openImage,
+        onError: (text) => flash({ kind: 'error', text }),
+      });
 
       const tray = state.tray;
       const queueCollapsed = normalizeSettings(state.settings).queueCollapsed;
@@ -4205,116 +4144,22 @@ window.__ModuleLoader__.load({
             )
           : null,
         !settingsOpen
-          ? queueCollapsed
-            ? h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'pp-queue-strip',
-                  title: translate('tray.expandTitle'),
-                  'aria-label': translate('tray.expandTitle'),
-                  'aria-expanded': 'false',
-                  onClick: () => poolActions.setSetting('queueCollapsed', false),
-                },
-                h('span', { className: 'pp-queue-strip-action' }, icon('chevronUp')),
-                h('span', { className: 'pp-queue-strip-title' }, translate('tray.title')),
-                h('span', { className: 'pp-hint' }, translate('tray.selected', { n: tray.length })),
-                h('span', { className: 'pp-grow' }),
-              )
-            : h(
-              'div',
-              { className: 'pp-page-foot' },
-              h(
-                'div',
-                { className: 'pp-foot-head' },
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'pp-queue-toggle',
-                    title: translate('tray.collapseTitle'),
-                    'aria-label': translate('tray.collapseTitle'),
-                    'aria-expanded': 'true',
-                    onClick: () => poolActions.setSetting('queueCollapsed', true),
-                  },
-                  h('span', { className: 'pp-queue-toggle-icon' }, icon('chevronDown')),
-                ),
-                h('span', { className: 'pp-foot-title' }, translate('tray.title')),
-            h('span', { className: 'pp-hint' }, translate('tray.selected', { n: tray.length })),
-                queue.length > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queue.length })) : null,
-                h('span', { className: 'pp-grow' }),
-                tray.length > 0 ? h('button', { type: 'button', className: 'pp-link', onClick: () => setConfirmClear(true) }, translate('tray.clear')) : null,
-                tray.length > 0
-                  ? h('button', { type: 'button', className: 'pp-primary', disabled: busy, onClick: release }, translate('tray.release'))
-                  : null,
-              ),
-              h(
-                'div',
-                { className: tray.length === 0 ? 'pp-tray pp-tray-empty' : 'pp-tray' },
-                tray.length === 0
-                  ? h('div', { className: 'pp-hint' }, translate('tray.empty'))
-                  : tray.map((entry, index) => {
-                  if (trayEditing && trayEditing.key === entry.key) {
-                    return h(
-                      'div',
-                      { key: entry.key, className: 'pp-edit', style: { margin: '4px 0' } },
-                      h(MentionField, {
-                        value: trayEditing.body,
-                        placeholder: translate('row.bodyPlaceholder'),
-                        rows: 4,
-                        autoFocus: true,
-                        sessionId: props.sessionId,
-                        onChange: (event) => setTrayEditing((current) => (current ? { ...current, body: event.target.value } : current)),
-                        onPasteImages: pasteTrayImages,
-                        onKeyDown: (event) => {
-                          if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-                            event.preventDefault();
-                            saveTrayEdit();
-                          }
-                        },
-                      }),
-                      h(ImagePicker, {
-                        images: trayEditing.images || [],
-                        onChange: (images) => setTrayEditing((current) => (current ? { ...current, images } : current)),
-                        onError: (text) => flash({ kind: 'error', text }),
-                        onOpen: openImage,
-                      }),
-                      h(
-                        'div',
-                        { className: 'pp-edit-actions' },
-                        h('button', { type: 'button', className: 'pp-mini', onClick: () => setTrayEditing(null) }, translate('row.cancel')),
-                        h('button', { type: 'button', className: 'pp-primary', onClick: saveTrayEdit }, translate('row.save')),
-                      ),
-                    );
-                  }
-                  return h(
-                    'div',
-                    { key: entry.key, className: 'pp-chip' },
-                    h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
-                    h('div', { className: 'pp-chip-t', title: entry.body }, entry.body),
-                    h(ImageStrip, { images: entry.images, compact: true, max: 4, onOpen: openImage }),
-                    h(
-                      'div',
-                      { className: 'pp-chip-actions' },
-                      h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.moveTray(entry.key, -1) }),
-                      h(IconButton, {
-                        name: 'down',
-                        label: translate('row.down'),
-                        disabled: index === tray.length - 1,
-                        onClick: () => poolActions.moveTray(entry.key, 1),
-                      }),
-                      h(IconButton, {
-                        name: 'edit',
-                        label: translate('row.edit'),
-                        onClick: () => setTrayEditing({ key: entry.key, body: entry.body || '', images: normalizeImages(entry.images) }),
-                      }),
-                      h(IconButton, { name: 'copy', label: translate('tray.duplicate'), onClick: () => poolActions.duplicateTray(entry.key) }),
-                      h(IconButton, { name: 'close', label: translate('tray.remove'), onClick: () => setPendingRemove(entry) }),
-                    ),
-                  );
-                }),
-              ),
-            )
+          ? renderTrayCard({
+              entries: tray,
+              queuePending: queue.length,
+              collapsed: queueCollapsed,
+              busy,
+              sessionId: props.sessionId,
+              editing: trayEditing,
+              setEditing: setTrayEditing,
+              onSaveEdit: saveTrayEdit,
+              onPasteImages: pasteTrayImages,
+              onClear: () => setConfirmClear(true),
+              onRelease: release,
+              onRemove: setPendingRemove,
+              onOpenImage: openImage,
+              onError: (text) => flash({ kind: 'error', text }),
+            })
           : null,
         ),
         h(ImageLightbox, { preview, onClose: closeImage }),

@@ -79,7 +79,9 @@ dsh plugin add ./dsh-prompt-pool-<version>.tgz --profile <profile>
 ## 开发
 
 ```powershell
-npm test                            # 通过 tools/run-tests.js 跑完整套检查
+npm run check                       # lint + 完整测试，CI 跑的就是这个
+npm run lint                        # 语法、版本一致性、中英 key 对齐与死 key
+npm test                            # 通过 tools/run-tests.js 跑完整测试
 node tools/smoke.js                 # 模块加载、槽位注册、语言切换改名、版本一致性
 node tools/render-smoke.js          # 每个槽位能渲染；面板与设置的结构断言
 Get-ChildItem tools/verify/*.js | ForEach-Object { node $_.FullName }   # 行为检查

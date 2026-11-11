@@ -97,6 +97,8 @@ Clearing them removes the pool for good.
 ## Development
 
 ```powershell
+npm run check                       # lint + the whole suite, as CI runs it
+npm run lint                        # syntax, version pin, locale parity and dead keys
 npm test                            # the whole suite through tools/run-tests.js
 node tools/smoke.js                 # module loads, slots register, locale retitle, version pin
 node tools/render-smoke.js          # every slot renders; panel and settings structure checks

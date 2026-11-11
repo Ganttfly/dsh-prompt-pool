@@ -11,10 +11,12 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
-## [1.0.4] — 2026-11-11
+## [1.1.0] — 2026-11-11
 
 ### Changed
 
+- The panel and the page render rows and the send-queue card through shared render functions, so a
+  row action or a queue-card change is written once instead of twice.
 - The composer panel and the sidebar page share one editor path (start edit, save, cancel, paste
   image), so the empty-row and unsaved-image rules cannot drift between them.
 - The settings copy and the empty-pool hints name the buttons that actually exist.
@@ -25,8 +27,10 @@ All notable changes to this project are documented here. The format follows
 
 - Keyboard support for the custom-tab delete control, a focus trap in confirmations that starts on
   the safe button, `aria-live` on the status line, and labels on both search boxes.
-- `npm test` / `tools/run-tests.js` runs the whole suite, and GitHub Actions runs it on every push.
-- A check that a new group selects a tab that exists, plus bug and feature issue templates.
+- `npm run check` runs a dependency-free lint (syntax, version, locale parity and dead keys) plus the
+  whole test suite; GitHub Actions runs it on every push.
+- Checks for a new group's tab target and for queue edits made while a release is running, plus bug
+  and feature issue templates.
 
 ### Fixed
 
@@ -112,8 +116,8 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.0.4...HEAD
-[1.0.4]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.4
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.1.0
 [1.0.3]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.3
 [1.0.2]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.2
 [1.0.1]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.1
