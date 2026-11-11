@@ -32,7 +32,8 @@ Settings: how each group family is displayed and ordered, and the plugin info ca
   is used. While a release runs, both views show progress and a Stop control; the queue is locked
   until it finishes.
 - **Composer panel** — search, group tabs, per-row insert / queue / edit / duplicate / delete, and the
-  send-queue card with collapse, clear and send. Drag its top edge to change the height.
+  send-queue card with collapse, clear and send. Drag its top edge to change the height, or its left
+  edge to change the width; pin it to keep it open over the conversation.
 - **Sidebar page** — the same pool as a full-height page in the right sidebar.
 - **Groups** — frequent / notes / templates built in, plus your own categories and one tab per workspace.
   Each family can be expanded, folded into a single tab, or hidden.
@@ -63,8 +64,9 @@ does not turn it on.
 ## Usage
 
 1. Click **提示池 / Prompt pool** beside the composer (or open the sidebar page).
-2. **存草稿** copies the composer content — text and image attachments — into the pool. The composer
-   keeps its text.
+2. **存草稿** copies the composer content — text and image attachments — into the pool. A small popup
+   offers the groups currently shown in the tab bar — built-in, custom, and every displayed
+   workspace — and the toast names the destination. The composer keeps its text.
 3. Add rows to the queue with the ⊕ control, reorder them in the queue card, then press **发送**.
 4. Each queued item is written into the composer and submitted in turn.
 

@@ -79,7 +79,7 @@ store.set(STORAGE_KEY, JSON.stringify({
 new Function('window', 'localStorage', 'require', source)(global.window, global.localStorage, () => reactStub);
 
 /** Render the panel against one composer state and capture it. */
-const capture = (draft, attachmentIds, occurrences) => {
+const capture = (draft, attachmentIds, occurrences, pick = 'group.note') => {
   const panelProps = {
     sessionId: 's1',
     useInput: () => ({ draft, phase: 'plain', queue: [], attachmentIds: attachmentIds || [], occurrences: occurrences || [] }),
@@ -112,6 +112,41 @@ const capture = (draft, attachmentIds, occurrences) => {
   if (!button) throw new Error('the capture button was not found');
   button.props.onClick();
   const pool = global.window.__dshPromptPoolStoreV1;
+  // The button opens the group chooser; pick the requested destination.
+  resetHooks();
+  let menu = entry.component(panelProps);
+  if (menu && typeof menu.type === 'function') {
+    resetHooks();
+    menu = menu.type(menu.props);
+  }
+  const menuNodes = [];
+  const collect = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { node.forEach(collect); return; }
+    menuNodes.push(node);
+    if (node.children) node.children.forEach(collect);
+  };
+  collect(menu);
+  const captureMenu = menuNodes.find((node) => typeof node.type === 'function' && node.type.name === 'CaptureMenu');
+  if (!captureMenu) throw new Error('the group chooser was not found');
+  const savedCells = cells;
+  const savedCursor = cursor;
+  cells = [];
+  cursor = 0;
+  const menuTree = captureMenu.type(captureMenu.props);
+  cells = savedCells;
+  cursor = savedCursor;
+  const optionNodes = [];
+  const collectOptions = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { node.forEach(collectOptions); return; }
+    optionNodes.push(node);
+    if (node.children) node.children.forEach(collectOptions);
+  };
+  collectOptions(menuTree);
+  const option = optionNodes.find((node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf(pick) >= 0);
+  if (!option) throw new Error(`the ${pick} destination was not found`);
+  option.props.onClick();
   // Re-render to read the status the capture surfaced; keep the hook cells so
   // the state the click wrote survives.
   resetHooks();
@@ -159,7 +194,7 @@ if (failures.length > 0) process.exitCode = 1;
 // Attachments cannot be captured; the toast must say so.
 const withAttachments = capture('带两张图的草稿', ['a1', 'a2']);
 if (!withAttachments.added) console.error('[fail] attachment draft: nothing was captured');
-else if (withAttachments.status !== 'status.savedPartial') console.error('[fail] attachment draft: status was ' + withAttachments.status);
+else if (withAttachments.status !== 'status.savedPartialTo') console.error('[fail] attachment draft: status was ' + withAttachments.status);
 else console.log('[ok] capture tells the user attachments were skipped');
 
 // When the host publishes chip ranges, the title uses their labels verbatim.
@@ -174,3 +209,9 @@ if (!structured.added) console.error('[fail] chip metadata: nothing was captured
 else if (structured.added.title !== '看下 @季度报表.xlsx 和 @设置页隐藏待发送队列 的差异') {
   console.error('[fail] chip metadata: title was ' + JSON.stringify(structured.added.title));
 } else console.log('[ok] chip metadata drives a clean title');
+
+// The chooser decides the destination instead of always using Notes.
+const templated = capture('模板草稿', [], [], 'group.template');
+if (!templated.added) console.error('[fail] template destination: nothing was captured');
+else if (templated.added.group !== 'builtin:template') console.error('[fail] template destination: group was ' + templated.added.group);
+else console.log('[ok] capture uses the chosen group');

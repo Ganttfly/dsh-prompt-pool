@@ -67,6 +67,9 @@ window.__ModuleLoader__.load({
       'panel.capture': '存草稿',
       'panel.captureHint': '把输入框里的内容复制一份存进池子（图片附件一起存）；输入框里的字会保留',
       'panel.resize': '拖动调整高度，双击还原',
+      'panel.resizeWidth': '拖动调整宽度，双击还原',
+      'panel.pin': '钉住面板',
+      'panel.unpin': '取消钉住',
       'panel.empty': '池子是空的。写一句，然后点「存草稿」。',
       'panel.emptyTab': '这一栏还没有内容。',
       'tab.all': '全部',
@@ -188,6 +191,9 @@ window.__ModuleLoader__.load({
       'tray.expandTitle': '展开待发送队列',
       'status.saved': '已存入池子',
       'status.savedPartial': '已存入池子，但这 {n} 个附件没有一起保存',
+      'status.savedTo': '已存入「{group}」',
+      'status.savedPartialTo': '已存入「{group}」，但 {n} 个附件没有保存',
+      'capture.title': '存到哪个分组？',
       'status.storageFailed': '保存失败：浏览器存储不可写（可能已满）。改动只在当前页面有效。',
       'status.nothing': '草稿是空的，先写点什么',
       'status.emptyBody': '内容不能是空的',
@@ -220,6 +226,9 @@ window.__ModuleLoader__.load({
       'panel.capture': 'Save draft',
       'panel.captureHint': 'Copy the composer draft into the pool; the composer keeps its text',
       'panel.resize': 'Drag to resize, double-click to reset',
+      'panel.resizeWidth': 'Drag to resize the width, double-click to reset',
+      'panel.pin': 'Pin the panel',
+      'panel.unpin': 'Unpin the panel',
       'panel.empty': 'The pool is empty. Write something, then press Save draft.',
       'panel.emptyTab': 'Nothing in this tab yet.',
       'tab.all': 'All',
@@ -341,6 +350,9 @@ window.__ModuleLoader__.load({
       'tray.expandTitle': 'Expand the send queue',
       'status.saved': 'Saved to the pool',
       'status.savedPartial': 'Saved to the pool; {n} attachment(s) were not captured',
+      'status.savedTo': 'Saved to {group}',
+      'status.savedPartialTo': 'Saved to {group}; {n} attachment(s) were not captured',
+      'capture.title': 'Save to which group?',
       'status.storageFailed': 'Could not save: browser storage is unwritable (possibly full). Changes last only for this page.',
       'status.nothing': 'The composer is empty',
       'status.emptyBody': 'The content cannot be empty',
@@ -948,6 +960,55 @@ window.__ModuleLoader__.load({
       ];
     }
 
+    /** Small chooser: where should the captured draft go? */
+    function CaptureMenu(props) {
+      useEffect(() => {
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') return;
+          event.preventDefault();
+          event.stopPropagation();
+          props.onCancel();
+        };
+        window.addEventListener('keydown', onKeyDown, true);
+        return () => window.removeEventListener('keydown', onKeyDown, true);
+      }, [props.onCancel]);
+
+      return h(
+        'div',
+        {
+          className: 'pp-modal',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) props.onCancel();
+          },
+        },
+        h(
+          'div',
+          { className: 'pp-modal-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': translate('capture.title') },
+          h('div', { className: 'pp-modal-text' }, translate('capture.title')),
+          h(
+            'div',
+            { className: 'pp-capture-options' },
+            props.groups.map((group, index) => h(
+              'button',
+              {
+                key: group.value,
+                type: 'button',
+                className: 'pp-mini pp-capture-option',
+                autoFocus: index === 0,
+                onClick: () => props.onPick(group.value),
+              },
+              group.label,
+            )),
+          ),
+          h(
+            'div',
+            { className: 'pp-modal-actions' },
+            h('button', { type: 'button', className: 'pp-mini', onClick: props.onCancel }, translate('row.cancel')),
+          ),
+        ),
+      );
+    }
+
     /** Shared confirm modal: backdrop click and Escape both cancel. */
     function ConfirmModal(props) {
       const cardRef = useRef(null);
@@ -1388,6 +1449,13 @@ window.__ModuleLoader__.load({
           const value = Number(settings.panelHeight);
           return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
         })(),
+        // 0 keeps the default width; anything else is a dragged width in px.
+        panelWidth: (() => {
+          const value = Number(settings.panelWidth);
+          return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
+        })(),
+        // A pinned panel ignores outside clicks and stays over the conversation.
+        panelPinned: settings.panelPinned === true,
         orderExplicit: settings.orderExplicit === true,
         order: (() => {
           const stored = Array.isArray(settings.order) ? settings.order.filter((name) => leaders.indexOf(name) >= 0) : [];
@@ -1413,6 +1481,50 @@ window.__ModuleLoader__.load({
         { id: BUILTIN_GROUP.note, name: translate('tab.note') },
         { id: BUILTIN_GROUP.template, name: translate('tab.template') },
       ];
+    }
+
+    /** Item counts per group id for one family, for the nested rail chips. */
+    function groupCounts(items, family) {
+      const counts = {};
+      for (const item of items) {
+        const group = groupOf(item);
+        if (familyOf(group) === family) counts[group] = (counts[group] || 0) + 1;
+      }
+      return counts;
+    }
+
+    /** Per-tab counts: every group id, each folded family, and the all tab. */
+    function tabCountsOf(items) {
+      const counts = { all: (items || []).length };
+      for (const item of items || []) {
+        const group = groupOf(item);
+        counts[group] = (counts[group] || 0) + 1;
+        const family = familyOf(group);
+        if (family) counts['nested:' + family] = (counts['nested:' + family] || 0) + 1;
+      }
+      return counts;
+    }
+
+    /** Destinations offered when a captured draft is saved: the groups on show. */
+    function captureChoices(categories, workspaces, currentWorkspaceId, settings) {
+      const flags = normalizeSettings(settings).display;
+      const list = [];
+      if (flags.builtin !== 'hidden') {
+        list.push({ value: BUILTIN_GROUP.note, label: translate('group.note') });
+        list.push({ value: BUILTIN_GROUP.oftenuse, label: translate('group.oftenuse') });
+        list.push({ value: BUILTIN_GROUP.template, label: translate('group.template') });
+      }
+      if (flags.custom !== 'hidden') {
+        for (const category of categories || []) list.push({ value: 'custom:' + category.id, label: category.name });
+      }
+      if (flags.workspace !== 'hidden') {
+        for (const workspace of workspaceRail(workspaces, settings, currentWorkspaceId)) {
+          list.push({ value: 'workspace:' + workspace.workspaceId, label: workspace.name });
+        }
+      }
+      // A pool with every family hidden still needs one destination.
+      if (list.length === 0) list.push({ value: BUILTIN_GROUP.note, label: translate('group.note') });
+      return list;
     }
 
     /** One family's tab block: hidden / one folded tab / one tab per group. */
@@ -2050,6 +2162,14 @@ window.__ModuleLoader__.load({
             h('path', { d: 'M2.6 6.2h10.8M2.6 9.6h10.8M2.6 13h6' }),
             h('path', { d: 'M11.6 2.4v4.4M9.4 4.6h4.4' }),
           );
+        case 'pin':
+          return h(
+            'svg',
+            base,
+            h('path', { d: 'M3.6 1.6h4.8' }),
+            h('path', { d: 'M4.5 1.6v3.4L2.6 7h6.8L7.5 5V1.6' }),
+            h('path', { d: 'M6 7v3.6' }),
+          );
         default:
           return null;
       }
@@ -2398,6 +2518,7 @@ window.__ModuleLoader__.load({
           });
         }
         const active = props.active === tab.id;
+        const count = props.counts && typeof props.counts[tab.id] === 'number' ? props.counts[tab.id] : 0;
         return h(
           'button',
           {
@@ -2410,6 +2531,9 @@ window.__ModuleLoader__.load({
             onDoubleClick: tab.category ? () => setRenaming({ id: tab.id, name: tab.label, original: tab.label }) : undefined,
           },
           tab.label,
+          count > 0 && tab.id !== 'all'
+            ? h('span', { className: 'pp-tab-count' }, String(count))
+            : null,
           tab.category && active
             ? h(
                 'span',
@@ -2528,6 +2652,8 @@ window.__ModuleLoader__.load({
       })();
       const activeSessionId = pageSessionId || sessionHint || workspaceSession || '';
       const tabs = buildTabs(state.categories, workspaceList, state.settings, currentWorkspaceId);
+      const captureGroups = captureChoices(state.categories, workspaceList, currentWorkspaceId, state.settings);
+      const tabCounts = tabCountsOf(state.items);
       const [tab, setPageTab] = useState(() => pageTabState.get().id || 'all');
       const setTab = (id) => {
         pageTabState.set({ id });
@@ -2539,6 +2665,7 @@ window.__ModuleLoader__.load({
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
       const [pendingRemove, setPendingRemove] = useState(null);
+      const [captureOpen, setCaptureOpen] = useState(false);
       const [wsSelected, setWsSelected] = useState('');
       const [customPick, setCustomPick] = useState('');
       const [builtinPick, setBuiltinPick] = useState('');
@@ -2673,11 +2800,35 @@ window.__ModuleLoader__.load({
         flash({ kind: 'error', text });
       };
 
-      /** The page cannot read the composer, so the mounted panel performs it. */
-      const captureDraft = () => {
+      /** Ask the panel whether the composer has content before opening the chooser. */
+      const openCapture = () => {
         let result;
         try {
-          result = bridge.request({ type: 'capture' });
+          result = bridge.request({ type: 'capture-check' });
+        } catch (error) {
+          result = { ok: false, reason: String((error && error.message) || error) };
+        }
+        Promise.resolve(result).then(
+          (value) => {
+            if (value && value.ok) {
+              if (value.ready) {
+                setCaptureOpen(true);
+              } else {
+                flash({ kind: 'error', text: translate('status.nothing') });
+              }
+              return;
+            }
+            flash({ kind: 'error', text: translate('status.noComposer') });
+          },
+          () => flash({ kind: 'error', text: translate('status.noComposer') }),
+        );
+      };
+
+      /** The page cannot read the composer, so the mounted panel performs it. */
+      const captureDraft = (group) => {
+        let result;
+        try {
+          result = bridge.request({ type: 'capture', group });
         } catch (error) {
           result = { ok: false, reason: String((error && error.message) || error) };
         }
@@ -2685,9 +2836,18 @@ window.__ModuleLoader__.load({
           (value) => {
             if (value && value.ok) {
               const skipped = Number(value.skipped) || 0;
+              const label = typeof value.label === 'string' ? value.label : '';
               flash(skipped > 0
-                ? { kind: 'info', text: translate('status.savedPartial', { n: skipped }) }
-                : { kind: 'ok', text: translate('status.saved') });
+                ? {
+                    kind: 'info',
+                    text: label
+                      ? translate('status.savedPartialTo', { group: label, n: skipped })
+                      : translate('status.savedPartial', { n: skipped }),
+                  }
+                : {
+                    kind: 'ok',
+                    text: label ? translate('status.savedTo', { group: label }) : translate('status.saved'),
+                  });
               return;
             }
             const reason = value && value.reason;
@@ -2776,11 +2936,8 @@ window.__ModuleLoader__.load({
         : customGroups.length > 0
           ? customGroups[0].id
           : '';
-      const customCounts = {};
-      for (const item of state.items) {
-        const group = groupOf(item);
-        if (familyOf(group) === 'custom') customCounts[group] = (customCounts[group] || 0) + 1;
-      }
+      const customCounts = groupCounts(state.items, 'custom');
+      const builtinCounts = groupCounts(state.items, 'builtin');
       const builtinList = builtinGroups();
       const builtinActive = builtinList.some((entry) => entry.id === builtinPick) ? builtinPick : builtinList[0].id;
       const nestedView =
@@ -2809,7 +2966,7 @@ window.__ModuleLoader__.load({
                   rail: builtinList,
                   activeId: builtinActive,
                   onSelect: setBuiltinPick,
-                  counts: {},
+                  counts: builtinCounts,
                   emptyText: translate('panel.emptyTab'),
                   scoped: state.items.filter((item) => groupOf(item) === builtinActive),
                 }
@@ -2833,7 +2990,7 @@ window.__ModuleLoader__.load({
             onChange: (event) => setQuery(event.target.value),
           }),
           h('button', { type: 'button', className: 'pp-mini', onClick: create }, '＋ ', translate('page.new')),
-          h('button', { type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: captureDraft }, translate('panel.capture')),
+          h('button', { type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
           h(SettingsButton, { active: settingsOpen, onClick: () => setSettingsOpen(!settingsOpen) }),
         ),
         h(
@@ -2841,6 +2998,7 @@ window.__ModuleLoader__.load({
           { className: 'pp-bar', style: { padding: '8px 12px 2px' } },
           h(TabBar, {
             tabs: tabs,
+            counts: tabCounts,
             active: tab,
             ...tabHandlers((next) => {
               setSettingsOpen(false);
@@ -2888,6 +3046,16 @@ window.__ModuleLoader__.load({
                 poolActions.removeTray(pendingRemove.key);
                 setPendingRemove(null);
               },
+            })
+          : null,
+        captureOpen
+          ? h(CaptureMenu, {
+              groups: captureGroups,
+              onPick: (group) => {
+                setCaptureOpen(false);
+                captureDraft(group);
+              },
+              onCancel: () => setCaptureOpen(false),
             })
           : null,
         h(
@@ -3572,6 +3740,7 @@ window.__ModuleLoader__.load({
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
       const [pendingRemove, setPendingRemove] = useState(null);
+      const [captureOpen, setCaptureOpen] = useState(false);
       const [status, setStatus] = useState(null);
       const [busy, setBusy] = useState(false);
       const { preview, openImage, closeImage } = useImagePreview();
@@ -3599,12 +3768,20 @@ window.__ModuleLoader__.load({
       };
 
       const panelRef = useRef(null);
+      const panelChrome = normalizeSettings(state.settings);
 
       // The panel can be dragged taller or shorter; 0 means the CSS default.
       const [dragHeight, setDragHeight] = useState(0);
-      const panelHeight = dragHeight || normalizeSettings(state.settings).panelHeight;
+      const panelHeight = dragHeight || panelChrome.panelHeight;
       const panelHeightRef = useRef(panelHeight);
       panelHeightRef.current = panelHeight;
+
+      // The panel's left edge can be dragged too; 0 means the CSS default width.
+      const [dragWidth, setDragWidth] = useState(0);
+      const panelWidth = dragWidth || panelChrome.panelWidth;
+      const panelWidthRef = useRef(panelWidth);
+      panelWidthRef.current = panelWidth;
+      const panelPinned = panelChrome.panelPinned;
 
       // Room from the top of the pane that clips the panel down to the panel's
       // own bottom edge. The overlay anchors that bottom edge to the composer,
@@ -3669,8 +3846,44 @@ window.__ModuleLoader__.load({
         poolActions.setSetting('panelHeight', 0);
       };
 
+      const startResizeWidth = (event) => {
+        if (event.button !== undefined && event.button !== 0) return;
+        event.preventDefault();
+        const node = panelRef.current;
+        const rect = node ? node.getBoundingClientRect() : null;
+        const startX = event.clientX;
+        const startWidth = rect ? rect.width : panelWidthRef.current || 920;
+        // The slot wrapper around the panel can be a zero-width anchor, so the
+        // limit comes from the containing block (offsetParent) and the panel's
+        // anchored right edge, not from parentElement.
+        const containing = node && node.offsetParent ? node.offsetParent.getBoundingClientRect() : null;
+        const byParent = containing && containing.width > 0 ? containing.width : Infinity;
+        const byRight = rect && rect.right > 0 ? rect.right - 8 : window.innerWidth - 24;
+        const ceiling = Math.max(360, Math.round(Math.min(window.innerWidth - 24, byParent, byRight)));
+        let latest = Math.round(startWidth);
+        const apply = (clientX) => {
+          latest = Math.round(Math.min(ceiling, Math.max(360, startWidth + (startX - clientX))));
+          setDragWidth(latest);
+        };
+        const onMove = (moveEvent) => {
+          moveEvent.preventDefault();
+          apply(moveEvent.clientX);
+        };
+        const onUp = () => {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+          poolActions.setSetting('panelWidth', latest);
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      };
+      const resetResizeWidth = () => {
+        setDragWidth(0);
+        poolActions.setSetting('panelWidth', 0);
+      };
+
       useEffect(() => {
-        if (!view.open) return undefined;
+        if (!view.open || panelPinned) return undefined;
         const onPointerDown = (event) => {
           const target = event.target;
           if (!(target instanceof Element)) return;
@@ -3680,12 +3893,12 @@ window.__ModuleLoader__.load({
         };
         document.addEventListener('pointerdown', onPointerDown, true);
         return () => document.removeEventListener('pointerdown', onPointerDown, true);
-      }, [view.open]);
+      }, [view.open, panelPinned]);
 
       useEffect(() => {
         if (!view.open || preview) return undefined;
         const onKey = (event) => {
-          if (event.key !== 'Escape') return;
+          if (event.key !== 'Escape' || captureOpen) return;
           if (editing) {
             setEditing(null);
           } else {
@@ -3696,7 +3909,7 @@ window.__ModuleLoader__.load({
         };
         window.addEventListener('keydown', onKey, true);
         return () => window.removeEventListener('keydown', onKey, true);
-      }, [view.open, editing, preview]);
+      }, [view.open, editing, preview, captureOpen]);
 
       const rail = workspaceRail(workspaces.items, state.settings, currentWorkspaceId);
       const wsActive = rail.some((entry) => entry.id === wsSelected) ? wsSelected : rail.length > 0 ? rail[0].id : '';
@@ -3858,12 +4071,22 @@ window.__ModuleLoader__.load({
         }
       };
 
+      /** Only open the destination chooser when the composer has something. */
+      const openCapture = () => {
+        if (!draftRef.current.trim()) {
+          flash({ kind: 'error', text: translate('status.nothing') });
+          return;
+        }
+        setCaptureOpen(true);
+      };
+
       /**
        * Copies the composer content into the pool; the composer keeps its text.
        * Attached images come along (their browser files are copied into the pool's
        * image store); other files have no local copy to keep, so they are counted.
        */
-      const captureDraft = async () => {
+      const captureDraft = async (groupArg) => {
+        const group = typeof groupArg === 'string' && familyOf(groupArg) ? groupArg : BUILTIN_GROUP.note;
         const text = draftRef.current;
         if (!text || !text.trim()) {
           flash({ kind: 'error', text: translate('status.nothing') });
@@ -3878,7 +4101,7 @@ window.__ModuleLoader__.load({
         }
         const item = {
           id: uid(),
-          group: BUILTIN_GROUP.note,
+          group,
           title: draftTitle(text, occurrenceRef.current),
           body: text,
           images: normalizeImages(stored),
@@ -3886,13 +4109,14 @@ window.__ModuleLoader__.load({
           updatedAt: Date.now(),
         };
         poolActions.add(item);
-        // The copy lands in 便签, which a folded/workspace tab cannot show.
+        // The copy lands in the chosen group, which a folded/workspace tab may not show.
         if (!matchesTab(item, tab)) setTab('all');
         const skipped = others.length + (images.length - item.images.length);
+        const label = groupLabelOf(item, state.categories, workspaces.items);
         flash(skipped > 0
-          ? { kind: 'info', text: translate('status.savedPartial', { n: skipped }) }
-          : { kind: 'ok', text: translate('status.saved') });
-        return { ok: true, skipped };
+          ? { kind: 'info', text: translate('status.savedPartialTo', { group: label, n: skipped }) }
+          : { kind: 'ok', text: translate('status.savedTo', { group: label }) });
+        return { ok: true, skipped, label };
       };
 
       const newItem = () => {
@@ -4115,10 +4339,14 @@ window.__ModuleLoader__.load({
             return { ok: requestReleaseStop() };
           }
           // The sidebar page cannot read the composer, so it asks for the capture.
+          if (command.type === 'capture-check') {
+            return { ok: true, ready: draftRef.current.trim() !== '' };
+          }
           if (command.type === 'capture') {
             // The capture is async (it copies attachments), so the answer is a promise;
             // reading `.ok` off it always failed and reported an empty composer.
-            return Promise.resolve(api.capture()).then(
+            const group = typeof command.group === 'string' ? command.group : '';
+            return Promise.resolve(api.capture(group)).then(
               (result) => (result && result.ok ? result : { ok: false, reason: (result && result.reason) || 'empty' }),
               (error) => ({ ok: false, reason: String((error && error.message) || error) }),
             );
@@ -4130,6 +4358,8 @@ window.__ModuleLoader__.load({
       if (!view.open) return null;
 
       const panelCount = state.items.length;
+      const captureGroups = captureChoices(state.categories, workspaces.items, currentWorkspaceId, state.settings);
+      const tabCounts = tabCountsOf(state.items);
 
       // A folded family renders its groups as chips inside one tab.
       const customGroups = state.categories.map((category) => ({ id: 'custom:' + category.id, name: category.name }));
@@ -4138,11 +4368,8 @@ window.__ModuleLoader__.load({
         : customGroups.length > 0
           ? customGroups[0].id
           : '';
-      const customCounts = {};
-      for (const item of state.items) {
-        const group = groupOf(item);
-        if (familyOf(group) === 'custom') customCounts[group] = (customCounts[group] || 0) + 1;
-      }
+      const customCounts = groupCounts(state.items, 'custom');
+      const builtinCounts = groupCounts(state.items, 'builtin');
       const builtinList = builtinGroups();
       const builtinActive = builtinList.some((entry) => entry.id === builtinPick) ? builtinPick : builtinList[0].id;
       const nestedView =
@@ -4171,7 +4398,7 @@ window.__ModuleLoader__.load({
                   rail: builtinList,
                   activeId: builtinActive,
                   onSelect: setBuiltinPick,
-                  counts: {},
+                  counts: builtinCounts,
                   emptyText: translate('panel.emptyTab'),
                   scoped: state.items.filter((item) => groupOf(item) === builtinActive),
                 }
@@ -4189,6 +4416,7 @@ window.__ModuleLoader__.load({
         panelStyle.height = size;
         panelStyle.maxHeight = 'none';
       }
+      if (panelWidth) panelStyle['--pp-w'] = panelWidth + 'px';
 
       return h(
         'div',
@@ -4214,6 +4442,19 @@ window.__ModuleLoader__.load({
           },
           h('span', { className: 'pp-grip-bar' }),
         ),
+        h(
+          'div',
+          {
+            key: 'grip-width',
+            className: 'pp-panel-grip-x',
+            role: 'separator',
+            'aria-orientation': 'vertical',
+            title: translate('panel.resizeWidth'),
+            onPointerDown: startResizeWidth,
+            onDoubleClick: resetResizeWidth,
+          },
+          h('span', { className: 'pp-grip-bar-x' }),
+        ),
         // Same header and tab strip as the sidebar page, so both views read alike.
         h(
           'div',
@@ -4229,8 +4470,14 @@ window.__ModuleLoader__.load({
             onChange: (event) => setQuery(event.target.value),
           }),
           h('button', { type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('page.new')),
-          h('button', { type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: captureDraft }, translate('panel.capture')),
+          h('button', { type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
           h(SettingsButton, { active: settingsOpen, onClick: () => setSettingsOpen(!settingsOpen) }),
+          h(IconButton, {
+            name: 'pin',
+            label: panelPinned ? translate('panel.unpin') : translate('panel.pin'),
+            active: panelPinned,
+            onClick: () => poolActions.setSetting('panelPinned', !panelPinned),
+          }),
           h(
             'button',
             { type: 'button', className: 'pp-x', title: translate('panel.close'), 'aria-label': translate('panel.close'), onClick: () => ui.set({ open: false }) },
@@ -4242,6 +4489,7 @@ window.__ModuleLoader__.load({
           { className: 'pp-bar', style: { padding: '8px 12px 2px' } },
           h(TabBar, {
             tabs: buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId),
+            counts: tabCounts,
             active: tab,
             ...tabHandlers((next) => {
               setSettingsOpen(false);
@@ -4289,6 +4537,16 @@ window.__ModuleLoader__.load({
                 poolActions.removeTray(pendingRemove.key);
                 setPendingRemove(null);
               },
+            })
+          : null,
+        captureOpen
+          ? h(CaptureMenu, {
+              groups: captureGroups,
+              onPick: (group) => {
+                setCaptureOpen(false);
+                captureDraft(group);
+              },
+              onCancel: () => setCaptureOpen(false),
             })
           : null,
         h(
@@ -4409,9 +4667,12 @@ window.__ModuleLoader__.load({
       '.pp-trigger[data-queued="true"]{border-color:var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
       '.pp-trigger[data-queued="true"]:hover{background:color-mix(in srgb,var(--pp-accent) 20%,transparent);color:var(--pp-accent)}' +
       '.pp-trigger[data-queued="true"] .pp-badge{border-color:var(--pp-accent);background:var(--pp-accent);color:var(--pp-on-accent);font-weight:600}' +
-      '.pp-panel{position:absolute;left:auto;right:0;bottom:0;margin:0;width:min(920px,100%);max-width:min(920px,100%);z-index:40;display:flex;flex-direction:column;--pp-h:min(70vh,720px,var(--pp-room,100vh));height:var(--pp-h);max-height:var(--pp-h);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;overflow:clip;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
+      '.pp-panel{position:absolute;left:auto;right:0;bottom:0;margin:0;width:min(var(--pp-w,920px),100%);max-width:min(var(--pp-w,920px),100%);z-index:40;display:flex;flex-direction:column;--pp-h:min(70vh,720px,var(--pp-room,100vh));height:var(--pp-h);max-height:var(--pp-h);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;overflow:clip;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
       // The grip above the header resizes the panel; a long queue may keep half the list.
       '.pp-panel-grip{flex:none;display:flex;align-items:center;justify-content:center;height:11px;cursor:ns-resize;touch-action:none}' +
+      '.pp-panel-grip-x{position:absolute;left:0;top:0;bottom:0;width:8px;z-index:5;display:flex;align-items:center;justify-content:center;cursor:ew-resize;touch-action:none}' +
+      '.pp-grip-bar-x{width:3px;height:44px;border-radius:2px;background:var(--pp-line-2);opacity:0;transition:opacity .12s ease}' +
+      '.pp-panel-grip-x:hover .pp-grip-bar-x,.pp-panel-grip-x:active .pp-grip-bar-x{opacity:1;background:var(--pp-accent)}' +
       '.pp-grip-bar{width:44px;height:4px;border-radius:2px;background:var(--pp-line-2);transition:background .12s ease}' +
       '.pp-panel-grip:hover .pp-grip-bar{background:var(--pp-accent)}' +
       // flex:none keeps the card at its content height (or its cap) instead of
@@ -4434,6 +4695,7 @@ window.__ModuleLoader__.load({
       '.pp-tab{height:24px;padding:0 9px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;cursor:pointer}' +
       '.pp-tab:hover{background:var(--pp-hover)}' +
       '.pp-tab[data-active="true"]{border-color:var(--pp-accent);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
+      '.pp-tab-count{margin-left:5px;padding:0 5px;vertical-align:1px;border-radius:999px;background:color-mix(in srgb, currentColor 12%, transparent);color:inherit;font-size:10px;font-weight:600;line-height:16px;height:16px;display:inline-flex;align-items:center}' +
       '.pp-tab-add{padding:0 7px;color:var(--pp-ink-2)}' +
       '.pp-tab-addwrap{display:inline-flex;align-items:center}' +
       '.pp-tab-sep{flex:none;width:1px;height:16px;margin:0 7px;background:color-mix(in srgb, var(--pp-ink-2) 45%, transparent)}' +
@@ -4449,6 +4711,8 @@ window.__ModuleLoader__.load({
       '.pp-modal-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px;padding:16px 18px;border:1px solid var(--pp-line);border-radius:12px;background:var(--pp-surface-2);box-shadow:0 18px 48px rgba(0,0,0,.24)}' +
       '.pp-modal-text{font-size:13px;line-height:1.65;color:var(--pp-ink)}' +
       '.pp-modal-actions{display:flex;justify-content:flex-end;gap:8px}' +
+      '.pp-capture-options{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto}' +
+      '.pp-capture-option{justify-content:flex-start;height:auto;min-height:26px;padding:5px 9px;text-align:left;white-space:normal}' +
       '.pp-mini{height:24px;padding:0 9px;border-radius:7px;border:1px solid var(--pp-line);background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
       '.pp-mini:hover{background:var(--pp-hover)}' +
       '.pp-set-btn{display:inline-flex;align-items:center;gap:5px;padding:0 9px}' +

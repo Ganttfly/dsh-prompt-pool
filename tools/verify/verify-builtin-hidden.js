@@ -102,6 +102,9 @@ for (const mode of ['hidden', 'tabs', 'nested']) {
 
   const tabBar = nodes(root(page.component({ sessionId: 's1' })), []).find((node) => node.props && Array.isArray(node.props.tabs));
   if (!tabBar) failures.push(`${mode}: the tab bar was not rendered`);
+  if (!tabBar || !tabBar.props.counts || tabBar.props.counts['builtin:note'] !== 1) {
+    failures.push(`${mode}: the tab counts lost the note item`);
+  }
   const tabs = tabBar ? tabBar.props.tabs : [];
   const tabIds = tabs.map((tab) => tab.id);
   const builtinTabs = tabIds.filter((id) => String(id).indexOf('builtin:') === 0);

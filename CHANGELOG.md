@@ -31,6 +31,15 @@ All notable changes to this project are documented here. The format follows
 - A release now blocks the pool with a progress overlay and a Stop control. Stopping lets the item in
   flight finish, keeps the unsent queue, and works from the sidebar page too (its Stop travels over the
   bridge to the panel, which owns the composer). The composer trigger is disabled while a release runs.
+- The composer panel's width is draggable from its left edge, remembered per profile, and reset by a
+  double-click, like the height grip.
+- Expansion of a group family no longer drops its counts: the per-group tabs now carry the same item
+  count bubble the folded family chips show.
+- Saving a draft now opens a small group chooser with exactly the groups currently shown in the tab
+  bar (hidden families and hidden workspaces are not offered), and the toast names where it went. An
+  empty composer is rejected before the chooser opens.
+- The composer panel can be pinned: outside clicks then leave it open over the conversation, and the
+  pin state is remembered. The close button, Escape and the trigger still close it.
 - Keyboard support for the custom-tab delete control, a focus trap in confirmations that starts on
   the safe button, `aria-live` on the status line, and labels on both search boxes.
 - `npm run check` runs a dependency-free lint (syntax, version, locale parity and dead keys) plus the
