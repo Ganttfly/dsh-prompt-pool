@@ -25,6 +25,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A release now blocks the pool with a progress overlay and a Stop control. Stopping lets the item in
+  flight finish, keeps the unsent queue, and works from the sidebar page too (its Stop travels over the
+  bridge to the panel, which owns the composer). The composer trigger is disabled while a release runs.
 - Keyboard support for the custom-tab delete control, a focus trap in confirmations that starts on
   the safe button, `aria-live` on the status line, and labels on both search boxes.
 - `npm run check` runs a dependency-free lint (syntax, version, locale parity and dead keys) plus the

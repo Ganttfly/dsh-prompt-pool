@@ -201,6 +201,12 @@ window.__ModuleLoader__.load({
       'status.deleted': '已删除「{title}」',
       'status.cleared': '已清空 {n} 条待发送',
       'status.undo': '撤销',
+      'release.title': '正在发送',
+      'release.progress': '已发送 {sent} / {total} 条',
+      'release.hint': '发送期间请勿操作输入框',
+      'release.stop': '停止',
+      'release.stopping': '正在停止…',
+      'status.releaseHalted': '已停止：发送了 {n} 条，剩余 {rest} 条还在队列里',
       'status.releasing': '正在释放 {n} 条…',
     };
 
@@ -346,6 +352,12 @@ window.__ModuleLoader__.load({
       'status.deleted': 'Deleted this item',
       'status.cleared': 'Cleared {n} queued items',
       'status.undo': 'Undo',
+      'release.title': 'Sending',
+      'release.progress': '{sent} of {total} sent',
+      'release.hint': 'Leave the composer alone while this runs',
+      'release.stop': 'Stop',
+      'release.stopping': 'Stopping…',
+      'status.releaseHalted': 'Stopped: {n} sent, {rest} left in the queue',
       'status.releasing': 'Releasing {n}…',
     };
 
@@ -414,6 +426,25 @@ window.__ModuleLoader__.load({
      * because a full quota would otherwise look like a successful save.
      */
     const storageState = createStore({ failed: false });
+
+    /** Progress of the one release in flight, shared by the panel and the page. */
+    const RELEASE_SINGLETON = '__dshPromptPoolReleaseV1';
+    const releaseState = (() => {
+      const initial = { active: false, sent: 0, total: 0, stopping: false };
+      if (typeof window === 'undefined') return createStore(initial);
+      if (!window[RELEASE_SINGLETON]) window[RELEASE_SINGLETON] = createStore(initial);
+      return window[RELEASE_SINGLETON];
+    })();
+    let releaseCancel = false;
+
+    /** Ask the running release to stop after the item it is sending. */
+    function requestReleaseStop() {
+      const state = releaseState.get();
+      if (!state.active || releaseCancel) return false;
+      releaseCancel = true;
+      releaseState.set({ ...state, stopping: true });
+      return true;
+    }
 
     function uid() {
       try {
@@ -1592,6 +1623,10 @@ window.__ModuleLoader__.load({
       return useSyncExternalStore(storageState.subscribe, storageState.get, storageState.get);
     }
 
+    function useReleaseState() {
+      return useSyncExternalStore(releaseState.subscribe, releaseState.get, releaseState.get);
+    }
+
     /**
      * Editor state shared by both views: the item being edited plus the save and
      * cancel paths. Keeping them here stops the empty-row and unsaved-image
@@ -1886,6 +1921,37 @@ window.__ModuleLoader__.load({
       );
     }
 
+    /** Blocks the pool while a release runs; only Stop is allowed. */
+    function renderReleaseOverlay(props) {
+      const state = props.state;
+      if (!state || !state.active) return null;
+      return h(
+        'div',
+        {
+          className: 'pp-release-mask',
+          role: 'dialog',
+          'aria-modal': 'true',
+          'aria-label': translate('release.title'),
+          onMouseDown: (event) => event.stopPropagation(),
+          onKeyDown: (event) => {
+            if (event.key === 'Tab') event.preventDefault();
+          },
+        },
+        h(
+          'div',
+          { className: 'pp-release-card' },
+          h('div', { className: 'pp-release-title' }, translate('release.title')),
+          h('div', { className: 'pp-release-count', 'aria-live': 'polite' }, translate('release.progress', { sent: state.sent, total: state.total })),
+          h('div', { className: 'pp-hint' }, translate('release.hint')),
+          h(
+            'button',
+            { type: 'button', className: 'pp-primary', autoFocus: true, disabled: state.stopping, onClick: props.onStop },
+            state.stopping ? translate('release.stopping') : translate('release.stop'),
+          ),
+        ),
+      );
+    }
+
     function useUiState() {
       return useSyncExternalStore(ui.subscribe, ui.get, ui.get);
     }
@@ -1998,6 +2064,7 @@ window.__ModuleLoader__.load({
       useLocaleTick();
       const state = usePoolState();
       const view = useUiState();
+      const release = useReleaseState();
       const label = translate('button.label');
       const count = state.tray.length;
       const queued = count > 0;
@@ -2015,12 +2082,16 @@ window.__ModuleLoader__.load({
             'data-pp-trigger': 'true',
             'data-open': view.open ? 'true' : 'false',
             'data-queued': queued ? 'true' : 'false',
+            disabled: release.active,
             title: hint,
             'aria-label': hint,
             'aria-haspopup': 'dialog',
             'aria-expanded': view.open ? 'true' : 'false',
             onMouseDown: (event) => event.preventDefault(),
-            onClick: () => ui.set({ open: !ui.get().open }),
+            onClick: () => {
+              if (release.active) return;
+              ui.set({ open: !ui.get().open });
+            },
           },
           icon('pool'),
           h('span', { className: 'pp-trigger-label' }, label),
@@ -2420,6 +2491,7 @@ window.__ModuleLoader__.load({
       useLocaleTick();
       const state = usePoolState();
       const storage = useStorageState();
+      const releaseInfo = useReleaseState();
       const queueCollapsed = state.settings && state.settings.queueCollapsed === true;
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
@@ -2865,6 +2937,7 @@ window.__ModuleLoader__.load({
               }),
         h(ImageLightbox, { preview, onClose: closeImage }),
         ),
+        renderReleaseOverlay({ state: releaseInfo, onStop: () => bridge.request({ type: 'stop' }) }),
       );
     }
 
@@ -3409,6 +3482,7 @@ window.__ModuleLoader__.load({
       useLocaleTick();
       const state = usePoolState();
       const storage = useStorageState();
+      const releaseInfo = useReleaseState();
       const view = useUiState();
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
@@ -3783,13 +3857,20 @@ window.__ModuleLoader__.load({
         }
         busyRef.current = true;
         setBusy(true);
+        releaseCancel = false;
+        releaseState.set({ active: true, sent: 0, total: entries.length, stopping: false });
         setStatus({ kind: 'info', text: translate('status.releasing', { n: entries.length }) });
         let sent = 0;
+        let canceled = false;
         // Keys finished by this run; the queue is filtered by key afterwards so
         // rows queued (or removed) meanwhile are not overwritten.
         const done = [];
         try {
           for (const entry of entries) {
+            if (releaseCancel) {
+              canceled = true;
+              break;
+            }
             const body = typeof entry.body === 'string' ? entry.body : '';
             const images = normalizeImages(entry.images);
             if (!body.trim() && images.length === 0) {
@@ -3835,19 +3916,30 @@ window.__ModuleLoader__.load({
             await waitFor(() => phaseRef.current === 'plain', RELEASE_WAIT.plain);
             sent += 1;
             done.push(entry.key);
+            releaseState.set({ active: true, sent, total: entries.length, stopping: releaseCancel });
+            if (releaseCancel) {
+              canceled = true;
+              break;
+            }
           }
         } catch (error) {
           flash({ kind: 'error', text: String((error && error.message) || error) });
         } finally {
           busyRef.current = false;
           setBusy(false);
+          releaseState.set({ active: false, sent, total: entries.length, stopping: false });
+          releaseCancel = false;
         }
         poolActions.removeTrayKeys(done);
-        flash(
-          sent === entries.length
-            ? { kind: 'ok', text: translate('status.released', { n: sent }) }
-            : { kind: 'error', text: translate('status.releaseStopped', { n: sent, rest: entries.length - sent }) },
-        );
+        if (canceled) {
+          flash({ kind: 'info', text: translate('status.releaseHalted', { n: sent, rest: entries.length - sent }) });
+        } else {
+          flash(
+            sent === entries.length
+              ? { kind: 'ok', text: translate('status.released', { n: sent }) }
+              : { kind: 'error', text: translate('status.releaseStopped', { n: sent, rest: entries.length - sent }) },
+          );
+        }
       };
 
       const rowOf = (item, index) => renderPoolRow({
@@ -3911,6 +4003,9 @@ window.__ModuleLoader__.load({
             if (draftRef.current.trim() !== '') return { ok: false, reason: 'draft-busy' };
             api.release();
             return { ok: true };
+          }
+          if (command.type === 'stop') {
+            return { ok: requestReleaseStop() };
           }
           // The sidebar page cannot read the composer, so it asks for the capture.
           if (command.type === 'capture') {
@@ -4163,6 +4258,7 @@ window.__ModuleLoader__.load({
           : null,
         ),
         h(ImageLightbox, { preview, onClose: closeImage }),
+        renderReleaseOverlay({ state: releaseInfo, onStop: requestReleaseStop }),
       );
     }
 
@@ -4201,6 +4297,7 @@ window.__ModuleLoader__.load({
       // The composer trigger names itself, and switches to the accent colour once
       // something is queued so the pending count is hard to miss.
       '.pp-trigger{gap:6px;padding:0 9px;border:1px solid transparent}' +
+      '.pp-trigger[disabled]{opacity:.55;cursor:not-allowed}' +
       '.pp-trigger-label{white-space:nowrap}' +
       '.pp-trigger[data-queued="true"]{border-color:var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
       '.pp-trigger[data-queued="true"]:hover{background:color-mix(in srgb,var(--pp-accent) 20%,transparent);color:var(--pp-accent)}' +
@@ -4237,6 +4334,10 @@ window.__ModuleLoader__.load({
       '.pp-tab-x:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
       '.pp-tab-x:hover{color:var(--pp-danger)}' +
       '.pp-tab-input{height:24px;width:110px;padding:0 7px;border:1px solid var(--pp-accent);border-radius:7px;background:var(--dsw-alias-bg-base);color:inherit;font:inherit;font-size:12px;outline:none}' +
+      '.pp-release-mask{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:color-mix(in srgb,var(--pp-ink) 28%,transparent)}' +
+      '.pp-release-card{width:100%;max-width:300px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 18px;border:1px solid var(--pp-line);border-radius:12px;background:var(--pp-surface-2);box-shadow:0 18px 48px rgba(0,0,0,.24);text-align:center}' +
+      '.pp-release-title{font-weight:600;font-size:13px}' +
+      '.pp-release-count{font-size:12px;color:var(--pp-ink-2);font-variant-numeric:tabular-nums}' +
       '.pp-modal{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:color-mix(in srgb,var(--pp-ink) 22%,transparent)}' +
       '.pp-modal-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px;padding:16px 18px;border:1px solid var(--pp-line);border-radius:12px;background:var(--pp-surface-2);box-shadow:0 18px 48px rgba(0,0,0,.24)}' +
       '.pp-modal-text{font-size:13px;line-height:1.65;color:var(--pp-ink)}' +

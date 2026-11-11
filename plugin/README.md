@@ -10,6 +10,7 @@ of prompt items, and release the batch into the composer's send queue in order.
 - Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback)
 - Groups: built-in, custom and one tab per workspace; each can be expanded, folded or hidden
 - Settings for group order/display, visible workspaces and post-use retention
+- A release shows progress and can be stopped; the unsent queue stays
 - Confirmations for destructive actions, with undo on deletes and clears
 
 Requires DSH >= 0.2.0-rc.1 (verified on 0.2.2-rc.1). This is a **bundle**: install the package, then

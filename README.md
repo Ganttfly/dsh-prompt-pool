@@ -27,7 +27,8 @@ Settings: how each group family is displayed and ordered, and the plugin info ca
 
 - **Staging instead of sending** — save a draft into the pool; nothing runs until you release it.
 - **Ordered release** — queue items in the order you want, then send them one by one; each submission
-  waits for the composer to be accepted before the next starts.
+  waits for the composer to be accepted before the next starts. While a release runs, both views show
+  progress and a Stop control; the queue is locked until it finishes.
 - **Composer panel** — search, group tabs, per-row insert / queue / edit / duplicate / delete, and the
   send-queue card with collapse, clear and send. Drag its top edge to change the height.
 - **Sidebar page** — the same pool as a full-height page in the right sidebar.
