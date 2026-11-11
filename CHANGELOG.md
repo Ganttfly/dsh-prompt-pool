@@ -15,6 +15,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Releases now prefer the host's queue admission: text and images go straight into the send queue
+  through the conversation service, so the composer is never filled and resized item by item. Hosts
+  without that service fall back to the composer path.
 - The panel and the page render rows and the send-queue card through shared render functions, so a
   row action or a queue-card change is written once instead of twice.
 - The composer panel and the sidebar page share one editor path (start edit, save, cancel, paste

@@ -207,6 +207,8 @@ window.__ModuleLoader__.load({
       'release.stop': '停止',
       'release.stopping': '正在停止…',
       'status.releaseHalted': '已停止：发送了 {n} 条，剩余 {rest} 条还在队列里',
+      'status.releaseFailed': '队列提交失败：已发送 {n} 条，剩余 {rest} 条还在队列里',
+      'status.queueFailed': '提交到队列失败',
       'status.releasing': '正在释放 {n} 条…',
     };
 
@@ -358,6 +360,8 @@ window.__ModuleLoader__.load({
       'release.stop': 'Stop',
       'release.stopping': 'Stopping…',
       'status.releaseHalted': 'Stopped: {n} sent, {rest} left in the queue',
+      'status.releaseFailed': 'Queueing failed: {n} sent, {rest} left in the queue',
+      'status.queueFailed': 'Could not queue the prompt',
       'status.releasing': 'Releasing {n}…',
     };
 
@@ -3725,18 +3729,79 @@ window.__ModuleLoader__.load({
         actions.setDraft(text);
       };
 
-      const addImages = async (images) => {
-        const list = normalizeImages(images);
-        if (list.length === 0) return 0;
-        if (!actions || typeof actions.addAttachments !== 'function') throw new Error(translate('image.insertFailed'));
-        const api = conversationFace || serviceOf(pluginCtx, 'conversation');
-        if (!api || typeof api.createDrafts !== 'function' || !props.sessionId) throw new Error(translate('image.insertFailed'));
+      /** Bytes for pooled images, as browser files the host can accept. */
+      const loadImageFiles = async (images) => {
         const files = [];
-        for (const image of list) {
+        for (const image of normalizeImages(images)) {
           const blob = await getImageBlob(image.id);
           if (!blob) throw new Error(translate('image.missing'));
           files.push(new File([blob], image.name || 'image', { type: image.type || blob.type || 'image/png' }));
         }
+        return files;
+      };
+
+      /**
+       * The host's queue admission, if this context can reach it. Sending here
+       * keeps the composer untouched, which is the only way a batch release
+       * avoids resizing the input for every item.
+       */
+      const resolveDirectQueue = () => {
+        if (!props.sessionId) return null;
+        const candidates = [];
+        const base = conversationFace || serviceOf(pluginCtx, 'conversation');
+        if (base) candidates.push(base);
+        const sessions = sessionsFace || serviceOf(pluginCtx, 'sessions');
+        if (sessions && typeof sessions.scope === 'function') {
+          try {
+            const scoped = sessions.scope(props.sessionId);
+            const scopedConversation = serviceOf(scoped, 'conversation');
+            if (scopedConversation) candidates.push(scopedConversation);
+          } catch (_error) {
+            /* the context is not session-scoped */
+          }
+        }
+        for (const api of candidates) {
+          if (typeof api.createDrafts !== 'function' || typeof api.sendSession !== 'function' || typeof api.scopedSession !== 'function') continue;
+          try {
+            const session = api.scopedSession('send');
+            if (session && typeof session.prompt === 'function' && typeof session.beginSubmission === 'function') return { api, session };
+          } catch (_error) {
+            /* root-scoped service; try the next candidate */
+          }
+        }
+        return null;
+      };
+
+      /** Queue one occurrence without touching the composer. */
+      const sendDirect = async (direct, body, images) => {
+        const files = images.length > 0 ? await loadImageFiles(images) : [];
+        let drafts = [];
+        if (files.length > 0) {
+          drafts = direct.api.createDrafts(props.sessionId, files);
+          if (!Array.isArray(drafts) || drafts.length !== files.length) throw new Error(translate('image.insertFailed'));
+        }
+        try {
+          const outcome = await direct.api.sendSession(direct.session, body, drafts.map((draft) => draft.id), 'queue');
+          if (!outcome || outcome.kind !== 'success') throw new Error(translate('status.queueFailed'));
+        } catch (error) {
+          if (drafts.length > 0 && typeof direct.api.releaseDraftAttachments === 'function') {
+            try {
+              direct.api.releaseDraftAttachments(drafts);
+            } catch (_cleanupError) {
+              /* the draft attachment owner may already be gone */
+            }
+          }
+          throw error;
+        }
+        return drafts.length;
+      };
+
+      const addImages = async (images) => {
+        const files = await loadImageFiles(images);
+        if (files.length === 0) return 0;
+        if (!actions || typeof actions.addAttachments !== 'function') throw new Error(translate('image.insertFailed'));
+        const api = conversationFace || serviceOf(pluginCtx, 'conversation');
+        if (!api || typeof api.createDrafts !== 'function' || !props.sessionId) throw new Error(translate('image.insertFailed'));
         const drafts = api.createDrafts(props.sessionId, files);
         if (!Array.isArray(drafts) || drafts.length !== files.length) throw new Error(translate('image.insertFailed'));
         try {
@@ -3874,7 +3939,8 @@ window.__ModuleLoader__.load({
         if (busyRef.current) return;
         const entries = state.tray.slice();
         if (entries.length === 0) return;
-        if (draftRef.current.trim() !== '') {
+        const direct = resolveDirectQueue();
+        if (!direct && draftRef.current.trim() !== '') {
           flash({ kind: 'error', text: translate('status.draftBusy') });
           return;
         }
@@ -3885,6 +3951,7 @@ window.__ModuleLoader__.load({
         setStatus({ kind: 'info', text: translate('status.releasing', { n: entries.length }) });
         let sent = 0;
         let canceled = false;
+        let failed = false;
         // Keys finished by this run; the queue is filtered by key afterwards so
         // rows queued (or removed) meanwhile are not overwritten.
         const done = [];
@@ -3900,6 +3967,25 @@ window.__ModuleLoader__.load({
               done.push(entry.key);
               continue;
             }
+            if (direct) {
+              try {
+                // Straight into the host queue: the composer is never touched,
+                // so a batch release cannot resize the input per item.
+                await sendDirect(direct, body, images);
+              } catch (error) {
+                failed = true;
+                flash({ kind: 'error', text: String((error && error.message) || error) });
+                break;
+              }
+              sent += 1;
+              done.push(entry.key);
+              releaseState.set({ active: true, sent, total: entries.length, stopping: releaseCancel });
+              if (releaseCancel) {
+                canceled = true;
+                break;
+              }
+              continue;
+            }
             const clear = await waitFor(() => draftRef.current.trim() === '' && phaseRef.current === 'plain', RELEASE_WAIT.idle);
             if (!clear) break;
             try {
@@ -3913,14 +3999,10 @@ window.__ModuleLoader__.load({
             const pendingBefore = pendingRef.current.length;
             try {
               setDraft(body);
-            } catch (error) {
-              flash({ kind: 'error', text: String((error && error.message) || error) });
-              break;
-            }
-            // Wait until the editor really holds this occurrence before submitting it.
-            const loaded = await waitFor(() => draftRef.current.trim() === body.trim(), RELEASE_WAIT.idle);
-            if (!loaded) break;
-            try {
+              // The host applies setDraft as a discrete editor update and submit
+              // clears the draft in the same transaction. Submitting here keeps
+              // the prompt from being painted into the composer between the two
+              // steps, which made the conversation flash for every queued item.
               actions.submit();
             } catch (error) {
               flash({ kind: 'error', text: String((error && error.message) || error) });
@@ -3956,6 +4038,8 @@ window.__ModuleLoader__.load({
         poolActions.removeTrayKeys(done);
         if (canceled) {
           flash({ kind: 'info', text: translate('status.releaseHalted', { n: sent, rest: entries.length - sent }) });
+        } else if (failed) {
+          flash({ kind: 'error', text: translate('status.releaseFailed', { n: sent, rest: entries.length - sent }) });
         } else {
           flash(
             sent === entries.length
@@ -4557,6 +4641,9 @@ window.__ModuleLoader__.load({
         });
         bindOptional(['conversation'], (target) => {
           conversationFace = serviceOf(target, 'conversation');
+        });
+        bindOptional(['sessions'], (target) => {
+          sessionsFace = serviceOf(target, 'sessions');
         });
         if (ctx.locale && typeof ctx.locale.register === 'function' && typeof ctx.locale.bind === 'function') {
           ctx.effect(() => ctx.locale.register(NS, { zh: ZH, en: EN }));
