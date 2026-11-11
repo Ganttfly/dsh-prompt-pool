@@ -24,7 +24,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '1.0.1';
+    const PLUGIN_VERSION = '1.0.2';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/Ganttfly/dsh-prompt-pool';
@@ -201,7 +201,7 @@ window.__ModuleLoader__.load({
       'tray.release': '发送',
       'tray.clear': '清空',
       'tray.clearTitle': '清空待发送队列',
-      'tray.clearConfirm': '队列里的 {n} 条会被一起移出，这个操作不能撤销。',
+      'tray.clearConfirm': '队列里的 {n} 条会被一起移出。',
       'tray.clearAction': '清空',
       'tray.empty': '还没选中任何条目，点左侧「＋」加入',
       'tray.remove': '移出',
@@ -228,6 +228,7 @@ window.__ModuleLoader__.load({
       'status.releaseStopped': '已释放 {n} 条，其余 {rest} 条没发出去：输入框繁忙或内容被改动',
       'status.draftBusy': '输入框里还有内容，先清空或存进池子再释放',
       'status.deleted': '已删除「{title}」',
+      'status.cleared': '已清空 {n} 条待发送',
       'status.undo': '撤销',
       'status.releasing': '正在释放 {n} 条…',
     };
@@ -371,7 +372,7 @@ window.__ModuleLoader__.load({
       'tray.release': 'Send',
       'tray.clear': 'Clear',
       'tray.clearTitle': 'Clear the send queue',
-      'tray.clearConfirm': 'All {n} queued items are removed at once. This cannot be undone.',
+      'tray.clearConfirm': 'All {n} queued items are removed at once.',
       'tray.clearAction': 'Clear',
       'tray.empty': 'Nothing selected yet — use the ＋ control on a row',
       'tray.remove': 'Remove',
@@ -398,6 +399,7 @@ window.__ModuleLoader__.load({
       'status.releaseStopped': 'Released {n}; {rest} left because the composer was busy or edited',
       'status.draftBusy': 'The composer still has text. Clear it or save it to the pool first.',
       'status.deleted': 'Deleted this item',
+      'status.cleared': 'Cleared {n} queued items',
       'status.undo': 'Undo',
       'status.releasing': 'Releasing {n}…',
     };
@@ -831,9 +833,9 @@ window.__ModuleLoader__.load({
         onAdd: (name) => {
           const created = poolActions.addCategory(name);
           if (!created) return;
-          // Folded custom groups share one tab, so aim at that tab instead.
-          const folded = normalizeSettings(pool.get().settings).customNested;
-          setTab(folded ? 'nested:custom' : 'custom:' + created.id);
+          // Folded groups share one tab; a hidden family has no tab to aim at.
+          const mode = normalizeSettings(pool.get().settings).display.custom;
+          setTab(mode === 'nested' ? 'nested:custom' : mode === 'hidden' ? 'all' : 'custom:' + created.id);
         },
         onRename: (id, name) => {
           if (id.indexOf('custom:') === 0) poolActions.renameCategory(id.slice(7), name);
@@ -1491,8 +1493,25 @@ window.__ModuleLoader__.load({
           return { ...state, tray };
         });
       },
-      setTray(entries) {
-        mutate((state) => ({ ...state, tray: entries.slice() }));
+      /** Drop exactly these entries, so a release cannot overwrite concurrent edits. */
+      removeTrayKeys(keys) {
+        const drop = new Set(keys);
+        mutate((state) => {
+          const next = state.tray.filter((entry) => !drop.has(entry.key));
+          if (next.length === state.tray.length) return null;
+          return { ...state, tray: next };
+        });
+      },
+      /** Put cleared entries back in front; anything queued since stays behind them. */
+      restoreTray(entries) {
+        const restore = Array.isArray(entries) ? entries : [];
+        if (restore.length === 0) return;
+        mutate((state) => {
+          const present = new Set(state.tray.map((entry) => entry.key));
+          const missing = restore.filter((entry) => !present.has(entry.key));
+          if (missing.length === 0) return null;
+          return { ...state, tray: [...missing, ...state.tray] };
+        });
       },
       clearTray() {
         mutate((state) => (state.tray.length === 0 ? null : { ...state, tray: [] }));
@@ -2286,6 +2305,18 @@ window.__ModuleLoader__.load({
         setEditing({ id: item.id, group, title: '', body: '', images: [] });
       };
 
+      /**
+       * Cancel drops an item the editor created and never saved, so no empty
+       * row is left behind; an existing item keeps its stored content.
+       */
+      const cancelEdit = () => {
+        const current = editing;
+        setEditing(null);
+        if (!current) return;
+        const stored = pool.get().items.find((item) => item.id === current.id);
+        if (stored && !stored.body.trim() && !(stored.images && stored.images.length > 0)) poolActions.remove(stored.id);
+      };
+
       const rowOf = (item, index) => {
         if (editing && editing.id === item.id) {
           return h(
@@ -2353,7 +2384,7 @@ window.__ModuleLoader__.load({
                   : null,
               ),
               h('span', { className: 'pp-grow' }),
-              h('button', { type: 'button', className: 'pp-mini', onClick: () => setEditing(null) }, translate('row.cancel')),
+              h('button', { type: 'button', className: 'pp-mini', onClick: cancelEdit }, translate('row.cancel')),
               h('button', { type: 'button', className: 'pp-primary', onClick: save }, translate('row.save')),
             ),
           );
@@ -2484,8 +2515,18 @@ window.__ModuleLoader__.load({
           ? h(TrayClearConfirm, {
               count: state.tray.length,
               onConfirm: () => {
+                const entries = pool.get().tray.slice();
                 poolActions.clearTray();
                 setConfirmClear(false);
+                if (entries.length === 0) return;
+                flash({
+                  kind: 'info',
+                  text: translate('status.cleared', { n: entries.length }),
+                  undo: () => {
+                    poolActions.restoreTray(entries);
+                    setStatus(null);
+                  },
+                });
               },
               onCancel: () => setConfirmClear(false),
             })
@@ -3576,6 +3617,8 @@ window.__ModuleLoader__.load({
         const group = groupForTab(tab, inWorkspace && wsActive ? 'workspace:' + wsActive.slice(3) : '');
         // The new row must land on a visible list, so plain tabs switch to the kind tab.
         if (!inWorkspace && !familyOf(tab)) setTab(group);
+        // A search would filter the brand-new empty row out of the list.
+        setQuery('');
         const item = poolActions.add({
           id: uid(),
           group,
@@ -3586,6 +3629,18 @@ window.__ModuleLoader__.load({
           updatedAt: Date.now(),
         });
         setEditing({ id: item.id, group, title: '', body: '', images: [] });
+      };
+
+      /**
+       * Cancel drops an item the editor created and never saved, so no empty
+       * row is left behind; an existing item keeps its stored content.
+       */
+      const cancelEdit = () => {
+        const current = editing;
+        setEditing(null);
+        if (!current) return;
+        const stored = pool.get().items.find((item) => item.id === current.id);
+        if (stored && !stored.body.trim() && !(stored.images && stored.images.length > 0)) poolActions.remove(stored.id);
       };
 
       const startEdit = (item) => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body, images: normalizeImages(item.images) });
@@ -3645,11 +3700,17 @@ window.__ModuleLoader__.load({
         setBusy(true);
         setStatus({ kind: 'info', text: translate('status.releasing', { n: entries.length }) });
         let sent = 0;
+        // Keys finished by this run; the queue is filtered by key afterwards so
+        // rows queued (or removed) meanwhile are not overwritten.
+        const done = [];
         try {
           for (const entry of entries) {
             const body = typeof entry.body === 'string' ? entry.body : '';
             const images = normalizeImages(entry.images);
-            if (!body.trim() && images.length === 0) continue;
+            if (!body.trim() && images.length === 0) {
+              done.push(entry.key);
+              continue;
+            }
             const clear = await waitFor(() => draftRef.current.trim() === '' && phaseRef.current === 'plain', 2500);
             if (!clear) break;
             try {
@@ -3688,6 +3749,7 @@ window.__ModuleLoader__.load({
             }
             await waitFor(() => phaseRef.current === 'plain', 1500);
             sent += 1;
+            done.push(entry.key);
           }
         } catch (error) {
           flash({ kind: 'error', text: String((error && error.message) || error) });
@@ -3695,7 +3757,7 @@ window.__ModuleLoader__.load({
           busyRef.current = false;
           setBusy(false);
         }
-        poolActions.setTray(entries.slice(sent));
+        poolActions.removeTrayKeys(done);
         flash(
           sent === entries.length
             ? { kind: 'ok', text: translate('status.released', { n: sent }) }
@@ -3770,7 +3832,7 @@ window.__ModuleLoader__.load({
                   : null,
               ),
               h('span', { className: 'pp-grow' }),
-              h('button', { type: 'button', className: 'pp-mini', onClick: () => setEditing(null) }, translate('row.cancel')),
+              h('button', { type: 'button', className: 'pp-mini', onClick: cancelEdit }, translate('row.cancel')),
               h('button', { type: 'button', className: 'pp-primary', onClick: saveEdit }, translate('row.save')),
             ),
           );
@@ -3801,6 +3863,7 @@ window.__ModuleLoader__.load({
               onClick: () => poolActions.move(item.id, 1),
             }),
             h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => startEdit(item) }),
+            h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
             h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => setPendingDelete(item) }),
           ),
         );
@@ -3983,8 +4046,18 @@ window.__ModuleLoader__.load({
           ? h(TrayClearConfirm, {
               count: tray.length,
               onConfirm: () => {
+                const entries = pool.get().tray.slice();
                 poolActions.clearTray();
                 setConfirmClear(false);
+                if (entries.length === 0) return;
+                flash({
+                  kind: 'info',
+                  text: translate('status.cleared', { n: entries.length }),
+                  undo: () => {
+                    poolActions.restoreTray(entries);
+                    setStatus(null);
+                  },
+                });
               },
               onCancel: () => setConfirmClear(false),
             })

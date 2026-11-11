@@ -94,7 +94,7 @@ Clearing them removes the pool for good.
 ```powershell
 node tools/smoke.js                 # module loads, slots register, locale retitle, version pin
 node tools/render-smoke.js          # every slot renders; panel and settings structure checks
-node tools/oneshot/verify-*.js      # behavioural checks (destructive actions, retention, capture)
+Get-ChildItem tools/verify/*.js | ForEach-Object { node $_.FullName }   # behavioural checks (destructive actions, retention, capture, native tab)
 ```
 
 The panel's box model is measured in a real browser instead of by eye. It needs playwright on

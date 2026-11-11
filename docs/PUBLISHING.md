@@ -208,7 +208,7 @@ git push origin v1.0.0
 ## 9. 发布后维护
 
 1. **版本纪律**：每次修复 bump patch；`plugin/client.js` 的 `PLUGIN_VERSION` 与 `plugin/package.json` 必须一致（`tools/smoke.js` 已强制）。
-2. **兼容性**：DSH 升级后重跑 `node tools/smoke.js`、`render-smoke.js` 与 `tools/oneshot/verify-*.js`，再更新 README 的兼容性一行与 `engines.dsh`。
+2. **兼容性**：DSH 升级后重跑 `node tools/smoke.js`、`render-smoke.js` 与 `tools/verify/*.js`（逐个 `node`），再更新 README 的兼容性一行与 `engines.dsh`。
 3. **反馈入口**：GitHub issue 模板（bug / feature），README 里指过去。
 4. **数据兼容**：改存储结构时 bump `POOL_VERSION`，并想清楚旧数据是迁移还是重置（现在小于当前版本会重置为种子，要避免用户丢数据）。
 

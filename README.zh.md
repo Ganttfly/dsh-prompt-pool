@@ -78,7 +78,7 @@ dsh plugin add ./dsh-prompt-pool-<version>.tgz --profile <profile>
 ```powershell
 node tools/smoke.js                 # 模块加载、槽位注册、语言切换改名、版本一致性
 node tools/render-smoke.js          # 每个槽位能渲染；面板与设置的结构断言
-node tools/oneshot/verify-*.js      # 行为检查（破坏性操作、保留开关、捕获）
+Get-ChildItem tools/verify/*.js | ForEach-Object { node $_.FullName }   # 行为检查（破坏性操作、保留开关、捕获、原生 Tab）
 ```
 
 面板的高度在真浏览器里量，不靠肉眼：需要把 playwright 放进 `NODE_PATH`，再准备一份 `react` /

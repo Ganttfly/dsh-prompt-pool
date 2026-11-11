@@ -11,6 +11,26 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
+## [1.0.2] — 2026-11-11
+
+### Fixed
+
+- Clearing the send queue is undoable from the toast, as the readme promised; the confirmation no
+  longer claims it cannot be undone.
+- The composer panel has the duplicate action the readme promised, so both views share the same row
+  actions.
+- Cancelling a new prompt no longer leaves an empty "(untitled)" row behind.
+- The composer panel clears its search when a new prompt is created, so the new row is visible.
+- A release removes only the queued items it actually sent: rows queued or removed while it runs are
+  no longer overwritten.
+- Creating a custom group while the custom family is folded or hidden selects a visible view instead
+  of a tab that does not exist.
+
+### Changed
+
+- The behavioural checks moved from the untracked `tools/oneshot/` folder to the committed
+  `tools/verify/` folder, so the readme's test command works after a clone.
+
 ## [1.0.1] — 2026-11-11
 
 ### Fixed
@@ -57,6 +77,7 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.2
 [1.0.1]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.1
 [1.0.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.0
