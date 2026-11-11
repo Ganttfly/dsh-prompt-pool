@@ -18,13 +18,15 @@ window.__ModuleLoader__.load({
 
     const NS = 'prompt-pool';
     const STORAGE_KEY = 'dsh.prompt-pool.v1';
+    /** One pre-migration copy of the stored payload, written before the first rewrite. */
+    const BACKUP_KEY = STORAGE_KEY + '.backup';
     /** The sidebar tool tab this plugin owns; it also names the open tab. */
     const SIDEBAR_TAB_ID = 'prompt-pool:pool';
     /** Native right-sidebar registry identity (DSH 0.2) and the page kind it opens. */
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '1.0.2';
+    const PLUGIN_VERSION = '1.0.3';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/Ganttfly/dsh-prompt-pool';
@@ -218,6 +220,7 @@ window.__ModuleLoader__.load({
       'confirm.cancel': '再想想',
       'status.saved': '已存入池子',
       'status.savedPartial': '已存入池子，但这 {n} 个附件没有一起保存',
+      'status.storageFailed': '保存失败：浏览器存储不可写（可能已满）。改动只在当前页面有效。',
       'status.nothing': '草稿是空的，先写点什么',
       'status.emptyBody': '内容不能是空的',
       'status.inserted': '已插入到输入框',
@@ -389,6 +392,7 @@ window.__ModuleLoader__.load({
       'confirm.cancel': 'Not yet',
       'status.saved': 'Saved to the pool',
       'status.savedPartial': 'Saved to the pool; {n} attachment(s) were not captured',
+      'status.storageFailed': 'Could not save: browser storage is unwritable (possibly full). Changes last only for this page.',
       'status.nothing': 'The composer is empty',
       'status.emptyBody': 'The content cannot be empty',
       'status.inserted': 'Inserted into the composer',
@@ -463,6 +467,12 @@ window.__ModuleLoader__.load({
         },
       };
     }
+
+    /**
+     * Whether the last write reached localStorage. Both views surface this,
+     * because a full quota would otherwise look like a successful save.
+     */
+    const storageState = createStore({ failed: false });
 
     function uid() {
       try {
@@ -616,6 +626,61 @@ window.__ModuleLoader__.load({
       );
     }
 
+    function deleteImageBlobs(ids) {
+      const list = (Array.isArray(ids) ? ids : []).filter((id) => typeof id === 'string' && id);
+      if (list.length === 0) return Promise.resolve(true);
+      return openImageDb().then(
+        (db) =>
+          new Promise((resolve, reject) => {
+            const tx = db.transaction(IMAGE_STORE, 'readwrite');
+            const store = tx.objectStore(IMAGE_STORE);
+            for (const id of list) store.delete(id);
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => reject(tx.error || new Error('image-delete-failed'));
+            tx.onabort = () => reject(tx.error || new Error('image-delete-failed'));
+          }),
+      );
+    }
+
+    /** Drop bytes the editor added but never saved; stored images stay. */
+    function discardUnsavedImages(edited, stored) {
+      const keep = new Set(((stored && stored.images) || []).map((image) => image.id));
+      const drop = ((edited && edited.images) || []).map((image) => image.id).filter((imageId) => !keep.has(imageId));
+      if (drop.length > 0) deleteImageBlobs(drop).catch(() => {});
+    }
+
+    /**
+     * Every image id the pool still points at. Duplicated items and queued
+     * copies share ids, so an id is garbage only when nothing references it.
+     */
+    function referencedImageIds() {
+      const keep = new Set();
+      const state = pool.get();
+      for (const item of state.items) for (const image of item.images || []) keep.add(image.id);
+      for (const entry of state.tray) for (const image of entry.images || []) keep.add(image.id);
+      return keep;
+    }
+
+    /**
+     * Delete blobs nothing references, once per page load. This also clears the
+     * bytes of items deleted earlier, which cannot be freed immediately because
+     * the delete offers an undo.
+     */
+    function sweepImageBlobs() {
+      return new Promise((resolve, reject) => {
+        openImageDb().then((db) => {
+          const tx = db.transaction(IMAGE_STORE, 'readonly');
+          const request = tx.objectStore(IMAGE_STORE).getAllKeys();
+          request.onsuccess = () => resolve(request.result || []);
+          request.onerror = () => reject(request.error || new Error('image-read-failed'));
+        }, reject);
+      }).then((keys) => {
+        const keep = referencedImageIds();
+        const drop = keys.filter((key) => !keep.has(key));
+        return drop.length > 0 ? deleteImageBlobs(drop) : null;
+      });
+    }
+
     /** A small data-URL thumbnail keeps the list rendering synchronous. */
     function makeImageThumb(file) {
       return new Promise((resolve) => {
@@ -765,10 +830,19 @@ window.__ModuleLoader__.load({
     }
 
 
-    /** The one read path: item → canonical group id. */
+    /**
+     * The one read path: item → canonical group id. Older pools predate the
+     * group id and stored pinned / categoryId (`cat:<id>`) / kind instead, so
+     * map those once on load rather than dropping the user's classification.
+     */
     function groupOf(item) {
       const group = item && typeof item.group === 'string' ? item.group : '';
-      return group && familyOf(group) ? group : BUILTIN_GROUP.note;
+      if (group && familyOf(group)) return group;
+      const categoryId = item && typeof item.categoryId === 'string' ? item.categoryId : '';
+      if (categoryId) return 'custom:' + categoryId.replace(/^cat:/, '');
+      if (item && item.pinned === true) return BUILTIN_GROUP.oftenuse;
+      if (item && item.kind === 'snippet') return BUILTIN_GROUP.template;
+      return BUILTIN_GROUP.note;
     }
 
     /** The one write path: canonical group id → item. */
@@ -1157,34 +1231,25 @@ window.__ModuleLoader__.load({
         if (!raw) {
           // Brand-new install only: an existing (even empty) pool is never reseeded.
           const seeded = seededPool();
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-          } catch (_error) {
-            /* storage unavailable: keep the in-memory copy only */
-          }
+          persist(seeded);
           return seeded;
         }
         const parsed = JSON.parse(raw);
         const storedVersion = parsed && typeof parsed.version === 'number' ? parsed.version : 1;
         if (storedVersion < POOL_VERSION) {
-          // The shape changed and this build does not migrate: start from the seeds.
-          const reset = seededPool();
+          // Keep the payload this build first saw: normalization is lossy, and the
+          // backup is the only way back if an older shape maps differently.
           try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(reset));
+            localStorage.setItem(BACKUP_KEY, raw);
           } catch (_error) {
-            /* storage unavailable: keep the in-memory copy only */
+            /* the backup is best effort; the pool itself still loads */
           }
-          return reset;
         }
         const pool = normalizePool(parsed);
         const level = Number(pool.seeded) || 0;
-        if (level >= SEED_LEVEL) return pool;
-        const migrated = { ...pool, items: [...pool.items, ...seedItems(pool.items, level)], seeded: SEED_LEVEL };
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-        } catch (_error) {
-          /* storage unavailable: keep the in-memory copy only */
-        }
+        if (storedVersion >= POOL_VERSION && level >= SEED_LEVEL) return pool;
+        const migrated = level >= SEED_LEVEL ? pool : { ...pool, items: [...pool.items, ...seedItems(pool.items, level)], seeded: SEED_LEVEL };
+        persist(migrated);
         return migrated;
       } catch (_error) {
         return emptyPool();
@@ -1216,6 +1281,14 @@ window.__ModuleLoader__.load({
       if (!window[POOL_SINGLETON]) window[POOL_SINGLETON] = createPoolStore();
       return window[POOL_SINGLETON];
     })();
+
+    // Clear orphaned image bytes once the pool is readable; the delay keeps the
+    // first paint cheap and lets another window finish its own load.
+    if (typeof window !== 'undefined' && typeof indexedDB !== 'undefined' && typeof window.setTimeout === 'function') {
+      window.setTimeout(() => {
+        sweepImageBlobs().catch(() => {});
+      }, 5000);
+    }
 
     const ui = createStore({ open: false });
 
@@ -1343,15 +1416,19 @@ window.__ModuleLoader__.load({
 
     const bridge = (() => {
       const create = () => {
-        let handler = null;
+        const handlers = [];
         return {
           listen(fn) {
-            handler = fn;
+            handlers.push(fn);
             return () => {
-              if (handler === fn) handler = null;
+              const at = handlers.lastIndexOf(fn);
+              if (at >= 0) handlers.splice(at, 1);
             };
           },
           request(command) {
+            // The newest mounted panel owns the composer; an older one takes
+            // over again when the newer unmounts.
+            const handler = handlers[handlers.length - 1];
             if (!handler) return { ok: false, reason: 'unavailable' };
             try {
               return handler(command) || { ok: true };
@@ -1369,8 +1446,10 @@ window.__ModuleLoader__.load({
     function persist(next) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        if (storageState.get().failed) storageState.set({ failed: false });
       } catch (_error) {
-        /* storage unavailable: keep the session copy only */
+        // The in-memory copy stays usable, but both views now say it is not saved.
+        if (!storageState.get().failed) storageState.set({ failed: true });
       }
     }
 
@@ -1397,10 +1476,21 @@ window.__ModuleLoader__.load({
         });
       },
       patch(id, fields) {
+        const before = pool.get().items.find((item) => item.id === id);
         mutate((state) => ({
           ...state,
           items: state.items.map((item) => (item.id === id ? { ...item, ...fields, updatedAt: Date.now() } : item)),
         }));
+        // Saving is the point of no return for an image removed in the editor.
+        // A duplicate or a queued copy may share the id, so drop it only when
+        // nothing else points at it any more.
+        if (before && Array.isArray(fields.images)) {
+          const keep = new Set(fields.images.map((image) => image.id));
+          const drop = (before.images || []).map((image) => image.id).filter((imageId) => !keep.has(imageId));
+          const used = referencedImageIds();
+          const garbage = drop.filter((imageId) => !used.has(imageId));
+          if (garbage.length > 0) deleteImageBlobs(garbage).catch(() => {});
+        }
       },
 
       addCategory(name) {
@@ -1520,6 +1610,10 @@ window.__ModuleLoader__.load({
 
     function usePoolState() {
       return useSyncExternalStore(pool.subscribe, pool.get, pool.get);
+    }
+
+    function useStorageState() {
+      return useSyncExternalStore(storageState.subscribe, storageState.get, storageState.get);
     }
 
     function useUiState() {
@@ -2048,6 +2142,7 @@ window.__ModuleLoader__.load({
     function PromptPoolPage(props) {
       useLocaleTick();
       const state = usePoolState();
+      const storage = useStorageState();
       const queueCollapsed = state.settings && state.settings.queueCollapsed === true;
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
@@ -2087,6 +2182,8 @@ window.__ModuleLoader__.load({
         statusTimer.current = window.setTimeout(() => setStatus(null), 5000);
       }, []);
       useEffect(() => () => window.clearTimeout(statusTimer.current), []);
+      // A failed write outranks a transient toast: the change is not saved.
+      const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
       const trayRef = useRef(null);
       const trayCount = state.tray.length;
       const lastTrayCount = useRef(trayCount);
@@ -2314,6 +2411,7 @@ window.__ModuleLoader__.load({
         setEditing(null);
         if (!current) return;
         const stored = pool.get().items.find((item) => item.id === current.id);
+        discardUnsavedImages(current, stored);
         if (stored && !stored.body.trim() && !(stored.images && stored.images.length > 0)) poolActions.remove(stored.id);
       };
 
@@ -2585,19 +2683,19 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-queue-dock' },
-          status
+          notice
             ? h(
                 'div',
-                { className: 'pp-status pp-status-float', 'data-kind': status.kind || 'info' },
-                h('span', null, status.text),
-                status.undo
+                { className: 'pp-status pp-status-float', 'data-kind': notice.kind || 'info' },
+                h('span', null, notice.text),
+                notice.undo
                   ? h(
                       'button',
                       {
                         type: 'button',
                         className: 'pp-link',
                         onClick: () => {
-                          status.undo();
+                          notice.undo();
                         },
                       },
                       translate('status.undo'),
@@ -3275,6 +3373,7 @@ window.__ModuleLoader__.load({
     function PromptPoolPanel(props) {
       useLocaleTick();
       const state = usePoolState();
+      const storage = useStorageState();
       const view = useUiState();
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
@@ -3350,6 +3449,9 @@ window.__ModuleLoader__.load({
         statusTimer.current = window.setTimeout(() => setStatus(null), 6000);
       }, []);
       useEffect(() => () => window.clearTimeout(statusTimer.current), []);
+
+      // A failed write outranks a transient toast: the change is not saved.
+      const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
 
       const confirmCategoryDelete = () => {
         const target = pendingCategory;
@@ -3640,6 +3742,7 @@ window.__ModuleLoader__.load({
         setEditing(null);
         if (!current) return;
         const stored = pool.get().items.find((item) => item.id === current.id);
+        discardUnsavedImages(current, stored);
         if (stored && !stored.body.trim() && !(stored.images && stored.images.length > 0)) poolActions.remove(stored.id);
       };
 
@@ -4116,19 +4219,19 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-panel-dock' },
-          status
+          notice
           ? h(
               'div',
-              { className: 'pp-status pp-status-float', 'data-kind': status.kind || 'info' },
-              h('span', null, status.text),
-              status.undo
+              { className: 'pp-status pp-status-float', 'data-kind': notice.kind || 'info' },
+              h('span', null, notice.text),
+              notice.undo
                 ? h(
                     'button',
                     {
                       type: 'button',
                       className: 'pp-link',
                       onClick: () => {
-                        status.undo();
+                        notice.undo();
                       },
                     },
                     translate('status.undo'),

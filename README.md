@@ -76,6 +76,11 @@ does not turn it on.
 
 - Items and settings: `localStorage["dsh.prompt-pool.v1"]`.
 - Pool images: IndexedDB `dsh-prompt-pool-images.v1`.
+- Before a schema upgrade, the previous payload is copied once to
+  `localStorage["dsh.prompt-pool.v1.backup"]`.
+- If a write fails (storage full or blocked), both views say the change was not saved.
+- Image bytes that nothing references are deleted on startup; an image removed and saved is deleted
+  immediately.
 
 Uninstalling the plugin does not delete either store, so reinstalling later brings the pool back.
 Clearing them removes the pool for good.

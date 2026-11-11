@@ -1,5 +1,5 @@
-// Simulates the client module twice: a fresh install, then an already-seeded
-// v1 pool, to prove both receive the right seed batches.
+// Simulates the client module twice: a fresh install, then a version-1 pool
+// with a legacy item, to show the seed batches and the migration.
 const fs = require('fs');
 const src = fs.readFileSync('plugin/client.js', 'utf8');
 const KEY = 'dsh.prompt-pool.v1';
@@ -56,5 +56,10 @@ legacy.set(
 run(legacy);
 const migrated = JSON.parse(legacy.get(KEY));
 console.log('v1 pool:', migrated.items.length, 'items, seeded =', migrated.seeded);
+console.log('  legacy item kept:', migrated.items.some((item) => item.id === 'seed:plan-first'));
 console.log('  templates added:', migrated.items.filter((i) => i.group === 'builtin:template').map((i) => i.title).join(' / '));
-console.log('  prompts untouched:', migrated.items.filter((i) => i.group && i.group.startsWith('builtin:')).length);
+console.log('  backup written:', legacy.has(KEY + '.backup'));
+if (!migrated.items.some((item) => item.id === 'seed:plan-first')) {
+  console.error('[fail] the version-1 item was lost');
+  process.exitCode = 1;
+}

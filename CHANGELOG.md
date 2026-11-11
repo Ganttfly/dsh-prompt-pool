@@ -11,6 +11,20 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
+## [1.0.3] — 2026-11-11
+
+### Fixed
+
+- Version upgrades no longer reset the pool: existing items, groups, queue and settings are normalized
+  and kept, and the previous payload is copied to `localStorage["dsh.prompt-pool.v1.backup"]` before
+  the first write.
+- Legacy items that stored `pinned` / `categoryId` / `kind` instead of a group are mapped into the
+  group model instead of all landing in Notes.
+- A failed `localStorage` write is reported in both views instead of looking like a successful save.
+- Image bytes are deleted when an image is removed and saved, or when a cancelled edit added it;
+  unreferenced image blobs are swept on startup.
+- The sidebar page keeps its composer bridge when a panel unmounts while another panel is mounted.
+
 ## [1.0.2] — 2026-11-11
 
 ### Fixed
@@ -77,7 +91,8 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.3
 [1.0.2]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.2
 [1.0.1]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.1
 [1.0.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.0

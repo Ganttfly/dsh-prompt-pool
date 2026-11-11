@@ -5,19 +5,22 @@
 
 ---
 
-## 0. 现状盘点（2026-11-10，1.0.0）
+## 0. 现状盘点（2026-11-11，1.0.3）
+
+> §1–§8 是 2026-11-10 的执行清单，现已全部完成，保留作为记录；下表是当前状态。
 
 | 项目 | 现状 | 结论 |
 |---|---|---|
-| npm 包名 | `dsh-prompt-pool` 在 registry 返回 404 | 名字可用 |
-| 版本 | `plugin/package.json` = 1.0.0，界面 `PLUGIN_VERSION` 同步 | smoke 已强制一致 |
-| 打包产物 | `npm pack --dry-run` = 7 个文件、约 43 kB | 内容正确 |
-| `private` | `true` | **必须去掉，否则 npm 拒绝发布** |
-| license / author / repository / keywords / engines | 全部缺失 | 必须补齐 |
-| git remote | 指向 `github.com/ganttfly/dsh-to-chinese` | **错误仓库，必须替换** |
-| GitHub 账号 | `ganttfly` 存在；`GanttShen` 不存在（是显示名） | 仓库应建在 `ganttfly` 下 |
-| 插件信息卡里的仓库地址 | 暂填 `Ganttfly/dsh-prompt-pool`（尚未创建） | 仓库建好后核对 |
-| 宿主实测版本 | DSH 0.2.2-rc.1 | 写进 README 的兼容性一节 |
+| npm 包名 | `dsh-prompt-pool` 已发布 1.0.0 / 1.0.1 / 1.0.2 / 1.0.3 | 名字已占用 |
+| 版本 | `plugin/package.json` = 1.0.3，界面 `PLUGIN_VERSION` 同步 | smoke 已强制一致 |
+| 打包产物 | `npm pack --dry-run` = 9 个文件、约 53 kB | 内容正确 |
+| `private` | `false` | 已发布 |
+| license / author / repository / keywords / engines | 已补齐 | 已发布 |
+| git remote | `github.com/Ganttfly/dsh-prompt-pool`（`main`） | 正确 |
+| GitHub 账号 | `Ganttfly` | 仓库与包已互指 |
+| 插件信息卡里的仓库地址 | 已指向真实仓库 | 正确 |
+| 宿主实测版本 | DSH 0.2.2-rc.1 | README 已写 |
+| 仓库历史 | `_ref/`、`asar-files.tsv`、`_shots/` 已从历史清除 | 包体约 1.9 MiB |
 
 ---
 

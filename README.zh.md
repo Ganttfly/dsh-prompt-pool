@@ -64,6 +64,9 @@ dsh plugin add ./dsh-prompt-pool-<version>.tgz --profile <profile>
 
 - 条目与设置：`localStorage["dsh.prompt-pool.v1"]`
 - 池子里的图片：IndexedDB `dsh-prompt-pool-images.v1`
+- 存储结构升级前，旧数据会先复制一份到 `localStorage["dsh.prompt-pool.v1.backup"]`
+- 写入失败（存储已满或被禁用）时，页面会明确提示"没有保存"
+- 没有任何条目引用的图片会在启动时清理；在编辑器里移除并保存的图片会立即删除
 
 卸载插件**不会**删除这两处数据，重新安装后池子还在；要彻底清掉需要手动删除。
 
