@@ -1,0 +1,9 @@
+{
+  "name": "dsh-prompt-pool-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Development workspace for the dsh-prompt-pool plugin; the published package is plugin/.",
+  "scripts": {
+    "test": "node tools/run-tests.js"
+  }
+}

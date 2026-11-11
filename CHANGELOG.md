@@ -11,6 +11,27 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
+## [1.0.4] — 2026-11-11
+
+### Changed
+
+- The composer panel and the sidebar page share one editor path (start edit, save, cancel, paste
+  image), so the empty-row and unsaved-image rules cannot drift between them.
+- The settings copy and the empty-pool hints name the buttons that actually exist.
+- Removed unused locale strings, unused CSS rules, and the React 18 fallback for
+  `useSyncExternalStore`.
+
+### Added
+
+- Keyboard support for the custom-tab delete control, a focus trap in confirmations that starts on
+  the safe button, `aria-live` on the status line, and labels on both search boxes.
+- `npm test` / `tools/run-tests.js` runs the whole suite, and GitHub Actions runs it on every push.
+- A check that a new group selects a tab that exists, plus bug and feature issue templates.
+
+### Fixed
+
+- The panel's save button now confirms with the same "saved to the pool" toast as the page.
+
 ## [1.0.3] — 2026-11-11
 
 ### Fixed
@@ -91,7 +112,8 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.4
 [1.0.3]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.3
 [1.0.2]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.2
 [1.0.1]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.1

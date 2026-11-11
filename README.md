@@ -97,10 +97,13 @@ Clearing them removes the pool for good.
 ## Development
 
 ```powershell
+npm test                            # the whole suite through tools/run-tests.js
 node tools/smoke.js                 # module loads, slots register, locale retitle, version pin
 node tools/render-smoke.js          # every slot renders; panel and settings structure checks
-Get-ChildItem tools/verify/*.js | ForEach-Object { node $_.FullName }   # behavioural checks (destructive actions, retention, capture, native tab)
+Get-ChildItem tools/verify/*.js | ForEach-Object { node $_.FullName }   # behavioural checks
 ```
+
+GitHub Actions runs the same `npm test` on every push and pull request.
 
 The panel's box model is measured in a real browser instead of by eye. It needs playwright on
 `NODE_PATH` and a `react`/`react-dom` copy to serve — install those once into `%TEMP%\pp-harness`, or

@@ -79,10 +79,13 @@ dsh plugin add ./dsh-prompt-pool-<version>.tgz --profile <profile>
 ## 开发
 
 ```powershell
+npm test                            # 通过 tools/run-tests.js 跑完整套检查
 node tools/smoke.js                 # 模块加载、槽位注册、语言切换改名、版本一致性
 node tools/render-smoke.js          # 每个槽位能渲染；面板与设置的结构断言
-Get-ChildItem tools/verify/*.js | ForEach-Object { node $_.FullName }   # 行为检查（破坏性操作、保留开关、捕获、原生 Tab）
+Get-ChildItem tools/verify/*.js | ForEach-Object { node $_.FullName }   # 行为检查
 ```
+
+GitHub Actions 会在每次 push / pull request 时跑同一个 `npm test`。
 
 面板的高度在真浏览器里量，不靠肉眼：需要把 playwright 放进 `NODE_PATH`，再准备一份 `react` /
 `react-dom` 供页面加载（装到 `%TEMP%\pp-harness` 一次即可，或用 `PP_VENDOR` 指向已有的 `node_modules`）。

@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest a change to the prompt pool
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve
+      description: Describe the situation where the current plugin gets in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like
+      description: A sketch is enough; mention any alternative you considered.

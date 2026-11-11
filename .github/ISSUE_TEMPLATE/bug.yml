@@ -1,0 +1,26 @@
+name: Bug report
+description: Something in the prompt pool does not work
+labels: [bug]
+body:
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what the plugin did instead.
+    validations:
+      required: true
+  - type: input
+    id: dsh
+    attributes:
+      label: DSH version
+      placeholder: e.g. 0.2.2-rc.1
+  - type: input
+    id: plugin
+    attributes:
+      label: Prompt pool version
+      placeholder: e.g. 1.0.3
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Console errors, a screenshot, or the language you were using.

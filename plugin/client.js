@@ -7,14 +7,7 @@ window.__ModuleLoader__.load({
     const h = React.createElement;
     const { useCallback, useEffect, useMemo, useRef, useState } = React;
 
-    const useSyncExternalStore = React.useSyncExternalStore || function fallback(subscribe, getSnapshot) {
-      const [value, setValue] = useState(getSnapshot);
-      useEffect(() => {
-        setValue(getSnapshot());
-        return subscribe(() => setValue(getSnapshot()));
-      }, [subscribe, getSnapshot]);
-      return value;
-    };
+    const useSyncExternalStore = React.useSyncExternalStore;
 
     const NS = 'prompt-pool';
     const STORAGE_KEY = 'dsh.prompt-pool.v1';
@@ -26,7 +19,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '1.0.3';
+    const PLUGIN_VERSION = '1.0.4';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/Ganttfly/dsh-prompt-pool';
@@ -45,6 +38,8 @@ window.__ModuleLoader__.load({
      * running past it.
      */
     const PANEL_TOP_GAP = 10;
+    /** How long a release waits on the composer at each step, in ms. */
+    const RELEASE_WAIT = { idle: 2500, accept: 3000, plain: 1500 };
 
     /**
      * Top of the nearest ancestor that clips its overflow — the pane the panel
@@ -72,12 +67,10 @@ window.__ModuleLoader__.load({
       'panel.capture': '存草稿',
       'panel.captureHint': '把输入框里的内容复制一份存进池子（图片附件一起存）；输入框里的字会保留',
       'panel.resize': '拖动调整高度，双击还原',
-      'panel.empty': '池子是空的。写一句，然后点「存下当前草稿」。',
+      'panel.empty': '池子是空的。写一句，然后点「存草稿」。',
       'panel.emptyTab': '这一栏还没有内容。',
       'tab.all': '全部',
       'tab.oftenuse': '常用',
-      'tab.workspace': '工作区',
-      'tab.currentWorkspace': '当前工作区',
       'ws.none': '没有可用的工作区',
       'ws.empty': '这个工作区还没有条目',
       'tab.note': '便签',
@@ -95,37 +88,30 @@ window.__ModuleLoader__.load({
       'group.untitled': '（未命名）',
       'mention.loading': '正在读取…',
       'mention.empty': '没有匹配项',
-      'mention.noSession': '当前没有会话，无法读取技能目录',
+      'mention.noSessionTag': '无会话',
+      'mention.directory': '目录',
       'mention.noSkillService': '读不到技能目录（remote 服务未绑定）',
-      'mention.noDirectoryService': '读不到目录服务（uiWorkspace 未绑定）',
       'mention.noSessionService': '读不到会话服务（sessions 未绑定）',
       'mention.sessionClosed': '会话未打开，无法读取技能目录',
       'mention.failed': '读取失败',
       'mention.timeout': '读取超时：宿主没有响应（可能没有活跃会话）',
       'row.insert': '插入到输入框',
       'row.select': '加入待发送队列',
-      'row.copy': '复制内容',
       'row.duplicate': '复制一份，追加到池子末尾',
       'page.title': '提示池',
       'tab.description': '暂存、编辑、编排你的提示词，按住顺序一次性释放',
       'page.count': '共 {n} 条',
       'page.search': '搜索标题或内容…',
-      'page.empty': '还没有内容。点右上角「＋ 便签」开始。',
+      'page.empty': '还没有内容。点右上角「＋ 提示词」开始。',
       'page.emptyOftenuse': '还没有常用条目。把条目的「分组」改成「常用」即可。',
       'page.noMatch': '没有匹配的条目。',
-      'page.trayReady': '已选 {n} 条 · 去对话释放',
-      'page.gotoConversation': '去对话',
       'status.noComposer': '没有可用的输入框：请先打开一个对话页签',
       'status.releaseSent': '已交给输入框，按顺序排队中',
-      'status.copied': '已复制',
-      'status.copyFailed': '复制失败',
       'status.savedToPool': '已保存',
-      'sidebar.label': '提示池',
       'settings.nav': '提示池',
       'settings.open': '提示池设置',
       'settings.button': '设置',
       'settings.tab.order': '分组',
-      'settings.display': '分组怎么显示',
       'settings.table': '分组的顺序与显示',
       'settings.tableHint': '箭头调整先后顺序；右侧三列决定这一组怎么显示。',
       'settings.tableGroup': '分组',
@@ -148,27 +134,14 @@ window.__ModuleLoader__.load({
       'settings.about': '插件信息',
       'settings.aboutAuthor': '作者',
       'settings.aboutRepo': '仓库',
-      'settings.tab.display': '展示',
-      'settings.customNested': '自定义分组折叠成一个 Tab',
-      'settings.customNestedHint': '分组多时打开：Tab 行只保留一个「自定义」，组内用横排胶囊切换。',
       'settings.workspaceCard': '工作区如何展示',
         'settings.workspacesVisible': '显示哪些工作区',
         'settings.workspacesCurrent': '当前',
         'settings.workspacesEmpty': '还没有读到工作区列表。打开一次提示池页面后，这里会列出全部工作区。',
-      'settings.leading': '哪一组排在前面',
-      'settings.leading.workspace': '工作区',
-      'settings.leading.custom': '自定义分组',
-      'settings.leading.builtin': '内置分组',
-      'settings.leadingHint': '「全部」始终在最前；这里决定它后面先出现哪一组，另外两组按固定顺序跟随。',
-      'settings.reload': '重新加载界面',
-      'settings.reloadHint': '插件代码更新后，界面不会自动换新。点这里重新加载（比重启应用快）。',
       'settings.title': '提示池',
-      'settings.desc': '控制提示池 Tab 的显示方式。改动立即生效。',
-      'settings.workspaceTabs': '在工作区 Tab 中列出全部工作区',
-      'settings.workspaceTabsHint': '「工作区」Tab 里用横向胶囊切换工作区；关掉后只保留当前工作区。',
+      'settings.desc': '控制分组顺序、显示方式和工作区 Tab。改动立即生效。',
       'settings.currentWorkspaceTab': '当前工作区排在最前',
       'settings.currentWorkspaceTabHint': '当前会话所属的工作区固定排第一；其余按原顺序。',
-      'settings.label': '提示池',
       'row.edit': '编辑',
       'row.delete': '删除',
       'row.deleteTitle': '删除这条提示词',
@@ -194,7 +167,6 @@ window.__ModuleLoader__.load({
       'row.familyCustom': '自定义',
       'row.familyWorkspace': '工作区分组',
       'tab.familyBuiltin': '内置分组',
-      'row.categoryLabel': '自定义分组',
       'row.classification': '分组',
       'page.new': '提示词',
       'row.noCategory': '未分组',
@@ -211,13 +183,9 @@ window.__ModuleLoader__.load({
       'tray.removeConfirm': '「{title}」会从待发送队列移出；这条如果在队列里改过，改动不会保留。',
       'tray.removeAction': '移出',
       'tray.duplicate': '复制一份，追加到末尾',
-      'tray.hint': '释放后会按这个顺序排队，当前这轮结束后自动接着执行。',
       'tray.queue': '队列中 {n}',
       'tray.collapseTitle': '收起待发送队列',
       'tray.expandTitle': '展开待发送队列',
-      'confirm.title': '将按此顺序排队 {n} 条：',
-      'confirm.ok': '确认释放',
-      'confirm.cancel': '再想想',
       'status.saved': '已存入池子',
       'status.savedPartial': '已存入池子，但这 {n} 个附件没有一起保存',
       'status.storageFailed': '保存失败：浏览器存储不可写（可能已满）。改动只在当前页面有效。',
@@ -248,8 +216,6 @@ window.__ModuleLoader__.load({
       'panel.emptyTab': 'Nothing in this tab yet.',
       'tab.all': 'All',
       'tab.oftenuse': 'Frequent',
-      'tab.workspace': 'Workspaces',
-      'tab.currentWorkspace': 'Current workspace',
       'ws.none': 'No workspaces available',
       'ws.empty': 'No items in this workspace yet',
       'tab.note': 'Notes',
@@ -267,37 +233,30 @@ window.__ModuleLoader__.load({
       'group.untitled': '(untitled)',
       'mention.loading': 'Loading…',
       'mention.empty': 'No matches',
-      'mention.noSession': 'No active session, so the skill catalog is unavailable',
+      'mention.noSessionTag': 'no session',
+      'mention.directory': 'folder',
       'mention.noSkillService': 'Skill catalog unavailable (remote service not bound)',
-      'mention.noDirectoryService': 'Directory service unavailable (uiWorkspace not bound)',
       'mention.noSessionService': 'Session service unavailable (sessions not bound)',
       'mention.sessionClosed': 'The session is not open, so the catalog is unavailable',
       'mention.failed': 'Failed to load',
       'mention.timeout': 'Timed out: the host did not answer (no live session?)',
       'row.insert': 'Insert into the composer',
       'row.select': 'Add to the send queue',
-      'row.copy': 'Copy the text',
       'row.duplicate': 'Duplicate and append to the pool',
       'page.title': 'Prompt pool',
       'tab.description': 'Stage, edit and arrange prompts, then release them in order',
       'page.count': '{n} items',
       'page.search': 'Search title or text…',
-      'page.empty': 'Nothing yet. Use “+ Note” in the top right.',
+      'page.empty': 'Nothing yet. Use “+ Prompt” in the top right.',
       'page.emptyOftenuse': 'Nothing here yet. Set an item’s group to Frequent.',
       'page.noMatch': 'No matching item.',
-      'page.trayReady': '{n} selected · release in a conversation',
-      'page.gotoConversation': 'Open the conversation',
       'status.noComposer': 'No composer available: open a conversation tab first',
       'status.releaseSent': 'Handed to the composer; queuing in order',
-      'status.copied': 'Copied',
-      'status.copyFailed': 'Copy failed',
       'status.savedToPool': 'Saved',
-      'sidebar.label': 'Prompt pool',
       'settings.nav': 'Prompt pool',
       'settings.open': 'Prompt pool settings',
       'settings.button': 'Settings',
       'settings.tab.order': 'Groups',
-      'settings.display': 'How groups show up',
       'settings.table': 'Group order and display',
       'settings.tableHint': 'Use the arrows to reorder; the three columns decide how each family shows up.',
       'settings.tableGroup': 'Group',
@@ -320,27 +279,14 @@ window.__ModuleLoader__.load({
       'settings.about': 'Plugin info',
       'settings.aboutAuthor': 'Author',
       'settings.aboutRepo': 'Repository',
-      'settings.tab.display': 'Display',
-      'settings.customNested': 'Fold custom groups into one tab',
-      'settings.customNestedHint': 'Useful once you have many groups: one “Custom” tab keeps them as chips inside.',
       'settings.workspaceCard': 'How workspaces appear',
         'settings.workspacesVisible': 'Workspaces to show',
         'settings.workspacesCurrent': 'current',
         'settings.workspacesEmpty': 'No workspace roster yet. Open the prompt pool page once and every workspace will be listed here.',
-      'settings.leading': 'Which group comes first',
-      'settings.leading.workspace': 'Workspaces',
-      'settings.leading.custom': 'Custom groups',
-      'settings.leading.builtin': 'Built-in groups',
-      'settings.leadingHint': '"All" always leads; this picks which group follows it, the other two keep their fixed order.',
-      'settings.reload': 'Reload the UI',
-      'settings.reloadHint': 'A plugin code change does not swap the running UI. Use this instead of restarting the app.',
       'settings.title': 'Prompt pool',
-      'settings.desc': 'Controls how the prompt-pool tabs appear. Changes apply immediately.',
-      'settings.workspaceTabs': 'List every workspace in the Workspaces tab',
-      'settings.workspaceTabsHint': 'The Workspaces tab switches workspaces with horizontal chips; off keeps only the current workspace.',
+      'settings.desc': 'Controls group order, how each family is displayed, and the workspace tabs. Changes apply immediately.',
       'settings.currentWorkspaceTab': 'Put the current workspace first',
       'settings.currentWorkspaceTabHint': 'The workspace owning this session stays first; the rest keep their order.',
-      'settings.label': 'Prompt pool',
       'row.edit': 'Edit',
       'row.delete': 'Delete',
       'row.deleteTitle': 'Delete this prompt',
@@ -366,7 +312,6 @@ window.__ModuleLoader__.load({
       'row.familyCustom': 'Custom',
       'row.familyWorkspace': 'Workspace groups',
       'tab.familyBuiltin': 'Built-in groups',
-      'row.categoryLabel': 'Custom',
       'row.classification': 'Group',
       'page.new': 'Prompt',
       'row.noCategory': 'Ungrouped',
@@ -383,13 +328,9 @@ window.__ModuleLoader__.load({
       'tray.removeConfirm': '{title} will be removed from the send queue. Edits made to this queued copy are lost.',
       'tray.removeAction': 'Remove',
       'tray.duplicate': 'Duplicate and append to the end',
-      'tray.hint': 'Released items queue up in this order and run as soon as the current turn ends.',
       'tray.queue': '{n} in queue',
       'tray.collapseTitle': 'Collapse the send queue',
       'tray.expandTitle': 'Expand the send queue',
-      'confirm.title': 'Queue {n} in this order:',
-      'confirm.ok': 'Queue them',
-      'confirm.cancel': 'Not yet',
       'status.saved': 'Saved to the pool',
       'status.savedPartial': 'Saved to the pool; {n} attachment(s) were not captured',
       'status.storageFailed': 'Could not save: browser storage is unwritable (possibly full). Changes last only for this page.',
@@ -974,6 +915,7 @@ window.__ModuleLoader__.load({
 
     /** Shared confirm modal: backdrop click and Escape both cancel. */
     function ConfirmModal(props) {
+      const cardRef = useRef(null);
       useEffect(() => {
         const onKeyDown = (event) => {
           if (event.key !== 'Escape') return;
@@ -985,6 +927,32 @@ window.__ModuleLoader__.load({
         return () => window.removeEventListener('keydown', onKeyDown, true);
       }, [props.onCancel]);
 
+      // Keep focus inside the dialog and start on the safe action, never on
+      // the destructive one (Enter must not delete by accident).
+      useEffect(() => {
+        const card = cardRef.current;
+        if (!card || typeof document === 'undefined') return undefined;
+        const focusables = () => Array.from(card.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter((node) => !node.disabled);
+        const first = focusables()[0];
+        if (first) first.focus();
+        const onTab = (event) => {
+          if (event.key !== 'Tab') return;
+          const list = focusables();
+          if (list.length === 0) return;
+          const firstNode = list[0];
+          const lastNode = list[list.length - 1];
+          if (event.shiftKey && document.activeElement === firstNode) {
+            event.preventDefault();
+            lastNode.focus();
+          } else if (!event.shiftKey && document.activeElement === lastNode) {
+            event.preventDefault();
+            firstNode.focus();
+          }
+        };
+        card.addEventListener('keydown', onTab);
+        return () => card.removeEventListener('keydown', onTab);
+      }, []);
+
       return h(
         'div',
         {
@@ -995,13 +963,13 @@ window.__ModuleLoader__.load({
         },
         h(
           'div',
-          { className: 'pp-modal-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': props.label },
+          { ref: cardRef, className: 'pp-modal-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': props.label },
           h('div', { className: 'pp-modal-text' }, props.text),
           h(
             'div',
             { className: 'pp-modal-actions' },
-            h('button', { type: 'button', className: 'pp-mini', onClick: props.onCancel }, props.cancelText),
-            h('button', { type: 'button', className: 'pp-primary', autoFocus: true, onClick: props.onConfirm }, props.confirmText),
+            h('button', { type: 'button', className: 'pp-mini', autoFocus: true, onClick: props.onCancel }, props.cancelText),
+            h('button', { type: 'button', className: 'pp-primary', onClick: props.onConfirm }, props.confirmText),
           ),
         ),
       );
@@ -1092,8 +1060,15 @@ window.__ModuleLoader__.load({
                     {
                       className: 'pp-tab-x',
                       role: 'button',
+                      tabIndex: 0,
                       title: translate('tab.delete'),
                       onClick: (event) => {
+                        event.stopPropagation();
+                        if (props.onDelete) props.onDelete(workspace.id);
+                      },
+                      onKeyDown: (event) => {
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                        event.preventDefault();
                         event.stopPropagation();
                         if (props.onDelete) props.onDelete(workspace.id);
                       },
@@ -1466,7 +1441,8 @@ window.__ModuleLoader__.load({
         mutate((state) => ({ ...state, items: [...state.items, item] }));
         return item;
       },
-      /** Copy one pool item (current text) and append the copy last. */      duplicateItem(id) {
+      /** Copy one pool item (current text) and append the copy last. */
+      duplicateItem(id) {
         mutate((state) => {
           const found = state.items.find((item) => item.id === id);
           if (!found) return null;
@@ -1614,6 +1590,58 @@ window.__ModuleLoader__.load({
 
     function useStorageState() {
       return useSyncExternalStore(storageState.subscribe, storageState.get, storageState.get);
+    }
+
+    /**
+     * Editor state shared by both views: the item being edited plus the save and
+     * cancel paths. Keeping them here stops the empty-row and unsaved-image
+     * rules from drifting between the panel and the page.
+     */
+    function usePoolEditor(flash) {
+      const [editing, setEditing] = useState(null);
+
+      const startEdit = (item) => setEditing({
+        id: item.id,
+        group: groupOf(item),
+        title: item.title,
+        body: item.body,
+        images: normalizeImages(item.images),
+      });
+
+      const cancelEdit = () => {
+        const current = editing;
+        setEditing(null);
+        if (!current) return;
+        const stored = pool.get().items.find((item) => item.id === current.id);
+        discardUnsavedImages(current, stored);
+        if (stored && !stored.body.trim() && !(stored.images && stored.images.length > 0)) poolActions.remove(stored.id);
+      };
+
+      const save = () => {
+        if (!editing) return false;
+        if (!editing.body.trim() && (!editing.images || editing.images.length === 0)) {
+          flash({ kind: 'error', text: translate('status.emptyBody') });
+          return false;
+        }
+        poolActions.patch(editing.id, {
+          group: editing.group,
+          title: editing.title.trim(),
+          body: editing.body,
+          images: editing.images || [],
+        });
+        setEditing(null);
+        flash({ kind: 'ok', text: translate('status.savedToPool') });
+        return true;
+      };
+
+      const pasteImages = (files) => {
+        const id = editing && editing.id;
+        appendImageAssets(files, editing && editing.images ? editing.images : [], (text) => flash({ kind: 'error', text })).then((images) => {
+          setEditing((current) => (current && current.id === id ? { ...current, images } : current));
+        });
+      };
+
+      return { editing, setEditing, startEdit, save, cancelEdit, pasteImages };
     }
 
     function useUiState() {
@@ -2058,8 +2086,15 @@ window.__ModuleLoader__.load({
                 {
                   className: 'pp-tab-x',
                   role: 'button',
+                  tabIndex: 0,
                   title: translate('tab.delete'),
                   onClick: (event) => {
+                    event.stopPropagation();
+                    props.onDelete(tab.id);
+                  },
+                  onKeyDown: (event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
                     event.stopPropagation();
                     props.onDelete(tab.id);
                   },
@@ -2163,7 +2198,6 @@ window.__ModuleLoader__.load({
       const activeSessionId = pageSessionId || sessionHint || workspaceSession || '';
       const [tab, setTab] = useState('all');
       const [query, setQuery] = useState('');
-      const [editing, setEditing] = useState(null);
       const [trayEditing, setTrayEditing] = useState(null);
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
@@ -2182,6 +2216,7 @@ window.__ModuleLoader__.load({
         statusTimer.current = window.setTimeout(() => setStatus(null), 5000);
       }, []);
       useEffect(() => () => window.clearTimeout(statusTimer.current), []);
+      const { editing, setEditing, startEdit, save, cancelEdit, pasteImages } = usePoolEditor(flash);
       // A failed write outranks a transient toast: the change is not saved.
       const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
       const trayRef = useRef(null);
@@ -2338,29 +2373,6 @@ window.__ModuleLoader__.load({
         );
       };
 
-      const save = () => {
-        if (!editing) return;
-        if (!editing.body.trim() && (!editing.images || editing.images.length === 0)) {
-          flash({ kind: 'error', text: translate('status.emptyBody') });
-          return;
-        }
-        poolActions.patch(editing.id, {
-          group: editing.group,
-          title: editing.title.trim(),
-          body: editing.body,
-          images: editing.images || [],
-        });
-        setEditing(null);
-        flash({ kind: 'ok', text: translate('status.savedToPool') });
-      };
-
-      const pasteImages = (files) => {
-        const id = editing && editing.id;
-        appendImageAssets(files, editing && editing.images ? editing.images : [], (text) => flash({ kind: 'error', text })).then((images) => {
-          setEditing((current) => (current && current.id === id ? { ...current, images } : current));
-        });
-      };
-
       /** The confirmed delete: drop the item, then offer the same undo as the panel. */
       const removeItem = (item, text) => {
         const index = pool.get().items.findIndex((entry) => entry.id === item.id);
@@ -2400,19 +2412,6 @@ window.__ModuleLoader__.load({
           updatedAt: Date.now(),
         });
         setEditing({ id: item.id, group, title: '', body: '', images: [] });
-      };
-
-      /**
-       * Cancel drops an item the editor created and never saved, so no empty
-       * row is left behind; an existing item keeps its stored content.
-       */
-      const cancelEdit = () => {
-        const current = editing;
-        setEditing(null);
-        if (!current) return;
-        const stored = pool.get().items.find((item) => item.id === current.id);
-        discardUnsavedImages(current, stored);
-        if (stored && !stored.body.trim() && !(stored.images && stored.images.length > 0)) poolActions.remove(stored.id);
       };
 
       const rowOf = (item, index) => {
@@ -2504,7 +2503,7 @@ window.__ModuleLoader__.load({
           h(TrayAdd, { label: translate('row.select'), onClick: () => queueItem(item) }),
           h(
             'div',
-            { className: 'pp-main', onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body, images: normalizeImages(item.images) }) },
+            { className: 'pp-main', onClick: () => startEdit(item) },
             h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || (item.images && item.images[0] && (item.images[0].name || translate('image.only'))) || translate('group.untitled')),
             item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
             h(ImageStrip, { images: item.images, compact: true, onOpen: openImage }),
@@ -2522,7 +2521,7 @@ window.__ModuleLoader__.load({
               disabled: index === items.length - 1,
               onClick: () => poolActions.move(item.id, 1),
             }),
-            h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body, images: normalizeImages(item.images) }) }),
+            h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => startEdit(item) }),
             h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
             h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => setPendingDelete(item) }),
           ),
@@ -2589,6 +2588,7 @@ window.__ModuleLoader__.load({
             className: 'pp-search',
             value: query,
             placeholder: translate('page.search'),
+            'aria-label': translate('page.search'),
             onChange: (event) => setQuery(event.target.value),
           }),
           h('button', { type: 'button', className: 'pp-mini', onClick: create }, '＋ ', translate('page.new')),
@@ -2686,7 +2686,7 @@ window.__ModuleLoader__.load({
           notice
             ? h(
                 'div',
-                { className: 'pp-status pp-status-float', 'data-kind': notice.kind || 'info' },
+                { className: 'pp-status pp-status-float', role: 'status', 'aria-live': 'polite', 'data-kind': notice.kind || 'info' },
                 h('span', null, notice.text),
                 notice.undo
                   ? h(
@@ -3165,7 +3165,7 @@ window.__ModuleLoader__.load({
         setActive(0);
       };
 
-      const sessionTag = () => (props.sessionId ? 'session=' + String(props.sessionId).slice(-8) : 'session 为空');
+      const sessionTag = () => (props.sessionId ? 'session=' + String(props.sessionId).slice(-8) : translate('mention.noSessionTag'));
 
       const openFor = (value, caret) => {
         const before = String(value || '').slice(0, caret);
@@ -3224,7 +3224,7 @@ window.__ModuleLoader__.load({
             window.clearTimeout(timer);
             setItems([]);
             setNote(
-              translate('mention.failed') + '：' + String((error && error.message) || error).slice(0, 90) + ' · ' + sessionTag(),
+              translate('mention.failed') + ': ' + String((error && error.message) || error).slice(0, 90) + ' · ' + sessionTag(),
             );
             return;
           }
@@ -3241,7 +3241,7 @@ window.__ModuleLoader__.load({
               setItems([]);
               const message = String((error && error.message) || error).slice(0, 90);
               setNote(
-                (abort.signal.aborted ? translate('mention.timeout') : translate('mention.failed') + '：' + message) +
+                (abort.signal.aborted ? translate('mention.timeout') : translate('mention.failed') + ': ' + message) +
                   ' · ' +
                   sessionTag(),
               );
@@ -3256,7 +3256,7 @@ window.__ModuleLoader__.load({
         workspace
           .listDirectory(undefined)
           .then((listing) => {
-            apply(entriesOfListing(listing).map((entry) => ({ name: entry.name, hint: entry.directory ? '目录' : '' })), query);
+            apply(entriesOfListing(listing).map((entry) => ({ name: entry.name, hint: entry.directory ? translate('mention.directory') : '' })), query);
           })
           .catch(() => apply([], query));
       };
@@ -3277,7 +3277,7 @@ window.__ModuleLoader__.load({
               openFor(event.target.value, event.target.selectionStart || 0);
             } catch (error) {
               setItems([]);
-              setNote(translate('mention.failed') + '：' + String((error && error.message) || error).slice(0, 90));
+              setNote(translate('mention.failed') + ': ' + String((error && error.message) || error).slice(0, 90));
             }
           },
           onPaste: (event) => {
@@ -3428,7 +3428,6 @@ window.__ModuleLoader__.load({
 
       const [tab, setTab] = useState('all');
       const [query, setQuery] = useState('');
-      const [editing, setEditing] = useState(null);
       const [trayEditing, setTrayEditing] = useState(null);
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
@@ -3449,6 +3448,8 @@ window.__ModuleLoader__.load({
         statusTimer.current = window.setTimeout(() => setStatus(null), 6000);
       }, []);
       useEffect(() => () => window.clearTimeout(statusTimer.current), []);
+
+      const { editing, setEditing, startEdit, save, cancelEdit, pasteImages } = usePoolEditor(flash);
 
       // A failed write outranks a transient toast: the change is not saved.
       const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
@@ -3733,43 +3734,6 @@ window.__ModuleLoader__.load({
         setEditing({ id: item.id, group, title: '', body: '', images: [] });
       };
 
-      /**
-       * Cancel drops an item the editor created and never saved, so no empty
-       * row is left behind; an existing item keeps its stored content.
-       */
-      const cancelEdit = () => {
-        const current = editing;
-        setEditing(null);
-        if (!current) return;
-        const stored = pool.get().items.find((item) => item.id === current.id);
-        discardUnsavedImages(current, stored);
-        if (stored && !stored.body.trim() && !(stored.images && stored.images.length > 0)) poolActions.remove(stored.id);
-      };
-
-      const startEdit = (item) => setEditing({ id: item.id, group: groupOf(item), title: item.title, body: item.body, images: normalizeImages(item.images) });
-
-      const saveEdit = () => {
-        if (!editing) return;
-        if (!editing.body.trim() && (!editing.images || editing.images.length === 0)) {
-          flash({ kind: 'error', text: translate('status.emptyBody') });
-          return;
-        }
-        poolActions.patch(editing.id, {
-          group: editing.group,
-          title: editing.title.trim(),
-          body: editing.body,
-          images: editing.images || [],
-        });
-        setEditing(null);
-      };
-
-      const pasteImages = (files) => {
-        const id = editing && editing.id;
-        appendImageAssets(files, editing && editing.images ? editing.images : [], (text) => flash({ kind: 'error', text })).then((images) => {
-          setEditing((current) => (current && current.id === id ? { ...current, images } : current));
-        });
-      };
-
       const deleteItem = (item, text) => {
         const index = pool.get().items.findIndex((entry) => entry.id === item.id);
         poolActions.remove(item.id);
@@ -3814,7 +3778,7 @@ window.__ModuleLoader__.load({
               done.push(entry.key);
               continue;
             }
-            const clear = await waitFor(() => draftRef.current.trim() === '' && phaseRef.current === 'plain', 2500);
+            const clear = await waitFor(() => draftRef.current.trim() === '' && phaseRef.current === 'plain', RELEASE_WAIT.idle);
             if (!clear) break;
             try {
               if (images.length > 0) await addImages(images);
@@ -3832,7 +3796,7 @@ window.__ModuleLoader__.load({
               break;
             }
             // Wait until the editor really holds this occurrence before submitting it.
-            const loaded = await waitFor(() => draftRef.current.trim() === body.trim(), 2500);
+            const loaded = await waitFor(() => draftRef.current.trim() === body.trim(), RELEASE_WAIT.idle);
             if (!loaded) break;
             try {
               actions.submit();
@@ -3844,13 +3808,13 @@ window.__ModuleLoader__.load({
               () =>
                 (queueRef.current.length > queuedBefore || pendingRef.current.length > pendingBefore) &&
                 draftRef.current.trim() === '',
-              3000,
+              RELEASE_WAIT.accept,
             );
             if (!accepted) {
               // The first send of an idle session becomes the live turn, not a queue row.
               if (!(sent === 0 && draftRef.current.trim() === '')) break;
             }
-            await waitFor(() => phaseRef.current === 'plain', 1500);
+            await waitFor(() => phaseRef.current === 'plain', RELEASE_WAIT.plain);
             sent += 1;
             done.push(entry.key);
           }
@@ -3890,7 +3854,7 @@ window.__ModuleLoader__.load({
               onKeyDown: (event) => {
                 if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
                   event.preventDefault();
-                  saveEdit();
+                  save();
                 }
               },
             }),
@@ -3936,7 +3900,7 @@ window.__ModuleLoader__.load({
               ),
               h('span', { className: 'pp-grow' }),
               h('button', { type: 'button', className: 'pp-mini', onClick: cancelEdit }, translate('row.cancel')),
-              h('button', { type: 'button', className: 'pp-primary', onClick: saveEdit }, translate('row.save')),
+              h('button', { type: 'button', className: 'pp-primary', onClick: save }, translate('row.save')),
             ),
           );
         }
@@ -4120,6 +4084,7 @@ window.__ModuleLoader__.load({
             className: 'pp-search',
             value: query,
             placeholder: translate('page.search'),
+            'aria-label': translate('page.search'),
             onChange: (event) => setQuery(event.target.value),
           }),
           h('button', { type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('page.new')),
@@ -4222,7 +4187,7 @@ window.__ModuleLoader__.load({
           notice
           ? h(
               'div',
-              { className: 'pp-status pp-status-float', 'data-kind': notice.kind || 'info' },
+              { className: 'pp-status pp-status-float', role: 'status', 'aria-live': 'polite', 'data-kind': notice.kind || 'info' },
               h('span', null, notice.text),
               notice.undo
                 ? h(
@@ -4413,9 +4378,6 @@ window.__ModuleLoader__.load({
       // the tray sizes to its content and only shrinks (then scrolls) at the cap.
       '.pp-panel .pp-page-foot .pp-tray{max-height:none;min-height:0;flex:0 1 auto}' +
       '.pp-panel .pp-foot-head{flex:none}' +
-      '.pp-head{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}' +
-      '.pp-head-title{font-weight:600;font-size:13px}' +
-      '.pp-head-count{color:var(--pp-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +
       '.pp-grow{flex:1;min-width:0}' +
       '.pp-x{width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1}' +
       '.pp-x:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
@@ -4426,7 +4388,8 @@ window.__ModuleLoader__.load({
       '.pp-tab-add{padding:0 7px;color:var(--pp-ink-2)}' +
       '.pp-tab-addwrap{display:inline-flex;align-items:center}' +
       '.pp-tab-sep{flex:none;width:1px;height:16px;margin:0 7px;background:color-mix(in srgb, var(--pp-ink-2) 45%, transparent)}' +
-      '.pp-tab-x{margin-left:4px;padding:0 2px;border-radius:4px;font-size:11px;line-height:1;color:var(--pp-ink-2)}' +
+      '.pp-tab-x{margin-left:4px;padding:0 2px;border-radius:4px;font-size:11px;line-height:1;color:var(--pp-ink-2);cursor:pointer}' +
+      '.pp-tab-x:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
       '.pp-tab-x:hover{color:var(--pp-danger)}' +
       '.pp-tab-input{height:24px;width:110px;padding:0 7px;border:1px solid var(--pp-accent);border-radius:7px;background:var(--dsw-alias-bg-base);color:inherit;font:inherit;font-size:12px;outline:none}' +
       '.pp-modal{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:color-mix(in srgb,var(--pp-ink) 22%,transparent)}' +
@@ -4465,16 +4428,11 @@ window.__ModuleLoader__.load({
       '.pp-about-row{display:flex;gap:10px;padding:2px 0;font-size:12px;color:var(--pp-ink);min-width:0}' +
       '.pp-about-key{flex:none;width:60px;color:var(--pp-ink-2)}' +
       '.pp-about-row a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-        '.pp-set-line{display:flex;align-items:center;gap:12px;padding:4px 0}' +
         '.pp-set-ws{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;min-width:0}' +
         '.pp-set-ws input{margin:0;accent-color:var(--pp-accent);cursor:pointer}' +
         '.pp-set-ws-name{font-size:12px;color:var(--pp-ink);white-space:nowrap}' +
         '.pp-set-ws-tag{margin-left:6px;padding:0 5px;border-radius:5px;background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px}' +
         '.pp-set-ws-path{margin-left:auto;color:var(--pp-ink-2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px}' +
-        '.pp-set-name{min-width:78px;font-size:12px;color:var(--pp-ink)}' +
-        '.pp-set-modes{display:flex;flex-wrap:wrap;gap:16px}' +
-        '.pp-set-inline{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--pp-ink);cursor:pointer}' +
-        '.pp-set-inline input{margin:0;accent-color:var(--pp-accent);cursor:pointer}' +
         '.pp-set-label{font-size:12px;color:var(--pp-ink-2);margin:2px 0 4px}' +
       '.pp-set-card{padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
       '.pp-set-card .pp-set-label{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
@@ -4511,10 +4469,8 @@ window.__ModuleLoader__.load({
       '.pp-page-item .pp-actions{opacity:.35}' +
       '.pp-page-item:hover .pp-actions{opacity:1}' +
       '.pp-empty{padding:22px 16px;color:var(--pp-ink-2);text-align:center;font-size:12px}' +
-      '.pp-group{display:flex;align-items:center;gap:6px;padding:10px 8px 4px;font-size:11px;font-weight:500;color:var(--pp-ink-2);letter-spacing:.02em}' +
       '.pp-row{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:8px}' +
       '.pp-row:hover{background:var(--pp-hover)}' +
-      '.pp-check{margin:2px 0 0;accent-color:var(--pp-accent);cursor:pointer;flex:none}' +
       '.pp-toggle{width:26px;height:26px;flex:none;margin-top:-1px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}' +
       '.pp-toggle:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-toggle[data-selected="true"]{color:var(--pp-accent)}' +
@@ -4568,10 +4524,8 @@ window.__ModuleLoader__.load({
       '.pp-primary:disabled{opacity:.5;cursor:default}' +
       '.pp-link{border:0;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}' +
       '.pp-link:hover{color:var(--pp-ink)}' +
-      '.pp-foot{border-top:1px solid var(--pp-line);padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px;background:var(--pp-queue-bg)}' +
       '.pp-foot-head{display:flex;align-items:center;gap:6px}' +
       '.pp-page-foot .pp-foot-head{margin:-10px -12px 0;padding:8px 12px;border-radius:9px 9px 0 0;background:var(--pp-queue-head-bg)}' +
-      '.pp-foot .pp-foot-head{margin:-8px -12px 0;padding:8px 12px;background:var(--pp-queue-head-bg)}' +
       '.pp-foot-title{font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-tray{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}' +
       '.pp-foot .pp-tray{max-height:min(40vh,220px)}' +
