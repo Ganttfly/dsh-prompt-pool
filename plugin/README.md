@@ -3,6 +3,8 @@
 A staging pool for prompts inside DeepSeek Harness: park a draft without sending it, arrange a playlist
 of prompt items, and release the batch into the composer's send queue in order.
 
+![The prompt pool panel open above the composer](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/panel.png)
+
 - Composer trigger beside the send controls (accent + count while something is queued)
 - Composer panel with search, group tabs, row actions and a send-queue card
 - Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback)

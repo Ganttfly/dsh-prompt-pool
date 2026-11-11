@@ -7,6 +7,22 @@ arrange a playlist of prompt items, and release the whole batch into the compose
 
 It sits in two places: a trigger beside the composer, and a page in the right sidebar.
 
+## Screenshots
+
+![The prompt pool panel open above the composer, with the trigger showing a queue count](docs/images/panel.png)
+
+The composer panel: the trigger beside the send controls (accent colour with the queued count), the pool
+with its group tabs, and the send queue at the bottom.
+
+![The prompt pool as a full page in the right sidebar](docs/images/sidebar.png)
+
+The same pool as a right-sidebar page — a native tab on DSH 0.2+, with the group tabs and one tab per
+workspace.
+
+![Prompt pool settings: group order and display table, plus the plugin info card](docs/images/settings.png)
+
+Settings: how each group family is displayed and ordered, and the plugin info card.
+
 ## Features
 
 - **Staging instead of sending** — save a draft into the pool; nothing runs until you release it.
@@ -80,6 +96,21 @@ node tools/smoke.js                 # module loads, slots register, locale retit
 node tools/render-smoke.js          # every slot renders; panel and settings structure checks
 node tools/oneshot/verify-*.js      # behavioural checks (destructive actions, retention, capture)
 ```
+
+The panel's box model is measured in a real browser instead of by eye. It needs playwright on
+`NODE_PATH` and a `react`/`react-dom` copy to serve — install those once into `%TEMP%\pp-harness`, or
+point `PP_VENDOR` at a `node_modules` that has them:
+
+```powershell
+pnpm --dir "$env:TEMP\pp-harness" add react@18 react-dom@18
+$env:NODE_PATH = "$env:DSH_PROFILE_DIR\node_modules"
+node tools/panel-geometry/run.js --viewport 1280x760 --composer 0.34 --drag --shot panel-height
+node tools/panel-geometry/run.js --viewport 1280x900 --composer 0.9 --tray 6 --shot queue-card
+```
+
+`--composer` puts the composer partway up the window (a new session). The mock keeps a top bar above a
+clipping conversation pane, so the run fails when the panel's header ends up clipped or scrolled out of
+its own box. `--tray N` seeds the send queue, and the run then fails when a short queue already scrolls.
 
 The package lives in `plugin/`; `tools/` and `_shots/` are development-only.
 

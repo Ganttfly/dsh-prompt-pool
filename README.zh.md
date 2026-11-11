@@ -6,6 +6,20 @@ DeepSeek Harness 里的提示词暂存池：草稿先存着不会被执行，排
 
 它有两个入口：输入框旁的按钮，以及右侧栏里的整页。
 
+## 界面
+
+![提示池面板展开在输入框上方，入口按钮显示队列条数](docs/images/panel.png)
+
+输入框面板：右侧的「提示池」入口（有待发送时变蓝并显示条数）、分组 Tab、条目列表，底部是待发送队列。
+
+![提示池在右侧栏里的整页视图](docs/images/sidebar.png)
+
+右侧栏里的整页视图——DSH 0.2+ 是原生 Tab，带分组 Tab 与「每个工作区一个 Tab」。
+
+![设置页：分组顺序与显示方式，以及插件信息卡片](docs/images/settings.png)
+
+设置：每一族分组的显示方式与顺序，下面是插件信息。
+
 ## 功能
 
 - **暂存而不是发送**——写一半的提示词先存进池子，不释放就不会执行。
@@ -66,6 +80,20 @@ node tools/smoke.js                 # 模块加载、槽位注册、语言切换
 node tools/render-smoke.js          # 每个槽位能渲染；面板与设置的结构断言
 node tools/oneshot/verify-*.js      # 行为检查（破坏性操作、保留开关、捕获）
 ```
+
+面板的高度在真浏览器里量，不靠肉眼：需要把 playwright 放进 `NODE_PATH`，再准备一份 `react` /
+`react-dom` 供页面加载（装到 `%TEMP%\pp-harness` 一次即可，或用 `PP_VENDOR` 指向已有的 `node_modules`）。
+
+```powershell
+pnpm --dir "$env:TEMP\pp-harness" add react@18 react-dom@18
+$env:NODE_PATH = "$env:DSH_PROFILE_DIR\node_modules"
+node tools/panel-geometry/run.js --viewport 1280x760 --composer 0.34 --drag --shot panel-height
+node tools/panel-geometry/run.js --viewport 1280x900 --composer 0.9 --tray 6 --shot queue-card
+```
+
+`--composer` 把输入框放在窗口中部（新会话的样子）。模拟页面保留了顶部栏和会裁剪溢出的会话面板，所以
+面板标题被裁掉、或被自己的盒子滚出视野时，这次运行会直接报错；`--tray N` 预置待发送队列，队列还短就
+出现滚动条同样会报错。
 
 包本体在 `plugin/`；`tools/`、`_shots/` 只用于开发。
 
