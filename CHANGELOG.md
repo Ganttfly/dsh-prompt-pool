@@ -37,6 +37,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- The composer panel keeps a stable width when switching group tabs instead of resizing to the
+  longest row in the active tab.
 - The panel's save button now confirms with the same "saved to the pool" toast as the page.
 
 ## [1.0.3] — 2026-11-11
