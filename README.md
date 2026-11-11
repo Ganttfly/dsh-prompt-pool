@@ -112,7 +112,8 @@ node tools/panel-geometry/run.js --viewport 1280x900 --composer 0.9 --tray 6 --s
 clipping conversation pane, so the run fails when the panel's header ends up clipped or scrolled out of
 its own box. `--tray N` seeds the send queue, and the run then fails when a short queue already scrolls.
 
-The package lives in `plugin/`; `tools/` and `_shots/` are development-only.
+The package lives in `plugin/`; `tools/` is development-only, and `_shots/` is a local screenshot
+scratch folder that stays out of the repository.
 
 ## License
 

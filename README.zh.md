@@ -95,7 +95,7 @@ node tools/panel-geometry/run.js --viewport 1280x900 --composer 0.9 --tray 6 --s
 面板标题被裁掉、或被自己的盒子滚出视野时，这次运行会直接报错；`--tray N` 预置待发送队列，队列还短就
 出现滚动条同样会报错。
 
-包本体在 `plugin/`；`tools/`、`_shots/` 只用于开发。
+包本体在 `plugin/`；`tools/` 只用于开发，`_shots/` 是本地的截图暂存目录，不进仓库。
 
 ## License
 

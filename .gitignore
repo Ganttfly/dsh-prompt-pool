@@ -2,5 +2,8 @@
 # One-off rewrite scripts kept for reference, never committed
 tools/oneshot/
 
+# Local screenshot scratch; the readme images live in docs/images/
+_shots/
+
 # Build artifacts
 *.tgz
