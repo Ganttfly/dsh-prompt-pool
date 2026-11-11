@@ -5,15 +5,15 @@
 
 ---
 
-## 0. 现状盘点（2026-11-11，1.1.0）
+## 0. 现状盘点（2026-11-11，1.1.1）
 
 > §1–§8 是 2026-11-10 的执行清单，现已全部完成，保留作为记录；下表是当前状态。
 
 | 项目 | 现状 | 结论 |
 |---|---|---|
-| npm 包名 | `dsh-prompt-pool` 已发布 1.0.0 / 1.0.1 / 1.0.2 / 1.0.3 / 1.1.0 | 名字已占用 |
-| 版本 | `plugin/package.json` = 1.1.0，界面 `PLUGIN_VERSION` 同步 | smoke 已强制一致 |
-| 打包产物 | `npm pack --dry-run` = 9 个文件、约 56.8 kB（解压约 235 kB） | 内容正确 |
+| npm 包名 | `dsh-prompt-pool` 已发布 1.0.0 / 1.0.1 / 1.0.2 / 1.0.3 / 1.1.0 / 1.1.1 | 名字已占用 |
+| 版本 | `plugin/package.json` = 1.1.1，界面 `PLUGIN_VERSION` 同步 | smoke 已强制一致 |
+| 打包产物 | `npm pack --dry-run` = 9 个文件、约 56.9 kB（解压约 236 kB） | 内容正确 |
 | `private` | `false` | 已发布 |
 | license / author / repository / keywords / engines | 已补齐 | 已发布 |
 | git remote | `github.com/Ganttfly/dsh-prompt-pool`（`main`） | 正确 |
@@ -21,6 +21,8 @@
 | 插件信息卡里的仓库地址 | 已指向真实仓库 | 正确 |
 | 宿主实测版本 | DSH 0.2.2-rc.1 | README 已写 |
 | 仓库历史 | `_ref/`、`asar-files.tsv`、`_shots/` 已从历史清除 | 包体约 1.9 MiB |
+
+1.1.1 是文档版：刷新 README 截图、补 npm 版本徽章与安装说明，插件代码与 1.1.0 相同。
 
 1.1.0 的主要变化：释放优先直投宿主队列（不再逐条改输入框）；面板可钉住、可拖宽度；存草稿先选
 当前展示的分组，空输入直接拒绝；展开分组后的 Tab 也显示计数。

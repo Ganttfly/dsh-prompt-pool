@@ -37,7 +37,7 @@ DeepSeek Harness 里的提示词暂存池：草稿先存着不会被执行，排
 
 ## 安装
 
-包发布到 npm 并被社区市场收录后，可以在 设置 → 插件 的市场里直接装，或用命令行：
+包已发布到 npm（[`dsh-prompt-pool`](https://www.npmjs.com/package/dsh-prompt-pool)）。等社区市场收录后，可以在 设置 → 插件 的市场里直接装，或用命令行：
 
 ```powershell
 dsh plugin add dsh-prompt-pool --profile <profile>

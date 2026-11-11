@@ -47,8 +47,8 @@ Settings: how each group family is displayed and ordered, and the plugin info ca
 
 ## Install
 
-Once the package is on npm and indexed by the community market, install it from the plugin market in
-Settings, or from the CLI:
+The package is on npm as [`dsh-prompt-pool`](https://www.npmjs.com/package/dsh-prompt-pool). Once the
+community market has indexed it, install it from the plugin market in Settings, or from the CLI:
 
 ```powershell
 dsh plugin add dsh-prompt-pool --profile <profile>
