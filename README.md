@@ -1,5 +1,7 @@
 # Prompt pool · 提示池
 
+[![npm version](https://img.shields.io/npm/v/dsh-prompt-pool.svg)](https://www.npmjs.com/package/dsh-prompt-pool)
+
 English | [中文](README.zh.md)
 
 A staging pool for prompts inside DeepSeek Harness. Park a half-written prompt without sending it,

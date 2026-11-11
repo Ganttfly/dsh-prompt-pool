@@ -1,5 +1,7 @@
 # 提示池 · Prompt pool
 
+[![npm 版本](https://img.shields.io/npm/v/dsh-prompt-pool.svg)](https://www.npmjs.com/package/dsh-prompt-pool)
+
 [English](README.md) | 中文
 
 DeepSeek Harness 里的提示词暂存池：草稿先存着不会被执行，排好顺序后一次性释放进输入框的发送队列。
