@@ -33,6 +33,10 @@ Settings: how each group family is displayed and ordered, and the plugin info ca
   queue, items go straight into the queue without touching the composer; otherwise the composer path
   is used. While a release runs, both views show progress and a Stop control; the queue is locked
   until it finishes.
+- **Right-click to save** — select text in a reply or in one of your own messages, then right-click: the
+  menu offers **Copy** and **Add to the prompt pool**, whose submenu lists the groups currently on show;
+  picking one stores the selection as a new item there. The group used last time leads the submenu;
+  Shift+F10 opens the same menu, and a right-click without a selection keeps the browser menu.
 - **Composer panel** — search, group tabs, per-row insert / queue / edit / duplicate / delete, and the
   send-queue card with collapse, clear and send. Drag its top edge to change the height, or its left
   edge to change the width; pin it to keep it open over the conversation.
@@ -69,12 +73,16 @@ does not turn it on.
 2. **存草稿** copies the composer content — text and image attachments — into the pool. A small popup
    offers the groups currently shown in the tab bar — built-in, custom, and every displayed
    workspace — and the toast names the destination. The composer keeps its text.
-3. Add rows to the queue with the ⊕ control, reorder them in the queue card, then press **发送**.
-4. Each queued item is written into the composer and submitted in turn.
+3. Select text in a conversation and right-click: the menu offers **Copy** and **Add to the prompt
+   pool**; open the submenu and picking a group turns the selection into a new item there.
+4. Add rows to the queue with the ⊕ control, reorder them in the queue card, then press **发送**.
+5. Each queued item is written into the composer and submitted in turn.
 
 ## Compatibility
 
 - DSH **>= 0.2.0-rc.1**; verified on **0.2.2-rc.1**.
+- The right-click menu needs the conversation text-interaction service, present on 0.2.2-rc.1. A host
+  without it keeps the native menu; the panel, the page and capture are unaffected.
 - The sidebar page uses the native right-sidebar tab registry when the host provides it (DSH 0.2+).
   On hosts without it the plugin falls back to [`dsh-better-sidebar`](https://github.com/omdsh-dev/DSH-better-sidebar).
   With neither, the composer panel and the settings page still work.
@@ -99,6 +107,10 @@ Clearing them removes the pool for good.
 - **Reference chips come back as text.** A saved item that referenced a file or a session keeps the
   reference text (so the model still sees it), but inserting it back writes plain text rather than a
   clickable chip — the host exposes no API to rebuild one.
+- **The right-click menu covers conversation text only.** Replies, your own messages and expanded
+  reasoning are selectable sources; tool cards, the sidebar and the composer keep their own menus.
+- **Right-clicking a selection replaces the browser's own menu.** The menu carries Copy itself, but the
+  browser's Search / Translate / Inspect rows are not available from it.
 - **A capture does not clear the composer.** It copies; use the editor's own clear to remove the text.
 
 ## Development

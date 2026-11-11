@@ -19,7 +19,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '1.1.1';
+    const PLUGIN_VERSION = '1.2.0';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/Ganttfly/dsh-prompt-pool';
@@ -148,7 +148,7 @@ window.__ModuleLoader__.load({
       'row.edit': '编辑',
       'row.delete': '删除',
       'row.deleteTitle': '删除这条提示词',
-      'row.deleteConfirm': '「{title}」会从池子里移出。',
+      'row.deleteConfirm': '删除后这条会从池子里移出，可以在提示条上撤销。',
       'row.deleteAction': '删除',
       'row.up': '上移',
       'row.down': '下移',
@@ -183,7 +183,7 @@ window.__ModuleLoader__.load({
       'tray.empty': '还没选中任何条目，点左侧「＋」加入',
       'tray.remove': '移出',
       'tray.removeTitle': '移出这一条',
-      'tray.removeConfirm': '「{title}」会从待发送队列移出；这条如果在队列里改过，改动不会保留。',
+      'tray.removeConfirm': '移出后不可撤销；这条如果在队列里改过，改动不会保留。',
       'tray.removeAction': '移出',
       'tray.duplicate': '复制一份，追加到末尾',
       'tray.queue': '队列中 {n}',
@@ -194,6 +194,13 @@ window.__ModuleLoader__.load({
       'status.savedTo': '已存入「{group}」',
       'status.savedPartialTo': '已存入「{group}」，但 {n} 个附件没有保存',
       'capture.title': '存到哪个分组？',
+      'menu.title': '添加到提示池',
+      'menu.copy': '复制',
+      'menu.copied': '已复制',
+      'menu.copyFailed': '复制失败：请按 {shortcut}',
+      'menu.last': '上次',
+      'menu.count': '{n} 条',
+      'menu.saved': '已加入「{group}」',
       'status.storageFailed': '保存失败：浏览器存储不可写（可能已满）。改动只在当前页面有效。',
       'status.nothing': '草稿是空的，先写点什么',
       'status.emptyBody': '内容不能是空的',
@@ -204,7 +211,7 @@ window.__ModuleLoader__.load({
       'status.released': '已释放 {n} 条',
       'status.releaseStopped': '已释放 {n} 条，其余 {rest} 条没发出去：输入框繁忙或内容被改动',
       'status.draftBusy': '输入框里还有内容，先清空或存进池子再释放',
-      'status.deleted': '已删除「{title}」',
+      'status.deleted': '已删除这条提示词',
       'status.cleared': '已清空 {n} 条待发送',
       'status.undo': '撤销',
       'release.title': '正在发送',
@@ -307,7 +314,7 @@ window.__ModuleLoader__.load({
       'row.edit': 'Edit',
       'row.delete': 'Delete',
       'row.deleteTitle': 'Delete this prompt',
-      'row.deleteConfirm': '{title} will be removed from the pool.',
+      'row.deleteConfirm': 'This prompt will be removed from the pool. You can undo it from the toast.',
       'row.deleteAction': 'Delete',
       'row.up': 'Move up',
       'row.down': 'Move down',
@@ -342,7 +349,7 @@ window.__ModuleLoader__.load({
       'tray.empty': 'Nothing selected yet — use the ＋ control on a row',
       'tray.remove': 'Remove',
       'tray.removeTitle': 'Remove this queued item',
-      'tray.removeConfirm': '{title} will be removed from the send queue. Edits made to this queued copy are lost.',
+      'tray.removeConfirm': 'This cannot be undone. Edits made to this queued copy are lost.',
       'tray.removeAction': 'Remove',
       'tray.duplicate': 'Duplicate and append to the end',
       'tray.queue': '{n} in queue',
@@ -353,6 +360,13 @@ window.__ModuleLoader__.load({
       'status.savedTo': 'Saved to {group}',
       'status.savedPartialTo': 'Saved to {group}; {n} attachment(s) were not captured',
       'capture.title': 'Save to which group?',
+      'menu.title': 'Add to the prompt pool',
+      'menu.copy': 'Copy',
+      'menu.copied': 'Copied',
+      'menu.copyFailed': 'Copy failed: press {shortcut}',
+      'menu.last': 'Last used',
+      'menu.count': '{n} item(s)',
+      'menu.saved': 'Added to {group}',
       'status.storageFailed': 'Could not save: browser storage is unwritable (possibly full). Changes last only for this page.',
       'status.nothing': 'The composer is empty',
       'status.emptyBody': 'The content cannot be empty',
@@ -475,13 +489,43 @@ window.__ModuleLoader__.load({
       return line.length > 48 ? line.slice(0, 48) + '…' : line;
     }
 
-    /** The name an item shows under, also used when a confirmation names it. */
-    function itemLabel(item) {
-      const image = item.images && item.images[0];
-      return item.title
-        || firstLine(item.body)
-        || (image && (image.name || translate('image.only')))
-        || translate('group.untitled');
+    /**
+     * Copy text while the menu still holds the pointer gesture. The legacy path
+     * answers synchronously, which is what lets the menu report a failed copy;
+     * the async Clipboard API is the fallback for hosts that refuse execCommand.
+     */
+    function copyText(text) {
+      try {
+        if (typeof document !== 'undefined' && document.body) {
+          const area = document.createElement('textarea');
+          area.value = text;
+          area.setAttribute('readonly', '');
+          area.style.position = 'fixed';
+          area.style.top = '-1000px';
+          area.style.opacity = '0';
+          document.body.appendChild(area);
+          let copied = false;
+          try {
+            area.select();
+            copied = document.execCommand('copy') === true;
+          } finally {
+            document.body.removeChild(area);
+          }
+          if (copied) return true;
+        }
+      } catch (_error) {
+        /* fall through to the async clipboard */
+      }
+      try {
+        if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          const result = navigator.clipboard.writeText(text);
+          if (result && typeof result.catch === 'function') result.catch(() => {});
+          return true;
+        }
+      } catch (_error) {
+        /* nothing else to try */
+      }
+      return false;
     }
 
     /**
@@ -1099,7 +1143,7 @@ window.__ModuleLoader__.load({
     function ItemDeleteConfirm(props) {
       return h(ConfirmModal, {
         label: translate('row.deleteTitle'),
-        text: translate('row.deleteConfirm', { title: props.title }),
+        text: translate('row.deleteConfirm'),
         cancelText: translate('row.cancel'),
         confirmText: translate('row.deleteAction'),
         onCancel: props.onCancel,
@@ -1111,7 +1155,7 @@ window.__ModuleLoader__.load({
     function TrayRemoveConfirm(props) {
       return h(ConfirmModal, {
         label: translate('tray.removeTitle'),
-        text: translate('tray.removeConfirm', { title: props.title }),
+        text: translate('tray.removeConfirm'),
         cancelText: translate('row.cancel'),
         confirmText: translate('tray.removeAction'),
         onCancel: props.onCancel,
@@ -1441,6 +1485,8 @@ window.__ModuleLoader__.load({
           : [],
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
         queueCollapsed: settings.queueCollapsed === true,
+        // The group the right-click menu offered last, so it can lead the list.
+        lastCaptureGroup: typeof settings.lastCaptureGroup === 'string' ? settings.lastCaptureGroup : '',
         // Whether an item leaves the pool after it is used.
         keepAfterInsert: settings.keepAfterInsert !== false,
         keepAfterQueue: settings.keepAfterQueue !== false,
@@ -2863,7 +2909,7 @@ window.__ModuleLoader__.load({
         poolActions.remove(item.id);
         flash({
           kind: 'info',
-          text: text || translate('status.deleted', { title: itemLabel(item) }),
+          text: text || translate('status.deleted'),
           undo: () => {
             poolActions.restore(item, index);
             setStatus(null);
@@ -3030,7 +3076,6 @@ window.__ModuleLoader__.load({
           : null,
         pendingDelete
           ? h(ItemDeleteConfirm, {
-              title: itemLabel(pendingDelete),
               onCancel: () => setPendingDelete(null),
               onConfirm: () => {
                 removeItem(pendingDelete);
@@ -3040,7 +3085,6 @@ window.__ModuleLoader__.load({
           : null,
         pendingRemove && state.tray.some((entry) => entry.key === pendingRemove.key)
           ? h(TrayRemoveConfirm, {
-              title: itemLabel(pendingRemove),
               onCancel: () => setPendingRemove(null),
               onConfirm: () => {
                 poolActions.removeTray(pendingRemove.key);
@@ -3672,6 +3716,201 @@ window.__ModuleLoader__.load({
       );
     }
 
+    // --------------------------------------------------- conversation selection
+    /**
+     * Right-click destinations for text selected in the conversation. The host
+     * opens this surface at the pointer; the top level keeps Copy (the menu
+     * replaces the browser's own) and one pool entry whose submenu lists the
+     * groups on show. Picking a group stores the selection there, and the group
+     * used last time leads that submenu. The surface only exists while the Chat
+     * view is mounted, and a selection lost between the gesture and this mount
+     * leaves it with nothing to offer.
+     */
+    function SelectionMenu(props) {
+      useLocaleTick();
+      const state = usePoolState();
+      const published = useWorkspaceDir();
+      // The Chat view can read the workspace roster itself; the module store is
+      // the fallback for a host that does not hand `useWorkspaces` to this seat.
+      const snapshot = typeof props.useWorkspaces === 'function' ? props.useWorkspaces(selectAllInput) : undefined;
+      const workspaces = snapshot ? workspaceEntriesOf(snapshot) : published.items || [];
+      const currentWorkspaceId = snapshot ? currentWorkspaceOf(snapshot, props.sessionId) : published.currentId || '';
+      // The gesture captured the text before this surface mounted; keeping it in
+      // state means a collapsed selection cannot empty the menu mid-click.
+      const [body] = useState(() => {
+        const text = typeof props.readText === 'function' ? props.readText() : null;
+        return typeof text === 'string' ? text.replace(/\r\n?/g, '\n').trim() : '';
+      });
+      const [done, setDone] = useState(null);
+      // The group list lives one level down; Copy stays at the top.
+      const [submenu, setSubmenu] = useState(false);
+      const timer = useRef(0);
+      const dismiss = typeof props.dismiss === 'function' ? props.dismiss : () => {};
+
+      useEffect(() => () => window.clearTimeout(timer.current), []);
+      useEffect(() => {
+        // The selection was gone before the surface mounted; nothing to offer.
+        if (!body) dismiss();
+      }, [body, dismiss]);
+
+      if (!body) return null;
+
+      const choices = captureChoices(state.categories, workspaces, currentWorkspaceId, state.settings);
+      const last = state.settings && state.settings.lastCaptureGroup;
+      const remembered = choices.find((choice) => choice.value === last) || null;
+      const ordered = remembered ? [remembered, ...choices.filter((choice) => choice !== remembered)] : choices;
+      const counts = {};
+      for (const item of state.items) {
+        const group = groupOf(item);
+        counts[group] = (counts[group] || 0) + 1;
+      }
+
+      const pick = (choice) => {
+        if (done) return;
+        const now = Date.now();
+        poolActions.add({
+          id: uid(),
+          group: choice.value,
+          title: draftTitle(body),
+          body,
+          images: [],
+          createdAt: now,
+          updatedAt: now,
+        });
+        // Remembering the destination makes the next right-click a single pick.
+        poolActions.setSetting('lastCaptureGroup', choice.value);
+        // The write can fail on a full or blocked store; say so instead of
+        // claiming a save the pool would lose on reload.
+        const failed = storageState.get().failed === true;
+        setDone({ kind: failed ? 'failed' : 'saved', label: choice.label });
+        timer.current = window.setTimeout(() => dismiss(), failed ? 2600 : 900);
+      };
+
+      /**
+       * The menu replaces the browser's own menu, so it has to keep Copy. The
+       * selection is already captured, and the click still counts as a gesture.
+       */
+      const copySelection = () => {
+        if (done) return;
+        const copied = copyText(body);
+        setDone({ kind: copied ? 'copied' : 'copyFailed' });
+        // A failed copy stays up so the shortcut hint can be read and used.
+        if (copied) timer.current = window.setTimeout(() => dismiss(), 900);
+      };
+
+      /** Open the destination submenu; a click serves touch, hover serves mouse. */
+      const openGroups = () => {
+        if (done !== null) return;
+        setSubmenu(true);
+      };
+
+      const error = done !== null && (done.kind === 'failed' || done.kind === 'copyFailed');
+      const shortcut = /Mac|iPhone|iPad/.test(typeof navigator === 'undefined' ? '' : String(navigator.userAgent || '')) ? '⌘C' : 'Ctrl+C';
+      const doneText = done === null
+        ? ''
+        : done.kind === 'saved'
+          ? translate('menu.saved', { group: done.label })
+          : done.kind === 'copied'
+            ? translate('menu.copied')
+            : done.kind === 'copyFailed'
+              ? translate('menu.copyFailed', { shortcut })
+              : translate('status.storageFailed');
+
+      return h(
+        'div',
+        {
+          className: 'pp-selwrap',
+          role: 'menu',
+          'aria-label': translate('menu.title'),
+          // Keep the browser selection alive while the pointer is over the menu.
+          onPointerDown: (event) => event.preventDefault(),
+        },
+        h('style', { key: 'css' }, MENU_CSS),
+        done !== null
+          ? h(
+              'div',
+              { key: 'done', className: 'pp-selmenu pp-seldonecard' },
+              h(
+                'div',
+                { className: 'pp-seldone', 'data-kind': error ? 'error' : 'ok', role: 'status' },
+                h('span', { key: 'mark', className: 'pp-seldone-mark', 'aria-hidden': true }, error ? '!' : '✓'),
+                h('span', { key: 'text', className: 'pp-seldone-text' }, doneText),
+              ),
+            )
+          : [
+              h(
+                'div',
+                { key: 'main', className: 'pp-selmenu' },
+                h(
+                  'button',
+                  {
+                    key: 'copy',
+                    type: 'button',
+                    role: 'menuitem',
+                    className: 'pp-selrow',
+                    onClick: copySelection,
+                    // Moving back to the first row folds the submenu away.
+                    onPointerEnter: () => setSubmenu(false),
+                  },
+                  h('span', { key: 'name', className: 'pp-selname' }, translate('menu.copy')),
+                  h('span', { key: 'key', className: 'pp-selkey' }, shortcut),
+                ),
+                h('div', { key: 'rule', className: 'pp-selrule', role: 'separator' }),
+                h(
+                  'button',
+                  {
+                    key: 'pool',
+                    type: 'button',
+                    role: 'menuitem',
+                    className: 'pp-selrow',
+                    'aria-haspopup': 'menu',
+                    'aria-expanded': submenu,
+                    onClick: openGroups,
+                    onPointerEnter: openGroups,
+                  },
+                  h('span', { key: 'name', className: 'pp-selname' }, translate('menu.title')),
+                  h('span', { key: 'chev', className: 'pp-selchev', 'aria-hidden': true }, '▸'),
+                ),
+              ),
+              submenu
+                ? h(
+                    'div',
+                    { key: 'groups', className: 'pp-selpanel', role: 'menu', 'aria-label': translate('menu.title') },
+                    h(
+                      'div',
+                      { key: 'list', className: 'pp-sellist' },
+                      ordered.map((choice) =>
+                        h(
+                          'button',
+                          {
+                            key: choice.value,
+                            type: 'button',
+                            role: 'menuitem',
+                            className: 'pp-selrow',
+                            onClick: () => pick(choice),
+                          },
+                          h('span', { key: 'name', className: 'pp-selname' }, choice.label),
+                          remembered && choice === remembered
+                            ? h('span', { key: 'last', className: 'pp-sellast' }, translate('menu.last'))
+                            : null,
+                          h(
+                            'span',
+                            {
+                              key: 'count',
+                              className: 'pp-selcount',
+                              title: translate('menu.count', { n: counts[choice.value] || 0 }),
+                            },
+                            String(counts[choice.value] || 0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : null,
+            ],
+      );
+    }
+
     // ------------------------------------------------------------------ panel
     function PromptPoolPanel(props) {
       useLocaleTick();
@@ -4143,7 +4382,7 @@ window.__ModuleLoader__.load({
         poolActions.remove(item.id);
         flash({
           kind: 'info',
-          text: text || translate('status.deleted', { title: itemLabel(item) }),
+          text: text || translate('status.deleted'),
           undo: () => {
             poolActions.restore(item, index);
             setStatus(null);
@@ -4521,7 +4760,6 @@ window.__ModuleLoader__.load({
           : null,
         pendingDelete
           ? h(ItemDeleteConfirm, {
-              title: itemLabel(pendingDelete),
               onCancel: () => setPendingDelete(null),
               onConfirm: () => {
                 deleteItem(pendingDelete);
@@ -4531,7 +4769,6 @@ window.__ModuleLoader__.load({
           : null,
         pendingRemove && tray.some((entry) => entry.key === pendingRemove.key)
           ? h(TrayRemoveConfirm, {
-              title: itemLabel(pendingRemove),
               onCancel: () => setPendingRemove(null),
               onConfirm: () => {
                 poolActions.removeTray(pendingRemove.key);
@@ -4866,6 +5103,37 @@ window.__ModuleLoader__.load({
       '.pp-status-float .pp-link{pointer-events:auto}' +
       '@keyframes pp-status-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}';
 
+    /**
+     * The right-click menu is mounted by the conversation view, not by a pool
+     * view, so it carries its own copy of the shared tokens. The host positions
+     * the surrounding surface and caps its height; `max-height: inherit` lets the
+     * lists scroll inside that cap instead of running past the pointer. The menu
+     * and its submenu are two cards in one wrapping row: the host measures the
+     * grown surface and moves it back inside the pane, and a narrow pane drops
+     * the submenu under the menu instead of clipping it.
+     */
+    const MENU_CSS =
+      '.pp-selwrap{--pp-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));--pp-accent-soft:color-mix(in srgb,var(--pp-accent) 13%,transparent);--pp-ink:var(--dsw-alias-label-primary);--pp-ink-2:var(--dsw-alias-label-secondary);--pp-line:var(--dsw-alias-border-l1);--pp-surface:var(--dsw-alias-bg-overlay);--pp-ok:var(--dsw-alias-state-success-primary);--pp-danger:var(--dsw-alias-state-error-primary);display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px;max-height:inherit}' +
+      '.pp-selmenu,.pp-selpanel{display:flex;flex-direction:column;box-sizing:border-box;max-width:100%;max-height:inherit;padding:6px;border:1px solid var(--pp-line);border-radius:10px;background:var(--pp-surface);box-shadow:0 12px 32px rgba(0,0,0,.18);color:var(--pp-ink);font-size:12px;line-height:1.5;text-align:left;overflow:hidden}' +
+      '.pp-selmenu{width:214px}' +
+      '.pp-selpanel{width:190px}' +
+      '.pp-seldonecard{width:280px}' +
+      '.pp-sellist{display:flex;flex-direction:column;min-height:0;overflow-y:auto}' +
+      '.pp-selrule{height:1px;margin:3px 4px;background:var(--pp-line)}' +
+      '.pp-selrow{display:flex;align-items:center;gap:8px;width:100%;height:26px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}' +
+      '.pp-selrow:hover,.pp-selrow:focus-visible{background:color-mix(in srgb,var(--pp-accent) 11%,transparent)}' +
+      '.pp-selrow:focus-visible{outline:2px solid var(--pp-accent);outline-offset:-2px}' +
+      '.pp-selname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+      '.pp-selchev{flex:none;color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-selkey{flex:none;color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-selcount{flex:none;color:var(--pp-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +
+      '.pp-sellast{flex:none;padding:0 5px;border-radius:5px;background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px;line-height:16px}' +
+      '.pp-seldone{display:flex;align-items:flex-start;gap:6px;padding:2px;color:var(--pp-ink);font-size:12px}' +
+      '.pp-seldone-text{flex:1;min-width:0;line-height:1.5}' +
+      '.pp-seldone[data-kind="error"]{color:var(--pp-danger)}' +
+      '.pp-seldone-mark{flex:none;color:var(--pp-ok);font-size:12px}' +
+      '.pp-seldone[data-kind="error"] .pp-seldone-mark{color:var(--pp-danger)}';
+
     // ------------------------------------------------------------------- plugin
     return {
       inject: ['slots', 'locale'],
@@ -4909,6 +5177,35 @@ window.__ModuleLoader__.load({
         bindOptional(['sessions'], (target) => {
           sessionsFace = serviceOf(target, 'sessions');
         });
+        // Right-click on selected conversation text: the host asks plugins in
+        // registration order and the first surface that opens wins. Only the
+        // context-menu trigger is claimed, so the built-in Quote action keeps the
+        // plain drag selection. A host without this service keeps its native menu.
+        let selectionMenuMounted = false;
+        bindOptional(['uiConversation'], (target) => {
+          if (selectionMenuMounted) return;
+          const service = serviceOf(target, 'uiConversation');
+          const interactions = service && service.interactions;
+          if (!interactions || typeof interactions.register !== 'function') return;
+          selectionMenuMounted = true;
+          try {
+            ctx.effect(() =>
+              interactions.register({
+                id: 'prompt-pool',
+                onInteraction(request) {
+                  if (!request || request.trigger !== 'contextmenu') return;
+                  if (typeof request.readText !== 'function' || request.readText() === null) return;
+                  // Opening alone does not suppress the browser menu: without this
+                  // the native menu and our surface would both show.
+                  request.preventDefault();
+                  request.open();
+                },
+              }),
+            );
+          } catch (_error) {
+            selectionMenuMounted = false;
+          }
+        });
         if (ctx.locale && typeof ctx.locale.register === 'function' && typeof ctx.locale.bind === 'function') {
           ctx.effect(() => ctx.locale.register(NS, { zh: ZH, en: EN }));
           translate = ctx.locale.bind(NS);
@@ -4926,6 +5223,14 @@ window.__ModuleLoader__.load({
           ctx.slots.register(
             { name: 'conversation.input.overlay', id: 'prompt-pool-panel', order: 12, label: () => translate('panel.title') },
             PromptPoolPanel,
+          ),
+        );
+        // The Chat view renders the surface the interaction above opened, keyed by
+        // that interaction's id. The slot is declared only while Chat is mounted.
+        ctx.slots.inject('conversation.chat.text-interaction', () =>
+          ctx.slots.register(
+            { name: 'conversation.chat.text-interaction', key: 'prompt-pool', locale: NS },
+            SelectionMenu,
           ),
         );
 

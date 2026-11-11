@@ -9,6 +9,7 @@ of prompt items, and release the batch into the composer's send queue in order.
 
 - Composer trigger beside the send controls (accent + count while something is queued)
 - Composer panel with search, group tabs, row actions and a send-queue card
+- Right-click on selected conversation text to copy it or save it into a group (the last destination leads the menu)
 - Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback)
 - Groups: built-in, custom and one tab per workspace; each can be expanded, folded or hidden
 - Settings for group order/display, visible workspaces and post-use retention

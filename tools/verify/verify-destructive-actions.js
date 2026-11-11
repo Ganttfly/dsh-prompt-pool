@@ -197,7 +197,11 @@ for (const [slotName, props, label] of [
   tree = render();
   const removeConfirm = findRemoveConfirm(tree);
   if (!removeConfirm) { failures.push(`${label}: removing a queued entry did not open a confirmation`); continue; }
-  if (!removeConfirm.props.title) failures.push(`${label}: the remove confirmation did not name the entry`);
+  const removeModal = removeConfirm.type(removeConfirm.props);
+  if (!removeModal || !removeModal.props || removeModal.props.text !== 'tray.removeConfirm') {
+    failures.push(`${label}: the remove confirmation should use the generic copy`);
+  }
+  if (removeConfirm.props.title !== undefined) failures.push(`${label}: the remove confirmation still embeds the entry text`);
 
   removeConfirm.props.onCancel();
   tree = render();
@@ -269,7 +273,11 @@ for (const [slotName, props, label] of [
   tree = render();
   const deleteConfirm = findDeleteConfirm(tree);
   if (!deleteConfirm) { failures.push(`${label}: deleting did not open a confirmation`); continue; }
-  if (!deleteConfirm.props.title) failures.push(`${label}: the confirmation did not name the item`);
+  const deleteModal = deleteConfirm.type(deleteConfirm.props);
+  if (!deleteModal || !deleteModal.props || deleteModal.props.text !== 'row.deleteConfirm') {
+    failures.push(`${label}: the delete confirmation should use the generic copy`);
+  }
+  if (deleteConfirm.props.title !== undefined) failures.push(`${label}: the delete confirmation still embeds the item text`);
 
   deleteConfirm.props.onCancel();
   tree = render();

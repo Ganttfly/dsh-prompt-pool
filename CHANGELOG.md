@@ -11,6 +11,25 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
+## [1.2.0] — 2026-11-11
+
+### Added
+
+- Right-click on selected conversation text now offers **Add to the prompt pool**. The menu is two
+  levels: **Copy** (the menu replaces the browser's own, so that action stays one click away) and one
+  pool entry whose submenu lists the groups currently on show (built-in, custom and visible
+  workspaces). Picking a group stores the selection as a new item there, and the destination is
+  remembered so it leads the next submenu. Only the context-menu gesture is claimed, so the built-in
+  Quote action keeps drag selections; a right-click without selected text, and a host without the
+  conversation interaction service, keep the native menu.
+
+### Changed
+
+- Destructive confirmations use one generic sentence instead of quoting the item text. A right-click
+  capture is often a long paragraph, and its truncated first line made the delete dialog read like a
+  fragment; the delete toast is generic for the same reason. The queued-item confirmation also says
+  plainly that the removal cannot be undone.
+
 ## [1.1.1] — 2026-11-11
 
 ### Changed
@@ -142,7 +161,8 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.2.0
 [1.1.1]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.1.1
 [1.1.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.1.0
 [1.0.3]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.3
