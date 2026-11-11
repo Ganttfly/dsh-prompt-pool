@@ -37,6 +37,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- The sidebar page keeps its active group tab when the host remounts the pane (for example after
+  viewing another sidebar tab), instead of falling back to "All".
 - The composer panel keeps a stable width when switching group tabs instead of resizing to the
   longest row in the active tab.
 - The panel's save button now confirms with the same "saved to the pool" toast as the page.

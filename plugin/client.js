@@ -1299,6 +1299,19 @@ window.__ModuleLoader__.load({
     const ui = createStore({ open: false });
 
     /**
+     * The sidebar page's active group tab. The pane can be remounted by the
+     * host when another sidebar tab is shown, so this lives outside the
+     * component and survives that remount.
+     */
+    const PAGE_TAB_SINGLETON = '__dshPromptPoolPageTabV1';
+    const pageTabState = (() => {
+      const initial = { id: 'all' };
+      if (typeof window === 'undefined') return createStore(initial);
+      if (!window[PAGE_TAB_SINGLETON]) window[PAGE_TAB_SINGLETON] = createStore(initial);
+      return window[PAGE_TAB_SINGLETON];
+    })();
+
+    /**
      * Live workspace directory: derived (never persisted) and published by
      * whichever view can read the workspace snapshot, so one tab appears per
      * workspace in both views.
@@ -2510,7 +2523,12 @@ window.__ModuleLoader__.load({
         return pool.length > 0 ? pool[pool.length - 1] : '';
       })();
       const activeSessionId = pageSessionId || sessionHint || workspaceSession || '';
-      const [tab, setTab] = useState('all');
+      const tabs = buildTabs(state.categories, workspaceList, state.settings, currentWorkspaceId);
+      const [tab, setPageTab] = useState(() => pageTabState.get().id || 'all');
+      const setTab = (id) => {
+        pageTabState.set({ id });
+        setPageTab(id);
+      };
       const [query, setQuery] = useState('');
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
@@ -2531,6 +2549,11 @@ window.__ModuleLoader__.load({
       useEffect(() => () => window.clearTimeout(statusTimer.current), []);
       const { editing, setEditing, startEdit, save, cancelEdit, pasteImages } = usePoolEditor(flash);
       const { trayEditing, setTrayEditing, saveTrayEdit, pasteTrayImages } = useTrayEditor(flash);
+      // A stored tab can point at a group that was hidden or deleted since.
+      useEffect(() => {
+        if (tabs.some((entry) => entry.id === tab)) return;
+        setTab('all');
+      }, [tabs, tab]);
       // A failed write outranks a transient toast: the change is not saved.
       const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
       const trayRef = useRef(null);
@@ -2813,7 +2836,7 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-bar', style: { padding: '8px 12px 2px' } },
           h(TabBar, {
-            tabs: buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId),
+            tabs: tabs,
             active: tab,
             ...tabHandlers((next) => {
               setSettingsOpen(false);
