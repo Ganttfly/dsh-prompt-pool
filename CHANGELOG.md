@@ -11,6 +11,8 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
+## [1.0.1] — 2026-11-11
+
 ### Fixed
 
 - The composer panel no longer opens taller than the pane that clips it. It is anchored to the composer,
@@ -21,6 +23,10 @@ All notable changes to this project are documented here. The format follows
 - The send-queue card grows with its rows instead of collapsing to one row. Its height cap resolved as a
   percentage of an auto-height parent, so a second queued item already showed a scrollbar; the cap is now a
   share of the panel's own height, so the card only scrolls once it is genuinely long.
+
+### Changed
+
+- The readmes now carry screenshots of the composer panel, the sidebar page and the settings page.
 
 ## [1.0.0] — 2026-11-10
 
@@ -51,5 +57,6 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.1
 [1.0.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.0.0
