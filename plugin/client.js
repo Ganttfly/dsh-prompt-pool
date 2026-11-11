@@ -36,6 +36,30 @@ window.__ModuleLoader__.load({
     const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
     const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
     const EMPTY_PENDING = [];
+    /**
+     * Space kept between the panel's top edge and the pane that clips it: the
+     * panel is anchored to the composer, which in a new session sits well above
+     * the window bottom, so its height has to stop at the pane instead of
+     * running past it.
+     */
+    const PANEL_TOP_GAP = 10;
+
+    /**
+     * Top of the nearest ancestor that clips its overflow — the pane the panel
+     * is drawn in. The window top is not enough: the app's own top bar sits
+     * above that pane, and a panel sized to the window hides its header under
+     * the clip. 0 when nothing clips.
+     */
+    function clipTopOf(node) {
+      let top = 0;
+      for (let current = node.parentElement; current; current = current.parentElement) {
+        const style = getComputedStyle(current);
+        if (style.overflowX === 'visible' && style.overflowY === 'visible') continue;
+        const rect = current.getBoundingClientRect();
+        if (rect.top > top) top = rect.top;
+      }
+      return Math.max(0, Math.round(top));
+    }
 
     // ---------------------------------------------------------------- locale
     const ZH = {
@@ -3301,13 +3325,51 @@ window.__ModuleLoader__.load({
       const panelHeight = dragHeight || normalizeSettings(state.settings).panelHeight;
       const panelHeightRef = useRef(panelHeight);
       panelHeightRef.current = panelHeight;
+
+      // Room from the top of the pane that clips the panel down to the panel's
+      // own bottom edge. The overlay anchors that bottom edge to the composer,
+      // and a new session puts the composer mid-page, so the panel is capped by
+      // that pane rather than by 70vh of a viewport it does not reach. This runs
+      // after every render because a layout shift can move the composer without
+      // a resize; the equality check ends the extra render.
+      const [room, setRoom] = useState(0);
+      const roomRef = useRef(0);
+      roomRef.current = room;
+      const layoutEffect = React.useLayoutEffect || useEffect;
+      layoutEffect(() => {
+        if (!view.open) return undefined;
+        const node = panelRef.current;
+        if (!node) return undefined;
+        const measure = () => {
+          // Only the list and the queue tray scroll. If something inside the
+          // panel takes focus, the browser can scroll this box instead, which
+          // parks the header above its own viewport; pin it back.
+          if (node.scrollTop !== 0) node.scrollTop = 0;
+          const ceiling = node.getBoundingClientRect().bottom - clipTopOf(node) - PANEL_TOP_GAP;
+          const next = Math.max(160, Math.round(ceiling));
+          setRoom((previous) => (previous === next ? previous : next));
+        };
+        measure();
+        // The composer can settle a frame or two after the panel opens (fonts,
+        // entry animation, a restored draft), so follow the first measurement.
+        const timers = [120, 400].map((delay) => window.setTimeout(measure, delay));
+        node.addEventListener('scroll', measure);
+        window.addEventListener('resize', measure);
+        return () => {
+          timers.forEach((timer) => window.clearTimeout(timer));
+          node.removeEventListener('scroll', measure);
+          window.removeEventListener('resize', measure);
+        };
+      });
+
       const startResize = (event) => {
         if (event.button !== undefined && event.button !== 0) return;
         event.preventDefault();
         const startY = event.clientY;
         const startHeight = panelRef.current ? panelRef.current.getBoundingClientRect().height : panelHeightRef.current;
         const apply = (clientY) => {
-          const limit = Math.max(360, window.innerHeight - 96);
+          const ceiling = roomRef.current > 0 ? roomRef.current : window.innerHeight - 96;
+          const limit = Math.max(320, Math.min(ceiling, window.innerHeight - 96));
           setDragHeight(Math.round(Math.min(limit, Math.max(320, startHeight + (startY - clientY)))));
         };
         const onMove = (moveEvent) => {
@@ -3844,6 +3906,19 @@ window.__ModuleLoader__.load({
                 }
               : null;
 
+      // --pp-room carries the measured cap into the stylesheet; a dragged height
+      // is capped by the same value, so no path can push the header above the
+      // pane that clips the panel. --pp-h is the panel's own height, which the
+      // queue card uses to keep itself to a share of the panel.
+      const panelStyle = {};
+      if (room > 0) panelStyle['--pp-room'] = room + 'px';
+      if (panelHeight) {
+        const size = 'min(' + panelHeight + 'px, var(--pp-room, 90vh))';
+        panelStyle['--pp-h'] = size;
+        panelStyle.height = size;
+        panelStyle.maxHeight = 'none';
+      }
+
       return h(
         'div',
         {
@@ -3851,7 +3926,7 @@ window.__ModuleLoader__.load({
           role: 'dialog',
           'aria-label': translate('panel.title'),
           ref: panelRef,
-          style: panelHeight ? { height: 'min(' + panelHeight + 'px, 90vh)', maxHeight: 'none' } : undefined,
+          style: Object.keys(panelStyle).length > 0 ? panelStyle : undefined,
           onMouseDown: (event) => event.stopPropagation(),
         },
         h('style', null, CSS),
@@ -4144,7 +4219,7 @@ window.__ModuleLoader__.load({
       '.pp-trigger[data-queued="true"]{border-color:var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
       '.pp-trigger[data-queued="true"]:hover{background:color-mix(in srgb,var(--pp-accent) 20%,transparent);color:var(--pp-accent)}' +
       '.pp-trigger[data-queued="true"] .pp-badge{border-color:var(--pp-accent);background:var(--pp-accent);color:var(--pp-on-accent);font-weight:600}' +
-      '.pp-panel{position:absolute;left:auto;right:0;bottom:0;margin:0;max-width:min(920px,100%);z-index:40;display:flex;flex-direction:column;height:min(70vh,720px);max-height:min(70vh,720px);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
+      '.pp-panel{position:absolute;left:auto;right:0;bottom:0;margin:0;max-width:min(920px,100%);z-index:40;display:flex;flex-direction:column;--pp-h:min(70vh,720px,var(--pp-room,100vh));height:var(--pp-h);max-height:var(--pp-h);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;overflow:clip;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
       // The grip above the header resizes the panel; a long queue may keep half the list.
       '.pp-panel-grip{flex:none;display:flex;align-items:center;justify-content:center;height:11px;cursor:ns-resize;touch-action:none}' +
       '.pp-grip-bar{width:44px;height:4px;border-radius:2px;background:var(--pp-line-2);transition:background .12s ease}' +
@@ -4154,7 +4229,10 @@ window.__ModuleLoader__.load({
       // A short panel used to cap the card at 45% of itself, so even two chips
       // scrolled; a generous share of the panel keeps a few rows whole, and only a
       // genuinely long queue scrolls inside the card.
-      '.pp-panel .pp-page-foot{flex:none;max-height:min(70%,320px);min-height:0}' +
+      // The card sizes to its rows and only then scrolls. A percentage cap here
+      // resolves against an auto-height dock and collapses the card to one row,
+      // so the cap is expressed against the panel's own measured cap instead.
+      '.pp-panel .pp-page-foot{flex:none;max-height:min(calc(var(--pp-h, 100vh) * 0.7), 320px);min-height:0}' +
       // flex:1 would collapse an auto-height card to zero and clip the empty hint;
       // the tray sizes to its content and only shrinks (then scrolls) at the cap.
       '.pp-panel .pp-page-foot .pp-tray{max-height:none;min-height:0;flex:0 1 auto}' +

@@ -11,6 +11,17 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
+### Fixed
+
+- The composer panel no longer opens taller than the pane that clips it. It is anchored to the composer,
+  which in a new session sits mid-page, so a 70vh panel ran past the top of the conversation pane and its
+  header — title, search, close — was clipped under the app's top bar. The height is now capped to the room
+  above the composer inside that pane, follows window resizes, and the box itself can no longer be scrolled
+  out from under its own header.
+- The send-queue card grows with its rows instead of collapsing to one row. Its height cap resolved as a
+  percentage of an auto-height parent, so a second queued item already showed a scrollbar; the cap is now a
+  share of the panel's own height, so the card only scrolls once it is genuinely long.
+
 ## [1.0.0] — 2026-11-10
 
 First public release.
