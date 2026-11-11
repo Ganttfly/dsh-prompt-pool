@@ -9,10 +9,10 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 
 ## Screenshots
 
-![The prompt pool panel open above the composer, with the trigger showing a queue count](docs/images/panel.png)
+![The prompt pool panel open over the conversation, with per-group counts and a one-item send queue](docs/images/panel.png)
 
-The composer panel: the trigger beside the send controls (accent colour with the queued count), the pool
-with its group tabs, and the send queue at the bottom.
+The composer panel: group tabs with their counts, the row actions (insert, queue, edit, duplicate,
+delete), and the send queue at the bottom.
 
 ![The prompt pool as a full page in the right sidebar](docs/images/sidebar.png)
 
