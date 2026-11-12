@@ -8,6 +8,7 @@ const source = fs.readFileSync(process.env.PP_SOURCE || path.join(__dirname, '..
 const STORAGE_KEY = 'dsh.prompt-pool.v1';
 const registrations = [];
 const store = new Map();
+let currentLocale = 'en';
 
 let cells = [];
 let cursor = 0;
@@ -45,7 +46,7 @@ global.window = {
         effect: (fn) => fn() || (() => {}),
         get: () => undefined,
         inject: (deps, cb) => { cb({ get: () => undefined }); },
-        locale: { register: () => () => {}, bind: () => (key) => key, subscribe: () => () => {}, getLocale: () => ({ active: 'en' }) },
+        locale: { register: () => () => {}, bind: () => (key) => key, subscribe: () => () => {}, getLocale: () => ({ active: currentLocale }) },
         slots: {
           inject: (key, cb) => { cb(); },
           register: (options, component) => { registrations.push({ slot: options.name, component }); },
@@ -84,7 +85,6 @@ const findReset = (tree) => nodes(tree, []).find(
 const findConfirm = (tree) => nodes(tree, []).find(
   (node) => typeof node.type === 'function' && node.type.name === 'SeedResetConfirm',
 );
-const findSelect = (tree) => nodes(tree, []).find((node) => node.type === 'select' && node.props && node.props.name === 'seedLocale');
 const findKeepEdited = (tree) => nodes(tree, []).find((node) => node.type === 'input' && node.props && node.props.name === 'seedKeepEdited');
 const seedItems = () => pool.get().items.filter((item) => item.seed === true);
 const render = () => {
@@ -116,7 +116,7 @@ if (!confirm) throw new Error('cannot continue without a confirmation');
 check(confirm.props.removed === 8, `keep-edited confirmation removes ${confirm.props.removed}, expected 8`);
 check(confirm.props.kept === 1, `keep-edited confirmation keeps ${confirm.props.kept}, expected 1`);
 check(confirm.props.added === 10, `keep-edited confirmation adds ${confirm.props.added}, expected 10`);
-check(confirm.props.language === 'settings.seedLanguageAuto', 'the default language is not "follow interface"');
+check(confirm.props.language === 'settings.seedLanguageEn', 'the reset did not follow the English interface');
 confirm.props.onConfirm();
 tree = render();
 check(!findConfirm(tree), 'the confirmation stayed open after reset');
@@ -139,11 +139,7 @@ if (!scope) throw new Error('the restored seed is missing');
 scope.body = 'second edit';
 pool.set({ ...afterFirst, items: nextItems });
 
-tree = render();
-const select = findSelect(tree);
-check(Boolean(select), 'the language select is missing');
-if (!select) throw new Error('cannot continue without a language select');
-select.props.onChange({ target: { value: 'zh' } });
+currentLocale = 'zh';
 tree = render();
 const keep = findKeepEdited(tree);
 check(Boolean(keep), 'the keep-edited checkbox is missing');
@@ -159,7 +155,7 @@ check(Boolean(confirm), 'the second reset did not open a confirmation');
 if (!confirm) throw new Error('cannot continue without the second confirmation');
 check(confirm.props.removed === 10, `discard-edited confirmation removes ${confirm.props.removed}, expected 10`);
 check(confirm.props.kept === 0, `discard-edited confirmation keeps ${confirm.props.kept}, expected 0`);
-check(confirm.props.language === 'settings.seedLanguageZh', 'the language select did not switch to Chinese');
+check(confirm.props.language === 'settings.seedLanguageZh', 'the reset did not follow the Chinese interface');
 confirm.props.onConfirm();
 tree = render();
 check(seedItems().length === 10, `the Chinese reset left ${seedItems().length} seeds, expected 10`);

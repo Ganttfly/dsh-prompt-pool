@@ -9,10 +9,10 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - Built-in seed prompts follow the host language and carry a `seed`/locale marker. Settings → Prompts
-  can reset them to Chinese, English, or the interface language: every built-in is removed and the
-  chosen set is injected, so deleted built-ins come back. With "keep edited" checked, edited built-ins
-  become ordinary items first; unchecked, they are removed too. Custom items, custom groups, and the
-  send queue are left alone.
+  can reset them in the current interface language: every built-in is removed and the matching set is
+  injected, so deleted built-ins come back. With "keep edited" checked, edited built-ins become
+  ordinary items first; unchecked, they are removed too. Custom items, custom groups, and the send
+  queue are left alone.
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 

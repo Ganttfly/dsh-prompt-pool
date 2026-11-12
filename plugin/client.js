@@ -136,10 +136,9 @@ window.__ModuleLoader__.load({
       'settings.keepQueueHint': '关闭后，条目一加入队列就从池子移出；队列里的那一条不受影响。',
       'settings.seedCard': '内置提示词',
       'settings.seedHint': '当前有 {builtin} 条内置提示词，其中 {edited} 条已编辑。重置只影响内置条目，自定义条目和队列不受影响。',
-      'settings.seedLanguage': '重新注入的语言',
-      'settings.seedLanguageAuto': '跟随界面',
       'settings.seedLanguageZh': '中文',
       'settings.seedLanguageEn': 'English',
+      'settings.seedNote': '将按当前界面语言「{language}」重置。',
       'settings.seedKeepEdited': '保留已编辑的内置条目',
       'settings.seedKeepEditedHint': '勾选后，编辑过的内置条目会转成普通条目保留；未勾选则一起删除。',
       'settings.seedResetButton': '重置内置提示词',
@@ -314,10 +313,9 @@ window.__ModuleLoader__.load({
       'settings.keepQueueHint': 'Turned off, the item leaves the pool as soon as it is queued; the queued copy stays.',
       'settings.seedCard': 'Built-in prompts',
       'settings.seedHint': 'The pool has {builtin} built-in prompts, {edited} of them edited. Resetting only touches built-ins; custom items and the queue are left alone.',
-      'settings.seedLanguage': 'Language for the new set',
-      'settings.seedLanguageAuto': 'Follow interface',
       'settings.seedLanguageZh': 'Chinese',
       'settings.seedLanguageEn': 'English',
+      'settings.seedNote': 'Resets in the current interface language: {language}.',
       'settings.seedKeepEdited': 'Keep edited built-in items',
       'settings.seedKeepEditedHint': 'Checked, edited built-ins become ordinary items; unchecked, they are removed too.',
       'settings.seedResetButton': 'Reset built-in prompts',
@@ -3435,24 +3433,18 @@ window.__ModuleLoader__.load({
         poolActions.setSetting('hiddenWorkspaces', next);
       };
       const [section, setSection] = useState('order');
-      const [seedLocale, setSeedLocale] = useState('auto');
       const [seedKeepEdited, setSeedKeepEdited] = useState(true);
       const [seedConfirm, setSeedConfirm] = useState(false);
       const [seedStatus, setSeedStatus] = useState('');
       const seedItems = state.items.filter((item) => SEED_CATALOG.has(item.id));
       const editedSeeds = seedItems.filter((item) => seedIsEdited(item, SEED_CATALOG.get(item.id)));
       const seedLanguageLabel = translate(
-        seedLocale === 'auto'
-          ? 'settings.seedLanguageAuto'
-          : seedLocale === 'zh'
-            ? 'settings.seedLanguageZh'
-            : 'settings.seedLanguageEn',
+        activeLocaleId() === 'zh' ? 'settings.seedLanguageZh' : 'settings.seedLanguageEn',
       );
       const seedRemoveCount = seedItems.length - (seedKeepEdited ? editedSeeds.length : 0);
       const seedKeptCount = seedKeepEdited ? editedSeeds.length : 0;
       const resetSeeds = () => {
-        const target = seedLocale === 'auto' ? activeLocaleId() : seedLocale;
-        const result = poolActions.resetBuiltins(target, seedKeepEdited);
+        const result = poolActions.resetBuiltins(activeLocaleId(), seedKeepEdited);
         setSeedConfirm(false);
         setSeedStatus(translate('settings.seedResetDone', result));
       };
@@ -3540,23 +3532,6 @@ window.__ModuleLoader__.load({
           h(
             'label',
             { className: 'pp-set-row' },
-            h('span', null, translate('settings.seedLanguage')),
-            h(
-              'select',
-              {
-                className: 'pp-set-select',
-                name: 'seedLocale',
-                value: seedLocale,
-                onChange: (event) => setSeedLocale(event.target.value),
-              },
-              h('option', { value: 'auto' }, translate('settings.seedLanguageAuto')),
-              h('option', { value: 'zh' }, translate('settings.seedLanguageZh')),
-              h('option', { value: 'en' }, translate('settings.seedLanguageEn')),
-            ),
-          ),
-          h(
-            'label',
-            { className: 'pp-set-row' },
             h('input', {
               type: 'checkbox',
               name: 'seedKeepEdited',
@@ -3569,6 +3544,11 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'pp-set-actions' },
+            h(
+              'span',
+              { className: 'pp-hint pp-set-note' },
+              translate('settings.seedNote', { language: seedLanguageLabel }),
+            ),
             h(
               'button',
               {
@@ -5295,8 +5275,8 @@ window.__ModuleLoader__.load({
         '.pp-set-ws-tag{margin-left:6px;padding:0 5px;border-radius:5px;background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px}' +
         '.pp-set-ws-path{margin-left:auto;color:var(--pp-ink-2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px}' +
         '.pp-set-label{font-size:12px;color:var(--pp-ink-2);margin:2px 0 4px}' +
-        '.pp-set-select{height:28px;margin-left:auto;padding:0 8px;border:1px solid var(--pp-line);border-radius:7px;background:var(--pp-surface);color:var(--pp-ink);font:inherit;font-size:12px;cursor:pointer}' +
-        '.pp-set-actions{display:flex;justify-content:flex-end;margin-top:8px}' +
+        '.pp-set-note{margin-right:auto;padding:0;line-height:1.4}' +
+        '.pp-set-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px}' +
       '.pp-set-card{padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
       '.pp-set-card .pp-set-label{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-set-card .pp-set-row{padding:3px 0}' +
