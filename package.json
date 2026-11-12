@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "description": "Development workspace for the dsh-prompt-pool plugin; the published package is plugin/.",
+  "workspaces": [
+    "plugin"
+  ],
   "scripts": {
     "lint": "node tools/lint.js",
     "test": "node tools/run-tests.js",

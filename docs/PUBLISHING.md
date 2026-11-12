@@ -210,6 +210,10 @@ git push origin v1.0.0
 2. 到 `https://dshfind.com` 搜索包名，确认条目出现、分类为 `ui`、描述与图标正确。
 3. 应用内市场读的是同一份索引，收录后即可搜到。
 
+**仓库布局**：dshfind 从仓库根 `package.json` 开始探测；根清单要用 `workspaces` 指向
+`plugin/`，否则它看不到子包里的 `dsh.bundle`，会把条目判成不可安装、`is_plugin` 留空。
+安装命令由它每日的 `probe:install` 生成，不读 npm 页面的展示。
+
 **为什么**：应用内市场是绝大多数用户的实际安装路径；没有收录等于只有知道包名的人能装。
 
 **验收**：dshfind 条目存在；应用内市场搜索「提示池 / prompt pool」能装。
