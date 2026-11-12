@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- First-run seed prompts follow the host language: English hosts get the English set of frequent
+  prompts and templates, while Chinese hosts keep the existing Chinese set. Existing pools and items
+  are never rewritten.
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 

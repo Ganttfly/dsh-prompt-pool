@@ -1258,53 +1258,113 @@ window.__ModuleLoader__.load({
     }
 
     function emptyPool() {
-      return { version: POOL_VERSION, categories: [], items: [], tray: [], settings: normalizeSettings(undefined), seeded: true };
+      return { version: POOL_VERSION, categories: [], items: [], tray: [], settings: normalizeSettings(undefined), seeded: SEED_LEVEL };
     }
 
     /**
      * First-run content: five behaviour switches that stay valid as one-liners.
-     * They land in the 常用 group and stay ordinary, deletable items.
+     * They land in the 常用 / Frequent group and stay ordinary, deletable items.
+     * The locale is fixed at first run; switching languages later does not rewrite
+     * items the user may already have edited.
      */
-    const SEED_PROMPTS = [
-      ['seed:plan-first', '先给方案', '先列改动清单：要改哪些文件、每处改什么、怎么验证。等我确认后再动手。'],
-      ['seed:scope-guard', '不动无关代码', '只改与目标直接相关的行；看到别的问题只记录，不顺手修。'],
-      [
-        'seed:pre-delivery',
-        '交付前自检',
-        '交付前给一条最小验证（命令或测试），并回答三件事：最可能出问题的地方、怎么回滚、哪些假设我没验证过。',
+    const SEED_PROMPTS = {
+      zh: [
+        ['seed:plan-first', '先给方案', '先列改动清单：要改哪些文件、每处改什么、怎么验证。等我确认后再动手。'],
+        ['seed:scope-guard', '不动无关代码', '只改与目标直接相关的行；看到别的问题只记录，不顺手修。'],
+        [
+          'seed:pre-delivery',
+          '交付前自检',
+          '交付前给一条最小验证（命令或测试），并回答三件事：最可能出问题的地方、怎么回滚、哪些假设我没验证过。',
+        ],
+        ['seed:stop-restate', '停下重述', '停一下：重述我的原始要求和当前实际在做的事，指出偏差，再决定继续还是回退。'],
+        ['seed:commands', '给命令不给描述', '需要我操作时直接给可粘贴的命令、路径或代码块。'],
       ],
-      ['seed:stop-restate', '停下重述', '停一下：重述我的原始要求和当前实际在做的事，指出偏差，再决定继续还是回退。'],
-      ['seed:commands', '给命令不给描述', '需要我操作时直接给可粘贴的命令、路径或代码块。'],
-    ];
+      en: [
+        [
+          'seed:plan-first',
+          'Plan first',
+          'List the changes before touching code: which files, what changes in each, and how you will verify. Wait for my go-ahead before editing.',
+        ],
+        [
+          'seed:scope-guard',
+          'Stay in scope',
+          'Change only the lines directly related to the goal. If you spot other issues, note them instead of fixing them.',
+        ],
+        [
+          'seed:pre-delivery',
+          'Check before delivery',
+          'Before delivering, give one minimal verification (a command or test) and answer three things: what is most likely to break, how to roll back, and which assumptions I have not verified.',
+        ],
+        [
+          'seed:stop-restate',
+          'Stop and restate',
+          'Pause: restate my original request and what you are actually doing, call out the drift, then decide whether to continue or roll back.',
+        ],
+        [
+          'seed:commands',
+          'Commands, not prose',
+          'When I need to act, give me commands, paths, or code blocks I can paste directly.',
+        ],
+      ],
+    };
 
     /** Templates: each one has a hole to fill and a shape the answer must take. */
-    const SEED_TEMPLATES = [
-      [
-        'seed:review',
-        '代码审查',
-        '审阅 {{贴 diff 或文件}}：先用一句话给结论（能否合入、卡在哪）；再按「阻塞 / 建议 / 可选」分级列问题，每条给行号、触发条件、修法。不要重述代码在做什么。',
+    const SEED_TEMPLATES = {
+      zh: [
+        [
+          'seed:review',
+          '代码审查',
+          '审阅 {{贴 diff 或文件}}：先用一句话给结论（能否合入、卡在哪）；再按「阻塞 / 建议 / 可选」分级列问题，每条给行号、触发条件、修法。不要重述代码在做什么。',
+        ],
+        [
+          'seed:options',
+          '方案对比',
+          '针对 {{决策点}} 给 2–3 个候选方案，用表格对比：改动范围、风险、回滚难度、后续维护成本；最后给推荐项和一句理由。',
+        ],
+        [
+          'seed:acceptance',
+          '验收清单',
+          '为 {{功能名}} 输出可勾选清单，按「正常路径 / 边界 / 失败恢复」分组；每条写成一个可观察的结果，能被执行或验证。',
+        ],
+        [
+          'seed:changelog',
+          '变更说明',
+          '按 Keep a Changelog 写 {{版本号}} 的变更说明：动词开头、一条一个变更、修复与新增不混在同一条；破坏性变更单独列一节。',
+        ],
+        [
+          'seed:explain',
+          '解释这段代码',
+          '解释 {{代码或模块}}：先用一句话说它解决什么问题，再说依赖的关键不变量、最容易踩的坑、以及改动时不能破坏的东西。',
+        ],
       ],
-      [
-        'seed:options',
-        '方案对比',
-        '针对 {{决策点}} 给 2–3 个候选方案，用表格对比：改动范围、风险、回滚难度、后续维护成本；最后给推荐项和一句理由。',
+      en: [
+        [
+          'seed:review',
+          'Code review',
+          'Review {{paste a diff or file}}: open with a one-sentence verdict (mergeable, and where it is blocked), then list issues as Blocking / Suggestion / Optional, each with line number, trigger, and fix. Do not restate what the code does.',
+        ],
+        [
+          'seed:options',
+          'Compare options',
+          'For {{decision point}}, give 2–3 candidates in a table comparing change scope, risk, rollback difficulty, and maintenance cost. End with the recommended option and one reason.',
+        ],
+        [
+          'seed:acceptance',
+          'Acceptance checklist',
+          'For {{feature name}}, output a checkable list grouped by Happy path / Edge cases / Failure recovery; each line must be an observable result that can be executed or verified.',
+        ],
+        [
+          'seed:changelog',
+          'Changelog entry',
+          'Write the {{version}} entry in Keep a Changelog style: start each line with a verb, one change per line, and do not mix fixes with additions. Give breaking changes their own section.',
+        ],
+        [
+          'seed:explain',
+          'Explain this code',
+          'Explain {{code or module}}: one sentence on the problem it solves, then the key invariants it relies on, the most likely pitfalls, and what must not break when changing it.',
+        ],
       ],
-      [
-        'seed:acceptance',
-        '验收清单',
-        '为 {{功能名}} 输出可勾选清单，按「正常路径 / 边界 / 失败恢复」分组；每条写成一个可观察的结果，能被执行或验证。',
-      ],
-      [
-        'seed:changelog',
-        '变更说明',
-        '按 Keep a Changelog 写 {{版本号}} 的变更说明：动词开头、一条一个变更、修复与新增不混在同一条；破坏性变更单独列一节。',
-      ],
-      [
-        'seed:explain',
-        '解释这段代码',
-        '解释 {{代码或模块}}：先用一句话说它解决什么问题，再说依赖的关键不变量、最容易踩的坑、以及改动时不能破坏的东西。',
-      ],
-    ];
+    };
 
     /** A build bumps this and adds one batch; older pools receive only the new batch. */
     /** Bump when the stored item shape changes: older pools are reseeded, not migrated. */
@@ -1316,39 +1376,39 @@ window.__ModuleLoader__.load({
       return { id, group, title, body, createdAt: now, updatedAt: now };
     }
 
-    function seedsAbove(level, now) {
+    function seedsAbove(level, now, locale) {
+      const language = locale === 'zh' ? 'zh' : 'en';
       const batches = [
-        { level: 1, items: SEED_PROMPTS.map((entry) => seedItem(entry, BUILTIN_GROUP.oftenuse, now)) },
-        { level: 2, items: SEED_TEMPLATES.map((entry) => seedItem(entry, BUILTIN_GROUP.template, now)) },
+        { level: 1, items: SEED_PROMPTS[language].map((entry) => seedItem(entry, BUILTIN_GROUP.oftenuse, now)) },
+        { level: 2, items: SEED_TEMPLATES[language].map((entry) => seedItem(entry, BUILTIN_GROUP.template, now)) },
       ];
       return batches.filter((batch) => batch.level > level).reduce((list, batch) => list.concat(batch.items), []);
     }
 
-    function seededPool() {
+    /**
+     * An untitled empty pool is not the same as a deliberate empty one: it waits
+     * for apply() so the first-run seeds can follow the host locale.
+     */
+    function pendingPool() {
       return {
         version: POOL_VERSION,
         categories: [],
-        items: seedsAbove(0, Date.now()),
+        items: [],
         tray: [],
         settings: normalizeSettings(undefined),
-        seeded: SEED_LEVEL,
+        seeded: 0,
       };
     }
 
-    function seedItems(existing, level) {
+    function seedItems(existing, level, locale) {
       const taken = new Set(existing.map((item) => item.id));
-      return seedsAbove(level, Date.now()).filter((item) => !taken.has(item.id));
+      return seedsAbove(level, Date.now(), locale).filter((item) => !taken.has(item.id));
     }
 
     function loadPool() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          // Brand-new install only: an existing (even empty) pool is never reseeded.
-          const seeded = seededPool();
-          persist(seeded);
-          return seeded;
-        }
+        if (!raw) return pendingPool();
         const parsed = JSON.parse(raw);
         const storedVersion = parsed && typeof parsed.version === 'number' ? parsed.version : 1;
         if (storedVersion < POOL_VERSION) {
@@ -1360,12 +1420,8 @@ window.__ModuleLoader__.load({
             /* the backup is best effort; the pool itself still loads */
           }
         }
-        const pool = normalizePool(parsed);
-        const level = Number(pool.seeded) || 0;
-        if (storedVersion >= POOL_VERSION && level >= SEED_LEVEL) return pool;
-        const migrated = level >= SEED_LEVEL ? pool : { ...pool, items: [...pool.items, ...seedItems(pool.items, level)], seeded: SEED_LEVEL };
-        persist(migrated);
-        return migrated;
+        // Seed batches are added in apply(), where the host locale is known.
+        return normalizePool(parsed);
       } catch (_error) {
         return emptyPool();
       }
@@ -1632,6 +1688,44 @@ window.__ModuleLoader__.load({
         // The in-memory copy stays usable, but both views now say it is not saved.
         if (!storageState.get().failed) storageState.set({ failed: true });
       }
+    }
+
+    /** The host locale at first run; unsupported locales fall back to English seeds. */
+    function activeLocaleId() {
+      try {
+        const snapshot =
+          localeCtx && typeof localeCtx.getLocale === 'function'
+            ? localeCtx.getLocale()
+            : localeCtx && typeof localeCtx.getSnapshot === 'function'
+              ? localeCtx.getSnapshot()
+              : null;
+        const active = snapshot && (snapshot.active || snapshot.id || snapshot.locale || snapshot.language);
+        if (typeof active === 'string' && active) return active.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+      } catch (_error) {
+        /* a locale service that cannot answer still gets the document fallback */
+      }
+      try {
+        const htmlLang = typeof document !== 'undefined' && document.documentElement ? document.documentElement.lang : '';
+        if (typeof htmlLang === 'string' && htmlLang) return htmlLang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+      } catch (_error) {
+        /* no document in a non-browser host */
+      }
+      return 'en';
+    }
+
+    /**
+     * Add the missing seed batches now that apply() knows the host locale. A
+     * brand-new pool is seeded only here; an existing pool keeps every saved
+     * item, and its ids prevent a batch from being duplicated.
+     */
+    function seedPoolIfNeeded() {
+      const current = pool.get();
+      const level = current.seeded === true ? SEED_LEVEL : Number(current.seeded) || 0;
+      if (level >= SEED_LEVEL) return;
+      const missing = seedItems(current.items, level, activeLocaleId());
+      const next = { ...current, items: [...current.items, ...missing], seeded: SEED_LEVEL };
+      persist(next);
+      pool.set(next);
     }
 
     function mutate(fn) {
@@ -5140,6 +5234,7 @@ window.__ModuleLoader__.load({
       apply(ctx) {
         localeCtx = ctx.locale;
         pluginCtx = ctx;
+        seedPoolIfNeeded();
         // Optional services: bind late, and stay idle when they never mount.
         const bindOptional = (names, assign) => {
           const run = (target) => {

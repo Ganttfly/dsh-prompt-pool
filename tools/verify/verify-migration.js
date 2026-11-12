@@ -26,7 +26,15 @@ function load(stored) {
     getItem: (key) => (store.has(key) ? store.get(key) : null),
     setItem: (key, value) => store.set(key, String(value)),
   };
-  const win = { addEventListener: noop, __ModuleLoader__: { load: (spec) => spec.factory(() => React) } };
+  let plugin;
+  const win = {
+    addEventListener: noop,
+    __ModuleLoader__: {
+      load: (spec) => {
+        plugin = spec.factory(() => React);
+      },
+    },
+  };
   const ctx = {
     effect: (fn) => fn() || noop,
     get: () => undefined,
@@ -35,7 +43,8 @@ function load(stored) {
     slots: { inject: (name, cb) => { if (typeof cb === 'function') cb(); }, register: noop },
   };
   new Function('window', 'localStorage', 'require', source)(win, storage, () => React);
-  // The factory body runs before apply; the pool store is what this test reads.
+  // Seeding and migration happen in apply(), where the locale is known.
+  plugin.apply(ctx);
   return store;
 }
 

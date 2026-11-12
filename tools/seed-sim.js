@@ -16,8 +16,16 @@ const React = {
   useSyncExternalStore: (s, g) => g(),
 };
 
-function run(store) {
-  const win = { addEventListener: noop, __ModuleLoader__: { load: (spec) => spec.factory(() => React) } };
+function run(store, locale = 'zh') {
+  let plugin;
+  const win = {
+    addEventListener: noop,
+    __ModuleLoader__: {
+      load: (spec) => {
+        plugin = spec.factory(() => React);
+      },
+    },
+  };
   const storage = {
     getItem: (k) => (store.has(k) ? store.get(k) : null),
     setItem: (k, v) => store.set(k, String(v)),
@@ -29,10 +37,16 @@ function run(store) {
     },
     get: () => undefined,
     inject: () => noop,
-    locale: { register: () => noop, bind: () => (k) => k, subscribe: () => noop, getLocale: () => ({ id: 'zh' }) },
+    locale: {
+      register: () => noop,
+      bind: () => (k) => k,
+      subscribe: () => noop,
+      getLocale: () => ({ active: locale }),
+    },
     slots: { inject: () => noop, register: () => noop },
   };
   new Function('window', 'localStorage', 'require', src)(win, storage, () => React);
+  plugin.apply(ctx);
 }
 
 const fresh = new Map();
@@ -41,6 +55,16 @@ const freshPool = JSON.parse(fresh.get(KEY));
 console.log('fresh install:', freshPool.items.length, 'items, seeded =', freshPool.seeded);
 console.log('  pinned (常用):', freshPool.items.filter((i) => i.group === 'builtin:oftenuse').length);
 console.log('  snippets (模板):', freshPool.items.filter((i) => i.group === 'builtin:template').length);
+
+const freshEn = new Map();
+run(freshEn, 'en');
+const freshEnPool = JSON.parse(freshEn.get(KEY));
+const enTitles = freshEnPool.items.map((item) => item.title);
+console.log('fresh en:', freshEnPool.items.length, 'items, titles =', enTitles.join(' / '));
+if (!enTitles.includes('Plan first') || enTitles.some((title) => /[\u4e00-\u9fff]/.test(title))) {
+  console.error('[fail] English seeds did not follow the active locale');
+  process.exitCode = 1;
+}
 
 const legacy = new Map();
 legacy.set(
