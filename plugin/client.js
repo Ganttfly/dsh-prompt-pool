@@ -1690,8 +1690,26 @@ window.__ModuleLoader__.load({
       }
     }
 
+    /**
+     * Screenshot/test override: setting this key to 'en' or 'zh' makes the
+     * plugin's own copy and its new seed batches use that language without
+     * changing the host UI. Unset in normal use.
+     */
+    const PREVIEW_LOCALE_KEY = 'dsh.prompt-pool.preview-locale';
+
+    function previewLocaleId() {
+      try {
+        const value = localStorage.getItem(PREVIEW_LOCALE_KEY);
+        return value === 'zh' || value === 'en' ? value : null;
+      } catch (_error) {
+        return null;
+      }
+    }
+
     /** The host locale at first run; unsupported locales fall back to English seeds. */
     function activeLocaleId() {
+      const preview = previewLocaleId();
+      if (preview) return preview;
       try {
         const snapshot =
           localeCtx && typeof localeCtx.getLocale === 'function'
@@ -5303,7 +5321,13 @@ window.__ModuleLoader__.load({
         });
         if (ctx.locale && typeof ctx.locale.register === 'function' && typeof ctx.locale.bind === 'function') {
           ctx.effect(() => ctx.locale.register(NS, { zh: ZH, en: EN }));
-          translate = ctx.locale.bind(NS);
+          const preview = previewLocaleId();
+          if (preview) {
+            const table = preview === 'zh' ? ZH : EN;
+            translate = (key, params) => interpolate(table[key] || key, params);
+          } else {
+            translate = ctx.locale.bind(NS);
+          }
         }
         // The composer keeps two pieces: the trigger beside the input, and the
         // overlay panel. The overlay stays mounted even while closed, which is

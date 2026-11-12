@@ -16,7 +16,7 @@ const React = {
   useSyncExternalStore: (s, g) => g(),
 };
 
-function run(store, locale = 'zh') {
+function run(store, locale = 'zh', preview = null) {
   let plugin;
   const win = {
     addEventListener: noop,
@@ -30,6 +30,7 @@ function run(store, locale = 'zh') {
     getItem: (k) => (store.has(k) ? store.get(k) : null),
     setItem: (k, v) => store.set(k, String(v)),
   };
+  if (preview) storage.setItem('dsh.prompt-pool.preview-locale', preview);
   const ctx = {
     effect: (fn) => {
       const d = fn();
@@ -63,6 +64,17 @@ const enTitles = freshEnPool.items.map((item) => item.title);
 console.log('fresh en:', freshEnPool.items.length, 'items, titles =', enTitles.join(' / '));
 if (!enTitles.includes('Plan first') || enTitles.some((title) => /[\u4e00-\u9fff]/.test(title))) {
   console.error('[fail] English seeds did not follow the active locale');
+  process.exitCode = 1;
+}
+
+// A preview override must win over the host locale, so screenshots can be
+// seeded in English without changing the host UI.
+const previewEn = new Map();
+run(previewEn, 'zh', 'en');
+const previewTitles = JSON.parse(previewEn.get(KEY)).items.map((item) => item.title);
+console.log('preview en:', previewTitles.join(' / '));
+if (!previewTitles.includes('Plan first') || previewTitles.some((title) => /[\u4e00-\u9fff]/.test(title))) {
+  console.error('[fail] the preview locale override did not seed English');
   process.exitCode = 1;
 }
 
