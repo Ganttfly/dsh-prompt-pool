@@ -78,6 +78,52 @@ if (!previewTitles.includes('Plan first') || previewTitles.some((title) => /[\u4
   process.exitCode = 1;
 }
 
+// Switching the interface language swaps untouched built-in items in place,
+// while edited and deleted built-ins stay as the user left them.
+const switched = new Map();
+run(switched, 'zh');
+run(switched, 'en');
+const switchedPool = JSON.parse(switched.get(KEY));
+const switchedTitles = switchedPool.items.map((item) => item.title);
+console.log('switch zh->en:', switchedTitles.join(' / '));
+if (
+  switchedPool.items.length !== 10 ||
+  !switchedTitles.includes('Plan first') ||
+  switchedTitles.some((title) => /[\u4e00-\u9fff]/.test(title)) ||
+  switchedPool.items.some((item) => item.locale !== 'en')
+) {
+  console.error('[fail] untouched seeds did not switch language');
+  process.exitCode = 1;
+}
+
+const edited = new Map();
+run(edited, 'zh');
+const editedPool = JSON.parse(edited.get(KEY));
+const editedSeed = editedPool.items.find((item) => item.id === 'seed:plan-first');
+editedSeed.body = 'my custom edit';
+edited.set(KEY, JSON.stringify(editedPool));
+run(edited, 'en');
+const editedAfter = JSON.parse(edited.get(KEY));
+const editedKept = editedAfter.items.find((item) => item.id === 'seed:plan-first');
+console.log('edited seed after switch:', editedKept && editedKept.body);
+if (!editedKept || editedKept.body !== 'my custom edit' || editedAfter.items.filter((item) => item.locale === 'en').length !== 9) {
+  console.error('[fail] an edited seed was overwritten');
+  process.exitCode = 1;
+}
+
+const deleted = new Map();
+run(deleted, 'zh');
+const deletedPool = JSON.parse(deleted.get(KEY));
+deletedPool.items = deletedPool.items.filter((item) => item.id !== 'seed:plan-first');
+deleted.set(KEY, JSON.stringify(deletedPool));
+run(deleted, 'en');
+const deletedAfter = JSON.parse(deleted.get(KEY));
+console.log('deleted seed after switch:', deletedAfter.items.length, 'items, present =', deletedAfter.items.some((item) => item.id === 'seed:plan-first'));
+if (deletedAfter.items.length !== 9 || deletedAfter.items.some((item) => item.id === 'seed:plan-first')) {
+  console.error('[fail] a deleted seed was restored by the language switch');
+  process.exitCode = 1;
+}
+
 const legacy = new Map();
 legacy.set(
   KEY,

@@ -829,6 +829,8 @@ window.__ModuleLoader__.load({
         images,
         createdAt: Number.isFinite(raw.createdAt) ? raw.createdAt : now,
         updatedAt: Number.isFinite(raw.updatedAt) ? raw.updatedAt : now,
+        ...(raw.seed === true ? { seed: true } : {}),
+        ...(raw.locale === 'zh' || raw.locale === 'en' ? { locale: raw.locale } : {}),
       };
     }
 
@@ -1372,15 +1374,33 @@ window.__ModuleLoader__.load({
 
     const SEED_LEVEL = 2;
 
-    function seedItem([id, title, body], group, now) {
-      return { id, group, title, body, createdAt: now, updatedAt: now };
+    function seedItem([id, title, body], group, now, locale) {
+      return { id, group, title, body, seed: true, locale, createdAt: now, updatedAt: now };
     }
+
+    /**
+     * Every built-in id knows both language variants. The locale marker on a
+     * saved item plus an exact title/body match is what proves it is still the
+     * untouched built-in rather than a user edit.
+     */
+    const SEED_CATALOG = new Map();
+    function registerSeedBatch(entries, locale, level, group) {
+      for (const [id, title, body] of entries) {
+        const record = SEED_CATALOG.get(id) || { level, group, content: {} };
+        record.content[locale] = { title, body };
+        SEED_CATALOG.set(id, record);
+      }
+    }
+    registerSeedBatch(SEED_PROMPTS.zh, 'zh', 1, BUILTIN_GROUP.oftenuse);
+    registerSeedBatch(SEED_PROMPTS.en, 'en', 1, BUILTIN_GROUP.oftenuse);
+    registerSeedBatch(SEED_TEMPLATES.zh, 'zh', 2, BUILTIN_GROUP.template);
+    registerSeedBatch(SEED_TEMPLATES.en, 'en', 2, BUILTIN_GROUP.template);
 
     function seedsAbove(level, now, locale) {
       const language = locale === 'zh' ? 'zh' : 'en';
       const batches = [
-        { level: 1, items: SEED_PROMPTS[language].map((entry) => seedItem(entry, BUILTIN_GROUP.oftenuse, now)) },
-        { level: 2, items: SEED_TEMPLATES[language].map((entry) => seedItem(entry, BUILTIN_GROUP.template, now)) },
+        { level: 1, items: SEED_PROMPTS[language].map((entry) => seedItem(entry, BUILTIN_GROUP.oftenuse, now, language)) },
+        { level: 2, items: SEED_TEMPLATES[language].map((entry) => seedItem(entry, BUILTIN_GROUP.template, now, language)) },
       ];
       return batches.filter((batch) => batch.level > level).reduce((list, batch) => list.concat(batch.items), []);
     }
@@ -1742,6 +1762,56 @@ window.__ModuleLoader__.load({
       if (level >= SEED_LEVEL) return;
       const missing = seedItems(current.items, level, activeLocaleId());
       const next = { ...current, items: [...current.items, ...missing], seeded: SEED_LEVEL };
+      persist(next);
+      pool.set(next);
+    }
+
+    /** Which language variant this item still exactly matches, or null once edited. */
+    function seedContentLocale(item, record) {
+      for (const locale of ['zh', 'en']) {
+        const content = record.content[locale];
+        if (content && item.title === content.title && item.body === content.body) return locale;
+      }
+      return null;
+    }
+
+    /**
+     * Swap an untouched built-in to the target language. Edited items, duplicate
+     * ids outside the catalog, and items the user deleted are never touched.
+     */
+    function relocalizeSeed(item, target) {
+      const record = SEED_CATALOG.get(item.id);
+      if (!record) return null;
+      const source = seedContentLocale(item, record);
+      if (!source) return null;
+      if (source === target) {
+        if (item.seed === true && item.locale === target) return null;
+        return { ...item, seed: true, locale: target };
+      }
+      const content = record.content[target];
+      if (!content) return null;
+      return {
+        ...item,
+        title: content.title,
+        body: content.body,
+        seed: true,
+        locale: target,
+        updatedAt: Date.now(),
+      };
+    }
+
+    function syncSeedLocale() {
+      const target = activeLocaleId();
+      const current = pool.get();
+      let changed = false;
+      const items = current.items.map((item) => {
+        const next = relocalizeSeed(item, target);
+        if (!next) return item;
+        changed = true;
+        return next;
+      });
+      if (!changed) return;
+      const next = { ...current, items };
       persist(next);
       pool.set(next);
     }
@@ -5253,6 +5323,10 @@ window.__ModuleLoader__.load({
         localeCtx = ctx.locale;
         pluginCtx = ctx;
         seedPoolIfNeeded();
+        syncSeedLocale();
+        if (ctx.locale && typeof ctx.locale.subscribe === 'function') {
+          ctx.effect(() => ctx.locale.subscribe(() => syncSeedLocale()));
+        }
         // Optional services: bind late, and stay idle when they never mount.
         const bindOptional = (names, assign) => {
           const run = (target) => {
