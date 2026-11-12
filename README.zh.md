@@ -1,6 +1,6 @@
 # 提示池 · Prompt pool
 
-[![npm 版本](https://img.shields.io/npm/v/dsh-prompt-pool.svg)](https://www.npmjs.com/package/dsh-prompt-pool)
+[![npm 版本](https://img.shields.io/npm/v/dsh-prompt-pool.svg)](https://www.npmjs.com/package/dsh-prompt-pool) [![dshfind](https://dshfind.com/api/badge/Ganttfly/dsh-prompt-pool?lang=zh)](https://dshfind.com/zh/plugins/Ganttfly/dsh-prompt-pool?ref=badge)
 
 [English](README.md) | 中文
 

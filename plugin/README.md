@@ -1,6 +1,6 @@
 # Prompt pool · 提示池
 
-[![npm version](https://img.shields.io/npm/v/dsh-prompt-pool.svg)](https://www.npmjs.com/package/dsh-prompt-pool)
+[![npm version](https://img.shields.io/npm/v/dsh-prompt-pool.svg)](https://www.npmjs.com/package/dsh-prompt-pool) [![dshfind](https://dshfind.com/api/badge/Ganttfly/dsh-prompt-pool)](https://dshfind.com/en/plugins/Ganttfly/dsh-prompt-pool?ref=badge)
 
 A staging pool for prompts inside DeepSeek Harness: park a draft without sending it, arrange a playlist
 of prompt items, and release the batch into the composer's send queue in order.
