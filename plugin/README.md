@@ -8,7 +8,7 @@ of prompt items, and release the batch into the composer's send queue in order.
 ![The prompt pool panel open above the composer](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/panel.png)
 
 - Composer trigger beside the send controls (accent + count while something is queued)
-- Starter prompts and templates follow the host language, and untouched built-ins switch with it
+- Starter prompts follow the host language; Settings can reset them in Chinese, English, or the interface language, keeping edits as ordinary items
 - Composer panel with search, group tabs, row actions and a send-queue card
 - Right-click on selected conversation text to copy it or save it into a group (the last destination leads the menu)
 - Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback)

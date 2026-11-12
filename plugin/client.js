@@ -134,6 +134,18 @@ window.__ModuleLoader__.load({
       'settings.keepInsertHint': '关闭后，插入成功的条目会从池子移出；提示条上的「撤销」可以恢复。',
       'settings.keepQueue': '加入待发送队列后，仍旧保留在池子中',
       'settings.keepQueueHint': '关闭后，条目一加入队列就从池子移出；队列里的那一条不受影响。',
+      'settings.seedCard': '内置提示词',
+      'settings.seedHint': '当前有 {builtin} 条内置提示词，其中 {edited} 条已编辑。重置只影响内置条目，自定义条目和队列不受影响。',
+      'settings.seedLanguage': '重新注入的语言',
+      'settings.seedLanguageAuto': '跟随界面',
+      'settings.seedLanguageZh': '中文',
+      'settings.seedLanguageEn': 'English',
+      'settings.seedKeepEdited': '保留已编辑的内置条目',
+      'settings.seedKeepEditedHint': '勾选后，编辑过的内置条目会转成普通条目保留；未勾选则一起删除。',
+      'settings.seedResetButton': '重置内置提示词',
+      'settings.seedResetTitle': '重置内置提示词？',
+      'settings.seedResetConfirm': '将移除 {removed} 条内置提示词，保留 {kept} 条编辑为普通条目，并按「{language}」重新写入 {added} 条。',
+      'settings.seedResetDone': '已重置：移除 {removed} 条，保留 {kept} 条编辑，写入 {added} 条。',
       'settings.about': '插件信息',
       'settings.aboutAuthor': '作者',
       'settings.aboutRepo': '仓库',
@@ -300,6 +312,18 @@ window.__ModuleLoader__.load({
       'settings.keepInsertHint': 'Turned off, an inserted item leaves the pool; the toast offers an undo.',
       'settings.keepQueue': 'Keep it in the pool after adding it to the send queue',
       'settings.keepQueueHint': 'Turned off, the item leaves the pool as soon as it is queued; the queued copy stays.',
+      'settings.seedCard': 'Built-in prompts',
+      'settings.seedHint': 'The pool has {builtin} built-in prompts, {edited} of them edited. Resetting only touches built-ins; custom items and the queue are left alone.',
+      'settings.seedLanguage': 'Language for the new set',
+      'settings.seedLanguageAuto': 'Follow interface',
+      'settings.seedLanguageZh': 'Chinese',
+      'settings.seedLanguageEn': 'English',
+      'settings.seedKeepEdited': 'Keep edited built-in items',
+      'settings.seedKeepEditedHint': 'Checked, edited built-ins become ordinary items; unchecked, they are removed too.',
+      'settings.seedResetButton': 'Reset built-in prompts',
+      'settings.seedResetTitle': 'Reset built-in prompts?',
+      'settings.seedResetConfirm': 'Remove {removed} built-in prompts, keep {kept} edited as ordinary items, and add {added} in {language}.',
+      'settings.seedResetDone': 'Reset: {removed} removed, {kept} edits kept, {added} added.',
       'settings.about': 'Plugin info',
       'settings.aboutAuthor': 'Author',
       'settings.aboutRepo': 'Repository',
@@ -1165,6 +1189,23 @@ window.__ModuleLoader__.load({
       });
     }
 
+    /** Confirmation before the built-in set is replaced with a fresh language batch. */
+    function SeedResetConfirm(props) {
+      return h(ConfirmModal, {
+        label: translate('settings.seedResetTitle'),
+        text: translate('settings.seedResetConfirm', {
+          removed: props.removed,
+          kept: props.kept,
+          added: props.added,
+          language: props.language,
+        }),
+        cancelText: translate('row.cancel'),
+        confirmText: translate('settings.seedResetButton'),
+        onCancel: props.onCancel,
+        onConfirm: props.onConfirm,
+      });
+    }
+
     /** The workspace rail, or just its items when there is nothing to switch between. */
     function renderWorkspacePanes(props) {
       const rail = props.rail || [];
@@ -1373,6 +1414,7 @@ window.__ModuleLoader__.load({
     const POOL_VERSION = 2;
 
     const SEED_LEVEL = 2;
+    const SEED_TOTAL = SEED_PROMPTS.en.length + SEED_TEMPLATES.en.length;
 
     function seedItem([id, title, body], group, now, locale) {
       return { id, group, title, body, seed: true, locale, createdAt: now, updatedAt: now };
@@ -1775,45 +1817,9 @@ window.__ModuleLoader__.load({
       return null;
     }
 
-    /**
-     * Swap an untouched built-in to the target language. Edited items, duplicate
-     * ids outside the catalog, and items the user deleted are never touched.
-     */
-    function relocalizeSeed(item, target) {
-      const record = SEED_CATALOG.get(item.id);
-      if (!record) return null;
-      const source = seedContentLocale(item, record);
-      if (!source) return null;
-      if (source === target) {
-        if (item.seed === true && item.locale === target) return null;
-        return { ...item, seed: true, locale: target };
-      }
-      const content = record.content[target];
-      if (!content) return null;
-      return {
-        ...item,
-        title: content.title,
-        body: content.body,
-        seed: true,
-        locale: target,
-        updatedAt: Date.now(),
-      };
-    }
-
-    function syncSeedLocale() {
-      const target = activeLocaleId();
-      const current = pool.get();
-      let changed = false;
-      const items = current.items.map((item) => {
-        const next = relocalizeSeed(item, target);
-        if (!next) return item;
-        changed = true;
-        return next;
-      });
-      if (!changed) return;
-      const next = { ...current, items };
-      persist(next);
-      pool.set(next);
+    /** An extra image also counts as an edit, because a reset would lose it. */
+    function seedIsEdited(item, record) {
+      return seedContentLocale(item, record) === null || (Array.isArray(item.images) && item.images.length > 0);
     }
 
     function mutate(fn) {
@@ -1828,6 +1834,40 @@ window.__ModuleLoader__.load({
       add(item) {
         mutate((state) => ({ ...state, items: [...state.items, item] }));
         return item;
+      },
+      /**
+       * Replace every built-in item with a fresh set in `target`. A kept edit
+       * becomes an ordinary item with a new id, so the incoming set can use the
+       * canonical ids without a duplicate. Custom items and the tray are untouched.
+       */
+      resetBuiltins(target, keepEdited) {
+        const language = target === 'zh' ? 'zh' : 'en';
+        const current = pool.get();
+        const now = Date.now();
+        const items = [];
+        let removed = 0;
+        let kept = 0;
+        for (const item of current.items) {
+          const record = SEED_CATALOG.get(item.id);
+          if (!record) {
+            items.push(item);
+            continue;
+          }
+          if (keepEdited && seedIsEdited(item, record)) {
+            const preserved = { ...item, id: uid() };
+            delete preserved.seed;
+            delete preserved.locale;
+            items.push(preserved);
+            kept += 1;
+          } else {
+            removed += 1;
+          }
+        }
+        const fresh = seedsAbove(0, now, language);
+        const next = { ...current, items: [...items, ...fresh], seeded: SEED_LEVEL };
+        persist(next);
+        pool.set(next);
+        return { removed, kept, added: fresh.length, language };
       },
       /** Copy one pool item (current text) and append the copy last. */
       duplicateItem(id) {
@@ -3395,6 +3435,27 @@ window.__ModuleLoader__.load({
         poolActions.setSetting('hiddenWorkspaces', next);
       };
       const [section, setSection] = useState('order');
+      const [seedLocale, setSeedLocale] = useState('auto');
+      const [seedKeepEdited, setSeedKeepEdited] = useState(true);
+      const [seedConfirm, setSeedConfirm] = useState(false);
+      const [seedStatus, setSeedStatus] = useState('');
+      const seedItems = state.items.filter((item) => SEED_CATALOG.has(item.id));
+      const editedSeeds = seedItems.filter((item) => seedIsEdited(item, SEED_CATALOG.get(item.id)));
+      const seedLanguageLabel = translate(
+        seedLocale === 'auto'
+          ? 'settings.seedLanguageAuto'
+          : seedLocale === 'zh'
+            ? 'settings.seedLanguageZh'
+            : 'settings.seedLanguageEn',
+      );
+      const seedRemoveCount = seedItems.length - (seedKeepEdited ? editedSeeds.length : 0);
+      const seedKeptCount = seedKeepEdited ? editedSeeds.length : 0;
+      const resetSeeds = () => {
+        const target = seedLocale === 'auto' ? activeLocaleId() : seedLocale;
+        const result = poolActions.resetBuiltins(target, seedKeepEdited);
+        setSeedConfirm(false);
+        setSeedStatus(translate('settings.seedResetDone', result));
+      };
       const moveOrder = (index, delta) => {
         const order = settings.order.slice();
         const to = index + delta;
@@ -3466,6 +3527,60 @@ window.__ModuleLoader__.load({
           check('keepAfterInsert', 'settings.keepInsert', 'settings.keepInsertHint'),
           h('div', { className: 'pp-set-divider' }),
           check('keepAfterQueue', 'settings.keepQueue', 'settings.keepQueueHint'),
+        ),
+        h(
+          'div',
+          { className: 'pp-set-group pp-set-card', style: { display: section === 'prompts' ? '' : 'none' } },
+          h('div', { className: 'pp-set-label' }, translate('settings.seedCard')),
+          h(
+            'div',
+            { className: 'pp-hint' },
+            translate('settings.seedHint', { builtin: seedItems.length, edited: editedSeeds.length }),
+          ),
+          h(
+            'label',
+            { className: 'pp-set-row' },
+            h('span', null, translate('settings.seedLanguage')),
+            h(
+              'select',
+              {
+                className: 'pp-set-select',
+                name: 'seedLocale',
+                value: seedLocale,
+                onChange: (event) => setSeedLocale(event.target.value),
+              },
+              h('option', { value: 'auto' }, translate('settings.seedLanguageAuto')),
+              h('option', { value: 'zh' }, translate('settings.seedLanguageZh')),
+              h('option', { value: 'en' }, translate('settings.seedLanguageEn')),
+            ),
+          ),
+          h(
+            'label',
+            { className: 'pp-set-row' },
+            h('input', {
+              type: 'checkbox',
+              name: 'seedKeepEdited',
+              checked: seedKeepEdited,
+              onChange: () => setSeedKeepEdited((value) => !value),
+            }),
+            h('span', null, translate('settings.seedKeepEdited')),
+          ),
+          h('div', { className: 'pp-hint pp-set-hint' }, translate('settings.seedKeepEditedHint')),
+          h(
+            'div',
+            { className: 'pp-set-actions' },
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'pp-mini',
+                'data-pp': 'seed-reset',
+                onClick: () => setSeedConfirm(true),
+              },
+              translate('settings.seedResetButton'),
+            ),
+          ),
+          seedStatus ? h('div', { className: 'pp-hint' }, seedStatus) : null,
         ),
         h(
           'div',
@@ -3581,6 +3696,16 @@ window.__ModuleLoader__.load({
               )
             : null,
         ),
+        seedConfirm
+          ? h(SeedResetConfirm, {
+              removed: seedRemoveCount,
+              kept: seedKeptCount,
+              added: SEED_TOTAL,
+              language: seedLanguageLabel,
+              onCancel: () => setSeedConfirm(false),
+              onConfirm: resetSeeds,
+            })
+          : null,
       );
     }
 
@@ -5170,6 +5295,8 @@ window.__ModuleLoader__.load({
         '.pp-set-ws-tag{margin-left:6px;padding:0 5px;border-radius:5px;background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px}' +
         '.pp-set-ws-path{margin-left:auto;color:var(--pp-ink-2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px}' +
         '.pp-set-label{font-size:12px;color:var(--pp-ink-2);margin:2px 0 4px}' +
+        '.pp-set-select{height:28px;margin-left:auto;padding:0 8px;border:1px solid var(--pp-line);border-radius:7px;background:var(--pp-surface);color:var(--pp-ink);font:inherit;font-size:12px;cursor:pointer}' +
+        '.pp-set-actions{display:flex;justify-content:flex-end;margin-top:8px}' +
       '.pp-set-card{padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
       '.pp-set-card .pp-set-label{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-set-card .pp-set-row{padding:3px 0}' +
@@ -5323,10 +5450,6 @@ window.__ModuleLoader__.load({
         localeCtx = ctx.locale;
         pluginCtx = ctx;
         seedPoolIfNeeded();
-        syncSeedLocale();
-        if (ctx.locale && typeof ctx.locale.subscribe === 'function') {
-          ctx.effect(() => ctx.locale.subscribe(() => syncSeedLocale()));
-        }
         // Optional services: bind late, and stay idle when they never mount.
         const bindOptional = (names, assign) => {
           const run = (target) => {

@@ -28,8 +28,9 @@ Settings: how each group family is displayed and ordered, and the plugin info ca
 ## Features
 
 - **Staging instead of sending** — save a draft into the pool; nothing runs until you release it.
-- **Localized starter prompts** — a new pool is seeded in the host language, and switching languages
-  swaps untouched built-in items in place; edited or deleted items are left alone.
+- **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
+  can reset the built-in set in Chinese, English, or the interface language. Edited built-ins can be
+  kept as ordinary items; custom items and the queue are left alone.
 - **Ordered release** — queue items in the order you want, then send them one by one; each submission
   waits for the composer to be accepted before the next starts. On hosts that expose the conversation
   queue, items go straight into the queue without touching the composer; otherwise the composer path
