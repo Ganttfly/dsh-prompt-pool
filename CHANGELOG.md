@@ -8,13 +8,18 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- Built-in seed prompts follow the host language and carry a `seed`/locale marker. Settings → Prompts
-  can reset them in the current interface language: every built-in is removed and the matching set is
-  injected, so deleted built-ins come back. With "keep edited" checked, edited built-ins become
-  ordinary items first; unchecked, they are removed too. Custom items, custom groups, and the send
-  queue are left alone.
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
+
+## [1.3.0] — 2026-11-13
+
+### Added
+
+- Starter prompts are now localized: a new pool is seeded in the host language (Chinese or English),
+  and Settings → Prompts can reset the built-in set in the current interface language. Built-ins carry
+  a `seed`/locale marker, so a reset can replace them while keeping edited built-ins as ordinary items
+  when "keep edited" is checked. Deleted built-ins come back; custom items, custom groups, and the
+  send queue are left alone.
 
 ## [1.2.0] — 2026-11-11
 
@@ -166,7 +171,8 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.3.0
 [1.2.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.2.0
 [1.1.1]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.1.1
 [1.1.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.1.0
