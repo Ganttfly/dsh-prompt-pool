@@ -21,10 +21,10 @@ delete), and the send queue at the bottom. The trigger beside the composer carri
 The same pool as a right-sidebar page — a native tab on DSH 0.2+, with the group tabs and one tab per
 workspace.
 
-![Prompt pool settings: retention switches, the built-in prompt reset, and the plugin info card](docs/images/settings.png)
+![Prompt pool settings: retention switches and the built-in prompt reset](docs/images/settings.png)
 
-Settings: what happens to an item after use, resetting the built-in prompts in the current interface
-language, and the plugin info card.
+Settings: what happens to an item after use, and resetting the built-in prompts in the current
+interface language.
 
 ## Features
 
