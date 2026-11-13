@@ -64,7 +64,7 @@ window.__ModuleLoader__.load({
       'button.pending': '待发送 {n} 条',
       'panel.title': '提示池',
       'panel.close': '关闭',
-      'panel.capture': '存草稿',
+      'panel.capture': '保存草稿',
       'panel.captureHint': '把输入框里的内容复制一份存进池子（图片附件一起存）；输入框里的字会保留',
       'panel.resize': '拖动调整高度，双击还原',
       'panel.resizeWidth': '拖动调整宽度，双击还原',
@@ -98,12 +98,11 @@ window.__ModuleLoader__.load({
       'mention.sessionClosed': '会话未打开，无法读取技能目录',
       'mention.failed': '读取失败',
       'mention.timeout': '读取超时：宿主没有响应（可能没有活跃会话）',
-      'row.insert': '插入到输入框',
+      'row.insert': '生成草稿',
       'row.select': '加入待发送队列',
       'row.duplicate': '复制一份，追加到池子末尾',
       'page.title': '提示池',
       'tab.description': '暂存、编辑、编排你的提示词，按住顺序一次性释放',
-      'page.count': '共 {n} 条',
       'page.search': '搜索标题或内容…',
       'page.empty': '还没有内容。点右上角「＋ 提示词」开始。',
       'page.emptyOftenuse': '还没有常用条目。把条目的「分组」改成「常用」即可。',
@@ -115,6 +114,16 @@ window.__ModuleLoader__.load({
       'settings.open': '提示池设置',
       'settings.button': '设置',
       'settings.tab.order': '分组',
+      'settings.defaultTab': '打开时默认选中',
+      'settings.defaultTabNotes': '批注',
+      'settings.defaultTabWorkspace': '当前工作区',
+      'settings.defaultTabOther': '其他',
+      'settings.tab.notes': '批注',
+      'settings.notesIntro': '批注和当前会话绑定。\n在正文中添加的批注同时也会出现在提示池的【批注】页面，也可以把它存为提示词，或直接插入会话输入框。',
+      'settings.notesKeepDraft': '生成草稿后，仍旧保留',
+      'settings.notesKeepDraftHint': '关闭后，生成草稿成功的批注会从列表移除。',
+      'settings.notesKeepStore': '存为提示词后，仍旧保留',
+      'settings.notesKeepStoreHint': '关闭后，存成提示词成功的批注会从列表移除。',
       'settings.table': '分组的顺序与显示',
       'settings.tableHint': '箭头调整先后顺序；右侧三列决定这一组怎么显示。',
       'settings.tableGroup': '分组',
@@ -206,9 +215,41 @@ window.__ModuleLoader__.load({
       'status.savedPartialTo': '已存入「{group}」，但 {n} 个附件没有保存',
       'capture.title': '存到哪个分组？',
       'menu.title': '添加到提示池',
+      'menu.pool': '+ 提示词',
+      'menu.group': '提示池',
       'menu.copy': '复制',
       'menu.copied': '已复制',
       'menu.copyFailed': '复制失败：请按 {shortcut}',
+      'note.add': '+ 批注',
+      'note.title': '批注',
+      'note.placeholder': '写点什么：回答、疑问或修改意见',
+      'note.empty': '没有匹配的批注',
+      'note.emptyIntro': '还没有批注。在会话区选中一句话，右键「+ 批注」即可添加。',
+      'note.save': '保存',
+      'note.cancel': '取消',
+      'note.delete': '删除',
+      'note.compose': '生成草稿',
+      'note.composeHint': '把列表中全部批注生成一份草稿放入对话框',
+      'note.composeStoreHint': '把列表中全部批注存成一条提示词',
+      'note.insert': '插入',
+      'note.locate': '定位',
+      'note.locateFailed': '这条批注暂时找不到原文（回复可能被折叠或改写了）。',
+      'note.deleteConfirm': '删除这条批注？',
+      'note.default': '默认',
+      'note.reset': '重置位置',
+      'note.store': '存成提示词',
+      'note.stored': '已存入 {group}',
+      'note.composeStore': '存成提示词',
+      'note.composeStored': '已存成提示词到 {group}',
+      'note.inserted': '已插入输入框',
+      'note.insertFailed': '输入框暂不可用，稍后再试',
+      'note.quoteMissing': '这条批注暂时找不到原文位置（回复可能被折叠或改写了）。',
+      'note.kind.comment': '意见',
+      'note.kind.question': '提问',
+      'note.kind.agree': '同意',
+      'note.kind.disagree': '反对',
+      'note.kind.idea': '想法',
+      'note.kind.todo': '待办',
       'menu.last': '上次',
       'menu.count': '{n} 条',
       'menu.saved': '已加入「{group}」',
@@ -275,12 +316,11 @@ window.__ModuleLoader__.load({
       'mention.sessionClosed': 'The session is not open, so the catalog is unavailable',
       'mention.failed': 'Failed to load',
       'mention.timeout': 'Timed out: the host did not answer (no live session?)',
-      'row.insert': 'Insert into the composer',
+      'row.insert': 'Generate draft',
       'row.select': 'Add to the send queue',
       'row.duplicate': 'Duplicate and append to the pool',
       'page.title': 'Prompt pool',
       'tab.description': 'Stage, edit and arrange prompts, then release them in order',
-      'page.count': '{n} items',
       'page.search': 'Search title or text…',
       'page.empty': 'Nothing yet. Use “+ Prompt” in the top right.',
       'page.emptyOftenuse': 'Nothing here yet. Set an item’s group to Frequent.',
@@ -292,6 +332,16 @@ window.__ModuleLoader__.load({
       'settings.open': 'Prompt pool settings',
       'settings.button': 'Settings',
       'settings.tab.order': 'Groups',
+      'settings.defaultTab': 'Open on',
+      'settings.defaultTabNotes': 'Annotations',
+      'settings.defaultTabWorkspace': 'Current workspace',
+      'settings.defaultTabOther': 'Other',
+      'settings.tab.notes': 'Annotations',
+      'settings.notesIntro': 'Annotations are bound to the current session.\nAnnotations added in the transcript also appear in the prompt pool\'s Annotations tab; they can also be saved as a prompt or inserted straight into the conversation composer.',
+      'settings.notesKeepDraft': 'Keep annotations after generating a draft',
+      'settings.notesKeepDraftHint': 'Turned off, annotations leave the list once a draft is generated.',
+      'settings.notesKeepStore': 'Keep annotations after saving as a prompt',
+      'settings.notesKeepStoreHint': 'Turned off, annotations leave the list once saved as a prompt.',
       'settings.table': 'Group order and display',
       'settings.tableHint': 'Use the arrows to reorder; the three columns decide how each family shows up.',
       'settings.tableGroup': 'Group',
@@ -383,9 +433,41 @@ window.__ModuleLoader__.load({
       'status.savedPartialTo': 'Saved to {group}; {n} attachment(s) were not captured',
       'capture.title': 'Save to which group?',
       'menu.title': 'Add to the prompt pool',
+      'menu.pool': '+ Prompt',
+      'menu.group': 'Prompt pool',
       'menu.copy': 'Copy',
       'menu.copied': 'Copied',
       'menu.copyFailed': 'Copy failed: press {shortcut}',
+      'note.add': '+ Annotate',
+      'note.title': 'Annotations',
+      'note.placeholder': 'Write an answer, a question or a correction',
+      'note.empty': 'No matching annotations',
+      'note.emptyIntro': 'No annotations yet. Select a passage in the conversation area and right-click “+ Annotate” to add one.',
+      'note.save': 'Save',
+      'note.cancel': 'Cancel',
+      'note.delete': 'Delete',
+      'note.compose': 'Generate draft',
+      'note.composeHint': 'Turn every annotation in the list into one draft in the composer',
+      'note.composeStoreHint': 'Save every annotation in the list as one prompt',
+      'note.insert': 'Insert',
+      'note.locate': 'Locate',
+      'note.locateFailed': 'This note cannot find its passage right now (the reply may be folded or rewritten).',
+      'note.deleteConfirm': 'Delete this annotation?',
+      'note.default': 'Default',
+      'note.reset': 'Reset position',
+      'note.store': 'Save as prompt',
+      'note.stored': 'Saved to {group}',
+      'note.composeStore': 'Save as prompt',
+      'note.composeStored': 'Saved as a prompt in {group}',
+      'note.inserted': 'Inserted into the composer',
+      'note.insertFailed': 'The composer is not available; try again',
+      'note.quoteMissing': 'This note cannot find its text right now (the reply may be folded or rewritten).',
+      'note.kind.comment': 'Note',
+      'note.kind.question': 'Question',
+      'note.kind.agree': 'Agree',
+      'note.kind.disagree': 'Disagree',
+      'note.kind.idea': 'Idea',
+      'note.kind.todo': 'To do',
       'menu.last': 'Last used',
       'menu.count': '{n} item(s)',
       'menu.saved': 'Added to {group}',
@@ -1028,6 +1110,26 @@ window.__ModuleLoader__.load({
       ];
     }
 
+    /**
+     * The tab a freshly opened pool lands on. An unavailable preference (a
+     * deleted group, a hidden workspace, no annotations yet) falls back to all.
+     */
+    function resolveDefaultTab(pref, tabs, currentWorkspaceId, hasNotes) {
+      if (!pref) return '';
+      const ids = (tabs || []).map((tab) => tab.id);
+      // The annotation tab always exists now, so the preference always applies.
+      if (pref === 'notes') return 'notes';
+      if (pref === '__workspace__') {
+        const id = currentWorkspaceId ? 'workspace:' + currentWorkspaceId : '';
+        return id && ids.indexOf(id) >= 0 ? id : 'all';
+      }
+      if (pref.indexOf('tab:') === 0) {
+        const id = pref.slice(4);
+        return ids.indexOf(id) >= 0 ? id : 'all';
+      }
+      return '';
+    }
+
     /** Small chooser: where should the captured draft go? */
     function CaptureMenu(props) {
       useEffect(() => {
@@ -1603,6 +1705,14 @@ window.__ModuleLoader__.load({
         queueCollapsed: settings.queueCollapsed === true,
         // The group the right-click menu offered last, so it can lead the list.
         lastCaptureGroup: typeof settings.lastCaptureGroup === 'string' ? settings.lastCaptureGroup : '',
+        // Annotations: where their markers draw, not what they hold.
+        notesHighlight: settings.notesHighlight !== false,
+        // Which tab a freshly opened pool lands on: notes, this workspace, or a
+        // concrete tab ("tab:<id>").
+        defaultTab: typeof settings.defaultTab === 'string' ? settings.defaultTab : '',
+        // Annotations survive the two actions unless the user opts out.
+        noteKeepAfterDraft: settings.noteKeepAfterDraft !== false,
+        noteKeepAfterStore: settings.noteKeepAfterStore !== false,
         // Whether an item leaves the pool after it is used.
         keepAfterInsert: settings.keepAfterInsert !== false,
         keepAfterQueue: settings.keepAfterQueue !== false,
@@ -2381,7 +2491,15 @@ window.__ModuleLoader__.load({
             h('path', { d: 'M4.3 7.6H2.6A1.2 1.2 0 0 1 1.4 6.4V2.6A1.2 1.2 0 0 1 2.6 1.4h3.8a1.2 1.2 0 0 1 1.2 1.2v1.7' }),
           );
         case 'insert':
-          return h('svg', base, h('path', { d: 'M1.8 3.4v5.2M2 6h5.2M5.4 3.9L7.6 6 5.4 8.1' }), h('path', { d: 'M9.2 2.2h.8v7.6h-.8' }));
+          // The same glyph as an annotation's "generate draft" action: an arrow
+          // dropping into the composer box.
+          return h(
+            'svg',
+            { width: 15, height: 15, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
+            h('path', { d: 'M3.6 12.4h12.8v3.4H3.6z' }),
+            h('path', { d: 'M10 3v6.4' }),
+            h('path', { d: 'M7.4 6.9 10 9.4l2.6-2.5' }),
+          );
         case 'close':
           return h('svg', base, h('path', { d: 'M3 3l6 6M9 3l-6 6' }));
         case 'chevronDown':
@@ -2792,6 +2910,7 @@ window.__ModuleLoader__.load({
             type: 'button',
             className: 'pp-tab',
             'data-active': active ? 'true' : 'false',
+            'data-group': tab.group,
             title: tab.category ? translate('tab.renameHint') : undefined,
             onClick: () => props.onSelect(tab.id),
             onDoubleClick: tab.category ? () => setRenaming({ id: tab.id, name: tab.label, original: tab.label }) : undefined,
@@ -2899,6 +3018,7 @@ window.__ModuleLoader__.load({
       const state = usePoolState();
       const storage = useStorageState();
       const releaseInfo = useReleaseState();
+      const noteBar = useNoteStatus();
       const queueCollapsed = state.settings && state.settings.queueCollapsed === true;
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
@@ -2917,14 +3037,32 @@ window.__ModuleLoader__.load({
         return pool.length > 0 ? pool[pool.length - 1] : '';
       })();
       const activeSessionId = pageSessionId || sessionHint || workspaceSession || '';
-      const tabs = buildTabs(state.categories, workspaceList, state.settings, currentWorkspaceId);
+      const notesState = useNotesState();
+      const notesList = notesState.items
+        .filter((note) => note.sessionId === activeSessionId)
+        .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt));
+      const baseTabs = buildTabs(state.categories, workspaceList, state.settings, currentWorkspaceId);
+      // The annotation tab is always present, so the feature stays discoverable.
+      const tabs = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
       const captureGroups = captureChoices(state.categories, workspaceList, currentWorkspaceId, state.settings);
-      const tabCounts = tabCountsOf(state.items);
+      const tabCounts = {
+        ...tabCountsOf(state.items),
+        notes: notesList.length,
+      };
       const [tab, setPageTab] = useState(() => pageTabState.get().id || 'all');
       const setTab = (id) => {
         pageTabState.set({ id });
         setPageTab(id);
       };
+      // The page opens on the tab chosen in Settings (once per mount).
+      const defaultAppliedRef = useRef(false);
+      useEffect(() => {
+        if (defaultAppliedRef.current) return;
+        defaultAppliedRef.current = true;
+        const pref = normalizeSettings(state.settings).defaultTab;
+        const resolved = resolveDefaultTab(pref, tabs, currentWorkspaceId, notesList.length > 0);
+        if (resolved) setTab(resolved);
+      }, []);
       const [query, setQuery] = useState('');
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
@@ -3090,6 +3228,75 @@ window.__ModuleLoader__.load({
         );
       };
 
+      /** The page has no composer, so the mounted panel inserts the reply. */
+      const composeSessionNotes = () => {
+        let result;
+        try {
+          result = bridge.request({ type: 'compose-notes' });
+        } catch (_error) {
+          return false;
+        }
+        const ok = Boolean(result && result.ok);
+        if (ok && normalizeSettings(state.settings).noteKeepAfterDraft === false) {
+          notesActions.clearSession(activeSessionId);
+        }
+        return ok;
+      };
+
+      /** The page cannot write the composer, so the mounted panel inserts the note. */
+      const insertNote = (note) => {
+        let result;
+        try {
+          result = bridge.request({ type: 'insert-text', text: composeNoteLine(note) });
+        } catch (_error) {
+          return false;
+        }
+        return Boolean(result && result.ok);
+      };
+
+      /** Store the session's annotations as one prompt, from the page header. */
+      const storeNotesPrompt = (event) => {
+        const choices = captureChoices(state.categories, workspaceList, currentWorkspaceId, state.settings);
+        const preferred = currentWorkspaceId && choices.some((entry) => entry.value === 'workspace:' + currentWorkspaceId)
+          ? 'workspace:' + currentWorkspaceId
+          : BUILTIN_GROUP.oftenuse;
+        const ordered = choices.some((entry) => entry.value === preferred)
+          ? [...choices.filter((entry) => entry.value === preferred), ...choices.filter((entry) => entry.value !== preferred)]
+          : choices;
+        const rect = event && event.currentTarget && event.currentTarget.getBoundingClientRect
+          ? event.currentTarget.getBoundingClientRect()
+          : null;
+        notePrompt.set({
+          open: true,
+          target: { kind: 'reply' },
+          choices: ordered,
+          defaultValue: preferred,
+          anchor: rect
+            ? { left: Math.round(rect.left), right: Math.round(rect.right), top: Math.round(rect.top), bottom: Math.round(rect.bottom) }
+            : { left: 120, right: 160, top: 60, bottom: 90 },
+          token: Date.now(),
+          onPick: (group) => {
+            closeNotePrompt();
+            if (!group) return;
+            const text = composeNotesReply(notesList);
+            poolActions.add({
+              id: uid(),
+              group,
+              title: draftTitle(text),
+              body: text,
+              images: [],
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            });
+            if (normalizeSettings(state.settings).noteKeepAfterStore === false) {
+              notesActions.clearSession(activeSessionId);
+            }
+            const resolved = resolveGroup(group, state.categories, workspaceList);
+            showToast(translate('note.composeStored', { group: resolved ? resolved.label : translate('row.noCategory') }), 'ok');
+          },
+        });
+      };
+
       /** The page cannot read the composer, so the mounted panel performs it. */
       const captureDraft = (group) => {
         let result;
@@ -3245,18 +3452,23 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-page-head' },
-          h('span', { className: 'pp-page-title' }, translate('page.title')),
-          h('span', { className: 'pp-page-sub' }, translate('page.count', { n: state.items.length })),
-          h('span', { className: 'pp-grow' }),
           h('input', {
+            key: 'search',
             className: 'pp-search',
             value: query,
             placeholder: translate('page.search'),
             'aria-label': translate('page.search'),
             onChange: (event) => setQuery(event.target.value),
           }),
-          h('button', { type: 'button', className: 'pp-mini', onClick: create }, '＋ ', translate('page.new')),
-          h('button', { type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
+          tab === 'notes'
+            ? [
+                h('button', { key: 'store', type: 'button', className: 'pp-mini', title: translate('note.composeStoreHint'), onClick: storeNotesPrompt }, translate('note.composeStore')),
+                h('button', { key: 'draft', type: 'button', className: 'pp-mini', title: translate('note.composeHint'), onClick: composeSessionNotes }, translate('note.compose')),
+              ]
+            : [
+                h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: create }, '＋ ', translate('page.new')),
+                h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
+              ],
           h(SettingsButton, { active: settingsOpen, onClick: () => setSettingsOpen(!settingsOpen) }),
         ),
         h(
@@ -3327,7 +3539,20 @@ window.__ModuleLoader__.load({
           { className: 'pp-page-body', ref: pageListRef },
           settingsOpen
             ? h(PromptPoolSettings, { currentWorkspaceId })
-            : nestedView
+            : tab === 'notes'
+              ? h(NotesView, {
+                  notes: notesList,
+                  sessionId: activeSessionId,
+                  onCompose: composeSessionNotes,
+                  onInsertNote: insertNote,
+                  hideActions: true,
+                  filter: query,
+                  categories: state.categories,
+                  workspaces: workspaceList,
+                  currentWorkspaceId,
+                  settings: state.settings,
+                })
+              : nestedView
               ? renderWorkspacePanes({
                   rail: nestedView.rail,
                   items: nestedView.scoped,
@@ -3356,6 +3581,9 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-queue-dock' },
+          tab === 'notes' && noteBar.text
+            ? h('div', { className: 'pp-notes-bar', 'data-kind': noteBar.kind, role: 'status' }, noteBar.text)
+            : null,
           notice
             ? h(
                 'div',
@@ -3376,7 +3604,7 @@ window.__ModuleLoader__.load({
                   : null,
               )
             : null,
-          settingsOpen
+          settingsOpen || tab === 'notes'
             ? null
             : renderTrayCard({
                 entries: state.tray,
@@ -3433,6 +3661,15 @@ window.__ModuleLoader__.load({
         poolActions.setSetting('hiddenWorkspaces', next);
       };
       const [section, setSection] = useState('order');
+      const tabOptions = buildTabs(state.categories, wsItems, settings, wsCurrentId);
+      const defaultTab = settings.defaultTab || '';
+      const defaultTabMode = defaultTab === 'notes'
+        ? 'notes'
+        : defaultTab === '__workspace__'
+          ? 'workspace'
+          : defaultTab.indexOf('tab:') === 0
+            ? 'custom'
+            : '';
       const [seedKeepEdited, setSeedKeepEdited] = useState(true);
       const [seedConfirm, setSeedConfirm] = useState(false);
       const [seedStatus, setSeedStatus] = useState('');
@@ -3470,7 +3707,7 @@ window.__ModuleLoader__.load({
             }),
             h('span', null, translate(label)),
           ),
-          h('div', { className: 'pp-hint pp-set-hint' }, translate(hint)),
+          hint ? h('div', { className: 'pp-hint pp-set-hint' }, translate(hint)) : null,
         );
       return h(
         'div',
@@ -3511,6 +3748,25 @@ window.__ModuleLoader__.load({
             },
             translate('settings.tab.prompts'),
           ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-tab',
+              'data-active': section === 'notes' ? 'true' : 'false',
+              onClick: () => setSection('notes'),
+            },
+            translate('settings.tab.notes'),
+          ),
+        ),
+        h(
+          'div',
+          { className: 'pp-set-group pp-set-card', style: { display: section === 'notes' ? '' : 'none' } },
+          h('div', { className: 'pp-hint pp-set-intro' }, translate('settings.notesIntro')),
+          h('div', { className: 'pp-set-divider' }),
+          check('noteKeepAfterDraft', 'settings.notesKeepDraft', 'settings.notesKeepDraftHint'),
+          h('div', { className: 'pp-set-divider' }),
+          check('noteKeepAfterStore', 'settings.notesKeepStore', 'settings.notesKeepStoreHint'),
         ),
         h(
           'div',
@@ -3588,6 +3844,59 @@ window.__ModuleLoader__.load({
                   workspace.path ? h('span', { className: 'pp-set-ws-path' }, workspace.path) : null,
                 ),
               ),
+        ),
+        h(
+          'div',
+          { className: 'pp-set-group pp-set-card', style: { display: section === 'order' ? '' : 'none' } },
+          h('div', { className: 'pp-set-label' }, translate('settings.defaultTab')),
+          h(
+            'div',
+            { className: 'pp-set-radios' },
+            [
+              { mode: 'notes', key: 'settings.defaultTabNotes', value: 'notes' },
+              { mode: 'workspace', key: 'settings.defaultTabWorkspace', value: '__workspace__' },
+              { mode: 'custom', key: 'settings.defaultTabOther', value: '' },
+            ].map((entry) => h(
+              'div',
+              { key: entry.mode, className: 'pp-set-radio-row' },
+              h(
+                'label',
+                { className: 'pp-set-radio' },
+                h('input', {
+                  type: 'radio',
+                  name: 'pp-default-tab',
+                  checked: defaultTabMode === entry.mode,
+                  onChange: () => {
+                    if (entry.mode === 'custom') {
+                      const previous = defaultTab.indexOf('tab:') === 0 ? defaultTab : '';
+                      const first = tabOptions[0];
+                      poolActions.setSetting('defaultTab', previous || (first ? 'tab:' + first.id : ''));
+                      return;
+                    }
+                    poolActions.setSetting('defaultTab', entry.value);
+                  },
+                }),
+                h('span', null, translate(entry.key)),
+              ),
+              entry.mode === 'custom'
+                ? h(
+                    'select',
+                    {
+                      className: 'pp-select',
+                      // Always visible next to "other"; picking a tab here also
+                      // switches the choice to it.
+                      value: defaultTabMode === 'custom' ? defaultTab.slice(4) : (tabOptions[0] ? tabOptions[0].id : ''),
+                      onChange: (event) => poolActions.setSetting('defaultTab', 'tab:' + event.target.value),
+                    },
+                    tabOptions.map((tab) => h(
+                      'option',
+                      { key: tab.id, value: tab.id },
+                      tab.label,
+                    )),
+                  )
+                : null,
+            )),
+          ),
         ),
         h(
           'div',
@@ -4003,6 +4312,1487 @@ window.__ModuleLoader__.load({
       );
     }
 
+    // ------------------------------------------------------------------ notes
+    /**
+     * Annotations on a rendered assistant reply. They are stored by value (the
+     * quoted text plus its surroundings) instead of by DOM node, so a re-render,
+     * a fold or a paging remount costs the pin only until the text is back.
+     */
+    const NOTES_KEY = 'dsh.prompt-pool.notes.v1';
+    const NOTES_SINGLETON = '__dshPromptPoolNotesV1';
+    /** One Highlight object carries every annotated range. */
+    const NOTE_HIGHLIGHT = 'prompt-pool-note';
+    /** The always-open note card: fixed width so the gutter test is exact. */
+    /** Narrower columns fall back to numbered pins instead of cards. */
+    /** Tallest a card can get, for the occlusion test against a floating panel. */
+
+    /** Bumped when badge placement changes, so old chips are rebuilt in place. */
+    const NOTE_CHIP_VERSION = '3';
+
+    /** Annotation kinds: the glyph, tint and label drive the badge and highlight. */
+    const NOTE_KINDS = [
+      { id: 'comment', icon: '✎', tint: '255,191,36', label: 'note.kind.comment' },
+      { id: 'question', icon: '?', tint: '244,114,114', label: 'note.kind.question' },
+      { id: 'agree', icon: '✓', tint: '74,222,128', label: 'note.kind.agree' },
+      { id: 'disagree', icon: '✕', tint: '239,68,68', label: 'note.kind.disagree' },
+      { id: 'idea', icon: '💡', tint: '96,165,250', label: 'note.kind.idea' },
+      { id: 'todo', icon: '□', tint: '251,191,36', label: 'note.kind.todo' },
+    ];
+    const NOTE_KIND_IDS = NOTE_KINDS.map((kind) => kind.id);
+    const NOTE_KIND_DEFAULT = 'comment';
+    /** Inline annotations are a short badge: ten characters at most. */
+    const NOTE_BODY_MAX = 10;
+
+    function noteKind(kind) {
+      return NOTE_KINDS.find((entry) => entry.id === kind) || NOTE_KINDS[0];
+    }
+
+    /** The visible badge text, whitespace-collapsed and capped. */
+    function noteBodyText(body) {
+      const text = String(body || '').replace(/\s+/g, ' ').trim();
+      return text.length > NOTE_BODY_MAX ? text.slice(0, NOTE_BODY_MAX) + '…' : text;
+    }
+
+    /** Keep only fields the annotation UI reads; anything else is dropped. */
+    function normalizeNote(raw) {
+      if (!raw || typeof raw !== 'object') return null;
+      const quote = typeof raw.quote === 'string' ? raw.quote : '';
+      if (!quote.trim()) return null;
+      return {
+        id: typeof raw.id === 'string' && raw.id ? raw.id : uid(),
+        sessionId: typeof raw.sessionId === 'string' ? raw.sessionId : '',
+        nodeKey: typeof raw.nodeKey === 'string' ? raw.nodeKey : '',
+        quote,
+        prefix: typeof raw.prefix === 'string' ? raw.prefix : '',
+        suffix: typeof raw.suffix === 'string' ? raw.suffix : '',
+        offset: Number.isFinite(Number(raw.offset)) ? Number(raw.offset) : 0,
+        order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : 0,
+        kind: NOTE_KIND_IDS.indexOf(raw.kind) >= 0 ? raw.kind : NOTE_KIND_DEFAULT,
+        // Where the user dragged this note's card, relative to its passage.
+        dx: Number.isFinite(Number(raw.dx)) ? Number(raw.dx) : 0,
+        dy: Number.isFinite(Number(raw.dy)) ? Number(raw.dy) : 0,
+        // Set once the note was promoted into a pool group; the row keeps it
+        // visible with a "stored" marker instead of deleting the record.
+        promotedGroup: typeof raw.promotedGroup === 'string' ? raw.promotedGroup : '',
+        promotedAt: Number.isFinite(Number(raw.promotedAt)) ? Number(raw.promotedAt) : 0,
+        body: typeof raw.body === 'string' ? raw.body : '',
+        createdAt: Number.isFinite(Number(raw.createdAt)) ? Number(raw.createdAt) : Date.now(),
+        updatedAt: Number.isFinite(Number(raw.updatedAt)) ? Number(raw.updatedAt) : Date.now(),
+      };
+    }
+
+    function loadNotes() {
+      try {
+        const raw = localStorage.getItem(NOTES_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        const items = Array.isArray(parsed && parsed.items) ? parsed.items.map(normalizeNote).filter(Boolean) : [];
+        return { version: 1, items };
+      } catch (_error) {
+        return { version: 1, items: [] };
+      }
+    }
+
+    const notes = (() => {
+      if (typeof window === 'undefined') return createStore({ version: 1, items: [] });
+      if (!window[NOTES_SINGLETON]) window[NOTES_SINGLETON] = createStore(loadNotes());
+      return window[NOTES_SINGLETON];
+    })();
+
+    function mutateNotes(fn) {
+      const prev = notes.get();
+      const next = fn(prev);
+      if (!next || next === prev) return;
+      notes.set(next);
+      try {
+        localStorage.setItem(NOTES_KEY, JSON.stringify(next));
+      } catch (_error) {
+        /* a full store keeps the in-memory copy; the pool reports write failures */
+      }
+    }
+
+    const notesActions = {
+      add(note) {
+        mutateNotes((state) => ({ ...state, items: [...state.items, note] }));
+        return note;
+      },
+      patch(id, fields) {
+        mutateNotes((state) => ({
+          ...state,
+          items: state.items.map((note) => (note.id === id ? { ...note, ...fields, updatedAt: Date.now() } : note)),
+        }));
+      },
+      remove(id) {
+        mutateNotes((state) => (state.items.some((note) => note.id === id)
+          ? { ...state, items: state.items.filter((note) => note.id !== id) }
+          : null));
+      },
+      clearSession(sessionId) {
+        mutateNotes((state) => {
+          const items = state.items.filter((note) => note.sessionId !== sessionId);
+          return items.length === state.items.length ? null : { ...state, items };
+        });
+      },
+      /** Drop every drag offset in one session: the cards return to their anchors. */
+      resetPositions(sessionId) {
+        mutateNotes((state) => {
+          let touched = false;
+          const items = state.items.map((note) => {
+            if (note.sessionId !== sessionId) return note;
+            if ((note.dx || 0) === 0 && (note.dy || 0) === 0) return note;
+            touched = true;
+            return { ...note, dx: 0, dy: 0 };
+          });
+          return touched ? { ...state, items } : null;
+        });
+      },
+    };
+
+    /**
+     * A frame-level toast. The notes views live inside the composer overlay or a
+     * sidebar column, so an inline status would be clipped or lost in the list;
+     * the toast is appended to the body and floats above every surface.
+     */
+    let toastNode = null;
+    let toastTimer = 0;
+    function ensureToastStyle() {
+      if (typeof document === 'undefined') return;
+      if (document.querySelector('style[data-pp-toast]')) return;
+      const style = document.createElement('style');
+      style.setAttribute('data-pp-toast', '');
+      style.textContent = '.pp-toast{position:fixed;left:50%;bottom:30px;z-index:2147483000;max-width:min(520px,calc(100vw - 32px));padding:7px 13px;border-radius:8px;background:rgba(24,24,26,.94);color:#fff;font-size:12px;line-height:1.5;box-shadow:0 12px 30px rgba(0,0,0,.28);opacity:0;transform:translate(-50%,8px);transition:opacity .16s ease,transform .16s ease;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-toast[data-show="true"]{opacity:1;transform:translate(-50%,0)}.pp-toast[data-kind="error"]{background:rgba(160,38,38,.95)}';
+      document.head.appendChild(style);
+    }
+    function showToast(text, kind) {
+      if (typeof document === 'undefined' || !text) return;
+      ensureToastStyle();
+      if (!toastNode) {
+        toastNode = document.createElement('div');
+        toastNode.className = 'pp-toast';
+        toastNode.setAttribute('role', 'status');
+        document.body.appendChild(toastNode);
+      }
+      toastNode.textContent = text;
+      toastNode.setAttribute('data-kind', kind === 'error' ? 'error' : 'ok');
+      toastNode.setAttribute('data-show', 'true');
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => {
+        if (toastNode) toastNode.removeAttribute('data-show');
+      }, 2300);
+    }
+
+    /** The session whose transcript is on screen; published by the notes layer. */
+    const chatView = (() => {
+      if (typeof window === 'undefined') return createStore({ sessionId: '' });
+      if (!window.__dshPromptPoolNotesViewV1) window.__dshPromptPoolNotesViewV1 = createStore({ sessionId: '' });
+      return window.__dshPromptPoolNotesViewV1;
+    })();
+    /** A newly captured anchor waiting for the overlay to open its editor. */
+    const noteDraft = (() => {
+      if (typeof window === 'undefined') return createStore({ anchor: null, sessionId: '', token: 0 });
+      if (!window.__dshPromptPoolNotesDraftV1) window.__dshPromptPoolNotesDraftV1 = createStore({ anchor: null, sessionId: '', token: 0 });
+      return window.__dshPromptPoolNotesDraftV1;
+    })();
+    /** A request to scroll to one annotation and open it. */
+    const noteFocus = (() => {
+      if (typeof window === 'undefined') return createStore({ id: '', token: 0 });
+      if (!window.__dshPromptPoolNotesFocusV1) window.__dshPromptPoolNotesFocusV1 = createStore({ id: '', token: 0 });
+      return window.__dshPromptPoolNotesFocusV1;
+    })();
+
+    /**
+     * The "pick a group" popup for storing a prompt. It lives in the frame
+     * overlay (not in the pool list) so it can float over the panel instead of
+     * pushing content around or being clipped by the list.
+     */
+    const notePrompt = (() => {
+      const empty = { open: false, target: null, choices: [], anchor: null, defaultValue: '', onPick: null, token: 0 };
+      if (typeof window === 'undefined') return createStore(empty);
+      if (!window.__dshPromptPoolNotePromptV1) window.__dshPromptPoolNotePromptV1 = createStore(empty);
+      return window.__dshPromptPoolNotePromptV1;
+    })();
+    const closeNotePrompt = () => notePrompt.set({ open: false, target: null, choices: [], anchor: null, defaultValue: '', onPick: null, token: 0 });
+
+    /** The "delete this annotation?" popup; the confirmation floats, never inline. */
+    const noteConfirm = (() => {
+      const empty = { open: false, anchor: null, onConfirm: null, token: 0 };
+      if (typeof window === 'undefined') return createStore(empty);
+      if (!window.__dshPromptPoolNoteConfirmV1) window.__dshPromptPoolNoteConfirmV1 = createStore(empty);
+      return window.__dshPromptPoolNoteConfirmV1;
+    })();
+    const closeNoteConfirm = () => noteConfirm.set({ open: false, anchor: null, onConfirm: null, token: 0 });
+
+    /** A short status line in the annotations tab's bottom strip (locate misses). */
+    const noteStatus = (() => {
+      const empty = { text: '', kind: '', token: 0 };
+      if (typeof window === 'undefined') return createStore(empty);
+      if (!window.__dshPromptPoolNoteStatusV1) window.__dshPromptPoolNoteStatusV1 = createStore(empty);
+      return window.__dshPromptPoolNoteStatusV1;
+    })();
+    function showNoteStatus(text, kind) {
+      const token = Date.now();
+      noteStatus.set({ text: String(text || ''), kind: kind === 'error' ? 'error' : 'ok', token });
+      if (typeof window !== 'undefined') {
+        window.setTimeout(() => {
+          if (noteStatus.get().token === token) noteStatus.set({ text: '', kind: '', token: 0 });
+        }, 2800);
+      }
+    }
+    function openNoteConfirm(run, event) {
+      const rect = event && event.currentTarget && event.currentTarget.getBoundingClientRect
+        ? event.currentTarget.getBoundingClientRect()
+        : null;
+      noteConfirm.set({
+        open: true,
+        anchor: rect
+          ? { left: Math.round(rect.left), right: Math.round(rect.right), top: Math.round(rect.top), bottom: Math.round(rect.bottom) }
+          : { left: 120, right: 160, top: 90, bottom: 120 },
+        onConfirm: typeof run === 'function' ? run : null,
+        token: Date.now(),
+      });
+    }
+
+    const useNotesState = () => useSyncExternalStore(notes.subscribe, notes.get, notes.get);
+    const useChatView = () => useSyncExternalStore(chatView.subscribe, chatView.get, chatView.get);
+    const useNoteDraft = () => useSyncExternalStore(noteDraft.subscribe, noteDraft.get, noteDraft.get);
+    const useNoteFocus = () => useSyncExternalStore(noteFocus.subscribe, noteFocus.get, noteFocus.get);
+    const useNotePrompt = () => useSyncExternalStore(notePrompt.subscribe, notePrompt.get, notePrompt.get);
+    const useNoteConfirm = () => useSyncExternalStore(noteConfirm.subscribe, noteConfirm.get, noteConfirm.get);
+    const useNoteStatus = () => useSyncExternalStore(noteStatus.subscribe, noteStatus.get, noteStatus.get);
+
+    /** One line of quote text for a row, a pin tooltip or the composed reply. */
+    function noteQuoteText(quote, limit) {
+      const text = String(quote || '').replace(/\s+/g, ' ').trim();
+      const max = limit || 80;
+      return text.length > max ? text.slice(0, max) + '…' : text;
+    }
+
+    /** The reply a session's annotations produce: numbered, each with its quote. */
+    /** One note as a prompt line, without a number (single-note drafts). */
+    function composeNoteLine(note) {
+      const kind = noteKind(note.kind);
+      const label = translate(kind.label);
+      const body = String(note.body || '').replace(/\s+/g, ' ').trim();
+      return `【${label}】「${noteQuoteText(note.quote)}」${body ? '：' + body : ''}`;
+    }
+
+    /** The reply a session's annotations produce: numbered, each with its quote. */
+    function composeNotesReply(list) {
+      return list
+        .slice()
+        .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt))
+        .map((note, index) => `${index + 1}. ${composeNoteLine(note)}`)
+        .join('\n');
+    }
+
+    /** The selection's start as an index into the element's plain textContent. */
+    function textOffsetIn(source, container, offset) {
+      try {
+        const walker = document.createTreeWalker(source, typeof NodeFilter === 'undefined' ? 4 : NodeFilter.SHOW_TEXT);
+        let total = 0;
+        let node = walker.nextNode();
+        while (node) {
+          if (node === container) return total + offset;
+          total += node.nodeValue ? node.nodeValue.length : 0;
+          node = walker.nextNode();
+        }
+        if (container.nodeType !== 1) return total;
+        // An element boundary: sum the text before its child at `offset`.
+        let before = 0;
+        const probe = document.createRange();
+        probe.selectNodeContents(source);
+        try {
+          probe.setEnd(container, offset);
+        } catch (_error) {
+          return total;
+        }
+        const inner = document.createTreeWalker(source, typeof NodeFilter === 'undefined' ? 4 : NodeFilter.SHOW_TEXT);
+        let text = inner.nextNode();
+        while (text) {
+          const nodeRange = document.createRange();
+          nodeRange.selectNodeContents(text);
+          if (probe.compareBoundaryPoints(Range.END_TO_END, nodeRange) >= 0) {
+            before += text.nodeValue ? text.nodeValue.length : 0;
+          }
+          text = inner.nextNode();
+        }
+        return before;
+      } catch (_error) {
+        return 0;
+      }
+    }
+
+    /**
+     * Capture the selected assistant text as a value anchor. Runs while the
+     * gesture still owns the selection, so it reads the live DOM once and never
+     * depends on that DOM again.
+     */
+    function captureNoteAnchor(sessionId) {
+      try {
+        if (typeof document === 'undefined') return null;
+        const selection = document.getSelection();
+        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
+        const range = selection.getRangeAt(0);
+        if (!range || range.collapsed) return null;
+        const startNode = range.startContainer;
+        const startElement = startNode && startNode.nodeType === 1 ? startNode : startNode && startNode.parentElement;
+        const endNode = range.endContainer;
+        const endElement = endNode && endNode.nodeType === 1 ? endNode : endNode && endNode.parentElement;
+        if (!startElement || !startElement.closest || !endElement || !endElement.closest) return null;
+        const source = startElement.closest('[data-text-interaction-source]');
+        if (!source || endElement.closest('[data-text-interaction-source]') !== source) return null;
+        const row = source.closest('[data-chat-flow-kind]');
+        if (!row || row.getAttribute('data-chat-flow-kind') !== 'assistant-step') return null;
+        const keyed = source.closest('[data-chat-node-key]');
+        const nodeKey = keyed ? keyed.getAttribute('data-chat-node-key') || '' : '';
+        if (!nodeKey) return null;
+        const rawQuote = range.toString();
+        const quote = rawQuote.trim();
+        if (!quote) return null;
+        // A browser selection often starts on the whitespace that ends the
+        // previous line; trimmed here so the anchor (and its inline badge) starts
+        // on the first visible character instead of the line above.
+        const lead = rawQuote.length - rawQuote.trimStart().length;
+        // Offsets are stored against the element's textContent (block boundaries
+        // are not characters there), which is also what resolution walks.
+        const offset = textOffsetIn(source, range.startContainer, range.startOffset) + lead;
+        const text = source.textContent || '';
+        const prefix = text.slice(Math.max(0, offset - 24), offset);
+        const suffix = text.slice(offset + quote.length, offset + quote.length + 24);
+        let rowIndex = 0;
+        const scroll = noteChatRoot(sessionId);
+        if (scroll) {
+          const rows = scroll.querySelectorAll('[data-chat-node-key]');
+          // A row that is not in this list (a nested copy, a paging remount) must
+          // sort last rather than first: order 0 would put a later note above the
+          // earlier ones and drag their cards down with it.
+          const at = Array.prototype.indexOf.call(rows, keyed);
+          rowIndex = at >= 0 ? at : rows.length;
+        }
+        return { nodeKey, quote, prefix, suffix, offset, order: rowIndex * 1000000 + offset };
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    /**
+     * Find the stored quote inside one element's text. Context match wins over
+     * the stored offset, because a reply can be re-rendered with different
+     * neighbour nodes while its text stays the same.
+     */
+    function locateQuote(text, quote, prefix, suffix, offset) {
+      if (!text || !quote) return -1;
+      let best = -1;
+      let bestScore = -Infinity;
+      let index = text.indexOf(quote);
+      while (index >= 0) {
+        let score = 0;
+        if (prefix && text.slice(Math.max(0, index - prefix.length), index) === prefix) score += 2;
+        if (suffix && text.slice(index + quote.length, index + quote.length + suffix.length) === suffix) score += 2;
+        score -= Math.abs(index - offset) / Math.max(1, text.length);
+        if (score > bestScore) {
+          bestScore = score;
+          best = index;
+        }
+        index = text.indexOf(quote, index + 1);
+      }
+      return best;
+    }
+
+    /** Collapse whitespace runs for a tolerant comparison. */
+    function collapseWhitespace(value) {
+      return String(value || '').replace(/\s+/g, ' ').trim();
+    }
+
+    /** One collapsed string plus, per character, its index in the original. */
+    function collapsedText(text) {
+      const chars = [];
+      const positions = [];
+      let pendingSpace = false;
+      for (let index = 0; index < text.length; index += 1) {
+        const char = text[index];
+        if (/\s/u.test(char)) {
+          pendingSpace = chars.length > 0;
+          continue;
+        }
+        if (pendingSpace) {
+          chars.push(' ');
+          positions.push(index);
+          pendingSpace = false;
+        }
+        chars.push(char);
+        positions.push(index);
+      }
+      return { text: chars.join(''), positions };
+    }
+
+    /**
+     * The span of one quoted passage inside a source's text. The exact match wins;
+     * a re-render can serialize the same words with different whitespace, so a
+     * collapsed comparison is the fallback.
+     */
+    function findQuoteSpan(text, quote, prefix, suffix, offset) {
+      if (!text || !quote) return null;
+      // Older anchors may carry the whitespace that ended the previous line; the
+      // passage itself starts on the first visible character.
+      const clean = String(quote).trim();
+      if (!clean) return null;
+      const exact = locateQuote(text, clean, prefix, suffix, offset);
+      if (exact >= 0) return { start: exact, end: exact + clean.length };
+      const target = collapseWhitespace(clean);
+      if (!target) return null;
+      const collapsed = collapsedText(text);
+      const at = collapsed.text.indexOf(target);
+      if (at < 0) return null;
+      const start = collapsed.positions[at];
+      const end = collapsed.positions[at + target.length - 1] + 1;
+      return end > start ? { start, end } : null;
+    }
+
+    /** Build a live DOM Range for a character span of one element's text. */
+    function rangeFromTextOffset(source, start, length) {
+      if (typeof document === 'undefined' || length <= 0) return null;
+      try {
+        const walker = document.createTreeWalker(source, typeof NodeFilter === 'undefined' ? 4 : NodeFilter.SHOW_TEXT);
+        let node = walker.nextNode();
+        let consumed = 0;
+        let from = null;
+        while (node) {
+          const size = node.nodeValue ? node.nodeValue.length : 0;
+          if (from === null && consumed + size >= start) from = { node, offset: start - consumed };
+          if (from !== null && consumed + size >= start + length) {
+            const range = document.createRange();
+            range.setStart(from.node, from.offset);
+            range.setEnd(node, start + length - consumed);
+            return range;
+          }
+          consumed += size;
+          node = walker.nextNode();
+        }
+      } catch (_error) {
+        /* a half-built tree during a re-render */
+      }
+      return null;
+    }
+
+    /**
+     * The main conversation's scroll container. The sidebar renders session
+     * previews with the same conversation attributes, so pick the container that
+     * belongs to this session and owns the composer (previews own neither).
+     */
+    function noteChatRoot(sessionId) {
+      if (typeof document === 'undefined') return null;
+      const candidates = Array.from(document.querySelectorAll('[data-conversation-scroll]'));
+      if (candidates.length === 0) return null;
+      const sameSession = sessionId
+        ? candidates.filter((element) => {
+            const owner = element.closest('[data-conversation-session]');
+            return owner !== null && owner.getAttribute('data-conversation-session') === sessionId;
+          })
+        : [];
+      const pool = sameSession.length > 0 ? sameSession : candidates;
+      const withComposer = pool.filter((element) => element.querySelector('[data-composer-seat]') !== null);
+      const preferred = withComposer.length > 0 ? withComposer : pool;
+      let best = null;
+      let bestWidth = 0;
+      for (const element of preferred) {
+        const rect = element.getBoundingClientRect();
+        if (rect.height > 0 && rect.width > bestWidth) {
+          best = element;
+          bestWidth = rect.width;
+        }
+      }
+      return best || preferred[0] || null;
+    }
+
+
+    /** Resolve an anchor or a stored note to its live range and transcript row. */
+    function resolveNote(anchor, root) {
+      if (!root || !anchor || typeof document === 'undefined') return null;
+      const rows = root.querySelectorAll('[data-chat-node-key]');
+      // Prefer the row the note was captured from; if its key changed, the same
+      // words can still be found elsewhere in the transcript.
+      const ordered = [];
+      const rest = [];
+      for (const row of rows) {
+        if (row.getAttribute('data-chat-node-key') === anchor.nodeKey) ordered.push(row);
+        else rest.push(row);
+      }
+      for (const row of [...ordered, ...rest]) {
+        const sources = row.querySelectorAll('[data-text-interaction-source]');
+        for (const source of sources) {
+          const text = source.textContent || '';
+          const span = findQuoteSpan(text, anchor.quote, anchor.prefix, anchor.suffix, anchor.offset);
+          if (!span) continue;
+          const range = rangeFromTextOffset(source, span.start, span.end - span.start);
+          if (range) return { range, row };
+        }
+      }
+      return null;
+    }
+
+    /** The range alone, for callers that only need to paint or scroll it. */
+    function resolveNoteRange(anchor, root) {
+      const resolved = resolveNote(anchor, root);
+      return resolved ? resolved.range : null;
+    }
+
+    /** Paint every annotated range, tinted by its kind. */
+    function applyNoteHighlights(items) {
+      try {
+        // The module has its own `CSS` string for the pool panel, so reach for
+        // the browser namespace explicitly.
+        const registry = typeof globalThis === 'undefined' ? undefined : globalThis.CSS;
+        const HighlightType = typeof globalThis === 'undefined' ? undefined : globalThis.Highlight;
+        if (!registry || !registry.highlights || typeof HighlightType !== 'function') return;
+        for (const id of NOTE_KIND_IDS) registry.highlights.delete(NOTE_HIGHLIGHT + '-' + id);
+        if (!items || items.length === 0) return;
+        const buckets = new Map();
+        for (const item of items) {
+          if (!item || !item.range) continue;
+          const id = noteKind(item.kind).id;
+          if (!buckets.has(id)) buckets.set(id, []);
+          buckets.get(id).push(item.range);
+        }
+        for (const [id, ranges] of buckets) {
+          registry.highlights.set(NOTE_HIGHLIGHT + '-' + id, new HighlightType(...ranges));
+        }
+      } catch (_error) {
+        /* older engines: the inline badges still work */
+      }
+    }
+
+    /**
+     * Pins, highlights and the inline editor, drawn into the frame-wide overlay.
+     * The markdown DOM is never touched: live ranges are measured and the layer is
+     * positioned over them, so selection, copy and the host's rendering still work.
+     */
+    function NotesLayer() {
+      useLocaleTick();
+      const notesState = useNotesState();
+      const view = useChatView();
+      const draft = useNoteDraft();
+      const focus = useNoteFocus();
+      const prompt = useNotePrompt();
+      const confirm = useNoteConfirm();
+      const pool = usePoolState();
+      const [editing, setEditing] = useState(null);
+      const [body, setBody] = useState('');
+      const [kind, setKind] = useState(NOTE_KIND_DEFAULT);
+      const [missing, setMissing] = useState(false);
+      const [anchorPoint, setAnchorPoint] = useState(null);
+      const bubbleRef = useRef(null);
+      const frameRef = useRef(0);
+      const sessionId = view.sessionId;
+      const sessionNotes = notesState.items
+        .filter((note) => note.sessionId === sessionId)
+        .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt));
+      const notesRef = useRef(sessionNotes);
+      notesRef.current = sessionNotes;
+      // The open editor's passage: highlighted (and tinted by the pending kind)
+      // before anything is saved, and dropped again when the bubble closes.
+      const draftRef = useRef(null);
+      draftRef.current = editing ? { id: editing.id || '', anchor: editing.anchor || null, kind } : null;
+      const highlightOn = !pool.settings || pool.settings.notesHighlight !== false;
+      const highlightRef = useRef(highlightOn);
+      highlightRef.current = highlightOn;
+
+      /**
+       * The last visible character of a passage. Trailing whitespace in the
+       * selection is skipped so the badge sits right after the text.
+       */
+      const visibleEnd = (range) => {
+        try {
+          const take = (node, offset) => {
+            const data = node.nodeValue || '';
+            let at = Math.min(offset, data.length);
+            while (at > 0 && /\s/.test(data[at - 1])) at -= 1;
+            return at > 0 ? { node, offset: at } : null;
+          };
+          if (range.endContainer.nodeType === 3) {
+            const hit = take(range.endContainer, range.endOffset);
+            if (hit) return hit;
+          }
+          const walker = document.createTreeWalker(range.commonAncestorContainer, typeof NodeFilter === 'undefined' ? 4 : NodeFilter.SHOW_TEXT);
+          let node = walker.nextNode();
+          let last = null;
+          while (node) {
+            const position = range.comparePoint(node, 0);
+            if (position === 1) break;
+            if (position === 0 || node === range.startContainer) last = node;
+            node = walker.nextNode();
+          }
+          if (last) {
+            const hit = take(last, last.nodeValue ? last.nodeValue.length : 0);
+            if (hit) return hit;
+          }
+        } catch (_error) {
+          /* fall back to the range's own end */
+        }
+        return { node: range.endContainer, offset: range.endOffset };
+      };
+
+      /**
+       * The inline badge: a short chip inserted right before the passage. It is
+       * foreign to the host's React tree, so it is re-inserted whenever a
+       * re-render drops it; the chip itself carries no text the transcript would
+       * copy (it is user-select:none and clickable).
+       */
+      const insertChip = (range, note, meta, shown) => {
+        if (!range || !range.startContainer) return;
+        try {
+          const chip = document.createElement('span');
+          chip.className = 'pp-note-inline';
+          chip.setAttribute('data-pp-inline', note.id);
+          chip.setAttribute('data-kind', meta.id);
+          chip.setAttribute('data-text', shown);
+          chip.setAttribute('data-version', NOTE_CHIP_VERSION);
+          chip.setAttribute('role', 'button');
+          chip.setAttribute('tabindex', '0');
+          chip.setAttribute('title', shown ? `${translate(meta.label)}：${shown}` : translate(meta.label));
+          const icon = document.createElement('span');
+          icon.className = 'pp-note-inline-icon';
+          icon.textContent = meta.icon;
+          const text = document.createElement('span');
+          text.className = 'pp-note-inline-text';
+          // A kind-only note is just its glyph.
+          text.textContent = shown;
+          chip.appendChild(icon);
+          if (shown) chip.appendChild(text);
+          const open = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openNote(note.id);
+          };
+          chip.addEventListener('click', open);
+          chip.addEventListener('pointerdown', (event) => {
+            // Keep the pointer from starting a text selection; the click itself
+            // still has to reach the badge.
+            event.stopPropagation();
+          });
+          chip.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') open(event);
+          });
+          const at = document.createRange();
+          const end = visibleEnd(range);
+          at.setStart(end.node, end.offset);
+          at.collapse(true);
+          at.insertNode(chip);
+        } catch (_error) {
+          /* the passage moved or the node refused insertion; the tab still lists it */
+        }
+      };
+
+      const syncChips = () => {
+        if (typeof document === 'undefined') return;
+        const root = noteChatRoot(sessionId);
+        if (!root) return;
+        const wanted = new Map();
+        for (const note of notesRef.current) wanted.set(note.id, note);
+        // A fresh layer (or a session switch) rebuilds every badge once, so
+        // anchors placed by an older insertion rule are corrected too.
+        const resetKey = sessionId;
+        const fresh = chipResetRef.current !== resetKey;
+        chipResetRef.current = resetKey;
+        if (fresh) {
+          for (const chip of root.querySelectorAll('[data-pp-inline]')) chip.remove();
+        }
+        for (const chip of root.querySelectorAll('[data-pp-inline]')) {
+          if (!wanted.has(chip.getAttribute('data-pp-inline'))) chip.remove();
+        }
+        for (const note of wanted.values()) {
+          const meta = noteKind(note.kind);
+          const shown = noteBodyText(note.body);
+          const existing = root.querySelector('[data-pp-inline="' + note.id + '"]');
+          if (existing) {
+            const same = existing.getAttribute('data-kind') === meta.id
+              && existing.getAttribute('data-text') === shown
+              && existing.getAttribute('data-version') === NOTE_CHIP_VERSION;
+            if (same) continue;
+            existing.remove();
+          }
+          const hit = resolveNote(note, root);
+          if (!hit) continue;
+          // A streaming row rebuilds every token; only settled text keeps a badge.
+          if (hit.row && hit.row.querySelector('[data-streaming]')) continue;
+          insertChip(hit.range, note, meta, shown);
+        }
+      };
+      const syncRef = useRef(syncChips);
+      syncRef.current = syncChips;
+      const chipResetRef = useRef('');
+
+      const measure = useCallback(() => {
+        const list = notesRef.current;
+        const root = noteChatRoot(sessionId);
+        if (!root || list.length === 0) {
+          applyNoteHighlights([]);
+          return;
+        }
+        const items = [];
+        for (const note of list) {
+          const hit = resolveNote(note, root);
+          if (hit) items.push({ id: note.id, range: hit.range, kind: note.kind });
+        }
+        // The open bubble's passage is underlined immediately, following the
+        // pending kind until Save or Cancel.
+        const draftNote = draftRef.current;
+        if (draftNote) {
+          if (draftNote.id) {
+            const at = items.findIndex((item) => item.id === draftNote.id);
+            if (at >= 0) items[at] = { ...items[at], kind: draftNote.kind };
+            else {
+              const note = notesRef.current.find((entry) => entry.id === draftNote.id);
+              const hit = note ? resolveNote(note, root) : null;
+              if (hit) items.push({ id: draftNote.id, range: hit.range, kind: draftNote.kind });
+            }
+          } else if (draftNote.anchor) {
+            const range = resolveNoteRange(draftNote.anchor, root);
+            if (range) items.push({ id: '', range, kind: draftNote.kind });
+          }
+        }
+        if (highlightRef.current) applyNoteHighlights(items);
+        else applyNoteHighlights([]);
+      }, [sessionId]);
+
+      useEffect(() => {
+        if (typeof document === 'undefined') return undefined;
+        const root = noteChatRoot(sessionId);
+        if (!root || notesRef.current.length === 0) {
+          applyNoteHighlights([]);
+          return undefined;
+        }
+        // The flow can mount after the effect (switching back to Chat from another
+        // view); the observer below schedules a measure once its rows appear.
+        const schedule = () => {
+          if (frameRef.current) return;
+          const run = () => {
+            frameRef.current = 0;
+            measure();
+            syncRef.current();
+          };
+          frameRef.current = typeof window !== 'undefined' && window.requestAnimationFrame
+            ? window.requestAnimationFrame(run)
+            : window.setTimeout(run, 16);
+        };
+        root.addEventListener('scroll', schedule, true);
+        window.addEventListener('resize', schedule);
+        const resizer = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
+        if (resizer) resizer.observe(root);
+        const observer = typeof MutationObserver === 'function' ? new MutationObserver(schedule) : null;
+        if (observer) observer.observe(root, { childList: true, subtree: true, characterData: true });
+        schedule();
+        return () => {
+          root.removeEventListener('scroll', schedule, true);
+          window.removeEventListener('resize', schedule);
+          if (resizer) resizer.disconnect();
+          if (observer) observer.disconnect();
+          if (frameRef.current && typeof window !== 'undefined' && window.cancelAnimationFrame) window.cancelAnimationFrame(frameRef.current);
+          frameRef.current = 0;
+        };
+      }, [measure, sessionId, sessionNotes.length]);
+
+      // Adding, editing or deleting a note redraws the inline badges; the text
+      // itself never changes.
+      useEffect(() => {
+        syncRef.current();
+      }, [notesState.items, sessionId]);
+
+      useEffect(() => {
+        if (!draft.anchor || (draft.sessionId && draft.sessionId !== sessionId)) return;
+        setEditing({ id: '', anchor: draft.anchor, body: '' });
+        setBody('');
+        setKind(NOTE_KIND_DEFAULT);
+        setMissing(false);
+        // The bubble follows the passage, so the note is written where it belongs.
+        const root = noteChatRoot(sessionId);
+        const range = root ? resolveNoteRange(draft.anchor, root) : null;
+        if (range && root) {
+          const rect = range.getBoundingClientRect();
+          setAnchorPoint({ x: rect.right, y: Math.round(rect.top + rect.height / 2) });
+          const box = root.getBoundingClientRect();
+          if (rect.top < box.top + 40 || rect.bottom > box.bottom - 40) {
+            root.scrollTop += rect.top - box.top - Math.min(120, box.height / 3);
+          }
+        } else {
+          setAnchorPoint(null);
+        }
+        noteDraft.set({ anchor: null, sessionId: '', token: 0 });
+      }, [draft.anchor, draft.sessionId, draft.token, sessionId]);
+
+      // The open bubble's passage is underlined while it is being written; a
+      // kind switch re-tints it live instead of waiting for Save.
+      useEffect(() => {
+        measure();
+      }, [editing, kind, measure]);
+
+      // The floating popups (group picker, delete confirmation); a click outside
+      // or Escape puts them away without changing anything.
+      useEffect(() => {
+        if ((!prompt.open && !confirm.open) || typeof document === 'undefined') return undefined;
+        const onDown = (event) => {
+          const element = event.target instanceof Element ? event.target : null;
+          if (element && element.closest && element.closest('.pp-note-prompt')) return;
+          closeNotePrompt();
+          closeNoteConfirm();
+        };
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return;
+          closeNotePrompt();
+          closeNoteConfirm();
+        };
+        document.addEventListener('pointerdown', onDown, true);
+        document.addEventListener('keydown', onKey, true);
+        return () => {
+          document.removeEventListener('pointerdown', onDown, true);
+          document.removeEventListener('keydown', onKey, true);
+        };
+      }, [prompt.open, prompt.token, confirm.open, confirm.token]);
+
+      useEffect(() => {
+        if (!focus.id) return;
+        const note = notesState.items.find((entry) => entry.id === focus.id);
+        const wantsEditor = focus.edit === true;
+        noteFocus.set({ id: '', token: 0, edit: false });
+        if (!note) return;
+        const root = noteChatRoot(sessionId);
+        const range = root ? resolveNoteRange(note, root) : null;
+      // 定位 means locate: scroll the passage into view (editing is explicit).
+        // only an explicit edit opens the bubble.
+        if (!wantsEditor) {
+          if (!range || !root) return;
+          const rect = range.getBoundingClientRect();
+          const box = root.getBoundingClientRect();
+          if (rect.top < box.top + 40 || rect.bottom > box.bottom - 40) {
+            root.scrollTop += rect.top - box.top - Math.min(120, box.height / 3);
+          }
+          return;
+        }
+        setEditing({ id: note.id, anchor: null, body: note.body });
+        setBody(note.body);
+        setMissing(!range);
+        if (range) {
+          setAnchorPoint({ x: range.getBoundingClientRect().right, y: Math.round(range.getBoundingClientRect().top + range.getBoundingClientRect().height / 2) });
+        } else {
+          setAnchorPoint(null);
+        }
+        if (range && root) {
+          const rect = range.getBoundingClientRect();
+          const box = root.getBoundingClientRect();
+          if (rect.top < box.top + 40 || rect.bottom > box.bottom - 40) {
+            root.scrollTop += rect.top - box.top - Math.min(120, box.height / 3);
+          }
+        }
+      }, [focus.id, focus.token, notesState.items]);
+
+
+      useEffect(() => {
+        if (highlightOn) return;
+        applyNoteHighlights([]);
+      }, [highlightOn]);
+
+      useEffect(() => () => {
+        applyNoteHighlights([]);
+      }, []);
+
+
+      /** Open one saved note; its pin is on screen, so the bubble anchors there. */
+      const openNote = (id) => {
+        const note = notesRef.current.find((entry) => entry.id === id);
+        if (!note) return;
+        setEditing({ id, anchor: null, body: note.body });
+        setBody(note.body);
+        setKind(noteKind(note.kind).id);
+        setMissing(false);
+        const root = noteChatRoot(sessionId);
+        const range = root ? resolveNoteRange(note, root) : null;
+        if (range) {
+          const rect = range.getBoundingClientRect();
+          setAnchorPoint({ x: rect.right, y: Math.round(rect.top + rect.height / 2) });
+        } else {
+          setAnchorPoint(null);
+        }
+      };
+
+      const cancelEditing = () => {
+        setEditing(null);
+        setBody('');
+        setMissing(false);
+        setAnchorPoint(null);
+      };
+
+      const save = () => {
+        if (!editing) return;
+        const value = body.trim();
+        if (editing.id) {
+          notesActions.patch(editing.id, { body: value, kind });
+        } else if (editing.anchor) {
+          notesActions.add({
+            id: uid(),
+            sessionId,
+            nodeKey: editing.anchor.nodeKey,
+            quote: editing.anchor.quote,
+            prefix: editing.anchor.prefix,
+            suffix: editing.anchor.suffix,
+            offset: editing.anchor.offset,
+            order: editing.anchor.order,
+            kind,
+            body: value,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+        }
+        setEditing(null);
+        setBody('');
+        setAnchorPoint(null);
+      };
+
+      const removeEditing = () => {
+        if (!editing || !editing.id) return;
+        notesActions.remove(editing.id);
+        setEditing(null);
+        setBody('');
+        setAnchorPoint(null);
+      };
+
+      // Clicking anywhere else saves a non-empty note and drops an empty draft.
+      useEffect(() => {
+        if (!editing || typeof document === 'undefined') return undefined;
+        const onDown = (event) => {
+          const bubble = bubbleRef.current;
+          if (bubble && event.target instanceof Node && bubble.contains(event.target)) return;
+          const element = event.target instanceof Element ? event.target : null;
+          if (element && element.closest && element.closest('.pp-note-prompt')) return;
+          if (body.trim()) save();
+          else cancelEditing();
+        };
+        document.addEventListener('pointerdown', onDown, true);
+        return () => document.removeEventListener('pointerdown', onDown, true);
+      });
+
+      const onEditorKeyDown = (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          cancelEditing();
+          return;
+        }
+        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          save();
+        }
+      };
+
+      const editingNote = editing && editing.id ? sessionNotes.find((note) => note.id === editing.id) : null;
+      const point = anchorPoint;
+      const docElement = typeof document === 'undefined' ? null : document.documentElement;
+      const viewportWidth = typeof window === 'undefined'
+        ? 0
+        : Math.min(window.innerWidth, (docElement && docElement.clientWidth) || window.innerWidth);
+      const viewportHeight = typeof window === 'undefined'
+        ? 0
+        : Math.min(window.innerHeight, (docElement && docElement.clientHeight) || window.innerHeight);
+      // The bubble opens on the passage's right, but flips to its left when the
+      // right edge would land on the window border or its scrollbar (the save
+      // button used to sit on the scrollbar and could not be clicked).
+      const bubbleStyle = point && viewportWidth > 0
+        ? (() => {
+            const width = 300;
+            const margin = 16;
+            const right = point.x + 14;
+            const left = right + width <= viewportWidth - margin
+              ? right
+              : Math.max(margin, point.x - width - 14);
+            const top = Math.min(Math.max(margin, point.y - 24), Math.max(margin, viewportHeight - 250));
+            return {
+              left: Math.round(Math.max(margin, Math.min(left, viewportWidth - width - margin))) + 'px',
+              top: Math.round(top) + 'px',
+            };
+          })()
+        : { left: '50%', top: '38%', transform: 'translate(-50%, -50%)' };
+
+      // The group popup: anchored under the button that opened it, flipped above
+      // when it would leave the frame, and always in the overlay (never clipped
+      // by the pool list).
+      const placePopup = (anchor, width, height) => {
+        if (!anchor) return null;
+        const docElement = typeof document === 'undefined' ? null : document.documentElement;
+        const vw = typeof window === 'undefined' ? 0 : Math.min(window.innerWidth, (docElement && docElement.clientWidth) || window.innerWidth);
+        const vh = typeof window === 'undefined' ? 0 : Math.min(window.innerHeight, (docElement && docElement.clientHeight) || window.innerHeight);
+        // Right-aligned with the button when left-alignment would leave the frame.
+        const left = anchor.left + width + 8 <= vw ? anchor.left : anchor.right - width;
+        const x = Math.max(8, Math.min(left, Math.max(8, vw - width - 8)));
+        let y = anchor.bottom + 6;
+        if (y + height > vh - 8) y = Math.max(8, anchor.top - height - 6);
+        return { left: Math.round(x) + 'px', top: Math.round(y) + 'px' };
+      };
+      const promptStyle = prompt.open && prompt.anchor ? placePopup(prompt.anchor, 210, 280) : null;
+      const confirmStyle = confirm.open && confirm.anchor ? placePopup(confirm.anchor, 240, 110) : null;
+
+      return h(
+        'div',
+        { className: 'pp-note-layer' },
+        h('style', { key: 'css' }, NOTES_CSS),
+        prompt.open && promptStyle
+          ? h(
+              'div',
+              {
+                key: 'prompt',
+                className: 'pp-note-prompt',
+                style: promptStyle,
+                role: 'dialog',
+                'aria-label': translate('capture.title'),
+                onPointerDown: (event) => event.stopPropagation(),
+              },
+              h('div', { key: 'title', className: 'pp-note-prompt-title' }, translate('capture.title')),
+              h(
+                'div',
+                { key: 'list', className: 'pp-note-prompt-list' },
+                (prompt.choices || []).map((choice) => h(
+                  'button',
+                  {
+                    key: choice.value,
+                    type: 'button',
+                    className: 'pp-note-prompt-row',
+                    onClick: () => {
+                      const pick = notePrompt.get().onPick;
+                      if (typeof pick === 'function') pick(choice.value);
+                    },
+                  },
+                  h('span', { key: 'name', className: 'pp-note-prompt-name' }, choice.label),
+                  choice.value === prompt.defaultValue
+                    ? h('span', { key: 'default', className: 'pp-note-prompt-tag' }, translate('note.default'))
+                    : null,
+                )),
+              ),
+              h('div', { key: 'sep', className: 'pp-note-prompt-sep' }),
+              h('button', { key: 'cancel', type: 'button', className: 'pp-note-prompt-row pp-note-prompt-cancel', onClick: () => closeNotePrompt() }, translate('note.cancel')),
+            )
+          : null,
+        confirm.open && confirmStyle
+          ? h(
+              'div',
+              {
+                key: 'confirm',
+                className: 'pp-note-prompt',
+                style: confirmStyle,
+                role: 'alertdialog',
+                'aria-label': translate('note.deleteConfirm'),
+                onPointerDown: (event) => event.stopPropagation(),
+              },
+              h('div', { key: 'msg', className: 'pp-note-prompt-message' }, translate('note.deleteConfirm')),
+              h(
+                'div',
+                { key: 'actions', className: 'pp-note-prompt-actions' },
+                h('button', { key: 'no', type: 'button', className: 'pp-note-btn', onClick: () => closeNoteConfirm() }, translate('note.cancel')),
+                h(
+                  'button',
+                  {
+                    key: 'yes',
+                    type: 'button',
+                    className: 'pp-note-btn pp-note-btn-danger',
+                    onClick: () => {
+                      const run = noteConfirm.get().onConfirm;
+                      closeNoteConfirm();
+                      if (typeof run === 'function') run();
+                    },
+                  },
+                  translate('note.delete'),
+                ),
+              ),
+            )
+          : null,
+        editing
+          ? h(
+              'div',
+              {
+                key: 'bubble',
+                ref: bubbleRef,
+                className: 'pp-note-bubble',
+                style: { ...bubbleStyle, '--pp-bubble-tint': noteKind(kind).tint },
+                'data-kind': kind,
+                onPointerDown: (event) => event.stopPropagation(),
+              },
+              h(
+                'div',
+                { className: 'pp-note-bubble-quote' },
+                h('span', { className: 'pp-note-bubble-quote-icon' }, noteKind(kind).icon),
+                noteQuoteText(editingNote ? editingNote.quote : editing.anchor.quote, 10),
+              ),
+              missing
+                ? h(
+                    'div',
+                    { className: 'pp-note-bubble-hint' },
+                    translate('note.quoteMissing'),
+                  )
+                : null,
+              h(
+                'div',
+                { className: 'pp-note-kinds' },
+                NOTE_KINDS.map((entry) => h(
+                  'button',
+                  {
+                    key: entry.id,
+                    type: 'button',
+                    className: 'pp-note-kind',
+                    'data-kind': entry.id,
+                    'data-active': kind === entry.id ? 'true' : 'false',
+                    onClick: () => setKind(entry.id),
+                  },
+                  h('span', { className: 'pp-note-kind-icon' }, entry.icon),
+                  translate(entry.label),
+                )),
+              ),
+              h('textarea', {
+                className: 'pp-note-input',
+                value: body,
+                rows: 2,
+                maxLength: NOTE_BODY_MAX,
+                placeholder: translate('note.placeholder'),
+                autoFocus: true,
+                onChange: (event) => setBody(event.target.value),
+                onKeyDown: onEditorKeyDown,
+              }),
+              h(
+                'div',
+                { className: 'pp-note-bubble-foot' },
+                editingNote
+                  ? h(
+                      'button',
+                      {
+                        key: 'remove',
+                        type: 'button',
+                        className: 'pp-note-btn pp-note-btn-quiet-danger',
+                        onClick: (event) => openNoteConfirm(removeEditing, event),
+                      },
+                      translate('note.delete'),
+                    )
+                  : null,
+                h(
+                  'span',
+                  { key: 'limit', className: 'pp-note-limit' },
+                  h('span', { className: 'pp-note-limit-count' }, `${body.trim().length}/${NOTE_BODY_MAX}`),
+                ),
+                h(
+                  'div',
+                  { key: 'acts', className: 'pp-note-bubble-actions' },
+                  h('button', { type: 'button', className: 'pp-note-btn', onClick: cancelEditing }, translate('note.cancel')),
+                  h(
+                    'button',
+                    { type: 'button', className: 'pp-note-btn pp-note-btn-primary', onClick: save },
+                    translate('note.save'),
+                  ),
+                ),
+              ),
+            )
+          : null,
+      );
+    }
+
+    /**
+     * The session's annotations, shown as a tab inside both prompt-pool views.
+     * A note can be promoted into a pool group (defaulting to this session's
+     * workspace); the caller keeps the compose path: the composer panel inserts
+     * directly, the sidebar page asks the panel over the bridge.
+     */
+    /** Tiny stroke icons for the annotation row actions. */
+    function NoteActionIcon(props) {
+      const kind = props.kind;
+      const common = {
+        width: 14,
+        height: 14,
+        viewBox: '0 0 20 20',
+        fill: 'none',
+        stroke: 'currentColor',
+        strokeWidth: 1.6,
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+        'aria-hidden': true,
+        style: { display: 'block' },
+      };
+      if (kind === 'edit') {
+        return h('svg', common, h('path', { d: 'M4 16l.6-3.6 9-9a1.7 1.7 0 0 1 2.4 2.4l-9 9L4 16z' }));
+      }
+      if (kind === 'insert') {
+        return h(
+          'svg',
+          common,
+          h('path', { d: 'M3.6 12.4h12.8v3.4H3.6z' }),
+          h('path', { d: 'M10 3v6.4' }),
+          h('path', { d: 'M7.4 6.9 10 9.4l2.6-2.5' }),
+        );
+      }
+      if (kind === 'store') {
+        return h(
+          'svg',
+          common,
+          h('path', { d: 'M10 3v7' }),
+          h('path', { d: 'M7 7.2 10 10l3-2.8' }),
+          h('path', { d: 'M3.6 13.6v2.6h12.8v-2.6' }),
+        );
+      }
+      if (kind === 'locate') {
+        return h(
+          'svg',
+          common,
+          h('circle', { cx: 10, cy: 10, r: 4.6 }),
+          h('path', { d: 'M10 2.2v2.6M10 15.2v2.6M2.2 10h2.6M15.2 10h2.6' }),
+        );
+      }
+      return h(
+        'svg',
+        common,
+        h('path', { d: 'M4 6h12' }),
+        h('path', { d: 'M8 6V4h4v2' }),
+        h('path', { d: 'M6 6l.7 10h6.6L14 6' }),
+      );
+    }
+
+    function NotesView(props) {
+      useLocaleTick();
+      const list = Array.isArray(props.notes) ? props.notes : [];
+      const sessionId = typeof props.sessionId === 'string' ? props.sessionId : '';
+      const categories = Array.isArray(props.categories) ? props.categories : [];
+      const workspaceList = Array.isArray(props.workspaces) ? props.workspaces : [];
+      const currentWorkspaceId = typeof props.currentWorkspaceId === 'string' ? props.currentWorkspaceId : '';
+      const filter = typeof props.filter === 'string' ? props.filter.trim().toLowerCase() : '';
+      const matches = (note) => !filter
+        || String(note.quote || '').toLowerCase().indexOf(filter) >= 0
+        || String(note.body || '').toLowerCase().indexOf(filter) >= 0
+        || translate(noteKind(note.kind).label).toLowerCase().indexOf(filter) >= 0;
+
+      const flash = (text, kind) => showToast(text, kind);
+
+      const compose = () => {
+        let ok = false;
+        try {
+          ok = props.onCompose() === true;
+        } catch (_error) {
+          ok = false;
+        }
+        if (ok && normalizeSettings(props.settings).noteKeepAfterDraft === false) {
+          notesActions.clearSession(sessionId);
+        }
+        flash(ok ? translate('note.inserted') : translate('note.insertFailed'), ok ? 'ok' : 'error');
+      };
+
+      const labelOfGroup = (group) => {
+        const resolved = resolveGroup(group, categories, workspaceList);
+        return resolved ? resolved.label : translate('row.noCategory');
+      };
+
+      // The workspace this session belongs to leads the chooser; 常用 is the
+      // fallback when the workspace family is hidden or unknown.
+      const choices = captureChoices(categories, workspaceList, currentWorkspaceId, props.settings);
+      const preferred = currentWorkspaceId && choices.some((entry) => entry.value === 'workspace:' + currentWorkspaceId)
+        ? 'workspace:' + currentWorkspaceId
+        : BUILTIN_GROUP.oftenuse;
+      const ordered = choices.some((entry) => entry.value === preferred)
+        ? [...choices.filter((entry) => entry.value === preferred), ...choices.filter((entry) => entry.value !== preferred)]
+        : choices;
+
+      const promote = (note, group) => {
+        poolActions.add({
+          id: uid(),
+          group,
+          title: draftTitle(note.quote),
+          // The prompt carries the quoted passage, so inserting it into the
+          // composer later still has the original text (the title is only a label).
+          body: composeNoteLine(note),
+          images: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        if (normalizeSettings(props.settings).noteKeepAfterStore === false) {
+          notesActions.remove(note.id);
+        } else {
+          // The record stays: the row keeps a "stored" marker so the note is not
+          // silently lost from the conversation it belongs to.
+          notesActions.patch(note.id, { promotedGroup: group, promotedAt: Date.now() });
+        }
+        flash(translate('note.stored', { group: labelOfGroup(group) }), 'ok');
+      };
+
+      /** Compose the annotations into one prompt and file it in a group. */
+      const storePrompt = (group) => {
+        const text = composeNotesReply(list);
+        poolActions.add({
+          id: uid(),
+          group,
+          title: draftTitle(text),
+          body: text,
+          images: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        if (normalizeSettings(props.settings).noteKeepAfterStore === false) {
+          notesActions.clearSession(sessionId);
+        }
+        flash(translate('note.composeStored', { group: labelOfGroup(group) }), 'ok');
+      };
+
+      /** Open the group popup just under the button that asked for it. */
+      const openPrompt = (target, event) => {
+        const rect = event && event.currentTarget && event.currentTarget.getBoundingClientRect
+          ? event.currentTarget.getBoundingClientRect()
+          : null;
+        notePrompt.set({
+          open: true,
+          target,
+          choices: ordered,
+          defaultValue: preferred,
+          anchor: rect
+            ? { left: Math.round(rect.left), right: Math.round(rect.right), top: Math.round(rect.top), bottom: Math.round(rect.bottom) }
+            : { left: Math.round((window.innerWidth || 0) / 2), right: Math.round((window.innerWidth || 0) / 2) + 40, top: 60, bottom: 90 },
+          onPick: (group) => {
+            closeNotePrompt();
+            if (!group) return;
+            if (target && target.kind === 'note' && target.note) promote(target.note, group);
+            else storePrompt(group);
+          },
+          token: Date.now(),
+        });
+      };
+
+      /** Scroll the transcript to this note. */
+      const locate = (note) => {
+        const root = noteChatRoot(sessionId);
+        const hit = root ? resolveNote(note, root) : null;
+        if (!hit) {
+          showNoteStatus(translate('note.locateFailed'), 'error');
+          return;
+        }
+        const rect = hit.range.getBoundingClientRect();
+        const box = root.getBoundingClientRect();
+        if (rect.top < box.top + 40 || rect.bottom > box.bottom - 40) {
+          root.scrollTop += rect.top - box.top - Math.min(120, box.height / 3);
+        }
+        noteFocus.set({ id: note.id, token: Date.now(), edit: false });
+      };
+
+      /** Insert one note (as a one-line prompt) into the composer. */
+      const insertNote = (note) => {
+        let ok = false;
+        try {
+          ok = props.onInsertNote ? props.onInsertNote(note) === true : false;
+        } catch (_error) {
+          ok = false;
+        }
+        if (ok && normalizeSettings(props.settings).noteKeepAfterDraft === false) {
+          notesActions.remove(note.id);
+        }
+        flash(ok ? translate('note.inserted') : translate('note.insertFailed'), ok ? 'ok' : 'error');
+      };
+
+      return h(
+        'div',
+        { className: 'pp-notes pp-notes-embedded' },
+        h('style', { key: 'css' }, NOTES_CSS),
+        props.hideActions !== true || list.some((note) => (note.dx || 0) !== 0 || (note.dy || 0) !== 0)
+          ? h(
+              'div',
+              { className: 'pp-notes-head' },
+              h('span', { className: 'pp-notes-grow' }),
+              props.hideActions !== true
+                ? [
+                    h(
+                      'button',
+                      { key: 'compose-store', type: 'button', className: 'pp-note-btn pp-note-btn-primary', onClick: (event) => openPrompt({ kind: 'reply' }, event) },
+                      translate('note.composeStore'),
+                    ),
+                    h('button', { key: 'compose', type: 'button', className: 'pp-note-btn', onClick: compose }, translate('note.compose')),
+                  ]
+                : null,
+              list.some((note) => (note.dx || 0) !== 0 || (note.dy || 0) !== 0)
+                ? h(
+                    'button',
+                    { key: 'reset', type: 'button', className: 'pp-note-link', onClick: () => notesActions.resetPositions(sessionId) },
+                    translate('note.reset'),
+                  )
+                : null,
+            )
+          : null,
+        h(
+          'div',
+          { className: 'pp-notes-list' },
+          list.map((note, index) => {
+            if (!matches(note)) return null;
+            const meta = noteKind(note.kind);
+            return h(
+              'div',
+              {
+                className: 'pp-notes-row',
+                key: note.id,
+                'data-promoted': note.promotedGroup ? 'true' : undefined,
+              },
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'pp-note-icon pp-note-insert',
+                  title: translate('note.insert'),
+                  'aria-label': translate('note.insert'),
+                  onClick: () => insertNote(note),
+                },
+                h(NoteActionIcon, { kind: 'insert' }),
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'pp-note-icon pp-note-locate',
+                  title: translate('note.locate'),
+                  'aria-label': translate('note.locate'),
+                  onClick: () => locate(note),
+                },
+                h(NoteActionIcon, { kind: 'locate' }),
+              ),
+              h('span', { className: 'pp-notes-n' }, String(index + 1)),
+              h(
+                'div',
+                { className: 'pp-notes-main' },
+                h(
+                  'div',
+                  { className: 'pp-notes-quote', title: note.quote },
+                  h('span', { className: 'pp-notes-kind', 'data-kind': meta.id, title: translate(meta.label) }, meta.icon),
+                  h('span', { className: 'pp-notes-quote-text' }, noteQuoteText(note.quote)),
+                  note.promotedGroup
+                    ? h('span', { className: 'pp-notes-tag' }, translate('note.stored', { group: labelOfGroup(note.promotedGroup) }))
+                    : null,
+                ),
+                h('div', { className: 'pp-notes-text' }, note.body || translate(meta.label)),
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'pp-note-icon',
+                  title: translate('note.store'),
+                  'aria-label': translate('note.store'),
+                  onClick: (event) => openPrompt({ kind: 'note', note }, event),
+                },
+                h(NoteActionIcon, { kind: 'store' }),
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'pp-note-icon pp-note-link-danger',
+                  title: translate('note.delete'),
+                  'aria-label': translate('note.delete'),
+                  onClick: (event) => openNoteConfirm(() => notesActions.remove(note.id), event),
+                },
+                h(NoteActionIcon, { kind: 'delete' }),
+              ),
+            );
+          }),
+        ),
+        list.length === 0
+          ? h('div', { key: 'intro', className: 'pp-notes-empty' }, translate('note.emptyIntro'))
+          : filter && !list.some(matches)
+            ? h('div', { key: 'empty', className: 'pp-notes-empty' }, translate('note.empty'))
+            : null,
+      );
+    }
+
     // --------------------------------------------------- conversation selection
     /**
      * Right-click destinations for text selected in the conversation. The host
@@ -4031,6 +5821,9 @@ window.__ModuleLoader__.load({
       const [done, setDone] = useState(null);
       // The group list lives one level down; Copy stays at the top.
       const [submenu, setSubmenu] = useState(false);
+      // Annotating needs the assistant row and its text, captured while the
+      // selection still owns the DOM.
+      const [anchor] = useState(() => captureNoteAnchor(props.sessionId));
       const timer = useRef(0);
       const dismiss = typeof props.dismiss === 'function' ? props.dismiss : () => {};
 
@@ -4091,6 +5884,13 @@ window.__ModuleLoader__.load({
         setSubmenu(true);
       };
 
+      /** Hand the captured anchor to the overlay, which opens its editor. */
+      const startNote = () => {
+        if (!anchor) return;
+        noteDraft.set({ anchor, sessionId: props.sessionId || '', token: Date.now() });
+        dismiss();
+      };
+
       const error = done !== null && (done.kind === 'failed' || done.kind === 'copyFailed');
       const shortcut = /Mac|iPhone|iPad/.test(typeof navigator === 'undefined' ? '' : String(navigator.userAgent || '')) ? '⌘C' : 'Ctrl+C';
       const doneText = done === null
@@ -4142,7 +5942,24 @@ window.__ModuleLoader__.load({
                   h('span', { key: 'name', className: 'pp-selname' }, translate('menu.copy')),
                   h('span', { key: 'key', className: 'pp-selkey' }, shortcut),
                 ),
-                h('div', { key: 'rule', className: 'pp-selrule', role: 'separator' }),
+                h(
+                  'div',
+                  { key: 'poolgroup', className: 'pp-selgroup' },
+                  h('div', { key: 'label', className: 'pp-selgroup-label' }, h(PromptPoolIcon, { key: 'icon', size: 12 }), translate('menu.group')),
+                  anchor
+                  ? h(
+                      'button',
+                      {
+                        key: 'note',
+                        type: 'button',
+                        role: 'menuitem',
+                        className: 'pp-selrow',
+                        onClick: startNote,
+                        onPointerEnter: () => setSubmenu(false),
+                      },
+                      h('span', { key: 'name', className: 'pp-selname' }, translate('note.add')),
+                    )
+                  : null,
                 h(
                   'button',
                   {
@@ -4155,14 +5972,15 @@ window.__ModuleLoader__.load({
                     onClick: openGroups,
                     onPointerEnter: openGroups,
                   },
-                  h('span', { key: 'name', className: 'pp-selname' }, translate('menu.title')),
+                  h('span', { key: 'name', className: 'pp-selname' }, translate('menu.pool')),
                   h('span', { key: 'chev', className: 'pp-selchev', 'aria-hidden': true }, '▸'),
+                ),
                 ),
               ),
               submenu
                 ? h(
                     'div',
-                    { key: 'groups', className: 'pp-selpanel', role: 'menu', 'aria-label': translate('menu.title') },
+                    { key: 'groups', className: 'pp-selpanel', role: 'menu', 'aria-label': translate('menu.pool') },
                     h(
                       'div',
                       { key: 'list', className: 'pp-sellist' },
@@ -4205,13 +6023,22 @@ window.__ModuleLoader__.load({
       const storage = useStorageState();
       const releaseInfo = useReleaseState();
       const view = useUiState();
+      const noteBar = useNoteStatus();
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
+      const notesState = useNotesState();
+      const notesSessionId = typeof props.sessionId === 'string' ? props.sessionId : '';
+      const notesList = notesState.items
+        .filter((note) => note.sessionId === notesSessionId)
+        .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt));
 
       // This view can read the workspace roster; publish it for both views.
       const wsSnapshot = typeof props.useWorkspaces === 'function' ? props.useWorkspaces(selectAllInput) : undefined;
       useEffect(() => {
         sessionDir.set({ sessionId: props.sessionId || '' });
+        // The overlay is root-scoped; this session-scoped seat tells it which
+        // transcript the annotation cards belong to.
+        chatView.set({ sessionId: props.sessionId || '' });
       }, [props.sessionId]);
       const wsEntries = workspaceEntriesOf(wsSnapshot);
       const wsCurrent = currentWorkspaceOf(wsSnapshot, props.sessionId);
@@ -4845,11 +6672,76 @@ window.__ModuleLoader__.load({
 
       // The sidebar tab has no composer access, so it posts commands here.
       const bridgeRef = useRef(null);
-      bridgeRef.current = { insert: insertItem, release, capture: captureDraft };
+      /** The annotations tab's reply: numbered, each note quotes its passage. */
+      /** Write a block of text into the composer through the host's actions. */
+      const insertComposerText = (text) => {
+        const actions = props.inputActions;
+        if (!actions || typeof actions.insertText !== 'function') return false;
+        try {
+          const span = typeof actions.captureInsertion === 'function' ? actions.captureInsertion() : undefined;
+          return actions.insertText(text, span) === true;
+        } catch (_error) {
+          return false;
+        }
+      };
+      const composeSessionNotes = () => insertComposerText(composeNotesReply(notesList));
+      const insertNoteText = (note) => insertComposerText(composeNoteLine(note));
+
+      /** Store the session's annotations as one prompt, from the panel header. */
+      const storeNotesPrompt = (event) => {
+        const choices = captureChoices(state.categories, workspaces.items, currentWorkspaceId, state.settings);
+        const preferred = currentWorkspaceId && choices.some((entry) => entry.value === 'workspace:' + currentWorkspaceId)
+          ? 'workspace:' + currentWorkspaceId
+          : BUILTIN_GROUP.oftenuse;
+        const ordered = choices.some((entry) => entry.value === preferred)
+          ? [...choices.filter((entry) => entry.value === preferred), ...choices.filter((entry) => entry.value !== preferred)]
+          : choices;
+        const rect = event && event.currentTarget && event.currentTarget.getBoundingClientRect
+          ? event.currentTarget.getBoundingClientRect()
+          : null;
+        notePrompt.set({
+          open: true,
+          target: { kind: 'reply' },
+          choices: ordered,
+          defaultValue: preferred,
+          anchor: rect
+            ? { left: Math.round(rect.left), right: Math.round(rect.right), top: Math.round(rect.top), bottom: Math.round(rect.bottom) }
+            : { left: 120, right: 160, top: 60, bottom: 90 },
+          token: Date.now(),
+          onPick: (group) => {
+            closeNotePrompt();
+            if (!group) return;
+            const text = composeNotesReply(notesList);
+            poolActions.add({
+              id: uid(),
+              group,
+              title: draftTitle(text),
+              body: text,
+              images: [],
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            });
+            if (normalizeSettings(state.settings).noteKeepAfterStore === false) {
+              notesActions.clearSession(notesSessionId);
+            }
+            const resolved = resolveGroup(group, state.categories, workspaces.items);
+            showToast(translate('note.composeStored', { group: resolved ? resolved.label : translate('row.noCategory') }), 'ok');
+          },
+        });
+      };
+
+      bridgeRef.current = { insert: insertItem, release, capture: captureDraft, composeNotes: composeSessionNotes, insertText: insertComposerText };
       useEffect(() => {
         return bridge.listen((command) => {
           const api = bridgeRef.current;
           if (!api || !command) return { ok: false, reason: 'unavailable' };
+          if (command.type === 'compose-notes') {
+            return { ok: api.composeNotes() === true };
+          }
+          if (command.type === 'insert-text') {
+            if (typeof command.text !== 'string') return { ok: false, reason: 'bad-command' };
+            return { ok: api.insertText(command.text) === true };
+          }
           if (command.type === 'insert') {
             if (typeof command.text !== 'string') return { ok: false, reason: 'bad-command' };
             return Promise.resolve(api.insert({ body: command.text, images: normalizeImages(command.images) }))
@@ -4881,11 +6773,31 @@ window.__ModuleLoader__.load({
         });
       }, []);
 
+      // The panel lands on the Settings default each time it opens. The tab list
+      // is built here because render-time tabs are computed after this hook.
+      const wasOpenRef = useRef(false);
+      useEffect(() => {
+        const open = view.open === true;
+        if (open && !wasOpenRef.current) {
+          const pref = normalizeSettings(state.settings).defaultTab;
+          const baseTabs = buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId);
+          const resolved = resolveDefaultTab(pref, baseTabs, currentWorkspaceId, notesList.length > 0);
+          if (resolved) setTab(resolved);
+        }
+        wasOpenRef.current = open;
+      }, [view.open]);
+
       if (!view.open) return null;
 
       const panelCount = state.items.length;
       const captureGroups = captureChoices(state.categories, workspaces.items, currentWorkspaceId, state.settings);
-      const tabCounts = tabCountsOf(state.items);
+      const baseTabs = buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId);
+      // The annotation tab is always present, so the feature stays discoverable.
+      const tabs = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
+      const tabCounts = {
+        ...tabCountsOf(state.items),
+        notes: notesList.length,
+      };
 
       // A folded family renders its groups as chips inside one tab.
       const customGroups = state.categories.map((category) => ({ id: 'custom:' + category.id, name: category.name }));
@@ -4985,18 +6897,29 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-page-head' },
-          h('span', { className: 'pp-page-title' }, translate('panel.title')),
-          h('span', { className: 'pp-page-sub' }, translate('page.count', { n: panelCount })),
-          h('span', { className: 'pp-grow' }),
+          h(
+            'span',
+            { className: 'pp-page-title pp-panel-title' },
+            h(PromptPoolIcon, { key: 'icon', size: 16 }),
+            translate('panel.title'),
+          ),
           h('input', {
+            key: 'search',
             className: 'pp-search',
             value: query,
             placeholder: translate('page.search'),
             'aria-label': translate('page.search'),
             onChange: (event) => setQuery(event.target.value),
           }),
-          h('button', { type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('page.new')),
-          h('button', { type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
+          tab === 'notes'
+            ? [
+                h('button', { key: 'store', type: 'button', className: 'pp-mini', title: translate('note.composeStoreHint'), onClick: storeNotesPrompt }, translate('note.composeStore')),
+                h('button', { key: 'draft', type: 'button', className: 'pp-mini', title: translate('note.composeHint'), onClick: composeSessionNotes }, translate('note.compose')),
+              ]
+            : [
+                h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('page.new')),
+                h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
+              ],
           h(SettingsButton, { active: settingsOpen, onClick: () => setSettingsOpen(!settingsOpen) }),
           h(IconButton, {
             name: 'pin',
@@ -5014,7 +6937,7 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-bar', style: { padding: '8px 12px 2px' } },
           h(TabBar, {
-            tabs: buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId),
+            tabs,
             counts: tabCounts,
             active: tab,
             ...tabHandlers((next) => {
@@ -5078,7 +7001,20 @@ window.__ModuleLoader__.load({
           { className: 'pp-list', ref: listRef },
           settingsOpen
             ? h(PromptPoolSettings, { currentWorkspaceId })
-            : nestedView
+            : tab === 'notes'
+              ? h(NotesView, {
+                  notes: notesList,
+                  sessionId: notesSessionId,
+                  onCompose: composeSessionNotes,
+                  onInsertNote: insertNoteText,
+                  hideActions: true,
+                  filter: query,
+                  categories: state.categories,
+                  workspaces: workspaces.items,
+                  currentWorkspaceId,
+                  settings: state.settings,
+                })
+              : nestedView
               ? renderWorkspacePanes({
                   rail: nestedView.rail,
                   items: nestedView.scoped,
@@ -5107,6 +7043,9 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-panel-dock' },
+          tab === 'notes' && noteBar.text
+            ? h('div', { className: 'pp-notes-bar', 'data-kind': noteBar.kind, role: 'status' }, noteBar.text)
+            : null,
           notice
           ? h(
               'div',
@@ -5127,7 +7066,7 @@ window.__ModuleLoader__.load({
                 : null,
             )
           : null,
-        !settingsOpen
+        !settingsOpen && tab !== 'notes'
           ? renderTrayCard({
               entries: tray,
               queuePending: queue.length,
@@ -5217,10 +7156,20 @@ window.__ModuleLoader__.load({
       '.pp-x:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-bar{display:flex;align-items:center;gap:6px;padding:0 12px 8px;flex-wrap:wrap}' +
       '.pp-tab{height:24px;padding:0 9px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;cursor:pointer}' +
+      '.pp-tab:not([data-active="true"]){color:color-mix(in srgb,var(--pp-accent) 78%,var(--pp-ink-2))}' +
+      '.pp-tab[data-group="notes"]:not([data-active="true"]){color:#8a6200}' +
       '.pp-tab:hover{background:var(--pp-hover)}' +
       '.pp-tab[data-active="true"]{border-color:var(--pp-accent);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
+      '.pp-tab[data-group="notes"][data-active="true"]{border-color:rgba(232,176,40,.9);background:rgba(232,176,40,.2);color:#9a6b00}' +
+      '.pp-tab[data-group="notes"] .pp-tab-count{background:rgba(232,176,40,.22);color:#8a6200}' +
       '.pp-tab-count{margin-left:5px;padding:0 5px;vertical-align:1px;border-radius:999px;background:color-mix(in srgb, currentColor 12%, transparent);color:inherit;font-size:10px;font-weight:600;line-height:16px;height:16px;display:inline-flex;align-items:center}' +
+      '.pp-tab:not([data-group="notes"]) .pp-tab-count{background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent)}' +
       '.pp-tab-add{padding:0 7px;color:var(--pp-ink-2)}' +
+      '.pp-select{height:26px;min-width:170px;max-width:100%;padding:0 8px;border:1px solid var(--pp-line);border-radius:7px;background:var(--pp-surface);color:var(--pp-ink);font:inherit;font-size:12px}' +
+      '.pp-set-intro{white-space:pre-line}' +
+      '.pp-set-radios{display:flex;flex-direction:column;gap:4px;padding:2px 0 4px}' +
+      '.pp-set-radio-row{display:flex;align-items:center;gap:10px}' +
+      '.pp-set-radio{display:inline-flex;align-items:center;gap:6px;cursor:pointer}' +
       '.pp-tab-addwrap{display:inline-flex;align-items:center}' +
       '.pp-tab-sep{flex:none;width:1px;height:16px;margin:0 7px;background:color-mix(in srgb, var(--pp-ink-2) 45%, transparent)}' +
       '.pp-tab-x{margin-left:4px;padding:0 2px;border-radius:4px;font-size:11px;line-height:1;color:var(--pp-ink-2);cursor:pointer}' +
@@ -5246,6 +7195,7 @@ window.__ModuleLoader__.load({
       '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
       '.pp-page-head{display:flex;align-items:center;gap:8px;padding:12px 12px 8px;border-bottom:1px solid var(--pp-line);flex-wrap:wrap}' +
       '.pp-page-title{font-size:14px;font-weight:600}' +
+      '.pp-panel-title{display:inline-flex;align-items:center;gap:6px;flex:none;margin-right:2px}' +
       '.pp-page-sub{color:var(--pp-ink-2);font-size:12px}' +
       '.pp-search{height:26px;flex:1;min-width:120px;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-surface);color:inherit;font:inherit;font-size:12px;padding:0 9px;outline:none}' +
       '.pp-search:focus{border-color:var(--pp-accent)}' +
@@ -5313,7 +7263,7 @@ window.__ModuleLoader__.load({
       '.pp-page-item:hover .pp-actions{opacity:1}' +
       '.pp-empty{padding:22px 16px;color:var(--pp-ink-2);text-align:center;font-size:12px}' +
       '.pp-row{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:8px}' +
-      '.pp-row:hover{background:var(--pp-hover)}' +
+      '.pp-row:hover{background:color-mix(in srgb,var(--pp-accent) 10%,transparent)}' +
       '.pp-toggle{width:26px;height:26px;flex:none;margin-top:-1px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}' +
       '.pp-toggle:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-toggle[data-selected="true"]{color:var(--pp-accent)}' +
@@ -5386,6 +7336,8 @@ window.__ModuleLoader__.load({
       '.pp-status[data-kind="error"]{color:var(--pp-danger)}' +
       '.pp-status[data-kind="ok"]{color:var(--pp-ok)}' +
       '.pp-queue-dock,.pp-panel-dock{position:relative;flex:none;display:flex;flex-direction:column}' +
+      '.pp-notes-bar{margin:0 10px 10px;padding:8px 12px;border:1px solid color-mix(in srgb,var(--pp-danger) 30%,var(--pp-line-2));border-radius:9px;background:color-mix(in srgb,var(--pp-danger) 9%,transparent);color:var(--pp-danger);font-size:12px;line-height:1.5}' +
+      '.pp-notes-bar[data-kind="ok"]{border-color:color-mix(in srgb,var(--pp-ok) 30%,var(--pp-line-2));background:color-mix(in srgb,var(--pp-ok) 9%,transparent);color:var(--pp-ok)}' +
       '.pp-status-float{position:absolute;left:10px;right:auto;width:max-content;max-width:calc(100% - 20px);bottom:100%;margin-bottom:6px;padding:6px 12px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface);box-shadow:0 4px 14px rgba(0,0,0,.10);z-index:5;pointer-events:none;animation:pp-status-in .16s ease}' +
       '.pp-panel .pp-status-float{pointer-events:auto}' +
       // The page's status float stays click-through, so only the undo link takes clicks.
@@ -5409,6 +7361,8 @@ window.__ModuleLoader__.load({
       '.pp-seldonecard{width:280px}' +
       '.pp-sellist{display:flex;flex-direction:column;min-height:0;overflow-y:auto}' +
       '.pp-selrule{height:1px;margin:3px 4px;background:var(--pp-line)}' +
+      '.pp-selgroup{display:flex;flex-direction:column;margin-top:4px;padding:3px 3px 4px;border:1px solid var(--pp-line);border-radius:8px;background:color-mix(in srgb,var(--pp-ink) 3%,transparent)}' +
+      '.pp-selgroup-label{display:flex;align-items:center;gap:4px;padding:1px 8px 3px;color:var(--pp-ink-2);font-size:10px;letter-spacing:.02em}' +
       '.pp-selrow{display:flex;align-items:center;gap:8px;width:100%;height:26px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}' +
       '.pp-selrow:hover,.pp-selrow:focus-visible{background:color-mix(in srgb,var(--pp-accent) 11%,transparent)}' +
       '.pp-selrow:focus-visible{outline:2px solid var(--pp-accent);outline-offset:-2px}' +
@@ -5422,6 +7376,96 @@ window.__ModuleLoader__.load({
       '.pp-seldone[data-kind="error"]{color:var(--pp-danger)}' +
       '.pp-seldone-mark{flex:none;color:var(--pp-ok);font-size:12px}' +
       '.pp-seldone[data-kind="error"] .pp-seldone-mark{color:var(--pp-danger)}';
+
+    /**
+     * Annotations live in the frame overlay and in the composer dock, so they
+     * carry their own tokens and controls. The highlight rule is global: the
+     * Highlight API paints ranges that the markdown DOM never contains.
+     */
+    const NOTES_CSS =
+      '::highlight(prompt-pool-note-comment){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(255,191,36,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-question){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(244,114,114,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-agree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(74,222,128,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-disagree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(239,68,68,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-idea){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(96,165,250,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-todo){text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:rgba(251,191,36,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
+      '.pp-note-layer{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));--pp-note-ink:var(--dsw-alias-label-primary);--pp-note-ink-2:var(--dsw-alias-label-secondary);--pp-note-line:var(--dsw-alias-border-l1);--pp-note-surface:var(--dsw-alias-bg-overlay);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary);--pp-note-ok:var(--dsw-alias-state-success-primary);position:fixed;inset:0;z-index:2147482000;pointer-events:none}' +
+      '.pp-note-bubble{position:fixed;z-index:1;display:flex;flex-direction:column;gap:8px;width:310px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;padding:11px;border:1px solid var(--pp-note-line);border-radius:12px;background:var(--pp-note-surface);box-shadow:0 18px 48px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left;pointer-events:auto}' +
+      '.pp-note-bubble-quote{box-sizing:border-box;padding:6px 8px;border-radius:8px;background:rgba(var(--pp-bubble-tint),.10);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}.pp-note-bubble-quote-icon{margin-right:4px;color:rgb(var(--pp-bubble-tint))}' +
+      '.pp-note-bubble-hint{color:var(--pp-note-danger);font-size:11px}' +
+      
+      '.pp-note-input{width:100%;box-sizing:border-box;min-height:48px;max-height:120px;padding:6px 8px;border:1px solid var(--pp-note-line);border-radius:8px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent);color:inherit;font:inherit;font-size:12px;line-height:1.5;resize:none;outline:none}' +
+      '.pp-note-input:focus{border-color:rgba(var(--pp-bubble-tint),.9);box-shadow:0 0 0 2px rgba(var(--pp-bubble-tint),.14)}' +
+      '.pp-note-bubble-foot{display:flex;align-items:center;gap:8px}.pp-note-bubble-ask{flex:1;color:var(--pp-note-ink-2);font-size:11px;line-height:1.4}.pp-note-bubble-actions{display:flex;gap:6px;margin-left:auto}.pp-note-bubble .pp-note-btn{height:24px;padding:0 9px;font-size:11px;border-radius:7px}.pp-note-btn-quiet-danger{border-color:transparent;background:transparent;color:var(--pp-note-danger)}.pp-note-btn-quiet-danger:hover{background:rgba(var(--pp-note-danger-rgb,239,68,68),.10)}' +
+      '.pp-note-btn{height:24px;padding:0 10px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
+      '.pp-note-btn:hover{background:var(--pp-note-hover)}' +
+      '.pp-note-btn:disabled{opacity:.45;cursor:default}' +
+      '.pp-note-btn-primary{border-color:var(--pp-note-accent);background:var(--pp-note-accent);color:#fff}' +
+      '.pp-note-btn-primary:hover{background:var(--pp-note-accent);filter:brightness(1.05)}' +
+      '.pp-note-btn-danger{color:var(--pp-note-danger);border-color:color-mix(in srgb,var(--pp-note-danger) 40%,transparent)}' +
+      '.pp-note-btn-danger:hover{background:color-mix(in srgb,var(--pp-note-danger) 10%,transparent)}' +
+      '.pp-notes{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));--pp-note-ink:var(--dsw-alias-label-primary);--pp-note-ink-2:var(--dsw-alias-label-secondary);--pp-note-line:var(--dsw-alias-border-l1);--pp-note-surface:var(--dsw-alias-bg-overlay);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary);--pp-note-ok:var(--dsw-alias-state-success-primary);display:flex;flex-direction:column;box-sizing:border-box;width:100%;border:1px solid var(--pp-note-line);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-state-warn-primary,#e0a800) 5%,var(--dsw-alias-bg-base,#fff));color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +
+      '.pp-notes-embedded{border:0;border-radius:0;background:transparent}' +
+      '.pp-notes-embedded .pp-notes-head{padding:8px 2px 4px}' +
+      '.pp-notes-embedded .pp-notes-list{max-height:none;overflow:visible;padding:0}' +
+      '.pp-notes-embedded .pp-notes-row{background:transparent}' +
+      '.pp-notes-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:32px;padding:5px 10px}' +
+      '.pp-notes-title{font-weight:600}' +
+      '.pp-notes-count{color:var(--pp-note-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +
+      '.pp-notes-status{font-size:11px}' +
+      '.pp-notes-status[data-kind="error"]{color:var(--pp-note-danger)}' +
+      '.pp-notes-status[data-kind="ok"]{color:var(--pp-note-ok)}' +
+      '.pp-notes-grow{flex:1;min-width:8px}' +
+      '.pp-notes-ask{color:var(--pp-note-ink-2);font-size:11px}' +
+      '.pp-notes-list{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;padding:0 8px 8px}' +
+      '.pp-notes-row{display:flex;align-items:flex-start;gap:8px;padding:6px 7px;border:1px solid transparent;border-radius:8px;background:transparent}' +
+      '.pp-notes-row:hover{background:rgba(232,176,40,.22)}' +
+      '.pp-notes-n{flex:none;min-width:16px;height:16px;margin-top:1px;border-radius:999px;background:rgba(232,176,40,.22);color:var(--pp-note-ink-2);font-size:10px;line-height:16px;text-align:center}' +
+      '.pp-notes-main{flex:1;min-width:0}' +
+      '.pp-notes-quote{display:flex;align-items:center;gap:6px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap;overflow:hidden}' +
+      '.pp-notes-quote-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
+      '.pp-notes-empty{padding:14px 12px;color:var(--pp-note-ink-2);font-size:12px;line-height:1.6}' +
+      '.pp-notes-tag{flex:none;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--dsw-alias-state-success-primary,#2f9e63) 14%,transparent);color:var(--dsw-alias-state-success-primary,#2f9e63);font-size:10px;line-height:16px}' +
+      '.pp-notes-row[data-promoted="true"]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary,#2f9e63) 35%,var(--pp-note-line))}' +
+      '.pp-notes-kind{flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-right:4px;border-radius:4px;background:rgba(var(--pp-inline-tint),.18);color:rgb(var(--pp-inline-tint));font-size:10px;line-height:1}' +
+      '.pp-note-inline[data-kind="comment"],.pp-notes-kind[data-kind="comment"],.pp-note-kind[data-kind="comment"]{--pp-inline-tint:255,191,36}' +
+      '.pp-note-inline[data-kind="question"],.pp-notes-kind[data-kind="question"],.pp-note-kind[data-kind="question"]{--pp-inline-tint:244,114,114}' +
+      '.pp-note-inline[data-kind="agree"],.pp-notes-kind[data-kind="agree"],.pp-note-kind[data-kind="agree"]{--pp-inline-tint:74,222,128}' +
+      '.pp-note-inline[data-kind="disagree"],.pp-notes-kind[data-kind="disagree"],.pp-note-kind[data-kind="disagree"]{--pp-inline-tint:239,68,68}' +
+      '.pp-note-inline[data-kind="idea"],.pp-notes-kind[data-kind="idea"],.pp-note-kind[data-kind="idea"]{--pp-inline-tint:96,165,250}' +
+      '.pp-note-inline[data-kind="todo"],.pp-notes-kind[data-kind="todo"],.pp-note-kind[data-kind="todo"]{--pp-inline-tint:251,191,36}' +
+      '.pp-note-inline{display:inline-flex;align-items:center;gap:3px;height:17px;margin:0 1px 0 4px;padding:0 5px;border:1px dashed rgba(var(--pp-inline-tint),.85);border-radius:5px;background:rgba(var(--pp-inline-tint),.15);color:inherit;font:inherit;font-size:11px;line-height:17px;vertical-align:middle;white-space:nowrap;user-select:none;-webkit-user-select:none;cursor:pointer}' +
+      '.pp-note-inline-icon{font-size:10px;line-height:1;color:rgb(var(--pp-inline-tint))}' +
+      '.pp-note-inline-text{white-space:nowrap}' +
+      '.pp-note-inline:hover{border-color:rgb(var(--pp-inline-tint));background:rgba(var(--pp-inline-tint),.26)}' +
+      '.pp-note-kinds{display:flex;flex-wrap:wrap;gap:2px;margin:0}' +
+      '.pp-note-kind{display:inline-flex;align-items:center;gap:3px;height:20px;padding:0 5px;border:1px solid var(--pp-note-line);border-radius:999px;background:transparent;color:var(--pp-note-ink-2);font:inherit;font-size:10.5px;cursor:pointer}' +
+      '.pp-note-kind[data-active="true"]{border-color:rgba(var(--pp-inline-tint),.9);color:var(--pp-note-ink);background:rgba(var(--pp-inline-tint),.16)}' +
+      '.pp-note-kind-icon{font-size:10px;line-height:1;color:rgb(var(--pp-inline-tint))}' +
+      '.pp-note-limit{color:var(--pp-note-ink-2);font-size:10px;font-variant-numeric:tabular-nums}' +
+      '.pp-note-limit-count{font-variant-numeric:tabular-nums}' +
+      '.pp-note-prompt{position:fixed;z-index:3;display:flex;flex-direction:column;gap:2px;width:210px;box-sizing:border-box;padding:5px;border:1px solid var(--pp-note-line);border-radius:10px;background:var(--pp-note-surface);box-shadow:0 14px 34px rgba(0,0,0,.2);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left;pointer-events:auto}' +
+      '.pp-note-prompt-title{padding:2px 8px 4px;color:var(--pp-note-ink-2);font-size:11px}' +
+      '.pp-note-prompt-list{display:flex;flex-direction:column;max-height:250px;overflow-y:auto}' +
+      '.pp-note-prompt-row{display:flex;align-items:center;gap:6px;width:100%;height:26px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}' +
+      '.pp-note-prompt-row:hover,.pp-note-prompt-row:focus-visible{background:var(--pp-note-hover);outline:none}' +
+      '.pp-note-prompt-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+      '.pp-note-prompt-tag{flex:none;padding:0 5px;border-radius:5px;background:rgba(var(--pp-bubble-tint,232,176,40),.16);color:var(--pp-note-ink-2);font-size:10px;line-height:16px}' +
+      '.pp-note-prompt-sep{height:1px;margin:3px 6px;background:var(--pp-note-line)}' +
+      '.pp-note-prompt-cancel{color:var(--pp-note-ink-2)}' +
+      '.pp-note-prompt-message{padding:2px 8px;color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +
+      '.pp-note-prompt-actions{display:flex;justify-content:flex-end;gap:6px;padding:2px}' +
+      '.pp-note-groups{display:flex;flex-direction:column;gap:4px;margin:2px 0 6px;padding:8px;border:1px solid var(--pp-note-line);border-radius:8px;background:var(--pp-note-surface)}' +
+      '.pp-note-groups-title{font-size:11px;color:var(--pp-note-ink-2)}' +
+      '.pp-note-groups-list{display:flex;flex-wrap:wrap;gap:4px}' +
+      '.pp-note-group{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
+      '.pp-note-group:hover{border-color:var(--pp-note-accent)}' +
+      '.pp-note-group[data-default="true"]{border-color:var(--pp-note-accent);background:color-mix(in srgb,var(--pp-note-accent) 10%,transparent)}' +
+      '.pp-note-group-default{font-size:10px;color:var(--pp-note-accent)}' +
+      '.pp-notes-text{white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}' +
+      '.pp-note-link{border:0;background:transparent;color:var(--pp-note-ink-2);font:inherit;font-size:11px;cursor:pointer;padding:2px 0;white-space:nowrap}' +
+      '.pp-note-link:hover{color:var(--pp-note-ink);text-decoration:underline;text-underline-offset:2px}' +
+      '.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}.pp-note-icon:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}.pp-note-icon.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-ask{display:inline-flex;align-items:center;gap:4px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap}';
 
     // ------------------------------------------------------------------- plugin
     return {
@@ -5527,6 +7571,14 @@ window.__ModuleLoader__.load({
           ctx.slots.register(
             { name: 'conversation.chat.text-interaction', key: 'prompt-pool', locale: NS },
             SelectionMenu,
+          ),
+        );
+        // Annotations: cards and the inline editor in the frame overlay; the list
+        // and the composed reply live in the prompt pool views' annotation tab.
+        ctx.slots.inject('shell.overlay', () =>
+          ctx.slots.register(
+            { name: 'shell.overlay', id: 'prompt-pool-notes', order: 30, label: () => translate('note.title') },
+            NotesLayer,
           ),
         );
 
@@ -5637,6 +7689,3 @@ window.__ModuleLoader__.load({
     };
   },
 });
-
-
-

@@ -41,14 +41,25 @@ language, and the plugin info card.
   menu offers **Copy** and **Add to the prompt pool**, whose submenu lists the groups currently on show;
   picking one stores the selection as a new item there. The group used last time leads the submenu;
   Shift+F10 opens the same menu, and a right-click without a selection keeps the browser menu.
+- **Annotations on a reply** — select a passage in an assistant reply, right-click **Annotate**, pick a
+  kind (note / question / agree / disagree / idea / to-do) and type up to ten characters (or leave it
+  empty for a glyph-only badge). A small coloured badge with the kind's glyph follows the passage, and the
+  passage itself is underlined in the same tint; click the badge to edit. The prompt pool always carries
+  an **Annotations** tab (with a short empty state until the session has notes): **Locate** scrolls to a
+  passage, **Insert** writes one note into the composer, **Save as prompt** files one note into a pool
+  group (the chooser is a small popup; the session's workspace leads it, with 常用 as the fallback), and
+  **Generate draft** inserts one numbered message that quotes each passage with its kind. The tab header
+  can also save every note as one prompt or generate that draft. Saved notes keep a green marker instead
+  of disappearing; notes are stored per session and survive reloads.
 - **Composer panel** — search, group tabs, per-row insert / queue / edit / duplicate / delete, and the
   send-queue card with collapse, clear and send. Drag its top edge to change the height, or its left
   edge to change the width; pin it to keep it open over the conversation.
 - **Sidebar page** — the same pool as a full-height page in the right sidebar.
 - **Groups** — frequent / notes / templates built in, plus your own categories and one tab per workspace.
   Each family can be expanded, folded into a single tab, or hidden.
-- **Settings** — group order and display, visible workspaces, two switches for post-use retention, and
-  a reset for the built-in prompt set.
+- **Settings** — group order and display, visible workspaces, two switches for post-use retention, a
+  reset for the built-in prompt set, and an **Annotations** tab (session binding explained, plus
+  keep-after-draft and keep-after-save switches).
 - **Guarded destructive actions** — deleting an item, clearing the queue and removing a queued entry all
   ask first; deletes and clears can be undone from the toast.
 - **Chinese and English** — every label follows the harness language, including the sidebar tab name.
@@ -74,13 +85,18 @@ does not turn it on.
 ## Usage
 
 1. Click **提示池 / Prompt pool** beside the composer (or open the sidebar page).
-2. **存草稿** copies the composer content — text and image attachments — into the pool. A small popup
+2. **Save draft** copies the composer content — text and image attachments — into the pool. A small popup
    offers the groups currently shown in the tab bar — built-in, custom, and every displayed
    workspace — and the toast names the destination. The composer keeps its text.
 3. Select text in a conversation and right-click: the menu offers **Copy** and **Add to the prompt
    pool**; open the submenu and picking a group turns the selection into a new item there.
-4. Add rows to the queue with the ⊕ control, reorder them in the queue card, then press **发送**.
-5. Each queued item is written into the composer and submitted in turn.
+4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to ten
+   characters, and the badge appears right after the passage. The pool's **Annotations** tab collects
+   every note in the session; **Locate** scrolls to a passage, **Insert** writes one note into the
+   composer, **Save as prompt** files one note into a group, and **Generate draft** turns the whole list
+   into one numbered message. The tab header can also save every note as one prompt.
+5. Add rows to the queue with the ⊕ control, reorder them in the queue card, then press **发送**.
+6. Each queued item is written into the composer and submitted in turn.
 
 ## Compatibility
 
@@ -94,6 +110,7 @@ does not turn it on.
 ## Data
 
 - Items and settings: `localStorage["dsh.prompt-pool.v1"]`.
+- Annotations: `localStorage["dsh.prompt-pool.notes.v1"]`.
 - Pool images: IndexedDB `dsh-prompt-pool-images.v1`.
 - Before a schema upgrade, the previous payload is copied once to
   `localStorage["dsh.prompt-pool.v1.backup"]`.
@@ -101,7 +118,7 @@ does not turn it on.
 - Image bytes that nothing references are deleted on startup; an image removed and saved is deleted
   immediately.
 
-Uninstalling the plugin does not delete either store, so reinstalling later brings the pool back.
+Uninstalling the plugin does not delete these stores, so reinstalling later brings the pool back.
 Clearing them removes the pool for good.
 
 ## Known limitations
@@ -115,6 +132,12 @@ Clearing them removes the pool for good.
   reasoning are selectable sources; tool cards, the sidebar and the composer keep their own menus.
 - **Right-clicking a selection replaces the browser's own menu.** The menu carries Copy itself, but the
   browser's Search / Translate / Inspect rows are not available from it.
+- **Annotation cards follow the rendered text.** A note on a folded or unmounted reply keeps its row in
+  the pool's Annotations tab, but has no card, pin or highlight until that text is rendered again; the
+  composed reply still uses it.
+- **A card can cover the lines below its passage.** It hangs right after the end of the passage, so a
+  note on a short line may overlap the following lines to its right; the Annotations tab always keeps
+  the full list.
 - **A capture does not clear the composer.** It copies; use the editor's own clear to remove the text.
 
 ## Development

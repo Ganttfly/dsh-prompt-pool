@@ -8,6 +8,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Inline annotations on assistant replies. Select a passage, right-click **Annotate**, choose a kind
+  (note / question / agree / disagree / idea / to-do), and type up to ten characters (or leave it empty
+  for a glyph-only badge). A coloured badge with the kind's glyph follows the passage and the passage is
+  underlined in the same tint; clicking the badge edits it. Notes are stored per session and survive
+  reloads.
+- An **Annotations** tab in both prompt-pool views: locate a passage, insert one note into the composer,
+  save one note into a pool group, generate one numbered draft from all notes, delete notes, and see a
+  green marker on notes already saved. The Settings Annotations tab explains the session binding and
+  controls keep-after-draft and keep-after-save.
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 

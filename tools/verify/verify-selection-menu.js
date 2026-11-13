@@ -171,7 +171,7 @@ const renderMenu = (entry, text) => {
 
 /** Open the pool entry's submenu the way a hover or click does. */
 const openGroups = (entry, text) => {
-  const poolRow = rowsOf(renderMenu(entry, text)).find((row) => labelOf(row) === 'menu.title');
+  const poolRow = rowsOf(renderMenu(entry, text)).find((row) => labelOf(row) === 'menu.pool');
   if (!poolRow) return { rows: [] };
   poolRow.props.onClick();
   resetHooks();
@@ -216,7 +216,7 @@ if (interaction) {
 const topRows = rowsOf(renderMenu(menuEntry, '划选的文字'));
 const topLabels = topRows.map(labelOf);
 if (topLabels.indexOf('menu.copy') < 0) fail('the Copy row is missing');
-if (topLabels.indexOf('menu.title') < 0) fail('the pool entry is missing');
+if (topLabels.indexOf('menu.pool') < 0) fail('the pool entry is missing');
 if (topLabels.indexOf('分组甲') >= 0 || topLabels.indexOf('group.note') >= 0) {
   fail(`the groups must live in the submenu, not at the top level: ${JSON.stringify(topLabels)}`);
 }
@@ -224,7 +224,7 @@ if (topLabels.indexOf('分组甲') >= 0 || topLabels.indexOf('group.note') >= 0)
 const opened = openGroups(menuEntry, '划选的文字');
 const rows = opened.rows.filter((row) => {
   const label = labelOf(row);
-  return label !== 'menu.copy' && label !== 'menu.title';
+  return label !== 'menu.copy' && label !== 'menu.pool';
 });
 if (rows.length === 0) fail('the submenu rendered no destination rows');
 else {
@@ -294,7 +294,7 @@ const reloaded = boot();
 const reloadedMenu = findMenu(reloaded);
 if (!reloadedMenu) fail('the menu was not registered after a reload');
 else {
-  const reloadedRows = openGroups(reloadedMenu, '第二段文字').rows.filter((row) => labelOf(row) !== 'menu.copy' && labelOf(row) !== 'menu.title');
+  const reloadedRows = openGroups(reloadedMenu, '第二段文字').rows.filter((row) => labelOf(row) !== 'menu.copy' && labelOf(row) !== 'menu.pool');
   if (reloadedRows.length === 0) fail('the reloaded menu rendered no rows');
   else {
     if (labelOf(reloadedRows[0]) !== '分组甲') fail(`the remembered group did not lead the reloaded menu: ${labelOf(reloadedRows[0])}`);
