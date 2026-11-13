@@ -13,8 +13,10 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 
 ![Annotate passages inline and review them in the pool's Annotations tab](docs/images/annotations.png)
 
-The annotations feature end to end: annotate a passage in a reply (left), then locate, insert, save or
-compose the notes from the pool's **Annotations** tab (right).
+**Annotate while you read.** Select a passage and add a note right where it belongs, without leaving the
+reply; the original wording stays attached, so the context is easy to follow and no key point slips away.
+The **Annotations** tab on the right collects the whole set — locate a passage, insert one note, save it
+as a prompt, or turn every note into one quoted draft.
 
 ![The prompt pool panel open above the composer, with per-group counts and the trigger showing the queued count](docs/images/panel.png)
 
@@ -46,16 +48,16 @@ draft or saving as a prompt, plus the plugin info card.
   menu offers **Copy** and **Add to the prompt pool**, whose submenu lists the groups currently on show;
   picking one stores the selection as a new item there. The group used last time leads the submenu;
   Shift+F10 opens the same menu, and a right-click without a selection keeps the browser menu.
-- **Annotations on a reply** — select a passage in an assistant reply, right-click **Annotate**, pick a
-  kind (note / question / agree / disagree / idea / to-do) and type up to ten characters (or leave it
-  empty for a glyph-only badge). A small coloured badge with the kind's glyph follows the passage, and the
-  passage itself is underlined in the same tint; click the badge to edit. The prompt pool always carries
-  an **Annotations** tab (with a short empty state until the session has notes): **Locate** scrolls to a
-  passage, **Insert** writes one note into the composer, **Save as prompt** files one note into a pool
-  group (the chooser is a small popup; the session's workspace leads it, with 常用 as the fallback), and
-  **Generate draft** inserts one numbered message that quotes each passage with its kind. The tab header
-  can also save every note as one prompt or generate that draft. Saved notes keep a green marker instead
-  of disappearing; notes are stored per session and survive reloads.
+- **Annotate while you read** — select a passage in an assistant reply and right-click **Annotate**:
+  pick a kind (note / question / agree / disagree / idea / to-do), type up to ten characters (or leave it
+  empty for a glyph-only badge), and the badge lands right after the passage with a matching underline.
+  The note stays on the exact wording, so you can keep reading and come back to the context instead of
+  losing the point in a separate scratchpad; click the badge to edit. The **Annotations** tab always
+  exists: **Locate** scrolls to the passage, **Insert** writes one note into the composer, **Save as
+  prompt** files one note into a pool group (the chooser leads with the session's workspace, then 常用),
+  and **Generate draft** composes one numbered message that quotes each passage with its kind. The tab
+  header can save every note as one prompt or generate that draft as well. Saved notes keep a green
+  marker; notes are stored per session and survive reloads.
 - **Composer panel** — search, group tabs, per-row insert / queue / edit / duplicate / delete, and the
   send-queue card with collapse, clear and send. Drag its top edge to change the height, or its left
   edge to change the width; pin it to keep it open over the conversation.
