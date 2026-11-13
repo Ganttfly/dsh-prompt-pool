@@ -11,19 +11,20 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 
 ## Screenshots
 
-![The prompt pool panel open over the conversation, with per-group counts and a one-item send queue](docs/images/panel.png)
+![The prompt pool panel open above the composer, with per-group counts and the trigger showing the queued count](docs/images/panel.png)
 
 The composer panel: group tabs with their counts, the row actions (insert, queue, edit, duplicate,
-delete), and the send queue at the bottom.
+delete), and the send queue at the bottom. The trigger beside the composer carries the queued count.
 
 ![The prompt pool as a full page in the right sidebar](docs/images/sidebar.png)
 
 The same pool as a right-sidebar page — a native tab on DSH 0.2+, with the group tabs and one tab per
 workspace.
 
-![Prompt pool settings: group order and display table, plus the plugin info card](docs/images/settings.png)
+![Prompt pool settings: retention switches, the built-in prompt reset, and the plugin info card](docs/images/settings.png)
 
-Settings: how each group family is displayed and ordered, and the plugin info card.
+Settings: what happens to an item after use, resetting the built-in prompts in the current interface
+language, and the plugin info card.
 
 ## Features
 
@@ -46,8 +47,8 @@ Settings: how each group family is displayed and ordered, and the plugin info ca
 - **Sidebar page** — the same pool as a full-height page in the right sidebar.
 - **Groups** — frequent / notes / templates built in, plus your own categories and one tab per workspace.
   Each family can be expanded, folded into a single tab, or hidden.
-- **Settings** — group order and display, visible workspaces, and two switches that decide whether an
-  item stays in the pool after it is inserted or queued.
+- **Settings** — group order and display, visible workspaces, two switches for post-use retention, and
+  a reset for the built-in prompt set.
 - **Guarded destructive actions** — deleting an item, clearing the queue and removing a queued entry all
   ask first; deletes and clears can be undone from the toast.
 - **Chinese and English** — every label follows the harness language, including the sidebar tab name.

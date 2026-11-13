@@ -11,8 +11,8 @@
 
 | 项目 | 现状 | 结论 |
 |---|---|---|
-| npm 包名 | `dsh-prompt-pool` 已发布 1.0.0 / 1.0.1 / 1.0.2 / 1.0.3 / 1.1.0 / 1.1.1 / 1.2.0 | 名字已占用 |
-| 版本 | `plugin/package.json` = 1.3.0（未发布），界面 `PLUGIN_VERSION` 同步 | smoke 已强制一致 |
+| npm 包名 | `dsh-prompt-pool` 已发布 1.0.0 / 1.0.1 / 1.0.2 / 1.0.3 / 1.1.0 / 1.1.1 / 1.2.0 / 1.3.0 | 名字已占用 |
+| 版本 | `plugin/package.json` = 1.3.0，界面 `PLUGIN_VERSION` 同步 | smoke 已强制一致 |
 | 打包产物 | `npm pack --dry-run` = 9 个文件、约 64.2 kB（解压约 264.8 kB） | 内容正确 |
 | `private` | `false` | 已发布 |
 | license / author / repository / keywords / engines | 已补齐 | 已发布 |
