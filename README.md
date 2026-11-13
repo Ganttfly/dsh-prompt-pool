@@ -11,6 +11,11 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 
 ## Screenshots
 
+![Annotate passages inline and review them in the pool's Annotations tab](docs/images/annotations.png)
+
+The annotations feature end to end: annotate a passage in a reply (left), then locate, insert, save or
+compose the notes from the pool's **Annotations** tab (right).
+
 ![The prompt pool panel open above the composer, with per-group counts and the trigger showing the queued count](docs/images/panel.png)
 
 The composer panel: group tabs with their counts, the row actions (insert, queue, edit, duplicate,
@@ -25,11 +30,6 @@ workspace.
 
 Settings: annotations are bound to the current session; choose whether they stay after generating a
 draft or saving as a prompt, plus the plugin info card.
-
-![Annotations collected in the prompt pool's Annotations tab](docs/images/annotations.png)
-
-Annotate a passage from the reply's menu; the note is flagged inline and collected in the pool's
-Annotations tab.
 
 ## Features
 
