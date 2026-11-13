@@ -11,7 +11,7 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 
 ## Screenshots
 
-![Annotate passages inline and review them in the pool's Annotations tab](docs/images/annotations.png)
+![Annotate passages inline and review them in the pool's Annotations tab](docs/images/annotations-overview.png)
 
 **Annotate while you read.** Select a passage and add a note right where it belongs, without leaving the
 reply; the original wording stays attached, so the context is easy to follow and no key point slips away.
