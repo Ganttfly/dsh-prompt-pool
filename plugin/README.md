@@ -2,8 +2,11 @@
 
 [![npm version](https://img.shields.io/npm/v/dsh-prompt-pool.svg)](https://www.npmjs.com/package/dsh-prompt-pool) [![dshfind](https://dshfind.com/api/badge/Ganttfly/dsh-prompt-pool)](https://dshfind.com/en/plugins/Ganttfly/dsh-prompt-pool?ref=badge)
 
-A staging pool for prompts inside DeepSeek Harness: park a draft without sending it, arrange a playlist
-of prompt items, and release the batch into the composer's send queue in order.
+A prompt staging pool for DeepSeek Harness: park a draft until it is ready, queue the next prompts in
+order, and annotate a long reply without losing the sentence you mean. Nothing runs until you release it.
+
+Agent work breaks between messages: a half-written prompt, a sequence to run, a passage to comment on.
+The pool keeps the draft, the next action and the exact wording next to the conversation.
 
 ![Annotating a passage inline and reviewing the notes in the pool](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/annotations-overview.png)
 
@@ -16,7 +19,7 @@ of prompt items, and release the batch into the composer's send queue in order.
 - Annotate while you read: notes stay on the exact passage, collect in one tab, and compose into one quoted draft
 - Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback)
 - Groups: built-in, custom and one tab per workspace; each can be expanded, folded or hidden
-- Settings for group order/display, visible workspaces and post-use retention
+- Settings for group order/display, visible workspaces, retention, the built-in prompt reset and annotations
 - A release shows progress and can be stopped; the unsent queue stays
 - Confirmations for destructive actions, with undo on deletes and clears
 

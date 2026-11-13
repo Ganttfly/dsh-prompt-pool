@@ -4,8 +4,9 @@
 
 English | [中文](README.zh.md)
 
-A staging pool for prompts inside DeepSeek Harness. Park a half-written prompt without sending it,
-arrange a playlist of prompt items, and release the whole batch into the composer's send queue in order.
+A prompt staging pool for DeepSeek Harness. Keep a half-written prompt out of the agent's way until it is
+ready, line up the prompts you want to run next, and annotate a long reply without losing the sentence you
+mean.
 
 It sits in two places: a trigger beside the composer, and a page in the right sidebar.
 
@@ -33,21 +34,28 @@ workspace.
 Settings: annotations are bound to the current session; choose whether they stay after generating a
 draft or saving as a prompt, plus the plugin info card.
 
+## Why a prompt pool?
+
+Working with an agent is rarely one prompt. The friction sits between messages:
+
+| Where it hurts | What the pool does |
+|---|---|
+| You are still shaping the prompt, but the send button is one keystroke away. | Park the draft in a group; nothing runs until you release it. |
+| The next prompts are already in your head, and retyping them breaks the sequence. | Queue them in order and release one by one, with progress and Stop. |
+| A long answer needs a precise reply on one sentence, not a vague “looks good”. | Annotate the passage inline; the note stays on the exact words, and **Generate draft** turns every note into one quoted message. |
+| The constraint lives in an earlier message or another workspace. | Right-click capture and workspace tabs keep selections and prompts grouped where you can find them. |
+
+The goal is not another notes app. It is to keep the context, the exact wording and the next action next to
+the conversation, so the agent gets a precise instruction and you do not lose the thread.
+
 ## Features
 
 - **Staging instead of sending** — save a draft into the pool; nothing runs until you release it.
-- **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
-  can reset the built-in set in the current interface language. Edited built-ins can be kept as
-  ordinary items; custom items and the queue are left alone.
 - **Ordered release** — queue items in the order you want, then send them one by one; each submission
   waits for the composer to be accepted before the next starts. On hosts that expose the conversation
   queue, items go straight into the queue without touching the composer; otherwise the composer path
   is used. While a release runs, both views show progress and a Stop control; the queue is locked
   until it finishes.
-- **Right-click to save** — select text in a reply or in one of your own messages, then right-click: the
-  menu offers **Copy** and **Add to the prompt pool**, whose submenu lists the groups currently on show;
-  picking one stores the selection as a new item there. The group used last time leads the submenu;
-  Shift+F10 opens the same menu, and a right-click without a selection keeps the browser menu.
 - **Annotate while you read** — select a passage in an assistant reply and right-click **Annotate**:
   pick a kind (note / question / agree / disagree / idea / to-do), type up to ten characters (or leave it
   empty for a glyph-only badge), and the badge lands right after the passage with a matching underline.
@@ -62,8 +70,15 @@ draft or saving as a prompt, plus the plugin info card.
   send-queue card with collapse, clear and send. Drag its top edge to change the height, or its left
   edge to change the width; pin it to keep it open over the conversation.
 - **Sidebar page** — the same pool as a full-height page in the right sidebar.
+- **Right-click to save** — select text in a reply or in one of your own messages, then right-click: the
+  menu offers **Copy** and **Add to the prompt pool**, whose submenu lists the groups currently on show;
+  picking one stores the selection as a new item there. The group used last time leads the submenu;
+  Shift+F10 opens the same menu, and a right-click without a selection keeps the browser menu.
 - **Groups** — frequent / notes / templates built in, plus your own categories and one tab per workspace.
   Each family can be expanded, folded into a single tab, or hidden.
+- **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
+  can reset the built-in set in the current interface language. Edited built-ins can be kept as
+  ordinary items; custom items and the queue are left alone.
 - **Settings** — group order and display, visible workspaces, two switches for post-use retention, a
   reset for the built-in prompt set, and an **Annotations** tab (session binding explained, plus
   keep-after-draft and keep-after-save switches).
