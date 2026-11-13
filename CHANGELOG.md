@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
+  and release.
+
+## [1.4.0] — 2026-11-13
+
+### Added
+
 - Inline annotations on assistant replies. Select a passage, right-click **Annotate**, choose a kind
   (note / question / agree / disagree / idea / to-do), and type up to ten characters (or leave it empty
   for a glyph-only badge). A coloured badge with the kind's glyph follows the passage and the passage is
@@ -17,8 +24,6 @@ All notable changes to this project are documented here. The format follows
   save one note into a pool group, generate one numbered draft from all notes, delete notes, and see a
   green marker on notes already saved. The Settings Annotations tab explains the session binding and
   controls keep-after-draft and keep-after-save.
-- Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
-  and release.
 
 ## [1.3.0] — 2026-11-13
 
@@ -180,7 +185,8 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.4.0
 [1.3.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.3.0
 [1.2.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.2.0
 [1.1.1]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.1.1
