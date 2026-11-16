@@ -11,6 +11,14 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
+## [1.4.1] — 2026-11-16
+
+### Changed
+
+- The readmes now lead with the annotations workflow: annotating while reading, keeping notes attached
+  to the exact passage, and generating one quoted draft. The English and Chinese screenshots were
+  refreshed, and the full overview image leads the screenshot section. The plugin code is unchanged.
+
 ## [1.4.0] — 2026-11-13
 
 ### Added
@@ -185,7 +193,8 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.4.1
 [1.4.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.4.0
 [1.3.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.3.0
 [1.2.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.2.0
