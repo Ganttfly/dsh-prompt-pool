@@ -195,13 +195,13 @@ else {
   cells = [];
   childStores.clear();
   const tree = render();
-  const tabBarNode = findComponent(tree, 'TabBar');
+  const tabBarNode = findComponent(tree, 'ScopeBar');
   if (!tabBarNode) fail('the pool tab strip was not rendered');
   else {
     const bar = renderChild(tabBarNode);
     const notesTab = findAll(bar, (node) => node.type === 'button'
       && String(node.props && node.props.className || '') === 'pp-tab'
-      && textOf(node).indexOf('note.title') >= 0)[0];
+      && node.props && node.props['data-group'] === 'notes')[0];
     if (!notesTab) fail('the notes tab is missing while the session has notes');
     else {
       notesTab.props.onClick();
@@ -255,6 +255,7 @@ else {
           const pool = window.__dshPromptPoolStoreV1.get();
           const added = pool.items[pool.items.length - 1];
           if (!added || added.group !== 'builtin:oftenuse') fail(`promoted into ${added && added.group}`);
+          else if (added.type !== 'opinion') fail(`promoted type ${added && added.type}`);
           else if (added.body !== '【note.kind.comment】「构建是否接受参数？」：接受分支参数') fail(`promoted body ${JSON.stringify(added.body)}`);
           const note = window.__dshPromptPoolNotesV1.get().items.find((entry) => entry.id === 'n2');
           if (!note || note.promotedGroup !== 'builtin:oftenuse') fail('the note was not marked as stored');
@@ -321,11 +322,11 @@ else {
     useWorkspaces: () => ({ items: [], currentId: '' }),
     useSession: () => ({}),
   });
-  const tabBarNode = findComponent(tree, 'TabBar');
+  const tabBarNode = findComponent(tree, 'ScopeBar');
   const bar = tabBarNode ? renderChild(tabBarNode) : [];
   const notesTab = findAll(bar, (node) => node.type === 'button'
     && String(node.props && node.props.className || '') === 'pp-tab'
-    && textOf(node).indexOf('note.title') >= 0)[0];
+    && node.props && node.props['data-group'] === 'notes')[0];
   if (!notesTab) fail('the notes tab is missing without annotations');
   else console.log('[ok] the notes tab stays visible without annotations');
 }
@@ -399,6 +400,26 @@ else {
   else console.log('[ok] a new annotation defaults to 同意');
 }
 
+// Prompt types are one fixed value: derived from the annotation kind, never a
+// free-form multi-tag. Mixed batches stay unclassified.
+const promptTypeStart = source.indexOf('const PROMPT_TYPES =');
+const promptTypeEnd = source.indexOf('function sanitizeItem', promptTypeStart);
+if (promptTypeStart < 0 || promptTypeEnd < 0) fail('the prompt type helpers were not found');
+else {
+  const types = new Function(`${source.slice(promptTypeStart, promptTypeEnd)}; return { normalizePromptType, promptTypeForNote, promptTypeForNotes };`)();
+  if (types.promptTypeForNote({ kind: 'agree' }) !== 'decision') fail('agree did not map to a decision');
+  else if (types.promptTypeForNote({ kind: 'disagree' }) !== 'decision') fail('disagree did not map to a decision');
+  else if (types.promptTypeForNote({ kind: 'question' }) !== 'question') fail('question did not map to a question');
+  else if (types.promptTypeForNote({ kind: 'comment' }) !== 'opinion') fail('comment did not map to an opinion');
+  else if (types.promptTypeForNote({ kind: 'idea' }) !== 'idea') fail('idea did not map to an idea');
+  else if (types.promptTypeForNote({ kind: 'supplement' }) !== 'supplement') fail('supplement did not map to a supplement');
+  else if (types.promptTypeForNote({ kind: 'todo' }) !== 'todo') fail('todo did not map to a todo');
+  else if (types.normalizePromptType('bogus') !== '') fail('an unknown prompt type was accepted');
+  else if (types.promptTypeForNotes([{ kind: 'agree' }, { kind: 'disagree' }]) !== 'decision') fail('a uniform batch lost its type');
+  else if (types.promptTypeForNotes([{ kind: 'agree' }, { kind: 'todo' }]) !== '') fail('a mixed batch got a single type');
+  else console.log('[ok] prompt types are fixed and derived from annotation kinds');
+}
+
 // The inline badge must use the conversation's text size, not its own pixel
 // size, so Settings → the reading font size scales it too.
 const chipRule = /\.pp-note-inline\{([^}]*)\}/.exec(source);
@@ -430,3 +451,6 @@ if (!/onChange:\s*\(event\)\s*=>\s*\{[\s\S]{0,200}mergeNoteBodyInput\(current, n
 for (const failure of failures) console.error('[fail]', failure);
 console.log(failures.length === 0 ? '[ok] annotations live in the prompt pool' : `[fail] ${failures.length} check(s)`);
 if (failures.length > 0) process.exitCode = 1;
+
+
+

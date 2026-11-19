@@ -82,6 +82,7 @@ new Function('window', 'localStorage', 'require', source)(global.window, global.
 const capture = (draft, attachmentIds, occurrences, pick = 'group.note') => {
   const panelProps = {
     sessionId: 's1',
+    initialScope: 'workspace',
     useInput: () => ({ draft, phase: 'plain', queue: [], attachmentIds: attachmentIds || [], occurrences: occurrences || [] }),
     inputActions: {
       captureInsertion: () => ({ start: 0, end: 0, draftRev: 1 }),

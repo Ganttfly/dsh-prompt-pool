@@ -125,6 +125,7 @@ store.set(
 
 const panelProps = {
   sessionId: 's1',
+  initialScope: 'workspace',
   useInput: () => ({ draft: '草稿', phase: 'plain', queue: [], attachmentIds: [] }),
   inputActions,
   useWorkspaces: () => workspaceSnapshot,

@@ -158,10 +158,19 @@ const panelProps = {
 const failures = [];
 
 for (const [slotName, props, label] of [
-  ['betterSidebar.tab', {}, 'page'],
-  ['conversation.input.overlay', panelProps, 'panel'],
+  ['betterSidebar.tab', { initialScope: 'global' }, 'page'],
+  ['conversation.input.overlay', {
+    ...panelProps,
+    initialScope: 'workspace',
+    useWorkspaces: () => ({
+      items: [{ id: 'w1', workspaceId: 'w1', name: 'W', sessionIds: ['s1'] }],
+      currentId: 'w1',
+    }),
+  }, 'panel'],
 ]) {
-  store.set(STORAGE_KEY, fixture());
+  const fixtureData = JSON.parse(fixture());
+  if (label === 'panel') fixtureData.items = fixtureData.items.map((item) => ({ ...item, group: 'workspace:w1' }));
+  store.set(STORAGE_KEY, JSON.stringify(fixtureData));
   const entries = loadModule();
   const pool = global.window.__dshPromptPoolStoreV1;
   const trayLength = () => pool.get().tray.length;

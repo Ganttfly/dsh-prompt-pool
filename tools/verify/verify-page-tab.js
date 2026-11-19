@@ -99,26 +99,43 @@ const render = () => {
   return out;
 };
 const tabBar = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function' && node.type.name === 'TabBar');
+const scopeBar = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function' && node.type.name === 'ScopeBar');
+const openGlobalScope = (tree) => {
+  const scope = scopeBar(tree);
+  if (!scope) return false;
+  const buttons = nodes(scope.type(scope.props || {}), []).filter((node) => node.type === 'button');
+  if (buttons.length < 3) return false;
+  buttons[2].props.onClick();
+  return true;
+};
 
 const failures = [];
 let tree = render();
-let bar = tabBar(tree);
-if (!bar) {
-  failures.push('the tab bar was not rendered');
-} else {
-  if (bar.props.active !== 'all') failures.push(`the page started on ${bar.props.active}, expected all`);
-  bar.props.onSelect('builtin:note');
+if (!openGlobalScope(tree)) failures.push('the global scope tab is missing');
+else {
   tree = render();
-  bar = tabBar(tree);
-  if (!bar || bar.props.active !== 'builtin:note') failures.push(`selecting Notes left ${bar && bar.props.active}`);
+  let bar = tabBar(tree);
+  if (!bar) {
+    failures.push('the tab bar was not rendered');
+  } else {
+    if (bar.props.active !== 'all') failures.push(`the page started on ${bar.props.active}, expected all`);
+    bar.props.onSelect('builtin:note');
+    tree = render();
+    bar = tabBar(tree);
+    if (!bar || bar.props.active !== 'builtin:note') failures.push(`selecting Notes left ${bar && bar.props.active}`);
 
-  // Remount: drop the component's hook cells, keep only the host-level state.
-  cells = [];
-  cursor = 0;
-  tree = render();
-  bar = tabBar(tree);
-  if (!bar) failures.push('the tab bar disappeared after a remount');
-  else if (bar.props.active !== 'builtin:note') failures.push(`a remount fell back to ${bar.props.active}, expected builtin:note`);
+    // Remount: drop the component's hook cells, keep only the host-level state.
+    cells = [];
+    cursor = 0;
+    tree = render();
+    if (!openGlobalScope(tree)) failures.push('the global scope tab disappeared after a remount');
+    else {
+      tree = render();
+      bar = tabBar(tree);
+      if (!bar) failures.push('the tab bar disappeared after a remount');
+      else if (bar.props.active !== 'builtin:note') failures.push(`a remount fell back to ${bar.props.active}, expected builtin:note`);
+    }
+  }
 }
 
 for (const failure of failures) console.error('[fail]', failure);

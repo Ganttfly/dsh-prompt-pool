@@ -94,7 +94,7 @@ const loadPage = () => {
   return () => {
     current = pageState;
     resetHooks();
-    const out = entry.component({});
+    const out = entry.component({ initialScope: 'global' });
     if (out && typeof out.type === 'function') {
       resetHooks();
       return out.type(out.props || {});

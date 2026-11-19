@@ -79,6 +79,7 @@ const fixture = (settings) => JSON.stringify({
 
 const panelProps = {
   sessionId: 's1',
+  initialScope: 'workspace',
   useInput: () => ({ draft: '', phase: 'plain', queue: [], attachmentIds: [] }),
   inputActions: {
     captureInsertion: () => ({ start: 0, end: 0, draftRev: 1 }),
@@ -90,7 +91,10 @@ const panelProps = {
     pruneAttachments: () => {},
     persistDraft: () => {},
   },
-  useWorkspaces: () => ({ items: [], currentId: '' }),
+  useWorkspaces: () => ({
+    items: [{ id: 'w1', workspaceId: 'w1', name: 'W', sessionIds: ['s1'] }],
+    currentId: 'w1',
+  }),
   useSession: () => ({}),
 };
 
@@ -110,7 +114,11 @@ const findUndo = (tree) => nodes(tree, []).find(
 );
 
 const load = (settings, slotName, props) => {
-  store.set(STORAGE_KEY, fixture(settings));
+  const data = JSON.parse(fixture(settings));
+  if (slotName === 'conversation.input.overlay') {
+    data.items = data.items.map((item) => ({ ...item, group: 'workspace:w1' }));
+  }
+  store.set(STORAGE_KEY, JSON.stringify(data));
   delete global.window.__dshPromptPoolStoreV1;
   const before = registrations.length;
   new Function('window', 'localStorage', 'require', source)(global.window, global.localStorage, () => reactStub);
@@ -157,7 +165,7 @@ const main = async () => {
 
   // 3. Switch off: queueing removes the pool item but keeps the queued copy.
   {
-    const run = load({ keepAfterQueue: false }, 'betterSidebar.tab', {});
+    const run = load({ keepAfterQueue: false }, 'betterSidebar.tab', { initialScope: 'global' });
     findQueue(run.tree()).props.onClick();
     if (run.pool.get().tray.length !== 1) failures.push('off/queue: tray has ' + run.pool.get().tray.length + ' entry, expected 1');
     if (run.pool.get().items.length !== 1) failures.push('off/queue: ' + run.pool.get().items.length + ' item(s) left, expected 1');
@@ -171,7 +179,7 @@ const main = async () => {
 
   // 4. Default: queueing keeps the item.
   {
-    const run = load({}, 'betterSidebar.tab', {});
+    const run = load({}, 'betterSidebar.tab', { initialScope: 'global' });
     findQueue(run.tree()).props.onClick();
     if (run.pool.get().tray.length !== 1) failures.push('on/queue: tray has ' + run.pool.get().tray.length + ' entry, expected 1');
     if (run.pool.get().items.length !== 2) failures.push('on/queue: ' + run.pool.get().items.length + ' item(s) left, expected 2');
@@ -186,3 +194,4 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
+

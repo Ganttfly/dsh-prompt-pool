@@ -103,7 +103,8 @@ for (const showAllTab of [true, false]) {
     continue;
   }
   const before = failures.length;
-  const tabBar = nodes(root(page.component({ sessionId: 's1' })), []).find((node) => node.props && Array.isArray(node.props.tabs));
+  const pageTree = root(page.component({ sessionId: 's1', initialScope: 'global' }));
+  const tabBar = nodes(pageTree, []).find((node) => node.props && Array.isArray(node.props.tabs));
   if (!tabBar) fail(`showAllTab=${showAllTab}: the tab bar was not rendered`);
   else {
     const tabs = tabBar.props.tabs || [];
@@ -111,7 +112,7 @@ for (const showAllTab of [true, false]) {
     if (showAllTab && ids.indexOf('all') < 0) fail('showAllTab=true: the All tab is missing');
     if (!showAllTab && ids.indexOf('all') >= 0) fail('showAllTab=false: the All tab is still rendered');
     if (ids.indexOf('custom:c1') < 0) fail('the custom group tab disappeared');
-    if (ids.indexOf('notes') < 0) fail('the annotations tab disappeared');
+    if (ids.indexOf('notes') >= 0) fail('annotations leaked into the global group tabs');
     if (showAllTab && tabBar.props.active !== 'all') fail(`showAllTab=true: active tab is ${tabBar.props.active}, expected all`);
     if (!showAllTab && tabBar.props.active === 'all') fail('showAllTab=false: the hidden All tab is still active');
     if (!showAllTab && !ids.includes(tabBar.props.active)) fail(`showAllTab=false: active tab ${tabBar.props.active} is not in the bar`);
@@ -131,14 +132,11 @@ for (const showAllTab of [true, false]) {
       useWorkspaces: () => ({ items: [], currentId: '' }),
       useSession: () => ({}),
     };
-    const panelBar = nodes(panel.component(panelProps), []).find((node) => node.props && Array.isArray(node.props.tabs));
-    if (!panelBar) fail(`showAllTab=${showAllTab}: the panel tab bar was not rendered`);
-    else {
-      const panelIds = (panelBar.props.tabs || []).map((tab) => tab.id);
-      if (showAllTab && panelBar.props.active !== 'all') fail(`showAllTab=true: the panel starts on ${panelBar.props.active}`);
-      if (!showAllTab && panelBar.props.active === 'all') fail('showAllTab=false: the panel still starts on All');
-      if (!showAllTab && !panelIds.includes(panelBar.props.active)) fail(`showAllTab=false: the panel starts on missing tab ${panelBar.props.active}`);
-    }
+    const panelTree = panel.component(panelProps);
+    const panelScope = nodes(panelTree, []).find((node) => typeof node.type === 'function' && node.type.name === 'ScopeBar');
+    const panelGroups = nodes(panelTree, []).find((node) => node.props && Array.isArray(node.props.tabs));
+    if (!panelScope) fail(`showAllTab=${showAllTab}: the panel scope bar was not rendered`);
+    if (panelGroups) fail(`showAllTab=${showAllTab}: the panel still renders group tabs`);
   }
 
   const check = nodes(settings.component({}), []).find((node) => node.type === 'input'

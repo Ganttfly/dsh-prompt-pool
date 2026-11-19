@@ -105,7 +105,6 @@ window.__ModuleLoader__.load({
       'tab.description': '暂存、编辑、编排你的提示词，按住顺序一次性释放',
       'page.search': '搜索标题或内容…',
       'page.empty': '还没有内容。点右上角「＋ 提示词」开始。',
-      'page.emptyOftenuse': '还没有常用条目。把条目的「分组」改成「常用」即可。',
       'page.noMatch': '没有匹配的条目。',
       'status.noComposer': '没有可用的输入框：请先打开一个对话页签',
       'status.releaseSent': '已交给输入框，按顺序排队中',
@@ -191,6 +190,9 @@ window.__ModuleLoader__.load({
       'row.familyWorkspace': '工作区分组',
       'tab.familyBuiltin': '内置分组',
       'row.classification': '分组',
+      'row.type': '类型',
+      'row.typeNone': '未分类',
+      'row.allTypes': '全部类型',
       'page.new': '提示词',
       'row.noCategory': '未分组',
       'tray.title': '待发送队列',
@@ -230,6 +232,11 @@ window.__ModuleLoader__.load({
       'note.add': '+ 批注',
       'note.anchorFailed': '无法定位这段选中文字，请重新选择助手回复中的一句话。',
       'note.title': '批注',
+      'scope.notes': '批注',
+      'scope.prompts': '提示词',
+      'scope.session': '当前会话',
+      'scope.workspace': '当前工作区',
+      'scope.global': '全局共享池',
       'note.placeholder': '写点什么：回答、疑问或修改意见',
       'note.limitHint': '最多 100 个全角或 200 个半角字符',
       'note.select': '选择这条批注',
@@ -297,6 +304,13 @@ window.__ModuleLoader__.load({
       'note.kind.idea': '思路',
       'note.kind.supplement': '补充信息',
       'note.kind.todo': '待办',
+      'prompt.type.decision': '决策',
+      'prompt.type.question': '问题',
+      'prompt.type.opinion': '意见',
+      'prompt.type.idea': '思路',
+      'prompt.type.supplement': '补充',
+      'prompt.type.todo': '待办',
+      'prompt.type.inspiration': '灵感',
       'menu.last': '上次',
       'menu.count': '{n} 条',
       'menu.saved': '已加入「{group}」',
@@ -370,7 +384,6 @@ window.__ModuleLoader__.load({
       'tab.description': 'Stage, edit and arrange prompts, then release them in order',
       'page.search': 'Search title or text…',
       'page.empty': 'Nothing yet. Use “+ Prompt” in the top right.',
-      'page.emptyOftenuse': 'Nothing here yet. Set an item’s group to Frequent.',
       'page.noMatch': 'No matching item.',
       'status.noComposer': 'No composer available: open a conversation tab first',
       'status.releaseSent': 'Handed to the composer; queuing in order',
@@ -456,6 +469,9 @@ window.__ModuleLoader__.load({
       'row.familyWorkspace': 'Workspace groups',
       'tab.familyBuiltin': 'Built-in groups',
       'row.classification': 'Group',
+      'row.type': 'Type',
+      'row.typeNone': 'Unclassified',
+      'row.allTypes': 'All types',
       'page.new': 'Prompt',
       'row.noCategory': 'Ungrouped',
       'tray.title': 'Send queue',
@@ -495,6 +511,11 @@ window.__ModuleLoader__.load({
       'note.add': '+ Annotate',
       'note.anchorFailed': 'Could not anchor that selection. Select a passage in the assistant reply again.',
       'note.title': 'Annotations',
+      'scope.notes': 'Notes',
+      'scope.prompts': 'Prompts',
+      'scope.session': 'Current session',
+      'scope.workspace': 'Current workspace',
+      'scope.global': 'Global shared pool',
       'note.placeholder': 'Write an answer, a question or a correction',
       'note.limitHint': 'Up to 100 full-width or 200 half-width characters',
       'note.select': 'Select this annotation',
@@ -562,6 +583,13 @@ window.__ModuleLoader__.load({
       'note.kind.idea': 'Idea',
       'note.kind.supplement': 'Additional info',
       'note.kind.todo': 'To do',
+      'prompt.type.decision': 'Decision',
+      'prompt.type.question': 'Question',
+      'prompt.type.opinion': 'Opinion',
+      'prompt.type.idea': 'Idea',
+      'prompt.type.supplement': 'Supplement',
+      'prompt.type.todo': 'To do',
+      'prompt.type.inspiration': 'Inspiration',
       'menu.last': 'Last used',
       'menu.count': '{n} item(s)',
       'menu.saved': 'Added to {group}',
@@ -1094,6 +1122,46 @@ window.__ModuleLoader__.load({
       return list;
     }
 
+    /** One fixed semantic type per prompt; the user can leave it empty. */
+    const PROMPT_TYPES = [
+      { id: 'decision', label: 'prompt.type.decision' },
+      { id: 'question', label: 'prompt.type.question' },
+      { id: 'opinion', label: 'prompt.type.opinion' },
+      { id: 'idea', label: 'prompt.type.idea' },
+      { id: 'supplement', label: 'prompt.type.supplement' },
+      { id: 'todo', label: 'prompt.type.todo' },
+      { id: 'inspiration', label: 'prompt.type.inspiration' },
+    ];
+    const PROMPT_TYPE_IDS = PROMPT_TYPES.map((entry) => entry.id);
+    const NOTE_PROMPT_TYPES = {
+      agree: 'decision',
+      disagree: 'decision',
+      question: 'question',
+      comment: 'opinion',
+      idea: 'idea',
+      supplement: 'supplement',
+      todo: 'todo',
+    };
+
+    function normalizePromptType(value) {
+      return PROMPT_TYPE_IDS.indexOf(value) >= 0 ? value : '';
+    }
+
+    function promptTypeLabel(value) {
+      const type = PROMPT_TYPES.find((entry) => entry.id === normalizePromptType(value));
+      return type ? type.label : '';
+    }
+
+    function promptTypeForNote(note) {
+      return note && NOTE_PROMPT_TYPES[note.kind] ? NOTE_PROMPT_TYPES[note.kind] : '';
+    }
+
+    /** A mixed batch has no single type; a uniform batch keeps it. */
+    function promptTypeForNotes(list) {
+      const types = new Set((Array.isArray(list) ? list : []).map(promptTypeForNote).filter(Boolean));
+      return types.size === 1 ? [...types][0] : '';
+    }
+
     function sanitizeItem(raw) {
       if (!raw || typeof raw !== 'object') return null;
       const body = typeof raw.body === 'string' ? raw.body : '';
@@ -1106,6 +1174,7 @@ window.__ModuleLoader__.load({
         title: typeof raw.title === 'string' ? raw.title : '',
         body,
         images,
+        type: normalizePromptType(raw.type),
         createdAt: Number.isFinite(raw.createdAt) ? raw.createdAt : now,
         updatedAt: Number.isFinite(raw.updatedAt) ? raw.updatedAt : now,
         ...(raw.seed === true ? { seed: true } : {}),
@@ -2336,6 +2405,7 @@ window.__ModuleLoader__.load({
         title: item.title,
         body: item.body,
         images: normalizeImages(item.images),
+        type: normalizePromptType(item.type),
       });
 
       const cancelEdit = () => {
@@ -2358,6 +2428,7 @@ window.__ModuleLoader__.load({
           title: editing.title.trim(),
           body: editing.body,
           images: editing.images || [],
+          type: normalizePromptType(editing.type),
         });
         setEditing(null);
         flash({ kind: 'ok', text: translate('status.savedToPool') });
@@ -2471,6 +2542,18 @@ window.__ModuleLoader__.load({
                   )
                 : null,
             ),
+            h(
+              'select',
+              {
+                className: 'pp-input',
+                style: { width: 'auto', maxWidth: '120px' },
+                value: normalizePromptType(editing.type),
+                'aria-label': translate('row.type'),
+                onChange: (event) => setEditing({ ...editing, type: normalizePromptType(event.target.value) }),
+              },
+              h('option', { value: '' }, translate('row.typeNone')),
+              PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
+            ),
             h('span', { className: 'pp-grow' }),
             h('button', { type: 'button', className: 'pp-mini', onClick: onCancel }, translate('row.cancel')),
             h('button', { type: 'button', className: 'pp-primary', onClick: onSave }, translate('row.save')),
@@ -2490,7 +2573,11 @@ window.__ModuleLoader__.load({
           item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
           h(ImageStrip, { images: item.images, compact: true, onOpen: onOpenImage }),
         ),
-        showTag ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, categories, workspaces))) : null,
+        normalizePromptType(item.type)
+          ? h('span', { className: 'pp-tag pp-type-tag' }, translate(promptTypeLabel(item.type)))
+          : showTag
+            ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, categories, workspaces)))
+            : null,
         h(
           'div',
           { className: 'pp-actions' },
@@ -3205,6 +3292,37 @@ window.__ModuleLoader__.load({
     }
 
     /** Fixed tabs plus the user's category tabs, grouped, with inline add / rename / delete. */
+    function ScopeBar(props) {
+      const entries = props.mode === 'panel'
+        ? [
+            { id: 'notes', label: 'scope.notes' },
+            { id: 'workspace', label: 'scope.prompts' },
+          ]
+        : [
+            { id: 'notes', label: 'scope.session' },
+            { id: 'workspace', label: 'scope.workspace' },
+            { id: 'global', label: 'scope.global' },
+          ];
+      return h(
+        'div',
+        { className: 'pp-bar pp-scope-bar', role: 'tablist' },
+        entries.map((entry) => h(
+          'button',
+          {
+            key: entry.id,
+            type: 'button',
+            className: 'pp-tab',
+            role: 'tab',
+            'aria-selected': props.value === entry.id ? 'true' : 'false',
+            'data-group': entry.id === 'notes' ? 'notes' : undefined,
+            'data-active': props.value === entry.id ? 'true' : 'false',
+            onClick: () => props.onChange(entry.id),
+          },
+          translate(entry.label),
+        )),
+      );
+    }
+
     function TabBar(props) {
       const [adding, setAdding] = useState(null);
       const [renaming, setRenaming] = useState(null);
@@ -3389,6 +3507,8 @@ window.__ModuleLoader__.load({
       const baseTabs = buildTabs(state.categories, workspaceList, state.settings, currentWorkspaceId);
       // The annotation tab is always present, so the feature stays discoverable.
       const tabs = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
+      const globalTabs = tabs.filter((entry) => entry.id === 'all' || entry.group === 'builtin' || entry.group === 'custom');
+      const workspaceGroup = currentWorkspaceId ? 'workspace:' + currentWorkspaceId : '';
       const captureGroups = captureChoices(state.categories, workspaceList, currentWorkspaceId, state.settings);
       const tabCounts = {
         ...tabCountsOf(state.items),
@@ -3412,6 +3532,10 @@ window.__ModuleLoader__.load({
         if (resolved) setTab(resolved);
       }, []);
       const [query, setQuery] = useState('');
+      const [typeFilter, setTypeFilter] = useState('all');
+      const [scope, setScope] = useState(() => (
+        props && (props.initialScope === 'global' || props.initialScope === 'workspace') ? props.initialScope : 'notes'
+      ));
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [reviewOpen, setReviewOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
@@ -3438,6 +3562,13 @@ window.__ModuleLoader__.load({
         if (tabs.some((entry) => entry.id === tab)) return;
         setTab(fallbackTabFor(tabs));
       }, [tabs, tab]);
+      const activeGlobalTab = globalTabs.some((entry) => entry.id === tab) ? tab : (globalTabs.find((entry) => entry.id === 'all') || globalTabs[0] || { id: 'all' }).id;
+      const changeScope = (next) => {
+        setScope(next);
+        setSettingsOpen(false);
+        setReviewOpen(false);
+        if (next === 'global' && !globalTabs.some((entry) => entry.id === tab)) setTab(activeGlobalTab);
+      };
       // A failed write outranks a transient toast: the change is not saved.
       const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
       const trayRef = useRef(null);
@@ -3506,21 +3637,20 @@ window.__ModuleLoader__.load({
       }, [state.items]);
 
       const items = useMemo(() => {
-        if (tab === 'nested:workspace') {
-          const needle = query.trim().toLowerCase();
-          return state.items.filter((item) => {
-            if (groupOf(item) !== (wsActive ? 'workspace:' + wsActive.slice(3) : '')) return false;
-            if (!needle) return true;
-            return (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0;
-          });
-        }
+        if (scope === 'notes') return [];
+        const matchesType = (item) => typeFilter === 'all'
+          || (typeFilter === 'none' ? !normalizePromptType(item.type) : normalizePromptType(item.type) === typeFilter);
+        const base = scope === 'workspace'
+          ? state.items.filter((item) => groupOf(item) === workspaceGroup)
+          : state.items.filter((item) => {
+              const family = familyOf(groupOf(item));
+              return (family === 'builtin' || family === 'custom') && matchesTab(item, activeGlobalTab);
+            });
+        const typed = base.filter(matchesType);
         const needle = query.trim().toLowerCase();
-        return state.items.filter((item) => {
-          if (!matchesTab(item, tab)) return false;
-          if (!needle) return true;
-          return (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0;
-        });
-      }, [state.items, tab, query, wsActive]);
+        if (!needle) return typed;
+        return typed.filter((item) => (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0);
+      }, [state.items, scope, workspaceGroup, activeGlobalTab, query, typeFilter]);
 
       const goConversation = () => {
         try {
@@ -3630,6 +3760,7 @@ window.__ModuleLoader__.load({
             title: draftTitle(note.body || note.quote),
             body: composeNoteLine(note),
             images: normalizeImages(note.images),
+            type: promptTypeForNote(note),
             createdAt: now,
             updatedAt: now,
           });
@@ -3709,6 +3840,7 @@ window.__ModuleLoader__.load({
               title: draftTitle(text),
               body: text,
               images: imagesForNotes(selectedNotes),
+              type: promptTypeForNotes(selectedNotes),
               createdAt: Date.now(),
               updatedAt: Date.now(),
             });
@@ -3776,12 +3908,11 @@ window.__ModuleLoader__.load({
         if (!normalizeSettings(state.settings).keepAfterQueue) removeItem(item, translate('status.queuedAndRemoved'));
       };
 
-      /** One entry point: the current tab decides the new item's classification. */
+      /** The active scope decides the new item's classification. */
       const create = () => {
-        const inWorkspace = tab === 'nested:workspace';
-        const group = groupForTab(tab, inWorkspace && wsActive ? 'workspace:' + wsActive.slice(3) : '');
-        // Group tabs keep their own context; the neutral views land on the new item's group.
-        if (!inWorkspace && !familyOf(tab)) setTab(group);
+        const group = scope === 'workspace'
+          ? (workspaceGroup || BUILTIN_GROUP.note)
+          : groupForTab(activeGlobalTab, '');
         setQuery('');
         const item = poolActions.add({
           id: uid(),
@@ -3789,10 +3920,11 @@ window.__ModuleLoader__.load({
           title: '',
           body: '',
           images: [],
+          type: '',
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '', images: [] });
+        setEditing({ id: item.id, group, title: '', body: '', images: [], type: '' });
       };
 
       const rowOf = (item, index) => renderPoolRow({
@@ -3807,7 +3939,7 @@ window.__ModuleLoader__.load({
         sessionId: activeSessionId,
         editRows: 5,
         editStyle: { margin: '6px 0' },
-        showTag: tab === 'all',
+        showTag: scope === 'global' && activeGlobalTab === 'all',
         onInsert: (entry) => sendToComposer(
           { type: 'insert', text: entry.body, images: normalizeImages(entry.images) },
           entry.body.trim() ? translate('status.inserted') : translate('image.inserted'),
@@ -3884,7 +4016,22 @@ window.__ModuleLoader__.load({
             'aria-label': translate('page.search'),
             onChange: (event) => setQuery(event.target.value),
           }),
-          tab === 'notes'
+          scope === 'notes'
+            ? null
+            : h(
+                'select',
+                {
+                  key: 'type-filter',
+                  className: 'pp-input pp-type-filter',
+                  value: typeFilter,
+                  'aria-label': translate('row.type'),
+                  onChange: (event) => setTypeFilter(event.target.value),
+                },
+                h('option', { value: 'all' }, translate('row.allTypes')),
+                h('option', { value: 'none' }, translate('row.typeNone')),
+                PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
+              ),
+          scope === 'notes'
             ? [
                 h('button', {
                   key: 'store',
@@ -3909,21 +4056,24 @@ window.__ModuleLoader__.load({
               ],
           h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
         ),
-        h(
-          'div',
-          { className: 'pp-bar', style: { padding: '8px 12px 2px' } },
-          h(TabBar, {
-            tabs: tabs,
-            counts: tabCounts,
-            active: tab,
-            ...tabHandlers((next) => {
-              setSettingsOpen(false);
-              setReviewOpen(false);
-              setTab(next);
-            }, tab, fallbackTabFor(tabs)),
-            onDelete: (id) => setPendingCategory(id),
-          }),
-        ),
+        h(ScopeBar, { mode: 'page', value: scope, onChange: changeScope }),
+        scope === 'global'
+          ? h(
+              'div',
+              { className: 'pp-bar', style: { padding: '0 12px 8px' } },
+              h(TabBar, {
+                tabs: globalTabs,
+                counts: tabCounts,
+                active: activeGlobalTab,
+                ...tabHandlers((next) => {
+                  setSettingsOpen(false);
+                  setReviewOpen(false);
+                  setTab(next);
+                }, activeGlobalTab, fallbackTabFor(globalTabs)),
+                onDelete: (id) => setPendingCategory(id),
+              }),
+            )
+          : null,
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
         confirmClear && state.tray.length > 0
           ? h(TrayClearConfirm, {
@@ -3978,7 +4128,7 @@ window.__ModuleLoader__.load({
           { className: 'pp-page-body', ref: pageListRef },
           settingsOpen
             ? h(PromptPoolSettings, { currentWorkspaceId })
-            : tab === 'notes'
+            : scope === 'notes'
               ? h(NotesView, {
                   notes: notesList,
                   sessionId: activeSessionId,
@@ -3991,28 +4141,16 @@ window.__ModuleLoader__.load({
                   currentWorkspaceId,
                   settings: state.settings,
                 })
-              : nestedView
-              ? renderWorkspacePanes({
-                  rail: nestedView.rail,
-                  items: nestedView.scoped,
-                  activeId: nestedView.activeId,
-                  onSelect: nestedView.onSelect,
-                  counts: nestedView.counts,
-                  editable: nestedView.editable,
-                  onDelete: nestedView.onDelete,
-                  renderRow: rowOf,
-                  emptyText: nestedView.emptyText,
-                })
               : items.length === 0
                 ? h(
                     'div',
                     { className: 'pp-empty' },
                     translate(
-                      state.items.length === 0
-                        ? 'page.empty'
-                        : tab === BUILTIN_GROUP.oftenuse && !state.items.some((item) => groupOf(item) === BUILTIN_GROUP.oftenuse)
-                          ? 'page.emptyOftenuse'
-                          : 'page.noMatch',
+                      query.trim() || typeFilter !== 'all'
+                        ? 'page.noMatch'
+                        : scope === 'global' && activeGlobalTab === 'all'
+                          ? 'page.empty'
+                          : 'page.emptyTab',
                     ),
                   )
                 : items.map(rowOf),
@@ -4020,7 +4158,7 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-queue-dock' },
-          tab === 'notes' && noteBar.text
+          scope === 'notes' && noteBar.text
             ? h('div', { className: 'pp-notes-bar', 'data-kind': noteBar.kind, role: 'status' }, noteBar.text)
             : null,
           notice
@@ -4043,7 +4181,7 @@ window.__ModuleLoader__.load({
                   : null,
               )
             : null,
-          !settingsOpen && tab === 'notes' && reviewOpen
+          !settingsOpen && scope === 'notes' && reviewOpen
             ? renderReviewCard({
                 notes: notesList,
                 sessionId: activeSessionId,
@@ -4052,9 +4190,8 @@ window.__ModuleLoader__.load({
                 onPark: parkReviewTodos,
               })
             : null,
-          settingsOpen || tab === 'notes'
-            ? null
-            : renderTrayCard({
+          !settingsOpen
+            ? renderTrayCard({
                 entries: state.tray,
                 queuePending,
                 collapsed: queueCollapsed,
@@ -4069,7 +4206,8 @@ window.__ModuleLoader__.load({
                 onRemove: setPendingRemove,
                 onOpenImage: openImage,
                 onError: (text) => flash({ kind: 'error', text }),
-              }),
+              })
+            : null,
           h(ImageLightbox, { preview, onClose: closeImage }),
         ),
         renderReleaseOverlay({ state: releaseInfo, onStop: () => bridge.request({ type: 'stop' }) }),
@@ -6434,6 +6572,7 @@ window.__ModuleLoader__.load({
           // composer later still has the original text (the title is only a label).
           body: composeNoteLine(note),
           images: imagesForNotes([note]),
+          type: promptTypeForNote(note),
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
@@ -6461,6 +6600,7 @@ window.__ModuleLoader__.load({
           title: draftTitle(text),
           body: text,
           images: imagesForNotes(chosen),
+          type: promptTypeForNotes(chosen),
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
@@ -7009,6 +7149,7 @@ window.__ModuleLoader__.load({
           title: draftTitle(body),
           body,
           images: [],
+          type: '',
           createdAt: now,
           updatedAt: now,
         });
@@ -7247,6 +7388,7 @@ window.__ModuleLoader__.load({
       const wsEntries = workspaceEntriesOf(wsSnapshot);
       const wsCurrent = currentWorkspaceOf(wsSnapshot, props.sessionId);
       const currentWorkspaceId = wsCurrent;
+      const workspaceGroup = currentWorkspaceId ? 'workspace:' + currentWorkspaceId : '';
       const wsSignature = useRef('');
       useEffect(() => {
         const signature = JSON.stringify(wsEntries) + '|' + wsCurrent;
@@ -7292,6 +7434,10 @@ window.__ModuleLoader__.load({
         ...buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId),
       ]));
       const [query, setQuery] = useState('');
+      const [typeFilter, setTypeFilter] = useState('all');
+      const [scope, setScope] = useState(() => (
+        props && (props.initialScope === 'global' || props.initialScope === 'workspace') ? props.initialScope : 'notes'
+      ));
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [reviewOpen, setReviewOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
@@ -7487,13 +7633,15 @@ window.__ModuleLoader__.load({
       }, [state.items]);
 
       const items = useMemo(() => {
+        if (scope === 'notes') return [];
+        const matchesType = (item) => typeFilter === 'all'
+          || (typeFilter === 'none' ? !normalizePromptType(item.type) : normalizePromptType(item.type) === typeFilter);
+        const scoped = state.items.filter((item) => groupOf(item) === workspaceGroup);
+        const typed = scoped.filter(matchesType);
         const needle = query.trim().toLowerCase();
-        const scoped = tab === 'nested:workspace'
-          ? state.items.filter((item) => groupOf(item) === (wsActive ? 'workspace:' + wsActive.slice(3) : ''))
-          : state.items.filter((item) => matchesTab(item, tab));
-        if (!needle) return scoped;
-        return scoped.filter((item) => (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0);
-      }, [state.items, tab, wsActive, query]);
+        if (!needle) return typed;
+        return typed.filter((item) => (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0);
+      }, [state.items, scope, workspaceGroup, query, typeFilter]);
 
       const actions = props.inputActions;
       const canAct = actions && typeof actions.setDraft === 'function';
@@ -7602,6 +7750,7 @@ window.__ModuleLoader__.load({
           title: draftTitle(text, occurrenceRef.current),
           body: text,
           images: normalizeImages(stored),
+          type: '',
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
@@ -7624,11 +7773,7 @@ window.__ModuleLoader__.load({
       };
 
       const newItem = () => {
-        const inWorkspace = tab === 'nested:workspace';
-        const group = groupForTab(tab, inWorkspace && wsActive ? 'workspace:' + wsActive.slice(3) : '');
-        // The new row must land on a visible list, so plain tabs switch to the kind tab.
-        if (!inWorkspace && !familyOf(tab)) setTab(group);
-        // A search would filter the brand-new empty row out of the list.
+        const group = workspaceGroup || BUILTIN_GROUP.note;
         setQuery('');
         const item = poolActions.add({
           id: uid(),
@@ -7636,10 +7781,11 @@ window.__ModuleLoader__.load({
           title: '',
           body: '',
           images: [],
+          type: '',
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '', images: [] });
+        setEditing({ id: item.id, group, title: '', body: '', images: [], type: '' });
       };
 
       const deleteItem = (item, text) => {
@@ -7789,7 +7935,7 @@ window.__ModuleLoader__.load({
         sessionId: props.sessionId,
         editRows: 4,
         mainTitle: translate('row.insert'),
-        showTag: tab === 'all',
+        showTag: scope === 'global' && activeGlobalTab === 'all',
         onInsert: insertItem,
         onMain: insertItem,
         onStartEdit: startEdit,
@@ -7889,6 +8035,7 @@ window.__ModuleLoader__.load({
             title: draftTitle(note.body || note.quote),
             body: composeNoteLine(note),
             images: normalizeImages(note.images),
+            type: promptTypeForNote(note),
             createdAt: now,
             updatedAt: now,
           });
@@ -7957,6 +8104,7 @@ window.__ModuleLoader__.load({
               title: draftTitle(text),
               body: text,
               images: imagesForNotes(selectedNotes),
+              type: promptTypeForNotes(selectedNotes),
               createdAt: Date.now(),
               updatedAt: Date.now(),
             });
@@ -8052,6 +8200,14 @@ window.__ModuleLoader__.load({
       const baseTabs = buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId);
       // The annotation tab is always present, so the feature stays discoverable.
       const tabs = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
+      const globalTabs = tabs.filter((entry) => entry.id === 'all' || entry.group === 'builtin' || entry.group === 'custom');
+      const activeGlobalTab = globalTabs.some((entry) => entry.id === tab) ? tab : (globalTabs.find((entry) => entry.id === 'all') || globalTabs[0] || { id: 'all' }).id;
+      const changeScope = (next) => {
+        setScope(next);
+        setSettingsOpen(false);
+        setReviewOpen(false);
+        if (next === 'global' && !globalTabs.some((entry) => entry.id === tab)) setTab(activeGlobalTab);
+      };
       const tabCounts = {
         ...tabCountsOf(state.items),
         notes: notesList.length,
@@ -8169,7 +8325,22 @@ window.__ModuleLoader__.load({
             'aria-label': translate('page.search'),
             onChange: (event) => setQuery(event.target.value),
           }),
-          tab === 'notes'
+          scope === 'notes'
+            ? null
+            : h(
+                'select',
+                {
+                  key: 'type-filter',
+                  className: 'pp-input pp-type-filter',
+                  value: typeFilter,
+                  'aria-label': translate('row.type'),
+                  onChange: (event) => setTypeFilter(event.target.value),
+                },
+                h('option', { value: 'all' }, translate('row.allTypes')),
+                h('option', { value: 'none' }, translate('row.typeNone')),
+                PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
+              ),
+          scope === 'notes'
             ? [
                 h('button', {
                   key: 'store',
@@ -8205,21 +8376,7 @@ window.__ModuleLoader__.load({
             '✕',
           ),
         ),
-        h(
-          'div',
-          { className: 'pp-bar', style: { padding: '8px 12px 2px' } },
-          h(TabBar, {
-            tabs,
-            counts: tabCounts,
-            active: tab,
-            ...tabHandlers((next) => {
-              setSettingsOpen(false);
-              setReviewOpen(false);
-              setTab(next);
-            }, tab, fallbackTabFor(tabs)),
-            onDelete: (id) => setPendingCategory(id),
-          }),
-        ),
+        h(ScopeBar, { mode: 'panel', value: scope, onChange: changeScope }),
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
         confirmClear && tray.length > 0
           ? h(TrayClearConfirm, {
@@ -8274,7 +8431,7 @@ window.__ModuleLoader__.load({
           { className: 'pp-list', ref: listRef },
           settingsOpen
             ? h(PromptPoolSettings, { currentWorkspaceId })
-            : tab === 'notes'
+            : scope === 'notes'
               ? h(NotesView, {
                   notes: notesList,
                   sessionId: notesSessionId,
@@ -8287,36 +8444,18 @@ window.__ModuleLoader__.load({
                   currentWorkspaceId,
                   settings: state.settings,
                 })
-              : nestedView
-              ? renderWorkspacePanes({
-                  rail: nestedView.rail,
-                  items: nestedView.scoped,
-                  activeId: nestedView.activeId,
-                  onSelect: nestedView.onSelect,
-                  counts: nestedView.counts,
-                  editable: nestedView.editable,
-                  onDelete: nestedView.onDelete,
-                  renderRow: rowOf,
-                  emptyText: nestedView.emptyText,
-                })
-                : items.length === 0
-                  ? h(
-                      'div',
-                      { className: 'pp-empty' },
-                      translate(
-                        state.items.length === 0
-                          ? 'panel.empty'
-                          : tab === BUILTIN_GROUP.oftenuse && !state.items.some((item) => groupOf(item) === BUILTIN_GROUP.oftenuse)
-                            ? 'page.emptyOftenuse'
-                            : 'panel.emptyTab',
-                      ),
-                    )
-                  : items.map(rowOf),
+              : items.length === 0
+                ? h(
+                    'div',
+                    { className: 'pp-empty' },
+                    translate(query.trim() || typeFilter !== 'all' ? 'panel.emptyTab' : 'panel.empty'),
+                  )
+                : items.map(rowOf),
         ),
         h(
           'div',
           { className: 'pp-panel-dock' },
-          tab === 'notes' && noteBar.text
+          scope === 'notes' && noteBar.text
             ? h('div', { className: 'pp-notes-bar', 'data-kind': noteBar.kind, role: 'status' }, noteBar.text)
             : null,
           notice
@@ -8339,7 +8478,7 @@ window.__ModuleLoader__.load({
                 : null,
             )
           : null,
-        !settingsOpen && tab === 'notes' && reviewOpen
+        !settingsOpen && scope === 'notes' && reviewOpen
           ? renderReviewCard({
               notes: notesList,
               sessionId: notesSessionId,
@@ -8348,7 +8487,7 @@ window.__ModuleLoader__.load({
               onPark: parkReviewTodos,
             })
           : null,
-        !settingsOpen && tab !== 'notes'
+        !settingsOpen
           ? renderTrayCard({
               entries: tray,
               queuePending: queue.length,
@@ -8481,6 +8620,7 @@ window.__ModuleLoader__.load({
       '.pp-panel-title{display:inline-flex;align-items:center;gap:6px;flex:none;margin-right:2px}' +
       '.pp-page-sub{color:var(--pp-ink-2);font-size:12px}' +
       '.pp-search{height:26px;flex:1;min-width:120px;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-surface);color:inherit;font:inherit;font-size:12px;padding:0 9px;outline:none}' +
+      '.pp-type-filter{height:26px;flex:none;width:auto;max-width:112px;padding:0 6px;border-radius:8px;font-size:11px;cursor:pointer}' +
       '.pp-search:focus{border-color:var(--pp-accent)}' +
       '.pp-settings{max-width:640px;padding:16px 20px;color:var(--pp-ink);font-size:13px;line-height:1.6}' +
       '.pp-set-title{font-size:15px;font-weight:600;margin-bottom:4px}' +
@@ -8557,9 +8697,9 @@ window.__ModuleLoader__.load({
       '.pp-title{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-body{color:var(--pp-ink-2);font-size:12px;white-space:pre-wrap;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}' +
       '.pp-tag{flex:none;margin-top:2px;padding:0 5px;border-radius:5px;border:1px solid var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px;line-height:15px}' +
-      '.pp-actions{display:flex;gap:2px;opacity:0;flex:none}' +
+      '.pp-actions{display:flex;gap:0;opacity:0;flex:none}' +
       '.pp-row:hover .pp-actions,.pp-row:focus-within .pp-actions{opacity:1}' +
-      '.pp-icon{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}' +
+      '.pp-icon{width:24px;height:24px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}' +
       '.pp-icon:hover{background:var(--pp-surface);color:var(--pp-ink)}' +
       '.pp-icon:disabled{opacity:.35;cursor:default}' +
       '.pp-icon[data-danger="true"]:hover{color:var(--pp-danger)}' +

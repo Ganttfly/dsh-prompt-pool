@@ -173,9 +173,9 @@ else {
   cells = [];
   childStores.clear();
   const tree = render();
-  const tabBarNode = findComponent(tree, 'TabBar');
+  const tabBarNode = findComponent(tree, 'ScopeBar');
   const bar = tabBarNode ? renderChild(tabBarNode) : [];
-  const notesTab = findAll(bar, (node) => node.type === 'button' && textOf(node).indexOf('note.title') === 0)[0];
+  const notesTab = findAll(bar, (node) => node.type === 'button' && (textOf(node) === 'scope.notes' || textOf(node) === 'scope.session'))[0];
   if (!notesTab) fail('the notes tab is missing');
   else {
     notesTab.props.onClick();
@@ -239,7 +239,8 @@ else {
         const parkedItem = pool ? pool.items.find((item) => item.body.indexOf('执行下一步') >= 0) : null;
         if (!parkedItem) fail('the parked to-do was not saved to the prompt pool');
         else if (parkedItem.group !== 'builtin:note') fail(`the parked to-do landed in ${parkedItem.group}`);
-        else console.log('[ok] an unchecked to-do is saved to the prompt pool');
+        else if (parkedItem.type !== 'todo') fail(`the parked to-do has type ${parkedItem.type}`);
+        else console.log('[ok] an unchecked to-do is saved to the prompt pool with a type');
         const viewNode = findComponent(render(), 'NotesView');
         const view = viewNode ? renderChild(viewNode) : null;
         if (!view) fail('the notes view did not come back after sending');
@@ -299,9 +300,9 @@ else {
     resetHooks();
     return imagePanel.component(imageProps);
   };
-  const tabBarNode = findComponent(imageRender(), 'TabBar');
+  const tabBarNode = findComponent(imageRender(), 'ScopeBar');
   const bar = tabBarNode ? renderChild(tabBarNode) : [];
-  const notesTab = findAll(bar, (node) => node.type === 'button' && textOf(node).indexOf('note.title') === 0)[0];
+  const notesTab = findAll(bar, (node) => node.type === 'button' && (textOf(node) === 'scope.notes' || textOf(node) === 'scope.session'))[0];
   if (!notesTab) fail('the image review could not open the notes tab');
   else {
     notesTab.props.onClick();
@@ -394,9 +395,9 @@ else {
     resetHooks();
     return parkPanel.component(parkProps);
   };
-  const parkTabBar = findComponent(parkRender(), 'TabBar');
+  const parkTabBar = findComponent(parkRender(), 'ScopeBar');
   const parkBar = parkTabBar ? renderChild(parkTabBar) : [];
-  const parkNotesTab = findAll(parkBar, (node) => node.type === 'button' && textOf(node).indexOf('note.title') === 0)[0];
+  const parkNotesTab = findAll(parkBar, (node) => node.type === 'button' && (textOf(node) === 'scope.notes' || textOf(node) === 'scope.session'))[0];
   if (!parkNotesTab) fail('the parking panel could not open the notes tab');
   else {
     parkNotesTab.props.onClick();
@@ -441,3 +442,4 @@ for (const failure of failures) console.error('[fail]', failure);
 console.log(failures.length === 0 ? '[ok] annotation review sends, parks and clears one batch' : `[fail] ${failures.length} check(s)`);
 if (failures.length > 0) process.exitCode = 1;
 })();
+
