@@ -236,9 +236,12 @@ else {
   if (!count || count.children[0] !== '1') fail('the group count did not include the existing item');
 }
 
+const noAnchorMenu = renderMenu(menuEntry, '没有锚点的文字');
+if (!rowsOf(noAnchorMenu).some((row) => labelOf(row) === 'note.add')) fail('the +批注 row disappears without a captured anchor');
+else console.log('[ok] the +批注 row stays visible without a captured anchor');
+
 const custom = rows.find((row) => labelOf(row) === '分组甲');
-if (custom) {
-  custom.props.onClick();
+if (custom) {  custom.props.onClick();
   const pool = global.window.__dshPromptPoolStoreV1;
   const added = pool.get().items[pool.get().items.length - 1];
   if (!added || added.group !== 'custom:c1') fail('the pick did not land in the chosen group');
@@ -263,6 +266,53 @@ if (custom) {
     if (dismissed === 0) fail('the scheduled dismissal did not close the menu');
   }
   console.log('[ok] a pick saves the selection in the chosen group and remembers it');
+}
+
+// --- the Annotate row opens a kind submenu that seeds the bubble --------------
+const selectionText = '批注原文';
+const flowRow = { getAttribute: (name) => (name === 'data-chat-flow-kind' ? 'assistant-step' : null) };
+const keyedRow = { getAttribute: (name) => (name === 'data-chat-node-key' ? 'node-1' : null) };
+const sourceNode = {
+  textContent: selectionText,
+  closest(selector) {
+    if (selector === '[data-text-interaction-source]') return sourceNode;
+    if (selector === '[data-chat-flow-kind]') return flowRow;
+    if (selector === '[data-chat-node-key]') return keyedRow;
+    return null;
+  },
+};
+const textNode = { nodeType: 3, nodeValue: selectionText, parentElement: sourceNode };
+const range = {
+  collapsed: false,
+  startContainer: textNode,
+  endContainer: textNode,
+  startOffset: 0,
+  endOffset: selectionText.length,
+  toString: () => selectionText,
+};
+global.document = {
+  getSelection: () => ({ rangeCount: 1, isCollapsed: false, getRangeAt: () => range }),
+  querySelectorAll: () => [],
+};
+const anchorMenu = renderMenu(menuEntry, selectionText);
+const noteRow = rowsOf(anchorMenu).find((row) => labelOf(row) === 'note.add');
+if (!noteRow) fail('the Annotate row is missing for an assistant selection');
+else {
+  noteRow.props.onClick();
+  resetHooks();
+  const kindTree = menuEntry.component(menuProps(selectionText));
+  const kindRows = rowsOf(kindTree).filter((row) => String(labelOf(row) || '').indexOf('note.kind.') === 0);
+  if (kindRows.length !== 7) fail(`the Annotate submenu lists ${kindRows.length} kinds, expected 7`);
+  else {
+    const commentRow = kindRows.find((row) => labelOf(row) === 'note.kind.comment');
+    if (!commentRow) fail('the Annotate submenu is missing 意见');
+    else {
+      commentRow.props.onClick();
+      const draft = global.window.__dshPromptPoolNotesDraftV1 ? global.window.__dshPromptPoolNotesDraftV1.get() : null;
+      if (!draft || draft.kind !== 'comment') fail(`the chosen kind did not reach the bubble: ${JSON.stringify(draft)}`);
+      else console.log('[ok] the Annotate submenu seeds the bubble with the chosen kind');
+    }
+  }
 }
 
 // --- the menu keeps Copy: the browser menu it replaces had it -----------------
@@ -294,7 +344,7 @@ const reloaded = boot();
 const reloadedMenu = findMenu(reloaded);
 if (!reloadedMenu) fail('the menu was not registered after a reload');
 else {
-  const reloadedRows = openGroups(reloadedMenu, '第二段文字').rows.filter((row) => labelOf(row) !== 'menu.copy' && labelOf(row) !== 'menu.pool');
+  const reloadedRows = openGroups(reloadedMenu, '第二段文字').rows.filter((row) => labelOf(row) !== 'menu.copy' && labelOf(row) !== 'menu.pool' && labelOf(row) !== 'note.add');
   if (reloadedRows.length === 0) fail('the reloaded menu rendered no rows');
   else {
     if (labelOf(reloadedRows[0]) !== '分组甲') fail(`the remembered group did not lead the reloaded menu: ${labelOf(reloadedRows[0])}`);

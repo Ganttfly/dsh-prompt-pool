@@ -155,11 +155,11 @@ const notesSeed = () => JSON.stringify({
   items: [
     {
       id: 'n1', sessionId: 's1', nodeKey: 'node-1', quote: '报告类型 → job 映射：…，对吗？',
-      prefix: '', suffix: '', offset: 2, order: 2, body: '对，按你说的映射', createdAt: 1, updatedAt: 1,
+      prefix: '', suffix: '', offset: 2, order: 2, kind: 'comment', body: '对，按你说的映射', createdAt: 1, updatedAt: 1,
     },
     {
       id: 'n2', sessionId: 's1', nodeKey: 'node-1', quote: '构建是否接受参数？',
-      prefix: '', suffix: '', offset: 30, order: 1, body: '接受分支参数', createdAt: 2, updatedAt: 2,
+      prefix: '', suffix: '', offset: 30, order: 1, kind: 'comment', body: '接受分支参数', createdAt: 2, updatedAt: 2,
     },
   ],
 });
@@ -215,15 +215,31 @@ else {
         const rows = findAll(view, (node) => node.props && String(node.props.className || '') === 'pp-notes-row');
         if (rows.length !== 2) fail(`the notes tab rendered ${rows.length} rows, expected 2`);
         else console.log('[ok] a 批注 tab lists the session annotations');
+        const checks = findAll(view, (node) => node.type === 'input'
+          && String(node.props && node.props.className || '').indexOf('pp-note-check') >= 0);
+        if (checks.length !== 2) fail(`the notes tab rendered ${checks.length} checkboxes, expected 2`);
+        else if (checks.some((check) => check.props.checked !== true)) fail('annotations do not start checked');
+        else console.log('[ok] every annotation starts with a checked checkbox');
       }
 
-      const compose = findAll(render() || [], (node) => node.type === 'button' && textOf(node).join('') === 'note.compose')[0];
-      if (!compose) fail('the compose button is missing');
+      // The header action now opens the review sheet instead of inserting a
+      // composer draft; the sheet itself is covered in verify-review.js.
+      const reviewButton = findAll(render() || [], (node) => node.type === 'button' && textOf(node).join('') === 'note.compose')[0];
+      if (!reviewButton) fail('the review button is missing');
       else {
-        compose.props.onClick();
-        const expected = '1. 【note.kind.comment】「构建是否接受参数？」：接受分支参数\n2. 【note.kind.comment】「报告类型 → job 映射：…，对吗？」：对，按你说的映射';
-        if (inserted !== expected) fail(`composed reply was ${JSON.stringify(inserted)}`);
-        else console.log('[ok] the panel composes the quoted reply');
+        reviewButton.props.onClick();
+        const reviewNode = findComponent(render(), 'ReviewSheet');
+        if (!reviewNode) fail('the review button did not open the review sheet');
+        else {
+          const sheet = renderChild(reviewNode);
+          const preview = findAll(sheet, (node) => node.type === 'textarea' && node.props && node.props.className === 'pp-review-text')[0];
+          if (!preview || String(preview.props.value).indexOf('构建是否接受参数？') < 0) fail('the review preview lost the selected annotations');
+          else if (!findAll(sheet, (node) => node.type === 'button'
+            && String(node.props && node.props.className || '').indexOf('pp-note-btn-primary') >= 0).length) fail('the review sheet has no send action');
+          else console.log('[ok] the header action opens the annotation review sheet');
+          const close = findAll(sheet, (node) => node.type === 'button' && node.props && node.props.title === 'note.cancel')[0];
+          if (close) close.props.onClick();
+        }
       }
 
       // Promote one note; the chooser is a frame-level popup driven by a store.
@@ -312,6 +328,103 @@ else {
     && textOf(node).indexOf('note.title') >= 0)[0];
   if (!notesTab) fail('the notes tab is missing without annotations');
   else console.log('[ok] the notes tab stays visible without annotations');
+}
+
+// The badge and editor share one display-width budget: 100 full-width or 200
+// half-width characters. Exercise the pure helpers at the boundary.
+const widthStart = source.indexOf('const NOTE_BODY_MAX =');
+const widthEnd = source.indexOf('/** Keep only fields', widthStart);
+if (widthStart < 0 || widthEnd < 0) fail('the note width helpers were not found');
+else {
+  const helpers = new Function(`${source.slice(widthStart, widthEnd)}
+    return { NOTE_BODY_MAX, noteBodyText, noteBodyWidth, clampNoteBody, clampNoteText, mergeNoteBodyInput, noteHighlightActive };`)();
+  const same = (actual, expected, label) => {
+    if (actual !== expected) fail(`${label}: ${JSON.stringify(actual)} != ${JSON.stringify(expected)}`);
+    else console.log('[ok] ' + label);
+  };
+  same(helpers.NOTE_BODY_MAX, 200, 'the badge budget is 200 half-width cells');
+  same(helpers.noteBodyText('あ'.repeat(105)), 'あ'.repeat(100) + '…', '100 full-width characters fit and the 101st truncates');
+  same(helpers.noteBodyText('a'.repeat(210)), 'a'.repeat(200) + '…', '200 half-width characters fit and the 201st truncates');
+  same(helpers.noteBodyText('あ'.repeat(100)), 'あ'.repeat(100), '100 full-width characters fit without an ellipsis');
+  same(helpers.noteBodyText('a'.repeat(200)), 'a'.repeat(200), '200 half-width characters fit without an ellipsis');
+  same(helpers.noteBodyWidth('あ'.repeat(50) + 'a'.repeat(100)), 200, 'mixed text counts a full-width character as two cells');
+  same(helpers.noteBodyWidth('😀'), 2, 'an emoji counts as a full-width character');
+  same(helpers.clampNoteBody('あ'.repeat(105)), 'あ'.repeat(100), 'the editor clamps 105 full-width characters to 100');
+  same(helpers.clampNoteBody('a'.repeat(205)), 'a'.repeat(200), 'the editor clamps 205 half-width characters to 200');
+  same(helpers.mergeNoteBodyInput('a'.repeat(200), 'a'.repeat(200) + 'b'), 'a'.repeat(200), 'typing at the cap leaves the old body intact');
+  same(helpers.mergeNoteBodyInput('a'.repeat(199), 'a'.repeat(199) + 'あ'), 'a'.repeat(199), 'a wide character that does not fit is rejected');
+  same(helpers.mergeNoteBodyInput('a'.repeat(198), 'a'.repeat(198) + 'あ'), 'a'.repeat(198) + 'あ', 'a wide character that fits is accepted');
+  same(helpers.mergeNoteBodyInput('', 'a'.repeat(220)), 'a'.repeat(200), 'pasting into an empty body takes the prefix');
+  same(helpers.mergeNoteBodyInput('a'.repeat(200), 'b'.repeat(220)), 'b'.repeat(200), 'pasting over the whole body takes the prefix');
+  same(helpers.mergeNoteBodyInput('a'.repeat(195), 'a'.repeat(195) + 'b'.repeat(20)), 'a'.repeat(195) + 'b'.repeat(5), 'an overflowing insertion adds only the part that fits');
+  same(helpers.mergeNoteBodyInput('a'.repeat(200), 'a'.repeat(10) + 'あ' + 'a'.repeat(189)), 'a'.repeat(200), 'an overflowing replacement does not cut the old tail');
+  same(helpers.noteHighlightActive(0, null), false, 'no notes and no draft paints nothing');
+  same(helpers.noteHighlightActive(0, { anchor: {} }), true, 'an unsaved draft paints its passage');
+  same(helpers.noteHighlightActive(2, null), true, 'saved notes paint without a draft');
+}
+
+// The bubble's kind row is the NOTE_KINDS order: 意见 sits after 反对.
+const kindsStart = source.indexOf('const NOTE_KINDS = [');
+const kindsEnd = source.indexOf('];', kindsStart);
+if (kindsStart < 0 || kindsEnd < 0) fail('the annotation kind list was not found');
+else {
+  const kinds = new Function(`${source.slice(kindsStart, kindsEnd + 2)}; return NOTE_KINDS;`)();
+  const ids = kinds.map((kind) => kind.id).join(',');
+  if (ids !== 'agree,disagree,question,comment,idea,supplement,todo') fail(`the annotation kinds are ordered ${ids}`);
+  else console.log('[ok] the kind buttons put 提问 between 反对 and 意见');
+  const tints = {
+    agree: ['34,197,94', '22,163,74'],
+    disagree: ['220,38,38', '185,28,28'],
+    question: ['249,115,22', '234,88,12'],
+    comment: ['139,92,246', '124,58,237'],
+    idea: ['59,130,246', '37,99,235'],
+    supplement: ['20,184,166', '13,148,136'],
+    todo: ['250,204,21', '202,138,4'],
+  };
+  for (const kind of kinds) {
+    const [tint, ink] = tints[kind.id];
+    if (kind.tint !== tint) fail(`the ${kind.id} annotation color is ${kind.tint}, expected ${tint}`);
+    if (kind.ink !== ink) fail(`the ${kind.id} annotation ink is ${kind.ink}, expected ${ink}`);
+  }
+  if (new Set(kinds.map((kind) => kind.tint)).size !== kinds.length) fail('two annotation kinds still share one color');
+  else console.log('[ok] every annotation kind has its own color');
+  if (new Set(kinds.map((kind) => kind.ink)).size !== kinds.length) fail('two annotation kinds still share one ink');
+  else console.log('[ok] every annotation kind has its own ink shade');
+  if (!source.includes("'note.kind.idea': '思路'")) fail('the Chinese idea label is not 思路');
+  else if (!source.includes("'note.kind.idea': 'Idea'")) fail('the English idea label changed');
+  else if (!source.includes("'note.kind.supplement': '补充信息'")) fail('the Chinese supplement label changed');
+  else if (!source.includes("'note.kind.supplement': 'Additional info'")) fail('the English supplement label changed');
+  else console.log('[ok] the idea and supplement kinds keep their labels');
+  if (!source.includes("const NOTE_KIND_DEFAULT = 'agree'")) fail('a new bubble does not default to 同意');
+  else console.log('[ok] a new annotation defaults to 同意');
+}
+
+// The inline badge must use the conversation's text size, not its own pixel
+// size, so Settings → the reading font size scales it too.
+const chipRule = /\.pp-note-inline\{([^}]*)\}/.exec(source);
+if (!chipRule) fail('the inline badge rule is missing');
+else {
+  if (chipRule[1].indexOf('font-size:var(--dsh-content-font-size,14px)') < 0) fail('the badge does not follow the conversation font size');
+  else console.log('[ok] the badge follows the conversation font size');
+  if (chipRule[1].indexOf('font:inherit') < 0) fail('the badge does not inherit the conversation font');
+  if (chipRule[1].indexOf('font-family:var(--dsw-font-family,inherit)') < 0) fail('the badge does not use the host text font family');
+  if (chipRule[1].indexOf('font-size:11px') >= 0) fail('the badge still carries a fixed 11px font');
+  if (chipRule[1].indexOf('background:rgba(var(--pp-inline-tint),.28)') < 0) fail('the badge background is not deepened');
+  if (chipRule[1].indexOf('border:1px dashed rgba(var(--pp-inline-ink,var(--pp-inline-tint)),.9)') < 0) fail('the badge border does not use the ink shade');
+  if (chipRule[1].indexOf('max-width:100%') < 0 || chipRule[1].indexOf('white-space:normal') < 0) fail('a long badge cannot wrap inside the column');
+}
+const underlineRule = /::highlight\(prompt-pool-note-comment\)\{([^}]*)\}/.exec(source);
+if (!underlineRule) fail('the comment highlight rule is missing');
+else if (underlineRule[1].indexOf('text-decoration-thickness:2px') < 0 || underlineRule[1].indexOf('rgba(124,58,237,1)') < 0) {
+  fail('the comment underline is not the deeper 2px violet');
+} else console.log('[ok] the badge wash and the highlighted underline are deepened');
+const iconRule = /\.pp-note-inline-icon\{([^}]*)\}/.exec(source);
+if (!iconRule || iconRule[1].indexOf('font-size:.95em') < 0) fail('the badge icon does not scale with the badge');
+else console.log('[ok] the badge icon scales with the font');
+if (/maxLength:\s*NOTE_BODY_MAX/.test(source)) fail('the editor still uses a UTF-16 maxLength');
+else console.log('[ok] the editor no longer uses a UTF-16 maxLength');
+if (!/onChange:\s*\(event\)\s*=>\s*\{[\s\S]{0,200}mergeNoteBodyInput\(current, next\)/.test(source)) {
+  fail('the editor does not merge typed text by display width');
 }
 
 for (const failure of failures) console.error('[fail]', failure);

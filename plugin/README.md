@@ -16,11 +16,13 @@ The pool keeps the draft, the next action and the exact wording next to the conv
 - Starter prompts follow the host language; Settings can reset them in the current interface language, keeping edits as ordinary items
 - Composer panel with search, group tabs, row actions and a send-queue card
 - Right-click on selected conversation text to copy it or save it into a group (the last destination leads the menu)
-- Annotate while you read: notes stay on the exact passage, collect in one tab, and compose into one quoted draft
+- Annotate while you read: choose a kind from the right-click submenu, keep notes on the exact passage with image attachments, collect them in one tab, and send the checked ones as one review prompt straight to the session queue (new notes default to Agree)
 - Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback)
 - Groups: built-in, custom and one tab per workspace; each can be expanded, folded or hidden
-- Settings for group order/display, visible workspaces, retention, the built-in prompt reset and annotations
+- Settings for group order/display (including hiding the All tab), visible workspaces, retention, the built-in prompt reset and annotations
 - A release shows progress and can be stopped; the unsent queue stays
+- A dock strip above the composer sits beside the host's own queued messages and pushes the whole send
+  queue into it in one click
 - Confirmations for destructive actions, with undo on deletes and clears
 
 Requires DSH >= 0.2.0-rc.1 (verified on 0.2.2-rc.1). This is a **bundle**: install the package, then

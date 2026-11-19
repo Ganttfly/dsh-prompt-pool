@@ -42,7 +42,7 @@ Working with an agent is rarely one prompt. The friction sits between messages:
 |---|---|
 | You are still shaping the prompt, but the send button is one keystroke away. | Park the draft in a group; nothing runs until you release it. |
 | The next prompts are already in your head, and retyping them breaks the sequence. | Queue them in order and release one by one, with progress and Stop. |
-| A long answer needs a precise reply on one sentence, not a vague “looks good”. | Annotate the passage inline; the note stays on the exact words, and **Generate draft** turns every note into one quoted message. |
+| A long answer needs a precise reply on one sentence, not a vague “looks good”. | Annotate the passage inline; the note stays on the exact words, and **Review** sends the checked notes to the session queue as one quoted prompt. |
 | The constraint lives in an earlier message or another workspace. | Right-click capture and workspace tabs keep selections and prompts grouped where you can find them. |
 
 The goal is not another notes app. It is to keep the context, the exact wording and the next action next to
@@ -56,16 +56,33 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   queue, items go straight into the queue without touching the composer; otherwise the composer path
   is used. While a release runs, both views show progress and a Stop control; the queue is locked
   until it finishes.
+- **One-click handoff** — a strip above the composer sits beside the host's own queued messages and
+  shows both counts; **Push** hands the pool's send queue to the host queue in order, without the
+  release progress overlay and without touching the composer. Pushed entries leave the send queue, and
+  a host that exposes no queue admission keeps them and says so.
 - **Annotate while you read** — select a passage in an assistant reply and right-click **Annotate**:
-  pick a kind (note / question / agree / disagree / idea / to-do), type up to ten characters (or leave it
-  empty for a glyph-only badge), and the badge lands right after the passage with a matching underline.
+  pick a kind from its submenu (note / question / agree / disagree / idea / additional info / to-do), type up to 100
+  full-width or 200 half-width characters (or leave it empty for a glyph-only badge), and the badge lands
+  right after the passage with a matching underline. Picking a kind preselects it in the bubble; without
+  a pick new notes start as **Agree**. Add images from the bubble or paste them into its body, and the
+  thumbnails stay with the annotation. The badge follows the conversation's text size, so it grows with
+  the reading font instead of staying small.
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
   losing the point in a separate scratchpad; click the badge to edit. The **Annotations** tab always
-  exists: **Locate** scrolls to the passage, **Insert** writes one note into the composer, **Save as
-  prompt** files one note into a pool group (the chooser leads with the session's workspace, then 常用),
-  and **Generate draft** composes one numbered message that quotes each passage with its kind. The tab
-  header can save every note as one prompt or generate that draft as well. Saved notes keep a green
-  marker; notes are stored per session and survive reloads.
+  exists: each row leads with a checkbox (all checked by default); **Locate** scrolls to the passage,
+  **Insert** writes one note into the composer, and **Save as prompt** files one note into a pool group
+  (the chooser leads with the session's workspace, then 常用). The header's **Review** opens a
+  review card in the bottom dock (like the send queue): adjust the checked notes, then choose
+  **Preview prompt** to inspect the generated prompt and send it, or go back to adjust. The prompt is grouped
+  by kind with a type-specific response contract; additional info is used to revisit the related conclusions
+  rather than to execute anything. Opinions, ideas and agreements can be marked
+  **Implement if adopted / feasible / approved** to authorize the same-turn execution; the flag is off by
+  default and is only acted on when no further discussion is needed. To-dos choose between **Execute now**
+  and **Save as prompt** (the safe default). Questions, disagreements and additional info have no immediate
+  option. To-dos set to Save as prompt are not sent and are saved to the current workspace's prompt pool
+  instead. After a successful send, the sent annotations leave the annotation list; the parked to-dos are
+  in the prompt pool, and the batch log keeps the audit record. There are no open/handled status filters to
+  maintain. Saved notes keep a green marker; notes are stored per session and survive reloads.
 - **Composer panel** — search, group tabs, per-row insert / queue / edit / duplicate / delete, and the
   send-queue card with collapse, clear and send. Drag its top edge to change the height, or its left
   edge to change the width; pin it to keep it open over the conversation.
@@ -75,13 +92,13 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   picking one stores the selection as a new item there. The group used last time leads the submenu;
   Shift+F10 opens the same menu, and a right-click without a selection keeps the browser menu.
 - **Groups** — frequent / notes / templates built in, plus your own categories and one tab per workspace.
-  Each family can be expanded, folded into a single tab, or hidden.
+  Each family can be expanded, folded into a single tab, or hidden; the **All** tab can be hidden too.
 - **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
   can reset the built-in set in the current interface language. Edited built-ins can be kept as
   ordinary items; custom items and the queue are left alone.
-- **Settings** — group order and display, visible workspaces, two switches for post-use retention, a
-  reset for the built-in prompt set, and an **Annotations** tab (session binding explained, plus
-  keep-after-draft and keep-after-save switches).
+- **Settings** — group order and display (including whether the **All** tab shows), visible workspaces,
+  two switches for post-use retention, a reset for the built-in prompt set, and an **Annotations** tab
+  (session binding explained, plus the keep-after-save switch).
 - **Guarded destructive actions** — deleting an item, clearing the queue and removing a queued entry all
   ask first; deletes and clears can be undone from the toast.
 - **Chinese and English** — every label follows the harness language, including the sidebar tab name.
@@ -112,11 +129,12 @@ does not turn it on.
    workspace — and the toast names the destination. The composer keeps its text.
 3. Select text in a conversation and right-click: the menu offers **Copy** and **Add to the prompt
    pool**; open the submenu and picking a group turns the selection into a new item there.
-4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to ten
-   characters, and the badge appears right after the passage. The pool's **Annotations** tab collects
-   every note in the session; **Locate** scrolls to a passage, **Insert** writes one note into the
-   composer, **Save as prompt** files one note into a group, and **Generate draft** turns the whole list
-   into one numbered message. The tab header can also save every note as one prompt.
+4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 100
+   full-width or 200 half-width characters, and the badge appears right after the passage. The pool's
+   **Annotations** tab collects every note in the session; **Locate** scrolls to a passage, **Insert**
+   writes one note into the composer, and **Save as prompt** files one note into a group. **Review**
+   opens the batch sheet; optionally mark items to execute, send the checked notes to the session queue,
+   and those notes leave the list. To-dos set to Save as prompt are saved to the prompt pool instead.
 5. Add rows to the queue with the ⊕ control, reorder them in the queue card, then press **发送**.
 6. Each queued item is written into the composer and submitted in turn.
 

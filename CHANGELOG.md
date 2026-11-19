@@ -11,6 +11,80 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
+## [1.5.0] — 2026-11-16
+
+### Added
+
+- A composer dock strip that bridges the pool's send queue to the host's own queued messages. It shows
+  how many items the pool still has to send next to how many the session queue already holds (read from
+  the `inbox` projection), and one **Push** action hands every queued item to the host queue in order —
+  the same host admission the release uses, without the progress overlay and without touching the
+  composer. Pushed entries leave the send queue; a host without queue admission keeps them and says so.
+  The strip is its own cell of the `conversation.input.dock` slot, so it sits with the base queue UI
+  instead of replacing it, and it renders nothing while both sides are empty.
+- A checkbox on every annotation row. **Review** and the bulk **Save as prompt** now use only
+  the checked annotations (all start checked); unchecking every note disables both actions.
+- An annotation review sheet: the header action groups the checked notes by kind with a type-specific
+  response contract, and previews an editable prompt. Opinions, ideas and agreements can be marked for
+  same-turn execution; to-dos choose between **Execute now** and **Save as prompt** (the safe default).
+  To-dos set to Save as prompt are saved to the current workspace's prompt pool instead of being sent.
+  **Send to session queue** hands the prompt to the host queue without touching the composer; a successful
+  send removes the sent notes from the list, with the batch log kept for audit. There are no open/handled
+  status filters. The review view sits in the bottom dock as a card like the send queue, so the annotation
+  list stays visible.
+- Annotations can carry image attachments: add them from the bubble or paste them into the note body.
+  Thumbnails appear in the bubble and annotation list, and the images travel with a review batch into the
+  session queue and with a saved prompt. New annotations default to **同意**.
+- The conversation menu's **Annotate** row now opens a seven-kind submenu; picking a kind opens the bubble
+  with that type preselected.
+- A new **补充信息 / Additional info** annotation kind. It has no immediate-execution checkbox; the review
+  prompt uses it to re-check related conclusions and state what changes, rather than executing anything.
+- The **All** tab is optional: Settings → Group order and display now has a **Show the “All” tab**
+  switch. When it is hidden, the group tabs keep working and a view parked on All falls back to the
+  first available group tab.
+
+### Changed
+
+- The review prompt now uses readable English kind IDs (`Agree-1`, `Comment-1`, `Todo-1`) and writes the
+  immediate authorization on the item itself (for example `Comment-1 【立即实施（采纳后）】`) instead of
+  repeating the checkbox explanation in every type rule. The review card header carries the selected and
+  immediate counts, the yellow parking notice is gone, and the layout is tighter to reduce card height.
+  The review is a two-step flow: set the annotations, choose **Preview prompt**, then send or go back to adjust.
+- The review prompt is now type-driven instead of mode-driven: questions are answered, opinions get an
+  adoption decision with reasons, agreement/disagreement are acknowledged, ideas are assessed, and to-dos
+  are parked. Per-item immediate checkboxes (**if adopted / if feasible / approved**) default off and only
+  authorize same-turn execution when no further discussion is needed. To-dos use the two choices **Execute
+  now / Save as prompt** (safe default); Save as prompt to-dos are not sent and are saved to the current
+  workspace's prompt pool.
+- Inline annotations now take up to 100 full-width or 200 half-width characters (mixed text counts
+  proportionally), up from ten characters. The badge truncates by the same display width and the
+  editor's counter reports the used cells against 200.
+- The annotation badge uses a deeper kind-colored wash and the annotated passage is underlined in a
+  matching 2px deeper shade instead of a 1px pale line, so both stand out while reading.
+- The annotation bubble now shows up to 80 characters of the quoted passage across four lines
+  (previously ten characters on two), and the kind buttons place 提问 between 反对 and 意见.
+- The annotation kinds have distinct colors again: question is orange, comment is purple, supplement is
+  teal and to-do is bright yellow (agree, disagree and idea keep green, red and blue); no two kinds share
+  one tint.
+- Each kind now pairs a soft wash with a deeper ink shade for its border, icon and underline (green
+  agree, red disagree, orange question, violet comment, blue idea, teal supplement, bright-yellow to-do),
+  so the seven badges stay distinct without looking flat.
+
+### Fixed
+
+- The conversation menu's **+ Annotate** row no longer disappears when the browser collapses the selection
+  before the menu mounts. The anchor is captured in the `contextmenu` handler, the row is always present for
+  a text selection, and clicking it retries the anchor (with a clear message if the selection cannot be located).
+- A new annotation's passage is underlined as soon as its bubble opens again. The draft highlight was
+  cleared whenever the session had no saved annotations, so the first note only showed its underline
+  after saving.
+- Typing near the annotation editor's width limit no longer overwrites the tail of the existing text.
+  An over-limit insertion keeps the old body and adds only the part that fits; a partial replacement
+  is rejected, while pasting into an empty (or fully replaced) body still takes the prefix that fits.
+- The inline annotation badge now uses the conversation's text size (and the matching line height)
+  instead of a fixed 11px, so it no longer looks smaller than the reply and grows when the reading
+  font is enlarged in Settings.
+
 ## [1.4.1] — 2026-11-16
 
 ### Changed
@@ -31,7 +105,7 @@ All notable changes to this project are documented here. The format follows
 - An **Annotations** tab in both prompt-pool views: locate a passage, insert one note into the composer,
   save one note into a pool group, generate one numbered draft from all notes, delete notes, and see a
   green marker on notes already saved. The Settings Annotations tab explains the session binding and
-  controls keep-after-draft and keep-after-save.
+  controls keep-after-save.
 
 ## [1.3.0] — 2026-11-13
 

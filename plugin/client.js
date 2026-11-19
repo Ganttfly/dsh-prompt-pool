@@ -19,7 +19,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '1.4.1';
+    const PLUGIN_VERSION = '1.5.0';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/Ganttfly/dsh-prompt-pool';
@@ -119,13 +119,13 @@ window.__ModuleLoader__.load({
       'settings.defaultTabWorkspace': '当前工作区',
       'settings.defaultTabOther': '其他',
       'settings.tab.notes': '批注',
-      'settings.notesIntro': '批注和当前会话绑定。\n在正文中添加的批注同时也会出现在提示池的【批注】页面，也可以把它存为提示词，或直接插入会话输入框。',
-      'settings.notesKeepDraft': '生成草稿后，仍旧保留',
-      'settings.notesKeepDraftHint': '关闭后，生成草稿成功的批注会从列表移除。',
+      'settings.notesIntro': '批注和当前会话绑定。\n在正文中添加的批注同时也会出现在提示池的【批注】页面，可以存为提示词、直接插入输入框，或汇总审阅后发送到会话队列。',
       'settings.notesKeepStore': '存为提示词后，仍旧保留',
       'settings.notesKeepStoreHint': '关闭后，存成提示词成功的批注会从列表移除。',
       'settings.table': '分组的顺序与显示',
       'settings.tableHint': '箭头调整先后顺序；右侧三列决定这一组怎么显示。',
+      'settings.showAllTab': '显示「全部」标签页',
+      'settings.showAllTabHint': '关闭后在标签栏里隐藏「全部」；其他分组页签仍可正常切换，停在「全部」的视图会自动落到第一个可用页签。',
       'settings.tableGroup': '分组',
       'settings.tableOrder': '顺序',
       'settings.moveUp': '上移',
@@ -209,6 +209,13 @@ window.__ModuleLoader__.load({
       'tray.queue': '队列中 {n}',
       'tray.collapseTitle': '收起待发送队列',
       'tray.expandTitle': '展开待发送队列',
+      'dock.pool': '待发 {n} 条',
+      'dock.host': '会话队列 {n} 条',
+      'dock.push': '把待发的 {n} 条压入会话队列',
+      'dock.pushShort': '压入队列',
+      'dock.pushing': '压入 {sent}/{total}…',
+      'dock.pushed': '已压入 {n} 条',
+      'dock.unavailable': '这个宿主没有开放的入队接口，请用面板里的「发送」',
       'status.saved': '已存入池子',
       'status.savedPartial': '已存入池子，但这 {n} 个附件没有一起保存',
       'status.savedTo': '已存入「{group}」',
@@ -221,16 +228,55 @@ window.__ModuleLoader__.load({
       'menu.copied': '已复制',
       'menu.copyFailed': '复制失败：请按 {shortcut}',
       'note.add': '+ 批注',
+      'note.anchorFailed': '无法定位这段选中文字，请重新选择助手回复中的一句话。',
       'note.title': '批注',
       'note.placeholder': '写点什么：回答、疑问或修改意见',
+      'note.limitHint': '最多 100 个全角或 200 个半角字符',
+      'note.select': '选择这条批注',
+      'note.noneSelected': '先勾选至少一条批注',
+      'note.review.title': '汇总审阅',
+      'note.review.heading': '【批注审阅 {id}】',
+      'note.review.intro': '请按类型逐条回应，编号必须保留。默认只回应，不要修改文件或执行任务。只执行带【立即实施…】标记的条目：先完成回应，再按标记中的条件执行并报告结果；条件不满足或无法执行时说明原因。只输出对批注本身的回应，不要解释这些规则，也不要评论标记本身。',
+      'note.review.attachments': '附件：{n} 张图片。',
+      'note.review.group.question': '逐条回答。',
+      'note.review.group.comment': '逐条说明接受、不接受或需要补充，并给出理由。',
+      'note.review.group.agree': '确认收到结论即可，不必展开。',
+      'note.review.group.disagree': '确认收到否定结论即可，不必展开。',
+      'note.review.group.idea': '补充需要的信息，评估可行性、收益和风险，给出建议方案。',
+      'note.review.group.supplement': '这条批注补充了新信息。请结合它重新检查相关结论，指出哪些结论需要修正、哪些保持不变，并给出更新后的判断；不要修改文件或执行任务。',
+      'note.review.group.todo': '执行并逐项报告结果；如果受阻或需要确认，先说明并等待。',
+      'note.review.immediate.comment': '采纳时立即实施',
+      'note.review.immediate.agree': '按此方案立即实施',
+      'note.review.immediate.idea': '可行时立即实施',
+      'note.review.immediateMark.comment': '【立即实施（采纳后）】',
+      'note.review.immediateMark.agree': '【立即实施（按此方案）】',
+      'note.review.immediateMark.idea': '【立即实施（可行时）】',
+      'note.review.immediateMark.todo': '【立即实施】',
+      'note.review.immediateCount': '本轮立即实施 {n} 条',
+      'note.review.todo.execute': '立即实施',
+      'note.review.todo.prompt': '存为提示词',
+      'note.review.parkOnly': '没有需要发送给 Agent 的批注；待办可以存入提示池。',
+      'note.review.parked': '已将 {n} 条待办存入提示池',
+      'note.review.queuedParked': '已发送审阅 {id}，并将 {n} 条待办存入提示池',
+      'note.review.selected': '已选 {n} 条',
+      'note.review.previewAction': '预览提示词',
+      'note.review.back': '返回批注',
+      'note.review.previewHint': '确认无误后发送；需要调整请返回批注。',
+      'note.review.send': '发送到会话队列',
+      'note.review.sending': '正在发送…',
+      'note.review.queued': '已送入会话队列：{id}',
+      'note.review.failed': '发送失败：{reason}',
+      'note.review.unsupported': '当前宿主没有队列直投接口',
+      'note.review.empty': '没有可汇总的批注',
+      'note.review.emptyHint': '先在批注列表里勾选要送审的条目。',
       'note.empty': '没有匹配的批注',
       'note.emptyIntro': '还没有批注。在会话区选中一句话，右键「+ 批注」即可添加。',
       'note.save': '保存',
       'note.cancel': '取消',
       'note.delete': '删除',
-      'note.compose': '生成草稿',
-      'note.composeHint': '把列表中全部批注生成一份草稿放入对话框',
-      'note.composeStoreHint': '把列表中全部批注存成一条提示词',
+      'note.compose': '汇总审阅',
+      'note.composeHint': '预览选中的批注并发送到会话队列',
+      'note.composeStoreHint': '把选中的批注存成一条提示词',
       'note.insert': '插入',
       'note.locate': '定位',
       'note.locateFailed': '这条批注暂时找不到原文（回复可能被折叠或改写了）。',
@@ -248,7 +294,8 @@ window.__ModuleLoader__.load({
       'note.kind.question': '提问',
       'note.kind.agree': '同意',
       'note.kind.disagree': '反对',
-      'note.kind.idea': '想法',
+      'note.kind.idea': '思路',
+      'note.kind.supplement': '补充信息',
       'note.kind.todo': '待办',
       'menu.last': '上次',
       'menu.count': '{n} 条',
@@ -337,13 +384,13 @@ window.__ModuleLoader__.load({
       'settings.defaultTabWorkspace': 'Current workspace',
       'settings.defaultTabOther': 'Other',
       'settings.tab.notes': 'Annotations',
-      'settings.notesIntro': 'Annotations are bound to the current session.\nAnnotations added in the transcript also appear in the prompt pool\'s Annotations tab; they can also be saved as a prompt or inserted straight into the conversation composer.',
-      'settings.notesKeepDraft': 'Keep annotations after generating a draft',
-      'settings.notesKeepDraftHint': 'Turned off, annotations leave the list once a draft is generated.',
+      'settings.notesIntro': 'Annotations are bound to the current session.\nAnnotations added in the transcript also appear in the prompt pool\'s Annotations tab; they can be saved as a prompt, inserted into the composer, or reviewed and sent to the session queue.',
       'settings.notesKeepStore': 'Keep annotations after saving as a prompt',
       'settings.notesKeepStoreHint': 'Turned off, annotations leave the list once saved as a prompt.',
       'settings.table': 'Group order and display',
       'settings.tableHint': 'Use the arrows to reorder; the three columns decide how each family shows up.',
+      'settings.showAllTab': 'Show the “All” tab',
+      'settings.showAllTabHint': 'Turned off, the tab bar hides “All”; group tabs still switch normally, and a view parked on “All” lands on the first available tab.',
       'settings.tableGroup': 'Group',
       'settings.tableOrder': 'Order',
       'settings.moveUp': 'Move up',
@@ -427,6 +474,13 @@ window.__ModuleLoader__.load({
       'tray.queue': '{n} in queue',
       'tray.collapseTitle': 'Collapse the send queue',
       'tray.expandTitle': 'Expand the send queue',
+      'dock.pool': '{n} ready',
+      'dock.host': '{n} in the session queue',
+      'dock.push': 'Push the {n} queued item(s) into the session queue',
+      'dock.pushShort': 'Push',
+      'dock.pushing': 'Pushing {sent}/{total}…',
+      'dock.pushed': 'Pushed {n}',
+      'dock.unavailable': 'This host exposes no queue admission; use Send in the panel',
       'status.saved': 'Saved to the pool',
       'status.savedPartial': 'Saved to the pool; {n} attachment(s) were not captured',
       'status.savedTo': 'Saved to {group}',
@@ -439,16 +493,55 @@ window.__ModuleLoader__.load({
       'menu.copied': 'Copied',
       'menu.copyFailed': 'Copy failed: press {shortcut}',
       'note.add': '+ Annotate',
+      'note.anchorFailed': 'Could not anchor that selection. Select a passage in the assistant reply again.',
       'note.title': 'Annotations',
       'note.placeholder': 'Write an answer, a question or a correction',
+      'note.limitHint': 'Up to 100 full-width or 200 half-width characters',
+      'note.select': 'Select this annotation',
+      'note.noneSelected': 'Select at least one annotation first',
+      'note.review.title': 'Review annotations',
+      'note.review.heading': '[Annotation review {id}]',
+      'note.review.intro': 'Respond to each annotation by kind and keep its ID. By default, respond only: do not modify files or run tasks. Execute only items marked [Execute now…]: finish the response first, then execute under the condition in the marker and report the result; if the condition is not met or execution is blocked, explain why. Answer the annotation itself only: do not explain these rules or comment on the marker.',
+      'note.review.attachments': 'Attachments: {n} image(s).',
+      'note.review.group.question': 'Answer each one.',
+      'note.review.group.comment': 'Say whether you accept, reject or need more input, with reasons.',
+      'note.review.group.agree': 'Confirm the conclusion; no need to elaborate.',
+      'note.review.group.disagree': 'Confirm the rejection; no need to elaborate.',
+      'note.review.group.idea': 'Gather what is needed, assess feasibility, upside and risk, and propose next steps.',
+      'note.review.group.supplement': 'This annotation adds new information. Use it to revisit the related conclusions, say which need correcting and which stay the same, and give the updated judgement; do not modify files or run tasks.',
+      'note.review.group.todo': 'Execute and report the result; if blocked or in need of confirmation, explain and wait.',
+      'note.review.immediate.comment': 'Implement if adopted',
+      'note.review.immediate.agree': 'Implement the approved proposal',
+      'note.review.immediate.idea': 'Implement if feasible',
+      'note.review.immediateMark.comment': '[Execute now (once adopted)]',
+      'note.review.immediateMark.agree': '[Execute now (approved proposal)]',
+      'note.review.immediateMark.idea': '[Execute now (if feasible)]',
+      'note.review.immediateMark.todo': '[Execute now]',
+      'note.review.immediateCount': '{n} to execute this round',
+      'note.review.todo.execute': 'Execute now',
+      'note.review.todo.prompt': 'Save as prompt',
+      'note.review.parkOnly': 'Nothing to send to the agent; to-dos can be saved to the prompt pool.',
+      'note.review.parked': 'Saved {n} to-do(s) to the prompt pool',
+      'note.review.queuedParked': 'Review {id} sent; {n} to-do(s) saved to the prompt pool',
+      'note.review.selected': '{n} selected',
+      'note.review.previewAction': 'Preview prompt',
+      'note.review.back': 'Back to annotations',
+      'note.review.previewHint': 'Send when ready, or go back to adjust.',
+      'note.review.send': 'Send to session queue',
+      'note.review.sending': 'Sending…',
+      'note.review.queued': 'Sent to the session queue: {id}',
+      'note.review.failed': 'Could not send: {reason}',
+      'note.review.unsupported': 'This host exposes no direct queue admission',
+      'note.review.empty': 'No annotations to review',
+      'note.review.emptyHint': 'Check the annotations you want to send first.',
       'note.empty': 'No matching annotations',
       'note.emptyIntro': 'No annotations yet. Select a passage in the conversation area and right-click “+ Annotate” to add one.',
       'note.save': 'Save',
       'note.cancel': 'Cancel',
       'note.delete': 'Delete',
-      'note.compose': 'Generate draft',
-      'note.composeHint': 'Turn every annotation in the list into one draft in the composer',
-      'note.composeStoreHint': 'Save every annotation in the list as one prompt',
+      'note.compose': 'Review',
+      'note.composeHint': 'Review the selected annotations and send them to the session queue',
+      'note.composeStoreHint': 'Save the selected annotations as one prompt',
       'note.insert': 'Insert',
       'note.locate': 'Locate',
       'note.locateFailed': 'This note cannot find its passage right now (the reply may be folded or rewritten).',
@@ -467,6 +560,7 @@ window.__ModuleLoader__.load({
       'note.kind.agree': 'Agree',
       'note.kind.disagree': 'Disagree',
       'note.kind.idea': 'Idea',
+      'note.kind.supplement': 'Additional info',
       'note.kind.todo': 'To do',
       'menu.last': 'Last used',
       'menu.count': '{n} item(s)',
@@ -695,10 +789,11 @@ window.__ModuleLoader__.load({
     }
 
     /** Only metadata enters localStorage; the bytes live in IndexedDB. */
-    function normalizeImages(raw) {
+    function normalizeImages(raw, limit) {
       if (!Array.isArray(raw)) return [];
+      const max = Number.isFinite(Number(limit)) ? Math.max(0, Number(limit)) : MAX_IMAGES;
       return raw
-        .slice(0, MAX_IMAGES)
+        .slice(0, max)
         .map((entry) => {
           if (!entry || typeof entry !== 'object') return null;
           const id = typeof entry.id === 'string' ? entry.id : '';
@@ -716,6 +811,82 @@ window.__ModuleLoader__.load({
           };
         })
         .filter(Boolean);
+    }
+
+    /** Unique image descriptors across several notes, in first-seen order. */
+    function imagesForNotes(list) {
+      const images = new Map();
+      for (const note of Array.isArray(list) ? list : []) {
+        for (const image of normalizeImages(note && note.images)) images.set(image.id, image);
+      }
+      return [...images.values()];
+    }
+
+    /** Bytes for pooled images, as browser files the host can accept. */
+    async function loadImageFiles(images, limit = Number.MAX_SAFE_INTEGER) {
+      const files = [];
+      for (const image of normalizeImages(images, limit)) {
+        const blob = await getImageBlob(image.id);
+        if (!blob) throw new Error(translate('image.missing'));
+        files.push(new File([blob], image.name || 'image', { type: image.type || blob.type || 'image/png' }));
+      }
+      return files;
+    }
+
+    /**
+     * The host's queue admission for one session, if this context can reach it.
+     * Sending there keeps the composer untouched: it is the only way a batch
+     * release avoids resizing the input once per item.
+     */
+    function resolveDirectQueue(sessionId) {
+      if (!sessionId) return null;
+      const candidates = [];
+      const base = conversationFace || serviceOf(pluginCtx, 'conversation');
+      if (base) candidates.push(base);
+      const sessions = sessionsFace || serviceOf(pluginCtx, 'sessions');
+      if (sessions && typeof sessions.scope === 'function') {
+        try {
+          const scoped = sessions.scope(sessionId);
+          const scopedConversation = serviceOf(scoped, 'conversation');
+          if (scopedConversation) candidates.push(scopedConversation);
+        } catch (_error) {
+          /* the context is not session-scoped */
+        }
+      }
+      for (const api of candidates) {
+        if (typeof api.createDrafts !== 'function' || typeof api.sendSession !== 'function' || typeof api.scopedSession !== 'function') continue;
+        try {
+          const session = api.scopedSession('send');
+          if (session && typeof session.prompt === 'function' && typeof session.beginSubmission === 'function') return { api, session };
+        } catch (_error) {
+          /* root-scoped service; try the next candidate */
+        }
+      }
+      return null;
+    }
+
+    /** Queue one occurrence without touching the composer. */
+    async function sendDirect(direct, sessionId, body, images) {
+      const files = images.length > 0 ? await loadImageFiles(images) : [];
+      let drafts = [];
+      if (files.length > 0) {
+        drafts = direct.api.createDrafts(sessionId, files);
+        if (!Array.isArray(drafts) || drafts.length !== files.length) throw new Error(translate('image.insertFailed'));
+      }
+      try {
+        const outcome = await direct.api.sendSession(direct.session, body, drafts.map((draft) => draft.id), 'queue');
+        if (!outcome || outcome.kind !== 'success') throw new Error(translate('status.queueFailed'));
+      } catch (error) {
+        if (drafts.length > 0 && typeof direct.api.releaseDraftAttachments === 'function') {
+          try {
+            direct.api.releaseDraftAttachments(drafts);
+          } catch (_cleanupError) {
+            /* the draft attachment owner may already be gone */
+          }
+        }
+        throw error;
+      }
+      return drafts.length;
     }
 
     let imageDbPromise = null;
@@ -794,6 +965,10 @@ window.__ModuleLoader__.load({
       const state = pool.get();
       for (const item of state.items) for (const image of item.images || []) keep.add(image.id);
       for (const entry of state.tray) for (const image of entry.images || []) keep.add(image.id);
+      // Annotation images and the review batches that quote them live outside
+      // the pool store, so the sweep must see both.
+      for (const note of notes.get().items) for (const image of note.images || []) keep.add(image.id);
+      for (const batch of batches.get().items) for (const image of batch.images || []) keep.add(image.id);
       return keep;
     }
 
@@ -1039,7 +1214,7 @@ window.__ModuleLoader__.load({
     }
 
     /** Tab actions shared by the composer panel and the sidebar page. */
-    function tabHandlers(setTab, currentTab) {
+    function tabHandlers(setTab, currentTab, fallback) {
       return {
         onSelect: (id) => setTab(id),
         onAdd: (name) => {
@@ -1047,7 +1222,7 @@ window.__ModuleLoader__.load({
           if (!created) return;
           // Folded groups share one tab; a hidden family has no tab to aim at.
           const mode = normalizeSettings(pool.get().settings).display.custom;
-          setTab(mode === 'nested' ? 'nested:custom' : mode === 'hidden' ? 'all' : 'custom:' + created.id);
+          setTab(mode === 'nested' ? 'nested:custom' : mode === 'hidden' ? (fallback || 'all') : 'custom:' + created.id);
         },
         onRename: (id, name) => {
           if (id.indexOf('custom:') === 0) poolActions.renameCategory(id.slice(7), name);
@@ -1055,7 +1230,7 @@ window.__ModuleLoader__.load({
         onDelete: (id) => {
           if (id.indexOf('custom:') !== 0) return;
           poolActions.removeCategory(id.slice(7));
-          if (currentTab === id) setTab('all');
+          if (currentTab === id) setTab(fallback || 'all');
         },
       };
     }
@@ -1103,29 +1278,43 @@ window.__ModuleLoader__.load({
         ),
       };
       const rest = flags.order;
+      // 全部 anchors the row unless the user hid it; the chosen block leads the rest.
+      const all = flags.showAllTab === false ? [] : [{ id: 'all', label: translate('tab.all'), group: 'all' }];
       return [
-        // 全部 always anchors the row; the chosen block leads the rest.
-        { id: 'all', label: translate('tab.all'), group: 'all' },
+        ...all,
         ...rest.reduce((list, name) => list.concat(blocks[name]), []),
       ];
     }
 
     /**
      * The tab a freshly opened pool lands on. An unavailable preference (a
-     * deleted group, a hidden workspace, no annotations yet) falls back to all.
+     * deleted group, a hidden workspace, a hidden "all" tab) falls back to the
+     * first available group tab, then the annotations tab.
      */
+    function fallbackTabFor(tabs) {
+      const list = Array.isArray(tabs) ? tabs : [];
+      // "All" is the catch-all whenever the user kept it.
+      const all = list.find((tab) => tab && tab.id === 'all');
+      if (all) return 'all';
+      // The annotation tab is always mounted, but a group tab reads better as
+      // the landing spot when "all" is hidden.
+      const groupTab = list.find((tab) => tab && tab.id !== 'notes');
+      return groupTab ? groupTab.id : (list[0] && list[0].id) || '';
+    }
+
     function resolveDefaultTab(pref, tabs, currentWorkspaceId, hasNotes) {
       if (!pref) return '';
       const ids = (tabs || []).map((tab) => tab.id);
+      const fallback = () => fallbackTabFor(tabs) || (hasNotes ? 'notes' : '');
       // The annotation tab always exists now, so the preference always applies.
       if (pref === 'notes') return 'notes';
       if (pref === '__workspace__') {
         const id = currentWorkspaceId ? 'workspace:' + currentWorkspaceId : '';
-        return id && ids.indexOf(id) >= 0 ? id : 'all';
+        return id && ids.indexOf(id) >= 0 ? id : fallback();
       }
       if (pref.indexOf('tab:') === 0) {
         const id = pref.slice(4);
-        return ids.indexOf(id) >= 0 ? id : 'all';
+        return ids.indexOf(id) >= 0 ? id : fallback();
       }
       return '';
     }
@@ -1702,6 +1891,8 @@ window.__ModuleLoader__.load({
           ? settings.hiddenWorkspaces.filter((value) => typeof value === 'string' && value !== '')
           : [],
         currentWorkspaceTab: settings.currentWorkspaceTab !== false,
+        // The "all" tab is the catch-all view; hiding it leaves the group tabs.
+        showAllTab: settings.showAllTab !== false,
         queueCollapsed: settings.queueCollapsed === true,
         // The group the right-click menu offered last, so it can lead the list.
         lastCaptureGroup: typeof settings.lastCaptureGroup === 'string' ? settings.lastCaptureGroup : '',
@@ -1710,8 +1901,7 @@ window.__ModuleLoader__.load({
         // Which tab a freshly opened pool lands on: notes, this workspace, or a
         // concrete tab ("tab:<id>").
         defaultTab: typeof settings.defaultTab === 'string' ? settings.defaultTab : '',
-        // Annotations survive the two actions unless the user opts out.
-        noteKeepAfterDraft: settings.noteKeepAfterDraft !== false,
+        // Annotations survive Store unless the user opts out.
         noteKeepAfterStore: settings.noteKeepAfterStore !== false,
         // Whether an item leaves the pool after it is used.
         keepAfterInsert: settings.keepAfterInsert !== false,
@@ -2621,6 +2811,141 @@ window.__ModuleLoader__.load({
       );
     }
 
+    // ------------------------------------------------------------------- dock
+    /**
+     * The bridge above the composer: what the pool still has to send, what the
+     * session queue already holds, and one action that hands the whole pool
+     * send queue to the host queue without touching the composer.
+     *
+     * The session queue itself belongs to the base QueueDock; this strip only
+     * reads it through the `inbox` projection so the two numbers sit next to
+     * each other. With nothing on either side it renders nothing at all.
+     */
+    function PromptPoolQueueDock(props) {
+      useLocaleTick();
+      const state = usePoolState();
+      const entries = state.tray;
+      const sessionId = (props && props.sessionId) || '';
+      // The seat always injects useProjection; the guard only serves render
+      // stubs. The prop identity is stable per mount, so the hook order holds.
+      const useProjection = props && typeof props.useProjection === 'function' ? props.useProjection : null;
+      const inbox = useProjection ? useProjection('inbox') : null;
+      const hostQueue = inbox && Array.isArray(inbox['next-turn']) ? inbox['next-turn'].length : 0;
+      const [busy, setBusy] = useState(false);
+      const [note, setNote] = useState(null);
+      const noteTimer = useRef(0);
+      // One release may already be draining the same queue from the panel or
+      // the page; handing it over twice would send every entry twice.
+      const release = useReleaseState();
+
+      useEffect(() => () => {
+        if (noteTimer.current) clearTimeout(noteTimer.current);
+      }, []);
+
+      if (entries.length === 0 && hostQueue === 0) return null;
+
+      /** Show one line of temporary feedback and let it fade. */
+      const report = (kind, text) => {
+        setNote({ kind, text });
+        if (noteTimer.current) clearTimeout(noteTimer.current);
+        noteTimer.current = typeof setTimeout === 'function'
+          ? setTimeout(() => setNote(null), kind === 'error' ? 6000 : 2600)
+          : 0;
+      };
+
+      /** Progress replaces any pending fade, so it cannot vanish mid-push. */
+      const showProgress = (text) => {
+        if (noteTimer.current) clearTimeout(noteTimer.current);
+        noteTimer.current = 0;
+        setNote({ kind: 'info', text });
+      };
+
+      /** Hand every queued pool entry to the host queue, in order. */
+      const push = async () => {
+        if (busy || release.active) return;
+        const direct = resolveDirectQueue(sessionId);
+        if (!direct) {
+          report('error', translate('dock.unavailable'));
+          return;
+        }
+        const batch = entries.slice();
+        if (batch.length === 0) return;
+        setBusy(true);
+        let sent = 0;
+        let failure = '';
+        const done = [];
+        try {
+          for (const entry of batch) {
+            const body = typeof entry.body === 'string' ? entry.body : '';
+            const images = normalizeImages(entry.images);
+            if (!body.trim() && images.length === 0) {
+              done.push(entry.key);
+              continue;
+            }
+            showProgress(translate('dock.pushing', { sent, total: batch.length }));
+            try {
+              await sendDirect(direct, sessionId, body, images);
+            } catch (error) {
+              failure = String((error && error.message) || error);
+              break;
+            }
+            sent += 1;
+            done.push(entry.key);
+          }
+        } finally {
+          poolActions.removeTrayKeys(done);
+          setBusy(false);
+        }
+        if (failure) report('error', failure);
+        else if (sent > 0) report('ok', translate('dock.pushed', { n: sent }));
+      };
+
+      return h(
+        React.Fragment,
+        null,
+        h('style', { key: 'css' }, CSS),
+        h(
+          'div',
+          {
+            key: 'dock',
+            className: 'pp-dock pp-root',
+            'data-pool': String(entries.length),
+            'data-host': String(hostQueue),
+            'data-busy': busy ? 'true' : 'false',
+          },
+          h('span', { className: 'pp-dock-mark' }, icon('pool')),
+          entries.length > 0
+            ? h('span', { className: 'pp-dock-count' }, translate('dock.pool', { n: entries.length }))
+            : null,
+          entries.length > 0 && hostQueue > 0 ? h('span', { className: 'pp-dock-sep', 'aria-hidden': 'true' }) : null,
+          hostQueue > 0
+            ? h('span', { className: 'pp-dock-host' }, translate('dock.host', { n: hostQueue }))
+            : null,
+          note
+            ? h('span', { className: 'pp-dock-note', 'data-kind': note.kind, role: 'status', 'aria-live': 'polite' }, note.text)
+            : null,
+          h('span', { className: 'pp-grow' }),
+          entries.length > 0
+            ? h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'pp-dock-btn',
+                  title: translate('dock.push', { n: entries.length }),
+                  'aria-label': translate('dock.push', { n: entries.length }),
+                  disabled: busy || release.active,
+                  onMouseDown: (event) => event.preventDefault(),
+                  onClick: () => {
+                    void push();
+                  },
+                },
+                translate('dock.pushShort'),
+              )
+            : null,
+        ),
+      );
+    }
+
     // ------------------------------------------------------------ sidebar icon
     function PromptPoolIcon(props) {
       const size = typeof props.size === 'number' && props.size > 0 ? props.size : 18;
@@ -2777,6 +3102,24 @@ window.__ModuleLoader__.load({
           },
         }),
       );
+    }
+
+    /** Image files carried by a paste gesture, for the annotation editor. */
+    function imageFilesFromClipboard(event) {
+      const data = event && event.clipboardData;
+      if (!data) return [];
+      const files = [];
+      if (data.items) {
+        for (const item of Array.from(data.items)) {
+          if (item.kind !== 'file') continue;
+          const file = item.getAsFile();
+          if (file && imageTypeOf(file)) files.push(file);
+        }
+      }
+      if (files.length === 0 && data.files) {
+        for (const file of Array.from(data.files)) if (imageTypeOf(file)) files.push(file);
+      }
+      return files;
     }
 
     /** Full-size preview state for one thumbnail click. */
@@ -3041,6 +3384,8 @@ window.__ModuleLoader__.load({
       const notesList = notesState.items
         .filter((note) => note.sessionId === activeSessionId)
         .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt));
+      const noteSelectionState = useNoteSelection();
+      const selectedNotes = notesForSelection(notesList, activeSessionId, noteSelectionState);
       const baseTabs = buildTabs(state.categories, workspaceList, state.settings, currentWorkspaceId);
       // The annotation tab is always present, so the feature stays discoverable.
       const tabs = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
@@ -3049,7 +3394,10 @@ window.__ModuleLoader__.load({
         ...tabCountsOf(state.items),
         notes: notesList.length,
       };
-      const [tab, setPageTab] = useState(() => pageTabState.get().id || 'all');
+      const [tab, setPageTab] = useState(() => {
+        const stored = pageTabState.get().id;
+        return stored && tabs.some((entry) => entry.id === stored) ? stored : fallbackTabFor(tabs);
+      });
       const setTab = (id) => {
         pageTabState.set({ id });
         setPageTab(id);
@@ -3065,6 +3413,7 @@ window.__ModuleLoader__.load({
       }, []);
       const [query, setQuery] = useState('');
       const [settingsOpen, setSettingsOpen] = useState(false);
+      const [reviewOpen, setReviewOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
@@ -3087,7 +3436,7 @@ window.__ModuleLoader__.load({
       // A stored tab can point at a group that was hidden or deleted since.
       useEffect(() => {
         if (tabs.some((entry) => entry.id === tab)) return;
-        setTab('all');
+        setTab(fallbackTabFor(tabs));
       }, [tabs, tab]);
       // A failed write outranks a transient toast: the change is not saved.
       const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
@@ -3139,7 +3488,7 @@ window.__ModuleLoader__.load({
         setPendingCategory(null);
         if (!target || target.indexOf('custom:') !== 0) return;
         poolActions.removeCategory(target.slice(7));
-        if (tab === target) setTab('all');
+        if (tab === target) setTab(fallbackTabFor(tabs.filter((entry) => entry.id !== target)));
       };
 
       const rail = workspaceRail(workspaces.items, state.settings, currentWorkspaceId);
@@ -3229,33 +3578,108 @@ window.__ModuleLoader__.load({
       };
 
       /** The page has no composer, so the mounted panel inserts the reply. */
-      const composeSessionNotes = () => {
+      const composeSessionNotes = (notes) => {
+        const chosen = Array.isArray(notes) ? notes : selectedNotes;
+        if (chosen.length === 0) {
+          flash({ kind: 'error', text: translate('note.noneSelected') });
+          return false;
+        }
         let result;
         try {
           result = bridge.request({ type: 'compose-notes' });
         } catch (_error) {
           return false;
         }
-        const ok = Boolean(result && result.ok);
-        if (ok && normalizeSettings(state.settings).noteKeepAfterDraft === false) {
-          notesActions.clearSession(activeSessionId);
-        }
-        return ok;
+        // The mounted panel owns the notes it composed, so it removes exactly
+        // those when the retention setting is off.
+        return Boolean(result && result.ok);
       };
 
       /** The page cannot write the composer, so the mounted panel inserts the note. */
       const insertNote = (note) => {
         let result;
         try {
-          result = bridge.request({ type: 'insert-text', text: composeNoteLine(note) });
+          result = bridge.request({ type: 'insert-text', text: composeNoteLine(note), images: note.images || [] });
         } catch (_error) {
           return false;
         }
         return Boolean(result && result.ok);
       };
 
+      const openReview = () => {
+        if (selectedNotes.length === 0) {
+          flash({ kind: 'error', text: translate('note.noneSelected') });
+          return;
+        }
+        setReviewOpen(true);
+      };
+
+      /** Move the unchecked to-dos into the current workspace's prompt pool. */
+      const moveReviewTodos = (review) => {
+        const ids = Array.isArray(review && review.parkedIds) ? review.parkedIds : [];
+        if (ids.length === 0) return 0;
+        const wanted = new Set(ids);
+        const notes = notesList.filter((note) => wanted.has(note.id));
+        if (notes.length === 0) return 0;
+        const group = reviewTodoGroup(currentWorkspaceId, workspaceList);
+        const now = Date.now();
+        for (const note of notes) {
+          poolActions.add({
+            id: uid(),
+            group,
+            title: draftTitle(note.body || note.quote),
+            body: composeNoteLine(note),
+            images: normalizeImages(note.images),
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+        const movedIds = notes.map((note) => note.id);
+        notesActions.removeMany(movedIds);
+        deselectNotes(activeSessionId, movedIds);
+        return movedIds.length;
+      };
+
+      const parkReviewTodos = async (review) => {
+        const moved = moveReviewTodos(review);
+        if (moved === 0) return { ok: false, reason: translate('status.storageFailed') };
+        setReviewOpen(false);
+        flash({ kind: 'ok', text: translate('note.review.parked', { n: moved }) });
+        return { ok: true };
+      };
+
+      /** Queue one reviewed batch through the mounted panel. */
+      const queueReview = async (review) => {
+        let result;
+        try {
+          result = await bridge.request({ type: 'queue-review', text: review.text, sessionId: activeSessionId, images: review.images });
+        } catch (error) {
+          result = { ok: false, reason: String((error && error.message) || error) };
+        }
+        if (!result || result.ok !== true) {
+          const reason = result && result.reason === 'unavailable'
+            ? translate('note.review.unsupported')
+            : result && result.reason;
+          return { ok: false, reason: reason || translate('note.review.unsupported') };
+        }
+        commitReviewBatch({ ...review, sessionId: activeSessionId });
+        const moved = moveReviewTodos(review);
+        setReviewOpen(false);
+        flash({
+          kind: 'ok',
+          text: moved > 0
+            ? translate('note.review.queuedParked', { id: review.batchId, n: moved })
+            : translate('note.review.queued', { id: review.batchId }),
+        });
+        return { ok: true };
+      };
+
       /** Store the session's annotations as one prompt, from the page header. */
       const storeNotesPrompt = (event) => {
+        if (selectedNotes.length === 0) {
+          flash({ kind: 'error', text: translate('note.noneSelected') });
+          return;
+        }
         const choices = captureChoices(state.categories, workspaceList, currentWorkspaceId, state.settings);
         const preferred = currentWorkspaceId && choices.some((entry) => entry.value === 'workspace:' + currentWorkspaceId)
           ? 'workspace:' + currentWorkspaceId
@@ -3278,18 +3702,18 @@ window.__ModuleLoader__.load({
           onPick: (group) => {
             closeNotePrompt();
             if (!group) return;
-            const text = composeNotesReply(notesList);
+            const text = composeNotesReply(selectedNotes);
             poolActions.add({
               id: uid(),
               group,
               title: draftTitle(text),
               body: text,
-              images: [],
+              images: imagesForNotes(selectedNotes),
               createdAt: Date.now(),
               updatedAt: Date.now(),
             });
             if (normalizeSettings(state.settings).noteKeepAfterStore === false) {
-              notesActions.clearSession(activeSessionId);
+              notesActions.removeMany(selectedNotes.map((note) => note.id));
             }
             const resolved = resolveGroup(group, state.categories, workspaceList);
             showToast(translate('note.composeStored', { group: resolved ? resolved.label : translate('row.noCategory') }), 'ok');
@@ -3462,14 +3886,28 @@ window.__ModuleLoader__.load({
           }),
           tab === 'notes'
             ? [
-                h('button', { key: 'store', type: 'button', className: 'pp-mini', title: translate('note.composeStoreHint'), onClick: storeNotesPrompt }, translate('note.composeStore')),
-                h('button', { key: 'draft', type: 'button', className: 'pp-mini', title: translate('note.composeHint'), onClick: composeSessionNotes }, translate('note.compose')),
+                h('button', {
+                  key: 'store',
+                  type: 'button',
+                  className: 'pp-mini',
+                  title: selectedNotes.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
+                  disabled: selectedNotes.length === 0,
+                  onClick: storeNotesPrompt,
+                }, translate('note.composeStore')),
+                h('button', {
+                  key: 'draft',
+                  type: 'button',
+                  className: 'pp-mini',
+                  title: selectedNotes.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
+                  disabled: selectedNotes.length === 0,
+                  onClick: openReview,
+                }, translate('note.compose')),
               ]
             : [
                 h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: create }, '＋ ', translate('page.new')),
                 h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
               ],
-          h(SettingsButton, { active: settingsOpen, onClick: () => setSettingsOpen(!settingsOpen) }),
+          h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
         ),
         h(
           'div',
@@ -3480,8 +3918,9 @@ window.__ModuleLoader__.load({
             active: tab,
             ...tabHandlers((next) => {
               setSettingsOpen(false);
+              setReviewOpen(false);
               setTab(next);
-            }, tab),
+            }, tab, fallbackTabFor(tabs)),
             onDelete: (id) => setPendingCategory(id),
           }),
         ),
@@ -3604,6 +4043,15 @@ window.__ModuleLoader__.load({
                   : null,
               )
             : null,
+          !settingsOpen && tab === 'notes' && reviewOpen
+            ? renderReviewCard({
+                notes: notesList,
+                sessionId: activeSessionId,
+                onClose: () => setReviewOpen(false),
+                onQueue: queueReview,
+                onPark: parkReviewTodos,
+              })
+            : null,
           settingsOpen || tab === 'notes'
             ? null
             : renderTrayCard({
@@ -3622,7 +4070,7 @@ window.__ModuleLoader__.load({
                 onOpenImage: openImage,
                 onError: (text) => flash({ kind: 'error', text }),
               }),
-        h(ImageLightbox, { preview, onClose: closeImage }),
+          h(ImageLightbox, { preview, onClose: closeImage }),
         ),
         renderReleaseOverlay({ state: releaseInfo, onStop: () => bridge.request({ type: 'stop' }) }),
       );
@@ -3763,9 +4211,6 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-set-group pp-set-card', style: { display: section === 'notes' ? '' : 'none' } },
           h('div', { className: 'pp-hint pp-set-intro' }, translate('settings.notesIntro')),
-          h('div', { className: 'pp-set-divider' }),
-          check('noteKeepAfterDraft', 'settings.notesKeepDraft', 'settings.notesKeepDraftHint'),
-          h('div', { className: 'pp-set-divider' }),
           check('noteKeepAfterStore', 'settings.notesKeepStore', 'settings.notesKeepStoreHint'),
         ),
         h(
@@ -3902,6 +4347,28 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-set-group pp-set-card', style: { display: section === 'order' ? '' : 'none' } },
           h('div', { className: 'pp-set-label' }, translate('settings.table')),
+          h(
+            'div',
+            { className: 'pp-set-item', style: { marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid var(--pp-line-2)' } },
+            h(
+              'label',
+              { className: 'pp-set-row' },
+              h('input', {
+                type: 'checkbox',
+                name: 'pp-show-all-tab',
+                checked: settings.showAllTab !== false,
+                onChange: () => {
+                  const next = settings.showAllTab === false;
+                  poolActions.setSetting('showAllTab', next);
+                  // A default tab that pointed at the hidden "all" tab would
+                  // otherwise leave the preference picker on a missing option.
+                  if (!next && settings.defaultTab === 'tab:all') poolActions.setSetting('defaultTab', '');
+                },
+              }),
+              h('span', null, translate('settings.showAllTab')),
+            ),
+            h('div', { className: 'pp-hint pp-set-hint' }, translate('settings.showAllTabHint')),
+          ),
           h('div', { className: 'pp-hint pp-set-hint' }, translate('settings.tableHint')),
           h(
             'div',
@@ -4320,6 +4787,9 @@ window.__ModuleLoader__.load({
      */
     const NOTES_KEY = 'dsh.prompt-pool.notes.v1';
     const NOTES_SINGLETON = '__dshPromptPoolNotesV1';
+    /** Review batches sent to the session queue; the note records point here. */
+    const BATCHES_KEY = 'dsh.prompt-pool.batches.v1';
+    const BATCHES_SINGLETON = '__dshPromptPoolBatchesV1';
     /** One Highlight object carries every annotated range. */
     const NOTE_HIGHLIGHT = 'prompt-pool-note';
     /** The always-open note card: fixed width so the gutter test is exact. */
@@ -4327,30 +4797,126 @@ window.__ModuleLoader__.load({
     /** Tallest a card can get, for the occlusion test against a floating panel. */
 
     /** Bumped when badge placement changes, so old chips are rebuilt in place. */
-    const NOTE_CHIP_VERSION = '3';
+    const NOTE_CHIP_VERSION = '4';
 
     /** Annotation kinds: the glyph, tint and label drive the badge and highlight. */
     const NOTE_KINDS = [
-      { id: 'comment', icon: '✎', tint: '255,191,36', label: 'note.kind.comment' },
-      { id: 'question', icon: '?', tint: '244,114,114', label: 'note.kind.question' },
-      { id: 'agree', icon: '✓', tint: '74,222,128', label: 'note.kind.agree' },
-      { id: 'disagree', icon: '✕', tint: '239,68,68', label: 'note.kind.disagree' },
-      { id: 'idea', icon: '💡', tint: '96,165,250', label: 'note.kind.idea' },
-      { id: 'todo', icon: '□', tint: '251,191,36', label: 'note.kind.todo' },
+      { id: 'agree', icon: '✓', tint: '34,197,94', ink: '22,163,74', prefix: 'Agree-', label: 'note.kind.agree' },
+      { id: 'disagree', icon: '✕', tint: '220,38,38', ink: '185,28,28', prefix: 'Disagree-', label: 'note.kind.disagree' },
+      { id: 'question', icon: '?', tint: '249,115,22', ink: '234,88,12', prefix: 'Question-', label: 'note.kind.question' },
+      { id: 'comment', icon: '✎', tint: '139,92,246', ink: '124,58,237', prefix: 'Comment-', label: 'note.kind.comment' },
+      { id: 'idea', icon: '💡', tint: '59,130,246', ink: '37,99,235', prefix: 'Idea-', label: 'note.kind.idea' },
+      { id: 'supplement', icon: 'ℹ', tint: '20,184,166', ink: '13,148,136', prefix: 'Supplement-', label: 'note.kind.supplement' },
+      { id: 'todo', icon: '□', tint: '250,204,21', ink: '202,138,4', prefix: 'Todo-', label: 'note.kind.todo' },
     ];
     const NOTE_KIND_IDS = NOTE_KINDS.map((kind) => kind.id);
-    const NOTE_KIND_DEFAULT = 'comment';
-    /** Inline annotations are a short badge: ten characters at most. */
-    const NOTE_BODY_MAX = 10;
+    const NOTE_KIND_DEFAULT = 'agree';
+    /**
+     * The annotation body budget in half-width cells, shared by the editor and
+     * the inline badge: 100 full-width characters (CJK, full-width punctuation,
+     * emoji) or 200 half-width ones, mixed text pro rata.
+     */
+    const NOTE_BODY_MAX = 200;
+    /** Zero-width code points: combining marks and emoji joiners/variations. */
+    const NOTE_ZERO_WIDTH = /[\u200b-\u200f\u2060\ufe0e\ufe0f]|\p{M}/u;
+    /** Code points that take two cells: East Asian wide/fullwidth and emoji. */
+    const NOTE_WIDE = /[\u1100-\u115f\u2e80-\u303e\u3041-\u33ff\u3400-\u4dbf\u4e00-\u9fff\ua000-\ua4cf\ua960-\ua97f\uac00-\ud7a3\uf900-\ufaff\ufe10-\ufe19\ufe30-\ufe6f\uff00-\uff60\uffe0-\uffe6]|\p{Emoji_Presentation}/u;
 
     function noteKind(kind) {
-      return NOTE_KINDS.find((entry) => entry.id === kind) || NOTE_KINDS[0];
+      return NOTE_KINDS.find((entry) => entry.id === kind)
+        || NOTE_KINDS.find((entry) => entry.id === NOTE_KIND_DEFAULT)
+        || NOTE_KINDS[0];
     }
 
-    /** The visible badge text, whitespace-collapsed and capped. */
+    /** Half-width cells one code point occupies in the badge. */
+    function noteCharCells(char) {
+      if (!char) return 0;
+      if (NOTE_ZERO_WIDTH.test(char)) return 0;
+      return NOTE_WIDE.test(char) ? 2 : 1;
+    }
+
+    /** The width of one note body in half-width cells. */
+    function noteBodyWidth(body) {
+      let width = 0;
+      for (const char of String(body || '')) width += noteCharCells(char);
+      return width;
+    }
+
+    /** Cut a string to at most `limit` half-width cells without splitting a character. */
+    function clampNoteText(value, limit) {
+      let width = 0;
+      let text = '';
+      const max = Math.max(0, limit);
+      for (const char of String(value || '')) {
+        const cells = noteCharCells(char);
+        if (width + cells > max) break;
+        text += char;
+        width += cells;
+      }
+      return text;
+    }
+
+    /** Cut a note body to the badge budget without splitting a character. */
+    function clampNoteBody(body) {
+      return clampNoteText(body, NOTE_BODY_MAX);
+    }
+
+    /**
+     * Apply one textarea edit without silently trimming the existing body.
+     * A pure insertion that overflows keeps the old text and takes only the
+     * part that still fits; a partial replacement is rejected rather than
+     * cutting the old tail. A full replacement (select all, then paste) takes
+     * as much of the new text as the budget allows.
+     */
+    function mergeNoteBodyInput(previous, next) {
+      const prev = String(previous || '');
+      const value = String(next || '');
+      if (noteBodyWidth(value) <= NOTE_BODY_MAX) return value;
+      const before = Array.from(prev);
+      const after = Array.from(value);
+      // The edit is one contiguous replacement: common head, changed middle,
+      // common tail. This is what typing, pasting and IME composition produce.
+      let head = 0;
+      while (head < before.length && head < after.length && before[head] === after[head]) head += 1;
+      let tail = 0;
+      while (
+        tail < before.length - head
+        && tail < after.length - head
+        && before[before.length - 1 - tail] === after[after.length - 1 - tail]
+      ) tail += 1;
+      const removed = before.slice(head, before.length - tail);
+      const inserted = after.slice(head, after.length - tail).join('');
+      // Select all + paste: the old body is intentionally gone, so the pasted
+      // text may be trimmed instead of being swallowed whole.
+      if (removed.length === before.length) return clampNoteBody(value);
+      const room = NOTE_BODY_MAX - noteBodyWidth(prev) + noteBodyWidth(removed.join(''));
+      const allowed = clampNoteText(inserted, room);
+      // A replacement has to fit untouched; a pure insertion may take the
+      // prefix that fits while the existing text stays intact.
+      if (removed.length > 0 && Array.from(allowed).length !== Array.from(inserted).length) return prev;
+      const result = [
+        ...before.slice(0, head),
+        ...Array.from(allowed),
+        ...before.slice(head + removed.length),
+      ].join('');
+      return clampNoteBody(result);
+    }
+
+    /** The visible badge text, whitespace-collapsed and capped by display width. */
     function noteBodyText(body) {
       const text = String(body || '').replace(/\s+/g, ' ').trim();
-      return text.length > NOTE_BODY_MAX ? text.slice(0, NOTE_BODY_MAX) + '…' : text;
+      if (!text) return '';
+      const clipped = clampNoteBody(text);
+      return clipped.length < text.length ? clipped.replace(/\s+$/, '') + '…' : clipped;
+    }
+
+    /**
+     * Whether the overlay has anything to paint. A draft counts on its own:
+     * the first annotation has no stored note yet, but its passage must still
+     * be underlined while the bubble is open.
+     */
+    function noteHighlightActive(noteCount, draft) {
+      return noteCount > 0 || Boolean(draft);
     }
 
     /** Keep only fields the annotation UI reads; anything else is dropped. */
@@ -4375,7 +4941,12 @@ window.__ModuleLoader__.load({
         // visible with a "stored" marker instead of deleting the record.
         promotedGroup: typeof raw.promotedGroup === 'string' ? raw.promotedGroup : '',
         promotedAt: Number.isFinite(Number(raw.promotedAt)) ? Number(raw.promotedAt) : 0,
+        // Legacy batch markers kept for old records; the review flow removes
+        // processed notes instead of showing a handled state.
+        lastBatchId: typeof raw.lastBatchId === 'string' ? raw.lastBatchId : '',
+        lastQueuedAt: Number.isFinite(Number(raw.lastQueuedAt)) ? Number(raw.lastQueuedAt) : 0,
         body: typeof raw.body === 'string' ? raw.body : '',
+        images: normalizeImages(raw.images),
         createdAt: Number.isFinite(Number(raw.createdAt)) ? Number(raw.createdAt) : Date.now(),
         updatedAt: Number.isFinite(Number(raw.updatedAt)) ? Number(raw.updatedAt) : Date.now(),
       };
@@ -4421,10 +4992,33 @@ window.__ModuleLoader__.load({
           items: state.items.map((note) => (note.id === id ? { ...note, ...fields, updatedAt: Date.now() } : note)),
         }));
       },
+      /** Apply the same fields to several notes in one write. */
+      patchMany(ids, fields) {
+        const targets = new Set(Array.isArray(ids) ? ids : []);
+        if (targets.size === 0) return;
+        mutateNotes((state) => {
+          let touched = false;
+          const items = state.items.map((note) => {
+            if (!targets.has(note.id)) return note;
+            touched = true;
+            return { ...note, ...fields, updatedAt: Date.now() };
+          });
+          return touched ? { ...state, items } : null;
+        });
+      },
       remove(id) {
         mutateNotes((state) => (state.items.some((note) => note.id === id)
           ? { ...state, items: state.items.filter((note) => note.id !== id) }
           : null));
+      },
+      /** Drop several notes in one write; only the picked ones leave the list. */
+      removeMany(ids) {
+        const drop = new Set(Array.isArray(ids) ? ids : []);
+        if (drop.size === 0) return;
+        mutateNotes((state) => {
+          const items = state.items.filter((note) => !drop.has(note.id));
+          return items.length === state.items.length ? null : { ...state, items };
+        });
       },
       clearSession(sessionId) {
         mutateNotes((state) => {
@@ -4444,6 +5038,55 @@ window.__ModuleLoader__.load({
           });
           return touched ? { ...state, items } : null;
         });
+      },
+    };
+
+    function normalizeBatch(raw) {
+      if (!raw || typeof raw !== 'object' || typeof raw.id !== 'string' || !raw.id) return null;
+      return {
+        id: raw.id,
+        sessionId: typeof raw.sessionId === 'string' ? raw.sessionId : '',
+        noteIds: Array.isArray(raw.noteIds) ? raw.noteIds.filter((id) => typeof id === 'string') : [],
+        parkedIds: Array.isArray(raw.parkedIds) ? raw.parkedIds.filter((id) => typeof id === 'string') : [],
+        immediateIds: Array.isArray(raw.immediateIds) ? raw.immediateIds.filter((id) => typeof id === 'string') : [],
+        mode: ['answer', 'decide', 'change', 'review'].indexOf(raw.mode) >= 0 ? raw.mode : 'review',
+        text: typeof raw.text === 'string' ? raw.text : '',
+        images: normalizeImages(raw.images, Number.MAX_SAFE_INTEGER),
+        createdAt: Number.isFinite(Number(raw.createdAt)) ? Number(raw.createdAt) : Date.now(),
+        queuedAt: Number.isFinite(Number(raw.queuedAt)) ? Number(raw.queuedAt) : 0,
+        state: raw.state === 'inserted' ? 'inserted' : 'queued',
+      };
+    }
+
+    function loadBatches() {
+      try {
+        const raw = localStorage.getItem(BATCHES_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        const items = Array.isArray(parsed && parsed.items) ? parsed.items.map(normalizeBatch).filter(Boolean) : [];
+        return { version: 1, items };
+      } catch (_error) {
+        return { version: 1, items: [] };
+      }
+    }
+
+    const batches = (() => {
+      if (typeof window === 'undefined') return createStore({ version: 1, items: [] });
+      if (!window[BATCHES_SINGLETON]) window[BATCHES_SINGLETON] = createStore(loadBatches());
+      return window[BATCHES_SINGLETON];
+    })();
+
+    const batchesActions = {
+      add(batch) {
+        const record = normalizeBatch(batch);
+        if (!record) return null;
+        const next = { version: 1, items: [record, ...batches.get().items].slice(0, 40) };
+        batches.set(next);
+        try {
+          localStorage.setItem(BATCHES_KEY, JSON.stringify(next));
+        } catch (_error) {
+          /* the note's batch marker is still kept in memory */
+        }
+        return record;
       },
     };
 
@@ -4488,8 +5131,8 @@ window.__ModuleLoader__.load({
     })();
     /** A newly captured anchor waiting for the overlay to open its editor. */
     const noteDraft = (() => {
-      if (typeof window === 'undefined') return createStore({ anchor: null, sessionId: '', token: 0 });
-      if (!window.__dshPromptPoolNotesDraftV1) window.__dshPromptPoolNotesDraftV1 = createStore({ anchor: null, sessionId: '', token: 0 });
+      if (typeof window === 'undefined') return createStore({ anchor: null, sessionId: '', token: 0, kind: '' });
+      if (!window.__dshPromptPoolNotesDraftV1) window.__dshPromptPoolNotesDraftV1 = createStore({ anchor: null, sessionId: '', token: 0, kind: '' });
       return window.__dshPromptPoolNotesDraftV1;
     })();
     /** A request to scroll to one annotation and open it. */
@@ -4497,6 +5140,18 @@ window.__ModuleLoader__.load({
       if (typeof window === 'undefined') return createStore({ id: '', token: 0 });
       if (!window.__dshPromptPoolNotesFocusV1) window.__dshPromptPoolNotesFocusV1 = createStore({ id: '', token: 0 });
       return window.__dshPromptPoolNotesFocusV1;
+    })();
+
+    /**
+     * Notes unchecked from the bulk draft/save actions. Keeping the excluded
+     * ids instead of the picked ones means a new note starts selected, and a
+     * session switch starts from "everything selected" without stale picks.
+     */
+    const noteSelection = (() => {
+      const empty = { sessionId: '', excluded: [] };
+      if (typeof window === 'undefined') return createStore(empty);
+      if (!window.__dshPromptPoolNoteSelectionV1) window.__dshPromptPoolNoteSelectionV1 = createStore(empty);
+      return window.__dshPromptPoolNoteSelectionV1;
     })();
 
     /**
@@ -4558,6 +5213,7 @@ window.__ModuleLoader__.load({
     const useNotePrompt = () => useSyncExternalStore(notePrompt.subscribe, notePrompt.get, notePrompt.get);
     const useNoteConfirm = () => useSyncExternalStore(noteConfirm.subscribe, noteConfirm.get, noteConfirm.get);
     const useNoteStatus = () => useSyncExternalStore(noteStatus.subscribe, noteStatus.get, noteStatus.get);
+    const useNoteSelection = () => useSyncExternalStore(noteSelection.subscribe, noteSelection.get, noteSelection.get);
 
     /** One line of quote text for a row, a pin tooltip or the composed reply. */
     function noteQuoteText(quote, limit) {
@@ -4582,6 +5238,140 @@ window.__ModuleLoader__.load({
         .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt))
         .map((note, index) => `${index + 1}. ${composeNoteLine(note)}`)
         .join('\n');
+    }
+
+    const REVIEW_GROUP_PROMPTS = {
+      question: 'note.review.group.question',
+      comment: 'note.review.group.comment',
+      agree: 'note.review.group.agree',
+      disagree: 'note.review.group.disagree',
+      idea: 'note.review.group.idea',
+      supplement: 'note.review.group.supplement',
+      todo: 'note.review.group.todo',
+    };
+    /** Kinds that can be authorized to implement from the review card. */
+    const REVIEW_IMMEDIATE_LABELS = {
+      comment: 'note.review.immediate.comment',
+      agree: 'note.review.immediate.agree',
+      idea: 'note.review.immediate.idea',
+    };
+    /** The conclusion written into the prompt for each authorized kind. */
+    const REVIEW_IMMEDIATE_MARKERS = {
+      comment: 'note.review.immediateMark.comment',
+      agree: 'note.review.immediateMark.agree',
+      idea: 'note.review.immediateMark.idea',
+      todo: 'note.review.immediateMark.todo',
+    };
+    let batchSequence = 0;
+
+    /** The workspace group as the parking place for unexecuted to-dos. */
+    function reviewTodoGroup(currentWorkspaceId, workspaces) {
+      const list = Array.isArray(workspaces) ? workspaces : [];
+      if (currentWorkspaceId && list.some((entry) => entry && entry.workspaceId === currentWorkspaceId)) {
+        return 'workspace:' + currentWorkspaceId;
+      }
+      return BUILTIN_GROUP.note;
+    }
+
+    /** A readable batch id; the sequence keeps two batches in one second apart. */
+    function newBatchId(now) {
+      const date = new Date(Number.isFinite(Number(now)) ? Number(now) : Date.now());
+      const pad = (value) => String(value).padStart(2, '0');
+      batchSequence = (batchSequence + 1) % 100;
+      return `B-${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`
+        + `-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}-${pad(batchSequence)}`;
+    }
+
+    /** The review prompt: a type-specific response contract plus the notes. */
+    function buildReviewPrompt(list, batchId, images, immediateIds) {
+      const immediate = new Set(Array.isArray(immediateIds) ? immediateIds : []);
+      const lines = [
+        translate('note.review.heading', { id: batchId }),
+        translate('note.review.intro'),
+        '',
+      ];
+      const attachmentCount = Array.isArray(images) ? images.length : 0;
+      if (attachmentCount > 0) lines.splice(2, 0, translate('note.review.attachments', { n: attachmentCount }));
+      for (const kind of NOTE_KINDS) {
+        const group = list
+          .filter((note) => note.kind === kind.id)
+          .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt));
+        if (group.length === 0) continue;
+        lines.push(`【${translate(kind.label)}】`);
+        lines.push(translate(REVIEW_GROUP_PROMPTS[kind.id]));
+        group.forEach((note, index) => {
+          const quote = noteQuoteText(note.quote, 80);
+          const body = String(note.body || '').replace(/\s+/g, ' ').trim();
+          const markerKey = REVIEW_IMMEDIATE_MARKERS[kind.id];
+          const mark = immediate.has(note.id) && markerKey
+            ? ' ' + translate(markerKey)
+            : '';
+          lines.push(`${kind.prefix}${index + 1}.${mark} 「${quote}」${body ? '：' + body : ''}`);
+        });
+        lines.push('');
+      }
+      return lines.join('\n').trim();
+    }
+
+    /** Record the batch and remove its processed notes. */
+    function commitReviewBatch(review) {
+      const now = Date.now();
+      const record = batchesActions.add({
+        id: review.batchId,
+        sessionId: review.sessionId,
+        noteIds: review.noteIds,
+        parkedIds: Array.isArray(review.parkedIds) ? review.parkedIds : [],
+        immediateIds: Array.isArray(review.immediateIds) ? review.immediateIds : [],
+        mode: 'review',
+        text: review.text,
+        // The bytes live in IndexedDB; keep only their identity in the batch log.
+        images: normalizeImages(review.images, Number.MAX_SAFE_INTEGER).map((image) => ({ ...image, thumb: '' })),
+        createdAt: review.createdAt || now,
+        queuedAt: now,
+        state: 'queued',
+      });
+      notesActions.removeMany(review.noteIds);
+      deselectNotes(review.sessionId, review.noteIds);
+      return record;
+    }
+
+    /** The selection for one session; another session starts with everything checked. */
+    function selectionForSession(selection, sessionId) {
+      const id = String(sessionId || '');
+      return selection && selection.sessionId === id ? selection : { sessionId: id, excluded: [] };
+    }
+
+    /** Whether one note is checked for the bulk draft/save actions. */
+    function noteSelected(selection, sessionId, noteId) {
+      return selectionForSession(selection, sessionId).excluded.indexOf(noteId) < 0;
+    }
+
+    /** The checked notes, in the list's order. */
+    function notesForSelection(list, sessionId, selection) {
+      const excluded = selectionForSession(selection, sessionId).excluded;
+      return list.filter((note) => excluded.indexOf(note.id) < 0);
+    }
+
+    /** Check or uncheck one note; switching sessions drops the old picks. */
+    function toggleNoteSelected(sessionId, noteId) {
+      const session = String(sessionId || '');
+      const current = selectionForSession(noteSelection.get(), session);
+      const at = current.excluded.indexOf(noteId);
+      const excluded = at >= 0
+        ? current.excluded.filter((entry) => entry !== noteId)
+        : [...current.excluded, noteId];
+      noteSelection.set({ sessionId: session, excluded });
+    }
+
+    /** Uncheck a batch after it went into the session queue. */
+    function deselectNotes(sessionId, noteIds) {
+      const ids = Array.isArray(noteIds) ? noteIds.filter(Boolean) : [];
+      if (ids.length === 0) return;
+      const session = String(sessionId || '');
+      const current = selectionForSession(noteSelection.get(), session);
+      const excluded = current.excluded.slice();
+      for (const id of ids) if (excluded.indexOf(id) < 0) excluded.push(id);
+      noteSelection.set({ sessionId: session, excluded });
     }
 
     /** The selection's start as an index into the element's plain textContent. */
@@ -4637,12 +5427,20 @@ window.__ModuleLoader__.load({
         const startElement = startNode && startNode.nodeType === 1 ? startNode : startNode && startNode.parentElement;
         const endNode = range.endContainer;
         const endElement = endNode && endNode.nodeType === 1 ? endNode : endNode && endNode.parentElement;
+        const commonNode = range.commonAncestorContainer;
+        const commonElement = commonNode && commonNode.nodeType === 1 ? commonNode : commonNode && commonNode.parentElement;
         if (!startElement || !startElement.closest || !endElement || !endElement.closest) return null;
-        const source = startElement.closest('[data-text-interaction-source]');
-        if (!source || endElement.closest('[data-text-interaction-source]') !== source) return null;
-        const row = source.closest('[data-chat-flow-kind]');
+        const startSource = startElement.closest('[data-text-interaction-source]');
+        const endSource = endElement.closest('[data-text-interaction-source]');
+        const source = startSource && endSource && startSource === endSource
+          ? startSource
+          : (commonElement && commonElement.closest ? commonElement.closest('[data-text-interaction-source]') : null);
+        if (!source) return null;
+        const row = source.closest('[data-chat-flow-kind]')
+          || (commonElement && commonElement.closest ? commonElement.closest('[data-chat-flow-kind]') : null);
         if (!row || row.getAttribute('data-chat-flow-kind') !== 'assistant-step') return null;
-        const keyed = source.closest('[data-chat-node-key]');
+        const keyed = source.closest('[data-chat-node-key]')
+          || (row.closest ? row.closest('[data-chat-node-key]') : null);
         const nodeKey = keyed ? keyed.getAttribute('data-chat-node-key') || '' : '';
         if (!nodeKey) return null;
         const rawQuote = range.toString();
@@ -4880,6 +5678,8 @@ window.__ModuleLoader__.load({
       const [kind, setKind] = useState(NOTE_KIND_DEFAULT);
       const [missing, setMissing] = useState(false);
       const [anchorPoint, setAnchorPoint] = useState(null);
+      const [images, setImages] = useState([]);
+      const { preview, openImage, closeImage } = useImagePreview();
       const bubbleRef = useRef(null);
       const frameRef = useRef(0);
       const sessionId = view.sessionId;
@@ -4892,6 +5692,7 @@ window.__ModuleLoader__.load({
       // before anything is saved, and dropped again when the bubble closes.
       const draftRef = useRef(null);
       draftRef.current = editing ? { id: editing.id || '', anchor: editing.anchor || null, kind } : null;
+      const draftOpen = draftRef.current !== null;
       const highlightOn = !pool.settings || pool.settings.notesHighlight !== false;
       const highlightRef = useRef(highlightOn);
       highlightRef.current = highlightOn;
@@ -5024,7 +5825,11 @@ window.__ModuleLoader__.load({
       const measure = useCallback(() => {
         const list = notesRef.current;
         const root = noteChatRoot(sessionId);
-        if (!root || list.length === 0) {
+        const draftNote = draftRef.current;
+        // A new note has no stored record yet, so the draft must keep the
+        // measure alive on its own; otherwise the first bubble would not paint
+        // its passage until Save.
+        if (!root || !noteHighlightActive(list.length, draftNote)) {
           applyNoteHighlights([]);
           return;
         }
@@ -5035,7 +5840,6 @@ window.__ModuleLoader__.load({
         }
         // The open bubble's passage is underlined immediately, following the
         // pending kind until Save or Cancel.
-        const draftNote = draftRef.current;
         if (draftNote) {
           if (draftNote.id) {
             const at = items.findIndex((item) => item.id === draftNote.id);
@@ -5057,7 +5861,7 @@ window.__ModuleLoader__.load({
       useEffect(() => {
         if (typeof document === 'undefined') return undefined;
         const root = noteChatRoot(sessionId);
-        if (!root || notesRef.current.length === 0) {
+        if (!root || !noteHighlightActive(notesRef.current.length, draftOpen)) {
           applyNoteHighlights([]);
           return undefined;
         }
@@ -5089,7 +5893,7 @@ window.__ModuleLoader__.load({
           if (frameRef.current && typeof window !== 'undefined' && window.cancelAnimationFrame) window.cancelAnimationFrame(frameRef.current);
           frameRef.current = 0;
         };
-      }, [measure, sessionId, sessionNotes.length]);
+      }, [measure, sessionId, sessionNotes.length, draftOpen]);
 
       // Adding, editing or deleting a note redraws the inline badges; the text
       // itself never changes.
@@ -5101,7 +5905,8 @@ window.__ModuleLoader__.load({
         if (!draft.anchor || (draft.sessionId && draft.sessionId !== sessionId)) return;
         setEditing({ id: '', anchor: draft.anchor, body: '' });
         setBody('');
-        setKind(NOTE_KIND_DEFAULT);
+        setKind(NOTE_KIND_IDS.indexOf(draft.kind) >= 0 ? draft.kind : NOTE_KIND_DEFAULT);
+        setImages([]);
         setMissing(false);
         // The bubble follows the passage, so the note is written where it belongs.
         const root = noteChatRoot(sessionId);
@@ -5116,8 +5921,8 @@ window.__ModuleLoader__.load({
         } else {
           setAnchorPoint(null);
         }
-        noteDraft.set({ anchor: null, sessionId: '', token: 0 });
-      }, [draft.anchor, draft.sessionId, draft.token, sessionId]);
+        noteDraft.set({ anchor: null, sessionId: '', token: 0, kind: '' });
+      }, [draft.anchor, draft.sessionId, draft.token, draft.kind, sessionId]);
 
       // The open bubble's passage is underlined while it is being written; a
       // kind switch re-tints it live instead of waiting for Save.
@@ -5169,6 +5974,7 @@ window.__ModuleLoader__.load({
         }
         setEditing({ id: note.id, anchor: null, body: note.body });
         setBody(note.body);
+        setImages(normalizeImages(note.images));
         setMissing(!range);
         if (range) {
           setAnchorPoint({ x: range.getBoundingClientRect().right, y: Math.round(range.getBoundingClientRect().top + range.getBoundingClientRect().height / 2) });
@@ -5202,6 +6008,7 @@ window.__ModuleLoader__.load({
         setEditing({ id, anchor: null, body: note.body });
         setBody(note.body);
         setKind(noteKind(note.kind).id);
+        setImages(normalizeImages(note.images));
         setMissing(false);
         const root = noteChatRoot(sessionId);
         const range = root ? resolveNoteRange(note, root) : null;
@@ -5216,15 +6023,17 @@ window.__ModuleLoader__.load({
       const cancelEditing = () => {
         setEditing(null);
         setBody('');
+        setImages([]);
         setMissing(false);
         setAnchorPoint(null);
       };
 
       const save = () => {
         if (!editing) return;
-        const value = body.trim();
+        const value = clampNoteBody(body.trim());
+        const keptImages = normalizeImages(images);
         if (editing.id) {
-          notesActions.patch(editing.id, { body: value, kind });
+          notesActions.patch(editing.id, { body: value, kind, images: keptImages });
         } else if (editing.anchor) {
           notesActions.add({
             id: uid(),
@@ -5237,12 +6046,14 @@ window.__ModuleLoader__.load({
             order: editing.anchor.order,
             kind,
             body: value,
+            images: keptImages,
             createdAt: Date.now(),
             updatedAt: Date.now(),
           });
         }
         setEditing(null);
         setBody('');
+        setImages([]);
         setAnchorPoint(null);
       };
 
@@ -5251,10 +6062,12 @@ window.__ModuleLoader__.load({
         notesActions.remove(editing.id);
         setEditing(null);
         setBody('');
+        setImages([]);
         setAnchorPoint(null);
       };
 
-      // Clicking anywhere else saves a non-empty note and drops an empty draft.
+      // Clicking anywhere else saves a note with text or images and drops an
+      // otherwise empty draft.
       useEffect(() => {
         if (!editing || typeof document === 'undefined') return undefined;
         const onDown = (event) => {
@@ -5262,7 +6075,7 @@ window.__ModuleLoader__.load({
           if (bubble && event.target instanceof Node && bubble.contains(event.target)) return;
           const element = event.target instanceof Element ? event.target : null;
           if (element && element.closest && element.closest('.pp-note-prompt')) return;
-          if (body.trim()) save();
+          if (body.trim() || images.length > 0) save();
           else cancelEditing();
         };
         document.addEventListener('pointerdown', onDown, true);
@@ -5302,9 +6115,13 @@ window.__ModuleLoader__.load({
               ? right
               : Math.max(margin, point.x - width - 14);
             const top = Math.min(Math.max(margin, point.y - 24), Math.max(margin, viewportHeight - 250));
+            // The quote can now take several lines; cap the card to the room
+            // below its top edge so it scrolls instead of leaving the viewport.
+            const maxHeight = Math.max(180, Math.round(viewportHeight - top - margin));
             return {
               left: Math.round(Math.max(margin, Math.min(left, viewportWidth - width - margin))) + 'px',
               top: Math.round(top) + 'px',
+              maxHeight: maxHeight + 'px',
             };
           })()
         : { left: '50%', top: '38%', transform: 'translate(-50%, -50%)' };
@@ -5407,7 +6224,7 @@ window.__ModuleLoader__.load({
                 key: 'bubble',
                 ref: bubbleRef,
                 className: 'pp-note-bubble',
-                style: { ...bubbleStyle, '--pp-bubble-tint': noteKind(kind).tint },
+                style: { ...bubbleStyle, '--pp-bubble-tint': noteKind(kind).tint, '--pp-bubble-ink': noteKind(kind).ink },
                 'data-kind': kind,
                 onPointerDown: (event) => event.stopPropagation(),
               },
@@ -5415,7 +6232,7 @@ window.__ModuleLoader__.load({
                 'div',
                 { className: 'pp-note-bubble-quote' },
                 h('span', { className: 'pp-note-bubble-quote-icon' }, noteKind(kind).icon),
-                noteQuoteText(editingNote ? editingNote.quote : editing.anchor.quote, 10),
+                noteQuoteText(editingNote ? editingNote.quote : editing.anchor.quote, 80),
               ),
               missing
                 ? h(
@@ -5445,11 +6262,25 @@ window.__ModuleLoader__.load({
                 className: 'pp-note-input',
                 value: body,
                 rows: 2,
-                maxLength: NOTE_BODY_MAX,
                 placeholder: translate('note.placeholder'),
                 autoFocus: true,
-                onChange: (event) => setBody(event.target.value),
+                onChange: (event) => {
+                  const next = event.target.value;
+                  setBody((current) => mergeNoteBodyInput(current, next));
+                },
+                onPaste: (event) => {
+                  const files = imageFilesFromClipboard(event);
+                  if (files.length === 0) return;
+                  event.preventDefault();
+                  appendImageAssets(files, images, (text) => showToast(text, 'error')).then(setImages);
+                },
                 onKeyDown: onEditorKeyDown,
+              }),
+              h(ImagePicker, {
+                images,
+                onChange: setImages,
+                onOpen: openImage,
+                onError: (text) => showToast(text, 'error'),
               }),
               h(
                 'div',
@@ -5468,8 +6299,8 @@ window.__ModuleLoader__.load({
                   : null,
                 h(
                   'span',
-                  { key: 'limit', className: 'pp-note-limit' },
-                  h('span', { className: 'pp-note-limit-count' }, `${body.trim().length}/${NOTE_BODY_MAX}`),
+                  { key: 'limit', className: 'pp-note-limit', title: translate('note.limitHint') },
+                  h('span', { className: 'pp-note-limit-count' }, `${noteBodyWidth(body.trim())}/${NOTE_BODY_MAX}`),
                 ),
                 h(
                   'div',
@@ -5484,6 +6315,7 @@ window.__ModuleLoader__.load({
               ),
             )
           : null,
+        h(ImageLightbox, { key: 'lightbox', preview, onClose: closeImage }),
       );
     }
 
@@ -5554,6 +6386,9 @@ window.__ModuleLoader__.load({
       const workspaceList = Array.isArray(props.workspaces) ? props.workspaces : [];
       const currentWorkspaceId = typeof props.currentWorkspaceId === 'string' ? props.currentWorkspaceId : '';
       const filter = typeof props.filter === 'string' ? props.filter.trim().toLowerCase() : '';
+      const selection = useNoteSelection();
+      const { preview, openImage, closeImage } = useImagePreview();
+      const picked = notesForSelection(list, sessionId, selection);
       const matches = (note) => !filter
         || String(note.quote || '').toLowerCase().indexOf(filter) >= 0
         || String(note.body || '').toLowerCase().indexOf(filter) >= 0
@@ -5562,14 +6397,15 @@ window.__ModuleLoader__.load({
       const flash = (text, kind) => showToast(text, kind);
 
       const compose = () => {
+        if (picked.length === 0) {
+          flash(translate('note.noneSelected'), 'error');
+          return;
+        }
         let ok = false;
         try {
-          ok = props.onCompose() === true;
+          ok = props.onCompose(picked) === true;
         } catch (_error) {
           ok = false;
-        }
-        if (ok && normalizeSettings(props.settings).noteKeepAfterDraft === false) {
-          notesActions.clearSession(sessionId);
         }
         flash(ok ? translate('note.inserted') : translate('note.insertFailed'), ok ? 'ok' : 'error');
       };
@@ -5597,7 +6433,7 @@ window.__ModuleLoader__.load({
           // The prompt carries the quoted passage, so inserting it into the
           // composer later still has the original text (the title is only a label).
           body: composeNoteLine(note),
-          images: [],
+          images: imagesForNotes([note]),
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
@@ -5611,20 +6447,25 @@ window.__ModuleLoader__.load({
         flash(translate('note.stored', { group: labelOfGroup(group) }), 'ok');
       };
 
-      /** Compose the annotations into one prompt and file it in a group. */
-      const storePrompt = (group) => {
-        const text = composeNotesReply(list);
+      /** Compose the checked annotations into one prompt and file it in a group. */
+      const storePrompt = (group, snapshot) => {
+        const chosen = Array.isArray(snapshot) ? snapshot : picked;
+        if (chosen.length === 0) {
+          flash(translate('note.noneSelected'), 'error');
+          return;
+        }
+        const text = composeNotesReply(chosen);
         poolActions.add({
           id: uid(),
           group,
           title: draftTitle(text),
           body: text,
-          images: [],
+          images: imagesForNotes(chosen),
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
         if (normalizeSettings(props.settings).noteKeepAfterStore === false) {
-          notesActions.clearSession(sessionId);
+          notesActions.removeMany(chosen.map((note) => note.id));
         }
         flash(translate('note.composeStored', { group: labelOfGroup(group) }), 'ok');
       };
@@ -5646,7 +6487,7 @@ window.__ModuleLoader__.load({
             closeNotePrompt();
             if (!group) return;
             if (target && target.kind === 'note' && target.note) promote(target.note, group);
-            else storePrompt(group);
+            else storePrompt(group, target && Array.isArray(target.notes) ? target.notes : picked);
           },
           token: Date.now(),
         });
@@ -5676,9 +6517,6 @@ window.__ModuleLoader__.load({
         } catch (_error) {
           ok = false;
         }
-        if (ok && normalizeSettings(props.settings).noteKeepAfterDraft === false) {
-          notesActions.remove(note.id);
-        }
         flash(ok ? translate('note.inserted') : translate('note.insertFailed'), ok ? 'ok' : 'error');
       };
 
@@ -5695,10 +6533,24 @@ window.__ModuleLoader__.load({
                 ? [
                     h(
                       'button',
-                      { key: 'compose-store', type: 'button', className: 'pp-note-btn pp-note-btn-primary', onClick: (event) => openPrompt({ kind: 'reply' }, event) },
+                      {
+                        key: 'compose-store',
+                        type: 'button',
+                        className: 'pp-note-btn pp-note-btn-primary',
+                        title: picked.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
+                        disabled: picked.length === 0,
+                        onClick: (event) => openPrompt({ kind: 'reply', notes: picked }, event),
+                      },
                       translate('note.composeStore'),
                     ),
-                    h('button', { key: 'compose', type: 'button', className: 'pp-note-btn', onClick: compose }, translate('note.compose')),
+                    h('button', {
+                      key: 'compose',
+                      type: 'button',
+                      className: 'pp-note-btn',
+                      title: picked.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
+                      disabled: picked.length === 0,
+                      onClick: compose,
+                    }, translate('note.compose')),
                   ]
                 : null,
               list.some((note) => (note.dx || 0) !== 0 || (note.dy || 0) !== 0)
@@ -5716,6 +6568,7 @@ window.__ModuleLoader__.load({
           list.map((note, index) => {
             if (!matches(note)) return null;
             const meta = noteKind(note.kind);
+            const selectLabel = translate('note.select') + '：' + noteQuoteText(note.quote, 20);
             return h(
               'div',
               {
@@ -5723,6 +6576,18 @@ window.__ModuleLoader__.load({
                 key: note.id,
                 'data-promoted': note.promotedGroup ? 'true' : undefined,
               },
+              h(
+                'input',
+                {
+                  key: 'select',
+                  type: 'checkbox',
+                  className: 'pp-note-check',
+                  checked: noteSelected(selection, sessionId, note.id),
+                  title: selectLabel,
+                  'aria-label': selectLabel,
+                  onChange: () => toggleNoteSelected(sessionId, note.id),
+                },
+              ),
               h(
                 'button',
                 {
@@ -5759,6 +6624,9 @@ window.__ModuleLoader__.load({
                     : null,
                 ),
                 h('div', { className: 'pp-notes-text' }, note.body || translate(meta.label)),
+                note.images && note.images.length > 0
+                  ? h(ImageStrip, { images: note.images, compact: true, max: 4, onOpen: openImage })
+                  : null,
               ),
               h(
                 'button',
@@ -5790,7 +6658,289 @@ window.__ModuleLoader__.load({
           : filter && !list.some(matches)
             ? h('div', { key: 'empty', className: 'pp-notes-empty' }, translate('note.empty'))
             : null,
+        h(ImageLightbox, { key: 'lightbox', preview, onClose: closeImage }),
       );
+    }
+
+    // The context menu is mounted after the contextmenu gesture; capture the
+    // anchor while the live selection still exists, then hand it to the menu.
+    let pendingNoteAnchor = null;
+
+    /**
+     * The batch review sheet: check notes, optionally authorize individual
+     * items to execute, and hand one message to the session queue. To-dos left
+     * unchecked are parked in the current workspace prompt pool instead of
+     * being sent.
+     */
+    function ReviewSheet(props) {
+      useLocaleTick();
+      const noteList = Array.isArray(props.notes) ? props.notes : [];
+      const sessionId = typeof props.sessionId === 'string' ? props.sessionId : '';
+      const selection = useNoteSelection();
+      const { preview, openImage, closeImage } = useImagePreview();
+      const [batchId] = useState(() => newBatchId());
+      const [step, setStep] = useState('notes');
+      const [immediate, setImmediate] = useState({});
+      const [todoMode, setTodoMode] = useState({});
+      const [busy, setBusy] = useState(false);
+      const [error, setError] = useState('');
+      const selected = notesForSelection(noteList, sessionId, selection);
+      const base = selected;
+      const isImmediate = (note) => (note.kind === 'todo'
+        ? todoMode[note.id] === 'execute'
+        : Boolean(immediate[note.id] && REVIEW_IMMEDIATE_LABELS[note.kind]));
+      const parkedTodos = base.filter((note) => note.kind === 'todo' && !isImmediate(note));
+      const sentNotes = base.filter((note) => !(note.kind === 'todo' && !isImmediate(note)));
+      const immediateIds = sentNotes.filter(isImmediate).map((note) => note.id);
+      const signature = sentNotes.map((note) => note.id + ':' + note.kind + ':' + (note.updatedAt || 0) + (isImmediate(note) ? '!' : '')).join('|');
+      const buildText = (list) => (list.length > 0
+        ? buildReviewPrompt(list, batchId, imagesForNotes(list), list.filter(isImmediate).map((note) => note.id))
+        : '');
+      const [text, setText] = useState(() => buildText(sentNotes));
+      const signatureRef = useRef(signature);
+      useEffect(() => {
+        if (signatureRef.current === signature) return;
+        signatureRef.current = signature;
+        setText(buildText(sentNotes));
+      }, [signature]);
+      const grouped = NOTE_KINDS
+        .map((kind) => ({ kind, rows: base.filter((note) => note.kind === kind.id) }))
+        .filter((group) => group.rows.length > 0);
+
+      const payload = () => ({
+        sessionId,
+        batchId,
+        noteIds: sentNotes.map((note) => note.id),
+        parkedIds: parkedTodos.map((note) => note.id),
+        immediateIds,
+        text: sentNotes.length > 0 ? text : '',
+        images: imagesForNotes(sentNotes),
+        createdAt: Date.now(),
+      });
+
+      const submit = async (action) => {
+        if (busy || !action) return;
+        setBusy(true);
+        setError('');
+        try {
+          const result = await action(payload());
+          if (!result || !result.ok) {
+            setBusy(false);
+            setError((result && result.reason) || translate('note.review.failed', { reason: '?' }));
+          }
+        } catch (errorValue) {
+          setBusy(false);
+          setError(String((errorValue && errorValue.message) || errorValue));
+        }
+      };
+
+      const toggleImmediate = (note) => {
+        setImmediate((current) => ({ ...current, [note.id]: !current[note.id] }));
+      };
+      const chooseTodo = (note, choice) => {
+        setTodoMode((current) => ({ ...current, [note.id]: choice }));
+      };
+      const canSend = sentNotes.length > 0 && text.trim().length > 0;
+      const canPark = parkedTodos.length > 0;
+      const primaryLabel = translate(busy ? 'note.review.sending' : 'note.review.send');
+      const primaryDisabled = busy || (sentNotes.length > 0 ? !canSend : !canPark);
+      const primaryAction = sentNotes.length > 0 ? props.onQueue : props.onPark;
+
+      return h(
+        'div',
+        { className: 'pp-notes pp-notes-embedded pp-review' },
+        h('style', { key: 'css' }, NOTES_CSS),
+        h(
+          'div',
+          { className: 'pp-review-top' },
+          h(
+            'div',
+            { className: 'pp-review-head' },
+            h('span', { className: 'pp-review-mark' }, h(NoteActionIcon, { kind: 'edit' })),
+            h(
+              'div',
+              { className: 'pp-review-title' },
+              h(
+                'div',
+                { className: 'pp-review-headline' },
+                h('strong', null, translate('note.review.title')),
+                h('span', { className: 'pp-review-chip' }, translate('note.review.selected', { n: base.length })),
+                immediateIds.length > 0
+                  ? h('span', { className: 'pp-review-chip pp-review-chip-accent' }, translate('note.review.immediateCount', { n: immediateIds.length }))
+                  : null,
+              ),
+              h('span', { className: 'pp-review-batch' }, batchId),
+            ),
+            h('span', { className: 'pp-notes-grow' }),
+            h('button', { type: 'button', className: 'pp-review-close', title: translate('note.cancel'), onClick: props.onClose }, icon('close')),
+          ),
+          h(
+            'div',
+            { className: 'pp-review-steps', 'aria-label': translate('note.review.title') },
+            h(
+              'div',
+              { className: 'pp-review-step', 'data-active': step === 'notes' ? 'true' : 'false', 'aria-current': step === 'notes' ? 'step' : undefined },
+              h('span', { className: 'pp-review-step-num' }, '1'),
+              h('span', null, translate('note.title')),
+            ),
+            h('span', { className: 'pp-review-step-sep', 'aria-hidden': true }, '›'),
+            h(
+              'div',
+              { className: 'pp-review-step', 'data-active': step === 'preview' ? 'true' : 'false', 'aria-current': step === 'preview' ? 'step' : undefined },
+              h('span', { className: 'pp-review-step-num' }, '2'),
+              h('span', null, translate('note.review.previewAction')),
+            ),
+          ),
+        ),
+        h(
+          'div',
+          { className: 'pp-review-pane', hidden: step !== 'notes', 'data-active': step === 'notes' ? 'true' : 'false' },
+          grouped.length > 0
+          ? h(
+              'div',
+              { className: 'pp-review-list' },
+              grouped.map((group) => h(
+                'div',
+                { key: group.kind.id, className: 'pp-review-group' },
+                h(
+                  'div',
+                  { className: 'pp-review-group-title' },
+                  h('span', { className: 'pp-review-group-dot', style: { background: `rgb(${group.kind.ink})` } }),
+                  h('span', null, translate(group.kind.label)),
+                  h('span', { className: 'pp-review-group-count' }, String(group.rows.length)),
+                ),
+                group.rows.map((note) => h(
+                  'div',
+                  { key: note.id, className: 'pp-review-row' },
+                  h('input', {
+                    type: 'checkbox',
+                    className: 'pp-note-check',
+                    checked: true,
+                    onChange: () => toggleNoteSelected(sessionId, note.id),
+                  }),
+                  h('span', { className: 'pp-notes-kind', 'data-kind': note.kind, title: translate(noteKind(note.kind).label) }, noteKind(note.kind).icon),
+                  h(
+                    'div',
+                    { className: 'pp-review-main' },
+                    h('div', { className: 'pp-review-quote', title: note.quote }, noteQuoteText(note.quote)),
+                    note.body ? h('div', { className: 'pp-review-body' }, note.body) : null,
+                    note.images && note.images.length > 0
+                      ? h(ImageStrip, { images: note.images, compact: true, max: 4, onOpen: openImage })
+                      : null,
+                    note.kind === 'todo'
+                      ? h(
+                          'div',
+                          { className: 'pp-review-todo-choice', role: 'radiogroup', 'aria-label': translate('note.kind.todo') },
+                          h(
+                            'label',
+                            { className: 'pp-review-todo-option', 'data-active': isImmediate(note) ? 'true' : 'false' },
+                            h('input', {
+                              type: 'radio',
+                              name: 'pp-review-todo-' + note.id,
+                              value: 'execute',
+                              checked: isImmediate(note),
+                              onChange: () => chooseTodo(note, 'execute'),
+                            }),
+                            h('span', null, translate('note.review.todo.execute')),
+                          ),
+                          h(
+                            'label',
+                            { className: 'pp-review-todo-option', 'data-active': !isImmediate(note) ? 'true' : 'false' },
+                            h('input', {
+                              type: 'radio',
+                              name: 'pp-review-todo-' + note.id,
+                              value: 'prompt',
+                              checked: !isImmediate(note),
+                              onChange: () => chooseTodo(note, 'prompt'),
+                            }),
+                            h('span', null, translate('note.review.todo.prompt')),
+                          ),
+                        )
+                      : REVIEW_IMMEDIATE_LABELS[note.kind]
+                        ? h(
+                            'label',
+                            { className: 'pp-review-exec', 'data-active': isImmediate(note) ? 'true' : 'false' },
+                            h('input', {
+                              type: 'checkbox',
+                              name: 'pp-review-immediate-' + note.id,
+                              checked: isImmediate(note),
+                              onChange: () => toggleImmediate(note),
+                            }),
+                            h('span', null, translate(REVIEW_IMMEDIATE_LABELS[note.kind])),
+                          )
+                        : null,
+                  ),
+                )),
+              )),
+            )
+          : h(
+              'div',
+              { className: 'pp-notes-empty' },
+              translate('note.review.empty'),
+              h('div', { className: 'pp-hint' }, translate('note.review.emptyHint')),
+            ),
+        ),
+        h(
+          'div',
+          { className: 'pp-review-pane', hidden: step !== 'preview', 'data-active': step === 'preview' ? 'true' : 'false' },
+          sentNotes.length > 0
+          ? h(
+              'div',
+              { className: 'pp-review-preview-wrap' },
+              h('div', { className: 'pp-review-preview-hint' }, translate('note.review.previewHint')),
+              h('textarea', {
+                className: 'pp-review-text',
+                value: text,
+                onChange: (event) => setText(event.target.value),
+                spellCheck: false,
+              }),
+            )
+          : h('div', { className: 'pp-review-empty-send' }, translate('note.review.parkOnly')),
+        ),
+        error ? h('div', { className: 'pp-review-error' }, error) : null,
+        h(
+          'div',
+          { className: 'pp-review-actions' },
+          step === 'notes'
+            ? [
+                h('button', { key: 'cancel', type: 'button', className: 'pp-note-btn pp-review-cancel', onClick: props.onClose }, translate('note.cancel')),
+                h(
+                  'button',
+                  {
+                    key: 'preview',
+                    type: 'button',
+                    className: 'pp-note-btn pp-note-btn-primary',
+                    disabled: base.length === 0,
+                    onClick: () => setStep('preview'),
+                  },
+                  translate('note.review.previewAction'),
+                ),
+              ]
+            : [
+                h('button', { key: 'back', type: 'button', className: 'pp-note-btn pp-review-cancel', onClick: () => setStep('notes') }, translate('note.review.back')),
+                h(
+                  'button',
+                  {
+                    key: 'send',
+                    type: 'button',
+                    className: 'pp-note-btn pp-note-btn-primary',
+                    disabled: primaryDisabled,
+                    onClick: () => submit(primaryAction),
+                  },
+                  primaryLabel,
+                ),
+              ],
+        ),
+        h(ImageLightbox, { key: 'lightbox', preview, onClose: closeImage }),
+      );
+    }
+
+    /**
+     * The review card sits in the same bottom dock as the send queue, so the
+     * annotation list stays visible while a batch is prepared.
+     */
+    function renderReviewCard(props) {
+      return h('div', { className: 'pp-page-foot pp-review-foot' }, h(ReviewSheet, props));
     }
 
     // --------------------------------------------------- conversation selection
@@ -5821,9 +6971,14 @@ window.__ModuleLoader__.load({
       const [done, setDone] = useState(null);
       // The group list lives one level down; Copy stays at the top.
       const [submenu, setSubmenu] = useState(false);
+      const [noteKindsOpen, setNoteKindsOpen] = useState(false);
       // Annotating needs the assistant row and its text, captured while the
       // selection still owns the DOM.
-      const [anchor] = useState(() => captureNoteAnchor(props.sessionId));
+      const [anchor] = useState(() => {
+        const captured = pendingNoteAnchor || captureNoteAnchor(props.sessionId);
+        pendingNoteAnchor = null;
+        return captured;
+      });
       const timer = useRef(0);
       const dismiss = typeof props.dismiss === 'function' ? props.dismiss : () => {};
 
@@ -5881,13 +7036,30 @@ window.__ModuleLoader__.load({
       /** Open the destination submenu; a click serves touch, hover serves mouse. */
       const openGroups = () => {
         if (done !== null) return;
+        setNoteKindsOpen(false);
         setSubmenu(true);
       };
 
-      /** Hand the captured anchor to the overlay, which opens its editor. */
-      const startNote = () => {
-        if (!anchor) return;
-        noteDraft.set({ anchor, sessionId: props.sessionId || '', token: Date.now() });
+      const openNoteKinds = () => {
+        if (done !== null) return;
+        setSubmenu(false);
+        setNoteKindsOpen(true);
+      };
+
+      /** Hand the captured anchor and the chosen kind to the overlay. */
+      const startNote = (kindId) => {
+        const currentAnchor = anchor || captureNoteAnchor(props.sessionId);
+        if (!currentAnchor) {
+          showToast(translate('note.anchorFailed'), 'error');
+          dismiss();
+          return;
+        }
+        noteDraft.set({
+          anchor: currentAnchor,
+          sessionId: props.sessionId || '',
+          token: Date.now(),
+          kind: NOTE_KIND_IDS.indexOf(kindId) >= 0 ? kindId : NOTE_KIND_DEFAULT,
+        });
         dismiss();
       };
 
@@ -5936,8 +7108,11 @@ window.__ModuleLoader__.load({
                     role: 'menuitem',
                     className: 'pp-selrow',
                     onClick: copySelection,
-                    // Moving back to the first row folds the submenu away.
-                    onPointerEnter: () => setSubmenu(false),
+                    // Moving back to the first row folds both submenus away.
+                    onPointerEnter: () => {
+                      setSubmenu(false);
+                      setNoteKindsOpen(false);
+                    },
                   },
                   h('span', { key: 'name', className: 'pp-selname' }, translate('menu.copy')),
                   h('span', { key: 'key', className: 'pp-selkey' }, shortcut),
@@ -5946,20 +7121,21 @@ window.__ModuleLoader__.load({
                   'div',
                   { key: 'poolgroup', className: 'pp-selgroup' },
                   h('div', { key: 'label', className: 'pp-selgroup-label' }, h(PromptPoolIcon, { key: 'icon', size: 12 }), translate('menu.group')),
-                  anchor
-                  ? h(
-                      'button',
-                      {
-                        key: 'note',
-                        type: 'button',
-                        role: 'menuitem',
-                        className: 'pp-selrow',
-                        onClick: startNote,
-                        onPointerEnter: () => setSubmenu(false),
-                      },
-                      h('span', { key: 'name', className: 'pp-selname' }, translate('note.add')),
-                    )
-                  : null,
+                  h(
+                    'button',
+                    {
+                      key: 'note',
+                      type: 'button',
+                      role: 'menuitem',
+                      className: 'pp-selrow',
+                      'aria-haspopup': 'menu',
+                      'aria-expanded': noteKindsOpen,
+                      onClick: openNoteKinds,
+                      onPointerEnter: openNoteKinds,
+                    },
+                    h('span', { key: 'name', className: 'pp-selname' }, translate('note.add')),
+                    h('span', { key: 'chev', className: 'pp-selchev', 'aria-hidden': true }, '▸'),
+                  ),
                 h(
                   'button',
                   {
@@ -6012,6 +7188,32 @@ window.__ModuleLoader__.load({
                     ),
                   )
                 : null,
+              noteKindsOpen
+                ? h(
+                    'div',
+                    { key: 'notekinds', className: 'pp-selpanel', role: 'menu', 'aria-label': translate('note.title') },
+                    h(
+                      'div',
+                      { key: 'list', className: 'pp-sellist' },
+                      NOTE_KINDS.map((kind) => h(
+                        'button',
+                        {
+                          key: kind.id,
+                          type: 'button',
+                          role: 'menuitem',
+                          className: 'pp-selrow',
+                          onClick: () => startNote(kind.id),
+                        },
+                        h(
+                          'span',
+                          { key: 'icon', className: 'pp-selkind-icon', style: { color: `rgb(${kind.ink})` }, 'aria-hidden': true },
+                          kind.icon,
+                        ),
+                        h('span', { key: 'name', className: 'pp-selname' }, translate(kind.label)),
+                      )),
+                    ),
+                  )
+                : null,
             ],
       );
     }
@@ -6031,6 +7233,8 @@ window.__ModuleLoader__.load({
       const notesList = notesState.items
         .filter((note) => note.sessionId === notesSessionId)
         .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt));
+      const noteSelectionState = useNoteSelection();
+      const selectedNotes = notesForSelection(notesList, notesSessionId, noteSelectionState);
 
       // This view can read the workspace roster; publish it for both views.
       const wsSnapshot = typeof props.useWorkspaces === 'function' ? props.useWorkspaces(selectAllInput) : undefined;
@@ -6083,9 +7287,13 @@ window.__ModuleLoader__.load({
       pendingRef.current = Array.isArray(pendingSubmissions) ? pendingSubmissions : EMPTY_PENDING;
       const busyRef = useRef(false);
 
-      const [tab, setTab] = useState('all');
+      const [tab, setTab] = useState(() => fallbackTabFor([
+        { id: 'notes', label: translate('note.title'), group: 'notes' },
+        ...buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId),
+      ]));
       const [query, setQuery] = useState('');
       const [settingsOpen, setSettingsOpen] = useState(false);
+      const [reviewOpen, setReviewOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
       const [wsSelected, setWsSelected] = useState('');
       const [customPick, setCustomPick] = useState('');
@@ -6117,7 +7325,7 @@ window.__ModuleLoader__.load({
         setPendingCategory(null);
         if (!target || target.indexOf('custom:') !== 0) return;
         poolActions.removeCategory(target.slice(7));
-        if (tab === target) setTab('all');
+        if (tab === target) setTab(fallbackTabFor(tabs.filter((entry) => entry.id !== target)));
       };
 
       const panelRef = useRef(null);
@@ -6295,72 +7503,8 @@ window.__ModuleLoader__.load({
         actions.setDraft(text);
       };
 
-      /** Bytes for pooled images, as browser files the host can accept. */
-      const loadImageFiles = async (images) => {
-        const files = [];
-        for (const image of normalizeImages(images)) {
-          const blob = await getImageBlob(image.id);
-          if (!blob) throw new Error(translate('image.missing'));
-          files.push(new File([blob], image.name || 'image', { type: image.type || blob.type || 'image/png' }));
-        }
-        return files;
-      };
-
-      /**
-       * The host's queue admission, if this context can reach it. Sending here
-       * keeps the composer untouched, which is the only way a batch release
-       * avoids resizing the input for every item.
-       */
-      const resolveDirectQueue = () => {
-        if (!props.sessionId) return null;
-        const candidates = [];
-        const base = conversationFace || serviceOf(pluginCtx, 'conversation');
-        if (base) candidates.push(base);
-        const sessions = sessionsFace || serviceOf(pluginCtx, 'sessions');
-        if (sessions && typeof sessions.scope === 'function') {
-          try {
-            const scoped = sessions.scope(props.sessionId);
-            const scopedConversation = serviceOf(scoped, 'conversation');
-            if (scopedConversation) candidates.push(scopedConversation);
-          } catch (_error) {
-            /* the context is not session-scoped */
-          }
-        }
-        for (const api of candidates) {
-          if (typeof api.createDrafts !== 'function' || typeof api.sendSession !== 'function' || typeof api.scopedSession !== 'function') continue;
-          try {
-            const session = api.scopedSession('send');
-            if (session && typeof session.prompt === 'function' && typeof session.beginSubmission === 'function') return { api, session };
-          } catch (_error) {
-            /* root-scoped service; try the next candidate */
-          }
-        }
-        return null;
-      };
-
-      /** Queue one occurrence without touching the composer. */
-      const sendDirect = async (direct, body, images) => {
-        const files = images.length > 0 ? await loadImageFiles(images) : [];
-        let drafts = [];
-        if (files.length > 0) {
-          drafts = direct.api.createDrafts(props.sessionId, files);
-          if (!Array.isArray(drafts) || drafts.length !== files.length) throw new Error(translate('image.insertFailed'));
-        }
-        try {
-          const outcome = await direct.api.sendSession(direct.session, body, drafts.map((draft) => draft.id), 'queue');
-          if (!outcome || outcome.kind !== 'success') throw new Error(translate('status.queueFailed'));
-        } catch (error) {
-          if (drafts.length > 0 && typeof direct.api.releaseDraftAttachments === 'function') {
-            try {
-              direct.api.releaseDraftAttachments(drafts);
-            } catch (_cleanupError) {
-              /* the draft attachment owner may already be gone */
-            }
-          }
-          throw error;
-        }
-        return drafts.length;
-      };
+      // Queue admission, image files and the direct send live at module scope so
+      // the composer dock can hand the same send queue over without the panel.
 
       const addImages = async (images) => {
         const files = await loadImageFiles(images);
@@ -6462,8 +7606,15 @@ window.__ModuleLoader__.load({
           updatedAt: Date.now(),
         };
         poolActions.add(item);
-        // The copy lands in the chosen group, which a folded/workspace tab may not show.
-        if (!matchesTab(item, tab)) setTab('all');
+        // The copy lands in the chosen group, which a folded/workspace tab may
+        // not show; "all" is the catch-all when the user kept it.
+        if (!matchesTab(item, tab)) {
+          const tabsWithNotes = [
+            { id: 'notes', label: translate('note.title'), group: 'notes' },
+            ...buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId),
+          ];
+          setTab(fallbackTabFor(tabsWithNotes));
+        }
         const skipped = others.length + (images.length - item.images.length);
         const label = groupLabelOf(item, state.categories, workspaces.items);
         flash(skipped > 0
@@ -6516,7 +7667,7 @@ window.__ModuleLoader__.load({
         if (busyRef.current) return;
         const entries = state.tray.slice();
         if (entries.length === 0) return;
-        const direct = resolveDirectQueue();
+        const direct = resolveDirectQueue(props.sessionId);
         if (!direct && draftRef.current.trim() !== '') {
           flash({ kind: 'error', text: translate('status.draftBusy') });
           return;
@@ -6548,7 +7699,7 @@ window.__ModuleLoader__.load({
               try {
                 // Straight into the host queue: the composer is never touched,
                 // so a batch release cannot resize the input per item.
-                await sendDirect(direct, body, images);
+                await sendDirect(direct, props.sessionId, body, images);
               } catch (error) {
                 failed = true;
                 flash({ kind: 'error', text: String((error && error.message) || error) });
@@ -6684,11 +7835,99 @@ window.__ModuleLoader__.load({
           return false;
         }
       };
-      const composeSessionNotes = () => insertComposerText(composeNotesReply(notesList));
-      const insertNoteText = (note) => insertComposerText(composeNoteLine(note));
+      const composeSessionNotes = (notes) => {
+        const chosen = Array.isArray(notes) ? notes : selectedNotes;
+        if (chosen.length === 0) {
+          showToast(translate('note.noneSelected'), 'error');
+          return false;
+        }
+        const ok = insertComposerText(composeNotesReply(chosen));
+        return ok;
+      };
+      const insertNoteText = (note) => {
+        const ok = insertComposerText(composeNoteLine(note));
+        if (ok && note.images && note.images.length > 0) {
+          addImages(note.images).catch((error) => showToast(String((error && error.message) || error), 'error'));
+        }
+        return ok;
+      };
+
+      const openReview = () => {
+        if (selectedNotes.length === 0) {
+          showToast(translate('note.noneSelected'), 'error');
+          return;
+        }
+        setReviewOpen(true);
+      };
+
+      /** Queue the review prompt in the host session queue, without touching the composer. */
+      const queueReviewText = async (text, sessionId, images) => {
+        const targetSession = typeof sessionId === 'string' && sessionId ? sessionId : notesSessionId;
+        const direct = resolveDirectQueue(targetSession);
+        if (!direct) return { ok: false, reason: translate('note.review.unsupported') };
+        try {
+          await sendDirect(direct, targetSession, text, normalizeImages(images, Number.MAX_SAFE_INTEGER));
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, reason: String((error && error.message) || error) };
+        }
+      };
+
+      /** Move the unchecked to-dos into the current workspace's prompt pool. */
+      const moveReviewTodos = (review) => {
+        const ids = Array.isArray(review && review.parkedIds) ? review.parkedIds : [];
+        if (ids.length === 0) return 0;
+        const wanted = new Set(ids);
+        const notes = notesList.filter((note) => wanted.has(note.id));
+        if (notes.length === 0) return 0;
+        const group = reviewTodoGroup(currentWorkspaceId, workspaces.items);
+        const now = Date.now();
+        for (const note of notes) {
+          poolActions.add({
+            id: uid(),
+            group,
+            title: draftTitle(note.body || note.quote),
+            body: composeNoteLine(note),
+            images: normalizeImages(note.images),
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+        const movedIds = notes.map((note) => note.id);
+        notesActions.removeMany(movedIds);
+        deselectNotes(notesSessionId, movedIds);
+        return movedIds.length;
+      };
+
+      const parkReviewTodos = async (review) => {
+        const moved = moveReviewTodos(review);
+        if (moved === 0) return { ok: false, reason: translate('status.storageFailed') };
+        setReviewOpen(false);
+        showToast(translate('note.review.parked', { n: moved }), 'ok');
+        return { ok: true };
+      };
+
+      const queueReview = async (review) => {
+        const result = await queueReviewText(review.text, notesSessionId, review.images);
+        if (!result.ok) return result;
+        commitReviewBatch({ ...review, sessionId: notesSessionId });
+        const moved = moveReviewTodos(review);
+        setReviewOpen(false);
+        showToast(
+          moved > 0
+            ? translate('note.review.queuedParked', { id: review.batchId, n: moved })
+            : translate('note.review.queued', { id: review.batchId }),
+          'ok',
+        );
+        return { ok: true };
+      };
 
       /** Store the session's annotations as one prompt, from the panel header. */
       const storeNotesPrompt = (event) => {
+        if (selectedNotes.length === 0) {
+          showToast(translate('note.noneSelected'), 'error');
+          return;
+        }
         const choices = captureChoices(state.categories, workspaces.items, currentWorkspaceId, state.settings);
         const preferred = currentWorkspaceId && choices.some((entry) => entry.value === 'workspace:' + currentWorkspaceId)
           ? 'workspace:' + currentWorkspaceId
@@ -6711,18 +7950,18 @@ window.__ModuleLoader__.load({
           onPick: (group) => {
             closeNotePrompt();
             if (!group) return;
-            const text = composeNotesReply(notesList);
+            const text = composeNotesReply(selectedNotes);
             poolActions.add({
               id: uid(),
               group,
               title: draftTitle(text),
               body: text,
-              images: [],
+              images: imagesForNotes(selectedNotes),
               createdAt: Date.now(),
               updatedAt: Date.now(),
             });
             if (normalizeSettings(state.settings).noteKeepAfterStore === false) {
-              notesActions.clearSession(notesSessionId);
+              notesActions.removeMany(selectedNotes.map((note) => note.id));
             }
             const resolved = resolveGroup(group, state.categories, workspaces.items);
             showToast(translate('note.composeStored', { group: resolved ? resolved.label : translate('row.noCategory') }), 'ok');
@@ -6730,7 +7969,7 @@ window.__ModuleLoader__.load({
         });
       };
 
-      bridgeRef.current = { insert: insertItem, release, capture: captureDraft, composeNotes: composeSessionNotes, insertText: insertComposerText };
+      bridgeRef.current = { insert: insertItem, release, capture: captureDraft, composeNotes: composeSessionNotes, insertText: insertComposerText, insertImages: addImages, queueReview: queueReviewText };
       useEffect(() => {
         return bridge.listen((command) => {
           const api = bridgeRef.current;
@@ -6738,9 +7977,17 @@ window.__ModuleLoader__.load({
           if (command.type === 'compose-notes') {
             return { ok: api.composeNotes() === true };
           }
+          if (command.type === 'queue-review') {
+            if (typeof command.text !== 'string') return { ok: false, reason: 'bad-command' };
+            return api.queueReview(command.text, command.sessionId, command.images);
+          }
           if (command.type === 'insert-text') {
             if (typeof command.text !== 'string') return { ok: false, reason: 'bad-command' };
-            return { ok: api.insertText(command.text) === true };
+            const ok = api.insertText(command.text) === true;
+            if (ok && Array.isArray(command.images) && command.images.length > 0 && typeof api.insertImages === 'function') {
+              api.insertImages(command.images).catch((error) => showToast(String((error && error.message) || error), 'error'));
+            }
+            return { ok };
           }
           if (command.type === 'insert') {
             if (typeof command.text !== 'string') return { ok: false, reason: 'bad-command' };
@@ -6781,11 +8028,22 @@ window.__ModuleLoader__.load({
         if (open && !wasOpenRef.current) {
           const pref = normalizeSettings(state.settings).defaultTab;
           const baseTabs = buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId);
-          const resolved = resolveDefaultTab(pref, baseTabs, currentWorkspaceId, notesList.length > 0);
+          const tabsWithNotes = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
+          const resolved = resolveDefaultTab(pref, tabsWithNotes, currentWorkspaceId, notesList.length > 0);
           if (resolved) setTab(resolved);
         }
         wasOpenRef.current = open;
       }, [view.open]);
+
+      // Hiding "all" (or a group) while the panel is open must not leave the
+      // active tab pointing at a tab that no longer exists.
+      useEffect(() => {
+        if (!view.open) return;
+        const baseTabs = buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId);
+        const tabsWithNotes = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
+        if (tabsWithNotes.some((entry) => entry.id === tab)) return;
+        setTab(fallbackTabFor(tabsWithNotes));
+      }, [view.open, tab, state.categories, state.settings, workspaces.items, currentWorkspaceId]);
 
       if (!view.open) return null;
 
@@ -6913,14 +8171,28 @@ window.__ModuleLoader__.load({
           }),
           tab === 'notes'
             ? [
-                h('button', { key: 'store', type: 'button', className: 'pp-mini', title: translate('note.composeStoreHint'), onClick: storeNotesPrompt }, translate('note.composeStore')),
-                h('button', { key: 'draft', type: 'button', className: 'pp-mini', title: translate('note.composeHint'), onClick: composeSessionNotes }, translate('note.compose')),
+                h('button', {
+                  key: 'store',
+                  type: 'button',
+                  className: 'pp-mini',
+                  title: selectedNotes.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
+                  disabled: selectedNotes.length === 0,
+                  onClick: storeNotesPrompt,
+                }, translate('note.composeStore')),
+                h('button', {
+                  key: 'draft',
+                  type: 'button',
+                  className: 'pp-mini',
+                  title: selectedNotes.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
+                  disabled: selectedNotes.length === 0,
+                  onClick: openReview,
+                }, translate('note.compose')),
               ]
             : [
                 h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('page.new')),
                 h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
               ],
-          h(SettingsButton, { active: settingsOpen, onClick: () => setSettingsOpen(!settingsOpen) }),
+          h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
           h(IconButton, {
             name: 'pin',
             label: panelPinned ? translate('panel.unpin') : translate('panel.pin'),
@@ -6942,8 +8214,9 @@ window.__ModuleLoader__.load({
             active: tab,
             ...tabHandlers((next) => {
               setSettingsOpen(false);
+              setReviewOpen(false);
               setTab(next);
-            }, tab),
+            }, tab, fallbackTabFor(tabs)),
             onDelete: (id) => setPendingCategory(id),
           }),
         ),
@@ -7066,6 +8339,15 @@ window.__ModuleLoader__.load({
                 : null,
             )
           : null,
+        !settingsOpen && tab === 'notes' && reviewOpen
+          ? renderReviewCard({
+              notes: notesList,
+              sessionId: notesSessionId,
+              onClose: () => setReviewOpen(false),
+              onQueue: queueReview,
+              onPark: parkReviewTodos,
+            })
+          : null,
         !settingsOpen && tab !== 'notes'
           ? renderTrayCard({
               entries: tray,
@@ -7187,7 +8469,8 @@ window.__ModuleLoader__.load({
       '.pp-capture-options{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto}' +
       '.pp-capture-option{justify-content:flex-start;height:auto;min-height:26px;padding:5px 9px;text-align:left;white-space:normal}' +
       '.pp-mini{height:24px;padding:0 9px;border-radius:7px;border:1px solid var(--pp-line);background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
-      '.pp-mini:hover{background:var(--pp-hover)}' +
+      '.pp-mini:hover:not([disabled]){background:var(--pp-hover)}' +
+      '.pp-mini:disabled{opacity:.5;cursor:not-allowed}' +
       '.pp-set-btn{display:inline-flex;align-items:center;gap:5px;padding:0 9px}' +
       '.pp-set-btn[data-active="true"]{border-color:var(--pp-accent);color:var(--pp-accent)}' +
       '.pp-set-btn-icon{display:inline-flex;align-items:center}' +
@@ -7242,6 +8525,9 @@ window.__ModuleLoader__.load({
       '.pp-ws-count{flex:none;font-size:10px;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
       '.pp-ws-body{min-width:0}' +
       '.pp-page-foot{display:flex;flex-direction:column;gap:8px;margin:8px 10px 10px;padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08);max-height:min(640px,66vh);overflow:hidden}' +
+      '.pp-review-foot{padding:0;gap:0;height:min(480px,56vh);max-height:min(480px,56vh)}' +
+      '.pp-review-foot>.pp-review{flex:1;min-height:0;overflow-y:auto;padding:10px 12px}' +
+      '.pp-panel .pp-review-foot{height:min(calc(var(--pp-h, 100vh) * 0.64), 420px);max-height:min(calc(var(--pp-h, 100vh) * 0.64), 420px)}' +
       // The card sizes itself to the queue: an empty tray is one hint row, a full
       // one stops at half the page so the pool above keeps the room it needs.
       '.pp-page-foot .pp-tray{max-height:min(520px,52vh);min-height:0;flex:0 1 auto;overflow-y:auto}' +
@@ -7342,6 +8628,20 @@ window.__ModuleLoader__.load({
       '.pp-panel .pp-status-float{pointer-events:auto}' +
       // The page's status float stays click-through, so only the undo link takes clicks.
       '.pp-status-float .pp-link{pointer-events:auto}' +
+      // The composer dock strip bridges the pool's send queue to the host queue.
+      // Its box follows the host's own dock geometry so it lines up with the
+      // composer card and with the base queue panel above/below it.
+      '.pp-dock{box-sizing:border-box;flex:none;display:flex;align-items:center;gap:8px;width:calc(100% - 2*var(--dsh-composer-side-clearance,0px) - 4*var(--dsh-composer-dock-inset,0px));max-width:calc(var(--dsh-composer-card-max-width,920px) - 4*var(--dsh-composer-dock-inset,0px));margin:0 auto;min-width:0;padding:5px 10px;border:1px solid var(--pp-line);border-radius:10px;background:var(--pp-queue-bg);color:var(--pp-ink);font-size:12px;line-height:1.5}' +
+      '.pp-dock-mark{display:inline-flex;align-items:center;color:var(--pp-ink-2)}' +
+      '.pp-dock-count,.pp-dock-host{white-space:nowrap;font-variant-numeric:tabular-nums}' +
+      '.pp-dock-host{color:var(--pp-ink-2)}' +
+      '.pp-dock-sep{flex:none;width:1px;height:12px;background:var(--pp-line-2)}' +
+      '.pp-dock-note{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2)}' +
+      '.pp-dock-note[data-kind="error"]{color:var(--pp-danger)}' +
+      '.pp-dock-note[data-kind="ok"]{color:var(--pp-ok)}' +
+      '.pp-dock-btn{flex:none;height:24px;padding:0 10px;border:1px solid var(--pp-accent-line);border-radius:7px;background:var(--pp-accent-soft);color:var(--pp-accent);font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}' +
+      '.pp-dock-btn:hover:not([disabled]){background:color-mix(in srgb,var(--pp-accent) 20%,transparent)}' +
+      '.pp-dock-btn[disabled]{opacity:.55;cursor:not-allowed}' +
       '@keyframes pp-status-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}';
 
     /**
@@ -7368,6 +8668,7 @@ window.__ModuleLoader__.load({
       '.pp-selrow:focus-visible{outline:2px solid var(--pp-accent);outline-offset:-2px}' +
       '.pp-selname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '.pp-selchev{flex:none;color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-selkind-icon{flex:none;width:16px;text-align:center;font-size:12px;line-height:1}' +
       '.pp-selkey{flex:none;color:var(--pp-ink-2);font-size:11px}' +
       '.pp-selcount{flex:none;color:var(--pp-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +
       '.pp-sellast{flex:none;padding:0 5px;border-radius:5px;background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px;line-height:16px}' +
@@ -7383,19 +8684,19 @@ window.__ModuleLoader__.load({
      * Highlight API paints ranges that the markdown DOM never contains.
      */
     const NOTES_CSS =
-      '::highlight(prompt-pool-note-comment){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(255,191,36,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-question){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(244,114,114,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-agree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(74,222,128,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-disagree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(239,68,68,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-idea){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(96,165,250,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-todo){text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:rgba(251,191,36,.95);text-decoration-thickness:1px;text-underline-offset:2px}' +
-      '.pp-note-layer{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));--pp-note-ink:var(--dsw-alias-label-primary);--pp-note-ink-2:var(--dsw-alias-label-secondary);--pp-note-line:var(--dsw-alias-border-l1);--pp-note-surface:var(--dsw-alias-bg-overlay);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary);--pp-note-ok:var(--dsw-alias-state-success-primary);position:fixed;inset:0;z-index:2147482000;pointer-events:none}' +
+      '::highlight(prompt-pool-note-comment){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(124,58,237,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-question){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(234,88,12,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-agree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(22,163,74,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-disagree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(185,28,28,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-idea){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(37,99,235,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-todo){text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:rgba(202,138,4,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '.pp-note-layer{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary,#2563eb));--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);position:fixed;inset:0;z-index:2147482000;pointer-events:none}' +
       '.pp-note-bubble{position:fixed;z-index:1;display:flex;flex-direction:column;gap:8px;width:310px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;padding:11px;border:1px solid var(--pp-note-line);border-radius:12px;background:var(--pp-note-surface);box-shadow:0 18px 48px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left;pointer-events:auto}' +
-      '.pp-note-bubble-quote{box-sizing:border-box;padding:6px 8px;border-radius:8px;background:rgba(var(--pp-bubble-tint),.10);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}.pp-note-bubble-quote-icon{margin-right:4px;color:rgb(var(--pp-bubble-tint))}' +
+      '.pp-note-bubble-quote{box-sizing:border-box;padding:6px 8px;border-radius:8px;background:rgba(var(--pp-bubble-tint),.10);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.pp-note-bubble-quote-icon{margin-right:4px;color:rgb(var(--pp-bubble-ink,var(--pp-bubble-tint)))}' +
       '.pp-note-bubble-hint{color:var(--pp-note-danger);font-size:11px}' +
       
       '.pp-note-input{width:100%;box-sizing:border-box;min-height:48px;max-height:120px;padding:6px 8px;border:1px solid var(--pp-note-line);border-radius:8px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent);color:inherit;font:inherit;font-size:12px;line-height:1.5;resize:none;outline:none}' +
-      '.pp-note-input:focus{border-color:rgba(var(--pp-bubble-tint),.9);box-shadow:0 0 0 2px rgba(var(--pp-bubble-tint),.14)}' +
+      '.pp-note-input:focus{border-color:rgba(var(--pp-bubble-ink,var(--pp-bubble-tint)),.9);box-shadow:0 0 0 2px rgba(var(--pp-bubble-ink,var(--pp-bubble-tint)),.14)}' +
       '.pp-note-bubble-foot{display:flex;align-items:center;gap:8px}.pp-note-bubble-ask{flex:1;color:var(--pp-note-ink-2);font-size:11px;line-height:1.4}.pp-note-bubble-actions{display:flex;gap:6px;margin-left:auto}.pp-note-bubble .pp-note-btn{height:24px;padding:0 9px;font-size:11px;border-radius:7px}.pp-note-btn-quiet-danger{border-color:transparent;background:transparent;color:var(--pp-note-danger)}.pp-note-btn-quiet-danger:hover{background:rgba(var(--pp-note-danger-rgb,239,68,68),.10)}' +
       '.pp-note-btn{height:24px;padding:0 10px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
       '.pp-note-btn:hover{background:var(--pp-note-hover)}' +
@@ -7404,7 +8705,7 @@ window.__ModuleLoader__.load({
       '.pp-note-btn-primary:hover{background:var(--pp-note-accent);filter:brightness(1.05)}' +
       '.pp-note-btn-danger{color:var(--pp-note-danger);border-color:color-mix(in srgb,var(--pp-note-danger) 40%,transparent)}' +
       '.pp-note-btn-danger:hover{background:color-mix(in srgb,var(--pp-note-danger) 10%,transparent)}' +
-      '.pp-notes{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));--pp-note-ink:var(--dsw-alias-label-primary);--pp-note-ink-2:var(--dsw-alias-label-secondary);--pp-note-line:var(--dsw-alias-border-l1);--pp-note-surface:var(--dsw-alias-bg-overlay);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary);--pp-note-ok:var(--dsw-alias-state-success-primary);display:flex;flex-direction:column;box-sizing:border-box;width:100%;border:1px solid var(--pp-note-line);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-state-warn-primary,#e0a800) 5%,var(--dsw-alias-bg-base,#fff));color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +
+      '.pp-notes{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary,#2563eb));--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);display:flex;flex-direction:column;box-sizing:border-box;width:100%;border:1px solid var(--pp-note-line);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-state-warn-primary,#e0a800) 5%,var(--dsw-alias-bg-base,#fff));color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +
       '.pp-notes-embedded{border:0;border-radius:0;background:transparent}' +
       '.pp-notes-embedded .pp-notes-head{padding:8px 2px 4px}' +
       '.pp-notes-embedded .pp-notes-list{max-height:none;overflow:visible;padding:0}' +
@@ -7420,28 +8721,108 @@ window.__ModuleLoader__.load({
       '.pp-notes-list{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;padding:0 8px 8px}' +
       '.pp-notes-row{display:flex;align-items:flex-start;gap:8px;padding:6px 7px;border:1px solid transparent;border-radius:8px;background:transparent}' +
       '.pp-notes-row:hover{background:rgba(232,176,40,.22)}' +
+      '.pp-note-check{flex:none;width:14px;height:14px;margin:4px 0 0;accent-color:#d97706;cursor:pointer}' +
       '.pp-notes-n{flex:none;min-width:16px;height:16px;margin-top:1px;border-radius:999px;background:rgba(232,176,40,.22);color:var(--pp-note-ink-2);font-size:10px;line-height:16px;text-align:center}' +
       '.pp-notes-main{flex:1;min-width:0}' +
       '.pp-notes-quote{display:flex;align-items:center;gap:6px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap;overflow:hidden}' +
       '.pp-notes-quote-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-notes-empty{padding:14px 12px;color:var(--pp-note-ink-2);font-size:12px;line-height:1.6}' +
+      '.pp-page-foot.pp-review-foot{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary,#2563eb));--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);padding:0;gap:0;border-color:color-mix(in srgb,var(--pp-note-accent) 22%,var(--pp-note-line));background:linear-gradient(180deg,color-mix(in srgb,var(--pp-note-accent) 7%,var(--pp-note-surface)) 0,var(--pp-note-surface) 140px);box-shadow:0 10px 30px rgba(0,0,0,.08)}' +
+      '.pp-review-foot>.pp-review{padding:0;gap:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}' +
+      '.pp-review{display:flex;flex-direction:column;min-height:0}' +
+      '.pp-review-top{position:sticky;top:0;z-index:4;background:color-mix(in srgb,var(--pp-note-surface) 92%,transparent);border-bottom:1px solid color-mix(in srgb,var(--pp-note-line) 80%,transparent);backdrop-filter:blur(10px)}' +
+      '.pp-review-head{display:flex;align-items:center;gap:8px;padding:9px 14px 5px;background:transparent}' +
+      '.pp-review-mark{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;flex:none;border-radius:8px;background:color-mix(in srgb,var(--pp-note-accent) 13%,transparent);color:var(--pp-note-accent)}' +
+      '.pp-review-title{display:flex;flex-direction:column;gap:0;min-width:0}' +
+      '.pp-review-headline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}' +
+      '.pp-review-headline strong{font-size:13px;font-weight:650;line-height:1.25;white-space:nowrap}' +
+      '.pp-review-batch{color:var(--pp-note-ink-2);font-size:9.5px;letter-spacing:.02em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.pp-review-close{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;padding:0;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}' +
+      '.pp-review-close:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}' +
+      '.pp-review-steps{display:flex;align-items:center;gap:7px;padding:0 14px 7px}' +
+      '.pp-review-step{display:inline-flex;align-items:center;gap:5px;color:var(--pp-note-ink-2);font-size:10.5px;line-height:1;opacity:.72}' +
+      '.pp-review-step[data-active="true"]{color:var(--pp-note-accent);opacity:1;font-weight:600}' +
+      '.pp-review-step-num{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border:1px solid color-mix(in srgb,var(--pp-note-line) 90%,transparent);border-radius:50%;font-size:9px;font-variant-numeric:tabular-nums}' +
+      '.pp-review-step[data-active="true"] .pp-review-step-num{border-color:var(--pp-note-accent);background:var(--pp-note-accent);color:#fff}' +
+      '.pp-review-step-sep{color:var(--pp-note-ink-2);font-size:11px;opacity:.45}' +
+      '.pp-review-pane{display:flex;flex-direction:column;min-height:0}' +
+      '.pp-review-pane[data-active="true"]{flex:1;min-height:0}' +
+      '.pp-review-pane[hidden]{display:none}' +
+      '.pp-review-chip{display:inline-flex;align-items:center;height:19px;padding:0 7px;border:1px solid color-mix(in srgb,var(--pp-note-line) 85%,transparent);border-radius:999px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent);color:var(--pp-note-ink-2);font-size:10px;line-height:1;font-variant-numeric:tabular-nums}' +
+      '.pp-review-chip-accent{border-color:color-mix(in srgb,var(--pp-note-accent) 34%,transparent);background:color-mix(in srgb,var(--pp-note-accent) 10%,transparent);color:var(--pp-note-accent)}' +
+      '.pp-review-list{display:flex;flex-direction:column;gap:8px;padding:8px 14px 10px;max-height:none;overflow:visible}' +
+      '.pp-review-group{display:flex;flex-direction:column;gap:4px}' +
+      '.pp-review-group-title{display:flex;align-items:center;gap:6px;padding:1px 1px 2px;color:var(--pp-note-ink-2);font-size:10.5px;font-weight:600;letter-spacing:.02em}' +
+      '.pp-review-group-dot{width:7px;height:7px;flex:none;border-radius:50%}' +
+      '.pp-review-group-count{margin-left:auto;min-width:17px;height:17px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--pp-note-ink) 6%,transparent);color:var(--pp-note-ink-2);font-size:9.5px;line-height:17px;text-align:center;font-variant-numeric:tabular-nums}' +
+      '.pp-review-row{display:flex;align-items:flex-start;gap:7px;padding:7px 8px;border:1px solid var(--pp-note-line);border-radius:9px;background:var(--pp-note-surface);box-shadow:0 1px 2px rgba(0,0,0,.03);transition:border-color .15s,box-shadow .15s}' +
+      '.pp-review-row:hover{border-color:color-mix(in srgb,var(--pp-note-accent) 26%,var(--pp-note-line));box-shadow:0 3px 10px rgba(0,0,0,.06)}' +
+      '.pp-review-row .pp-notes-kind{width:22px;height:22px;margin-right:0;border-radius:7px;background:color-mix(in srgb,rgb(var(--pp-inline-tint)) 18%,transparent);border:1px solid color-mix(in srgb,rgb(var(--pp-inline-ink)) 24%,transparent);font-size:12px}' +
+      '.pp-review-row .pp-note-check{width:14px;height:14px;margin-top:4px;accent-color:var(--pp-note-accent)}' +
+      '.pp-review-main{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}' +
+      '.pp-review-quote{color:var(--pp-note-ink-2);font-size:11px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.pp-review-body{margin-top:1px;color:var(--pp-note-ink);font-size:12px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:break-word}' +
+      '.pp-review-exec{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;margin-top:5px;padding:2px 7px;border:1px solid color-mix(in srgb,var(--pp-note-line) 85%,transparent);border-radius:999px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent);color:var(--pp-note-ink-2);font-size:10.5px;line-height:16px;cursor:pointer;transition:border-color .15s,background .15s,color .15s}' +
+      '.pp-review-exec:hover{border-color:color-mix(in srgb,var(--pp-note-accent) 30%,var(--pp-note-line))}' +
+      '.pp-review-exec[data-active="true"]{border-color:color-mix(in srgb,var(--pp-note-accent) 42%,transparent);background:color-mix(in srgb,var(--pp-note-accent) 11%,transparent);color:var(--pp-note-accent)}' +
+      '.pp-review-exec input{width:12px;height:12px;margin:0;accent-color:var(--pp-note-accent);cursor:pointer}' +
+      '.pp-review-todo-choice{display:inline-flex;align-items:center;gap:2px;align-self:flex-start;margin-top:5px;padding:2px;border:1px solid color-mix(in srgb,var(--pp-note-line) 85%,transparent);border-radius:999px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent)}' +
+      '.pp-review-todo-option{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;border-radius:999px;color:var(--pp-note-ink-2);font-size:10.5px;line-height:1;cursor:pointer;transition:background .15s,color .15s}' +
+      '.pp-review-todo-option[data-active="true"]{background:color-mix(in srgb,var(--pp-note-accent) 11%,transparent);color:var(--pp-note-accent)}' +
+      '.pp-review-todo-option input{width:11px;height:11px;margin:0;accent-color:var(--pp-note-accent);cursor:pointer}' +
+      '.pp-review-preview-wrap{display:flex;flex:1;flex-direction:column;gap:5px;min-height:0;margin:10px 14px 9px;padding:7px 8px;border:1px solid var(--pp-note-line);border-radius:9px;background:color-mix(in srgb,var(--pp-note-ink) 2%,var(--pp-note-surface))}' +
+      '.pp-review-preview-hint{padding:0 1px;color:var(--pp-note-ink-2);font-size:10.5px;line-height:1.45}' +
+      '.pp-review-text{box-sizing:border-box;flex:1;width:100%;min-height:160px;padding:7px 8px;border:1px solid var(--pp-note-line);border-radius:7px;background:var(--pp-note-surface);color:var(--pp-note-ink);font:inherit;font-size:11.5px;line-height:1.5;resize:vertical;outline:none}' +
+      '.pp-review-text:focus{border-color:var(--pp-note-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--pp-note-accent) 14%,transparent)}' +
+      '.pp-review-empty-send{margin:0 14px 9px;padding:7px 9px;border:1px dashed var(--pp-note-line);border-radius:8px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5}' +
+      '.pp-review-error{margin:0 14px 9px;padding:7px 9px;border-radius:7px;background:color-mix(in srgb,var(--pp-note-danger) 8%,transparent);color:var(--pp-note-danger);font-size:11px;line-height:1.5}' +
+      '.pp-review-actions{position:sticky;bottom:0;z-index:4;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;margin:auto 0 0;padding:8px 14px;border-top:1px solid color-mix(in srgb,var(--pp-note-line) 80%,transparent);background:color-mix(in srgb,var(--pp-note-surface) 92%,transparent);backdrop-filter:blur(10px)}' +
+      '.pp-review-actions .pp-note-btn{height:27px;padding:0 12px;border:1px solid var(--pp-note-line);border-radius:8px;background:var(--pp-note-surface);color:var(--pp-note-ink);font-weight:500}' +
+      '.pp-review-actions .pp-note-btn:hover:not([disabled]){border-color:color-mix(in srgb,var(--pp-note-accent) 30%,var(--pp-note-line));background:color-mix(in srgb,var(--pp-note-ink) 3%,var(--pp-note-surface))}' +
+      '.pp-review-actions .pp-note-btn-primary{border-color:transparent;background:var(--pp-note-accent);color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--pp-note-accent) 30%,transparent)}' +
+      '.pp-review-actions .pp-note-btn-primary:hover:not([disabled]){background:var(--pp-note-accent);filter:brightness(1.05)}' +
+      '.pp-review-actions .pp-review-cancel{border-color:transparent;background:transparent;color:var(--pp-note-ink-2)}' +
+      '.pp-review-actions .pp-review-cancel:hover:not([disabled]){border-color:transparent;background:var(--pp-note-hover);color:var(--pp-note-ink)}' +
+      '.pp-review-actions .pp-note-btn[disabled]{opacity:.5;cursor:not-allowed}' +
+      '.pp-review .pp-notes-empty{margin:10px 14px}' +
+      '.pp-note-bubble .pp-hint,.pp-notes .pp-hint{color:var(--pp-note-ink-2);font-size:11px;line-height:1.5}' +
+      '.pp-note-bubble .pp-image-picker,.pp-notes .pp-image-picker{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:2px}' +
+      '.pp-note-bubble .pp-image-add,.pp-notes .pp-image-add{height:26px;padding:0 9px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;cursor:pointer}' +
+      '.pp-note-bubble .pp-images,.pp-notes .pp-images{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px}' +
+      '.pp-note-bubble .pp-images-compact,.pp-notes .pp-images-compact{gap:3px;margin-top:3px}' +
+      '.pp-note-bubble .pp-image,.pp-notes .pp-image{position:relative;display:inline-flex;width:44px;height:44px;flex:none;border:1px solid var(--pp-note-line);border-radius:6px;background:color-mix(in srgb,var(--pp-note-ink) 5%,transparent);overflow:hidden;cursor:zoom-in}' +
+      '.pp-note-bubble .pp-images-compact .pp-image,.pp-notes .pp-images-compact .pp-image{width:32px;height:32px}' +
+      '.pp-note-bubble .pp-image img,.pp-notes .pp-image img{width:100%;height:100%;object-fit:cover;display:block}' +
+      '.pp-note-bubble .pp-image-empty,.pp-notes .pp-image-empty{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--pp-note-ink-2)}' +
+      '.pp-note-bubble .pp-image-x,.pp-notes .pp-image-x{position:absolute;top:1px;right:1px;width:15px;height:15px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font:inherit;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}' +
+      '.pp-note-bubble .pp-image-x:hover,.pp-notes .pp-image-x:hover{background:var(--pp-note-danger)}' +
+      '.pp-note-bubble .pp-image-more,.pp-notes .pp-image-more{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 4px;border-radius:6px;border:1px dashed var(--pp-note-line);color:var(--pp-note-ink-2);font-size:11px}' +
+      '.pp-note-layer .pp-lightbox,.pp-notes .pp-lightbox{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:28px;background:rgba(0,0,0,.72)}' +
+      '.pp-note-layer .pp-lightbox-body,.pp-notes .pp-lightbox-body{display:flex;flex-direction:column;align-items:center;gap:8px;max-width:min(92vw,1200px);max-height:92vh}' +
+      '.pp-note-layer .pp-lightbox-body img,.pp-notes .pp-lightbox-body img{max-width:100%;max-height:calc(92vh - 48px);object-fit:contain;border-radius:8px;background:var(--pp-note-surface,#fff);box-shadow:0 18px 48px rgba(0,0,0,.35)}' +
+      '.pp-note-layer .pp-lightbox-empty,.pp-notes .pp-lightbox-empty{display:flex;align-items:center;justify-content:center;min-width:180px;min-height:120px;padding:16px;border:1px dashed rgba(255,255,255,.35);border-radius:8px;color:#fff;font-size:12px}' +
+      '.pp-note-layer .pp-lightbox-bar,.pp-notes .pp-lightbox-bar{display:flex;align-items:center;gap:12px;max-width:100%;color:#fff;font-size:12px}' +
+      '.pp-note-layer .pp-lightbox-name,.pp-notes .pp-lightbox-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.9}' +
+      '.pp-note-layer .pp-lightbox-close,.pp-notes .pp-lightbox-close{width:26px;height:26px;border:1px solid rgba(255,255,255,.35);border-radius:50%;background:rgba(0,0,0,.35);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;font:inherit}' +
+      '.pp-note-layer .pp-lightbox-close:hover,.pp-notes .pp-lightbox-close:hover{background:rgba(0,0,0,.6)}' +
       '.pp-notes-tag{flex:none;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--dsw-alias-state-success-primary,#2f9e63) 14%,transparent);color:var(--dsw-alias-state-success-primary,#2f9e63);font-size:10px;line-height:16px}' +
       '.pp-notes-row[data-promoted="true"]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary,#2f9e63) 35%,var(--pp-note-line))}' +
-      '.pp-notes-kind{flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-right:4px;border-radius:4px;background:rgba(var(--pp-inline-tint),.18);color:rgb(var(--pp-inline-tint));font-size:10px;line-height:1}' +
-      '.pp-note-inline[data-kind="comment"],.pp-notes-kind[data-kind="comment"],.pp-note-kind[data-kind="comment"]{--pp-inline-tint:255,191,36}' +
-      '.pp-note-inline[data-kind="question"],.pp-notes-kind[data-kind="question"],.pp-note-kind[data-kind="question"]{--pp-inline-tint:244,114,114}' +
-      '.pp-note-inline[data-kind="agree"],.pp-notes-kind[data-kind="agree"],.pp-note-kind[data-kind="agree"]{--pp-inline-tint:74,222,128}' +
-      '.pp-note-inline[data-kind="disagree"],.pp-notes-kind[data-kind="disagree"],.pp-note-kind[data-kind="disagree"]{--pp-inline-tint:239,68,68}' +
-      '.pp-note-inline[data-kind="idea"],.pp-notes-kind[data-kind="idea"],.pp-note-kind[data-kind="idea"]{--pp-inline-tint:96,165,250}' +
-      '.pp-note-inline[data-kind="todo"],.pp-notes-kind[data-kind="todo"],.pp-note-kind[data-kind="todo"]{--pp-inline-tint:251,191,36}' +
-      '.pp-note-inline{display:inline-flex;align-items:center;gap:3px;height:17px;margin:0 1px 0 4px;padding:0 5px;border:1px dashed rgba(var(--pp-inline-tint),.85);border-radius:5px;background:rgba(var(--pp-inline-tint),.15);color:inherit;font:inherit;font-size:11px;line-height:17px;vertical-align:middle;white-space:nowrap;user-select:none;-webkit-user-select:none;cursor:pointer}' +
-      '.pp-note-inline-icon{font-size:10px;line-height:1;color:rgb(var(--pp-inline-tint))}' +
-      '.pp-note-inline-text{white-space:nowrap}' +
-      '.pp-note-inline:hover{border-color:rgb(var(--pp-inline-tint));background:rgba(var(--pp-inline-tint),.26)}' +
+      '.pp-notes-kind{flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-right:4px;border-radius:4px;background:rgba(var(--pp-inline-tint),.26);color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)));font-size:10px;line-height:1}' +
+      '.pp-note-inline[data-kind="comment"],.pp-notes-kind[data-kind="comment"],.pp-note-kind[data-kind="comment"]{--pp-inline-tint:139,92,246;--pp-inline-ink:124,58,237}' +
+      '.pp-note-inline[data-kind="question"],.pp-notes-kind[data-kind="question"],.pp-note-kind[data-kind="question"]{--pp-inline-tint:249,115,22;--pp-inline-ink:234,88,12}' +
+      '.pp-note-inline[data-kind="agree"],.pp-notes-kind[data-kind="agree"],.pp-note-kind[data-kind="agree"]{--pp-inline-tint:34,197,94;--pp-inline-ink:22,163,74}' +
+      '.pp-note-inline[data-kind="disagree"],.pp-notes-kind[data-kind="disagree"],.pp-note-kind[data-kind="disagree"]{--pp-inline-tint:220,38,38;--pp-inline-ink:185,28,28}' +
+      '.pp-note-inline[data-kind="idea"],.pp-notes-kind[data-kind="idea"],.pp-note-kind[data-kind="idea"]{--pp-inline-tint:59,130,246;--pp-inline-ink:37,99,235}' +
+      '.pp-note-inline[data-kind="supplement"],.pp-notes-kind[data-kind="supplement"],.pp-note-kind[data-kind="supplement"]{--pp-inline-tint:20,184,166;--pp-inline-ink:13,148,136}' +
+      '.pp-note-inline[data-kind="todo"],.pp-notes-kind[data-kind="todo"],.pp-note-kind[data-kind="todo"]{--pp-inline-tint:250,204,21;--pp-inline-ink:202,138,4}' +
+      '.pp-note-inline{box-sizing:border-box;display:inline-flex;align-items:center;gap:.25em;height:auto;max-width:100%;margin:0 .12em 0 .32em;padding:.02em .36em;border:1px dashed rgba(var(--pp-inline-ink,var(--pp-inline-tint)),.9);border-radius:5px;background:rgba(var(--pp-inline-tint),.28);color:inherit;font:inherit;font-family:var(--dsw-font-family,inherit);font-size:var(--dsh-content-font-size,14px);font-style:normal;font-weight:400;line-height:1.32;vertical-align:middle;white-space:normal;user-select:none;-webkit-user-select:none;cursor:pointer}' +
+      '.pp-note-inline-icon{flex:none;font-size:.95em;line-height:1;color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)))}' +
+      '.pp-note-inline-text{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:inherit}' +
+      '.pp-note-inline:hover{border-color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)));background:rgba(var(--pp-inline-tint),.4)}' +
       '.pp-note-kinds{display:flex;flex-wrap:wrap;gap:2px;margin:0}' +
       '.pp-note-kind{display:inline-flex;align-items:center;gap:3px;height:20px;padding:0 5px;border:1px solid var(--pp-note-line);border-radius:999px;background:transparent;color:var(--pp-note-ink-2);font:inherit;font-size:10.5px;cursor:pointer}' +
-      '.pp-note-kind[data-active="true"]{border-color:rgba(var(--pp-inline-tint),.9);color:var(--pp-note-ink);background:rgba(var(--pp-inline-tint),.16)}' +
-      '.pp-note-kind-icon{font-size:10px;line-height:1;color:rgb(var(--pp-inline-tint))}' +
+      '.pp-note-kind[data-active="true"]{border-color:rgba(var(--pp-inline-ink,var(--pp-inline-tint)),.9);color:var(--pp-note-ink);background:rgba(var(--pp-inline-tint),.24)}' +
+      '.pp-note-kind-icon{font-size:10px;line-height:1;color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)))}' +
       '.pp-note-limit{color:var(--pp-note-ink-2);font-size:10px;font-variant-numeric:tabular-nums}' +
       '.pp-note-limit-count{font-variant-numeric:tabular-nums}' +
       '.pp-note-prompt{position:fixed;z-index:3;display:flex;flex-direction:column;gap:2px;width:210px;box-sizing:border-box;padding:5px;border:1px solid var(--pp-note-line);border-radius:10px;background:var(--pp-note-surface);box-shadow:0 14px 34px rgba(0,0,0,.2);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left;pointer-events:auto}' +
@@ -7529,6 +8910,9 @@ window.__ModuleLoader__.load({
                 onInteraction(request) {
                   if (!request || request.trigger !== 'contextmenu') return;
                   if (typeof request.readText !== 'function' || request.readText() === null) return;
+                  // Capture before the surface mounts: opening it may collapse
+                  // the browser selection before the React state initializer runs.
+                  pendingNoteAnchor = captureNoteAnchor(request.sessionId || (request.session && request.session.id) || '');
                   // Opening alone does not suppress the browser menu: without this
                   // the native menu and our surface would both show.
                   request.preventDefault();
@@ -7565,6 +8949,20 @@ window.__ModuleLoader__.load({
             PromptPoolPanel,
           ),
         );
+        // The bridge to the host's own queue: it sits with the other composer
+        // dock entries (the base QueueDock is one of them), above the input.
+        // An older host may not declare this slot; the pool then keeps working
+        // without the strip instead of failing to mount.
+        try {
+          ctx.slots.inject('conversation.input.dock', () =>
+            ctx.slots.register(
+              { name: 'conversation.input.dock', id: 'prompt-pool-queue', order: 15, label: () => translate('tray.title') },
+              PromptPoolQueueDock,
+            ),
+          );
+        } catch (_error) {
+          /* the composer dock slot is a newer host surface */
+        }
         // The Chat view renders the surface the interaction above opened, keyed by
         // that interaction's id. The slot is declared only while Chat is mounted.
         ctx.slots.inject('conversation.chat.text-interaction', () =>
