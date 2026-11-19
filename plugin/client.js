@@ -183,6 +183,7 @@ window.__ModuleLoader__.load({
       'row.typeNone': '未分类',
       'row.allTypes': '全部类型',
       'page.new': '提示词',
+      'page.inspiration': '记录灵感',
       'row.noCategory': '未分组',
       'tray.title': '待发送队列',
       'tray.selected': '已选 {n} 条',
@@ -455,6 +456,7 @@ window.__ModuleLoader__.load({
       'row.typeNone': 'Unclassified',
       'row.allTypes': 'All types',
       'page.new': 'Prompt',
+      'page.inspiration': 'Capture inspiration',
       'row.noCategory': 'Ungrouped',
       'tray.title': 'Send queue',
       'tray.selected': '{n} selected',
@@ -3884,6 +3886,28 @@ window.__ModuleLoader__.load({
         setEditing({ id: item.id, group, title: '', body: '', images: [], type: '' });
       };
 
+      /** A lightweight global inspiration: a note-typed prompt with 灵感 preselected. */
+      const createInspiration = () => {
+        const normal = normalizeSettings(state.settings);
+        let group = BUILTIN_GROUP.note;
+        if (normal.display.builtin === 'hidden' && normal.display.custom !== 'hidden' && state.categories[0]) {
+          group = 'custom:' + state.categories[0].id;
+        }
+        setQuery('');
+        setTypeFilter('all');
+        const item = poolActions.add({
+          id: uid(),
+          group,
+          title: '',
+          body: '',
+          images: [],
+          type: 'inspiration',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        setEditing({ id: item.id, group, title: '', body: '', images: [], type: 'inspiration' });
+      };
+
       const rowOf = (item, index) => renderPoolRow({
         key: item.id,
         item,
@@ -3967,6 +3991,9 @@ window.__ModuleLoader__.load({
             : [
                 h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: create }, '＋ ', translate('page.new')),
                 h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
+                scope === 'global'
+                  ? h('button', { key: 'inspiration', type: 'button', className: 'pp-mini', onClick: createInspiration }, translate('page.inspiration'))
+                  : null,
               ],
           h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
         ),

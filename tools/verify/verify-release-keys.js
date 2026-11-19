@@ -130,6 +130,10 @@ const failures = [];
 
 (async () => {
   let tree = render();
+  const digest = nodes(tree, []).find(
+    (node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('tray.digest') >= 0,
+  );
+  if (!digest) failures.push('the merge-and-send action was not found');
   const release = nodes(tree, []).find(
     (node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('tray.release') >= 0,
   );

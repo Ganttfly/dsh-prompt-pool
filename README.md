@@ -93,7 +93,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
 - **Prompt types** — each prompt has at most one fixed type: decision / question / opinion / idea /
   supplement / to-do / inspiration, or unclassified. Saving a note seeds it from the annotation kind
   (agree and disagree both map to decision); the type can be changed in the save step or the editor and
-  filtered from the list header. Templates, habits and notes are groups, not types.
+  filtered from the list header. Templates, habits and notes are groups, not types. The global shared pool
+  offers a **Capture inspiration** shortcut that creates a global note with the inspiration type preselected.
 - **Composer panel** — search, the current workspace's prompt list, type filtering, per-row insert / queue /
   edit / duplicate / delete, and the shared send-queue card with collapse, clear and send. Its two scopes
   are **Annotations** (current session) and **Prompts** (current workspace); the panel never shows the

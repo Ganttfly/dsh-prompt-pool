@@ -238,6 +238,20 @@ const main = async () => {
     }
   }
 
+  // 6. Queue entries remember the session they were queued for.
+  {
+    const run = load({}, 'conversation.input.overlay', {
+      ...panelProps,
+      sessionId: 's1',
+      initialScope: 'workspace',
+    });
+    findQueue(run.tree()).props.onClick();
+    const entry = run.pool.get().tray[0];
+    if (!entry || entry.targetSessionId !== 's1') {
+      failures.push(`queued target was ${entry && entry.targetSessionId}, expected s1`);
+    }
+  }
+
   for (const failure of failures) console.error('[fail]', failure);
   console.log(failures.length === 0 ? '[ok] retention switches and workspace scoping behave' : '[fail] ' + failures.length + ' check(s)');
   if (failures.length > 0) process.exitCode = 1;

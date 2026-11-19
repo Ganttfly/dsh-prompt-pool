@@ -438,6 +438,7 @@ else {
   else if (types.promptTypeForNote({ kind: 'supplement' }) !== 'supplement') fail('supplement did not map to a supplement');
   else if (types.promptTypeForNote({ kind: 'todo' }) !== 'todo') fail('todo did not map to a todo');
   else if (types.normalizePromptType('bogus') !== '') fail('an unknown prompt type was accepted');
+  else if (types.normalizePromptType('inspiration') !== 'inspiration') fail('the inspiration type was rejected');
   else if (types.promptTypeForNotes([{ kind: 'agree' }, { kind: 'disagree' }]) !== 'decision') fail('a uniform batch lost its type');
   else if (types.promptTypeForNotes([{ kind: 'agree' }, { kind: 'todo' }]) !== '') fail('a mixed batch got a single type');
   else console.log('[ok] prompt types are fixed and derived from annotation kinds');
