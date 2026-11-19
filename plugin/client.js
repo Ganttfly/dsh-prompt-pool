@@ -518,7 +518,7 @@ window.__ModuleLoader__.load({
       'note.add': '+ Annotate',
       'note.anchorFailed': 'Could not anchor that selection. Select a passage in the assistant reply again.',
       'note.title': 'Annotations',
-      'scope.notes': 'Notes',
+      'scope.notes': 'Annotations',
       'scope.prompts': 'Prompts',
       'scope.session': 'Current session',
       'scope.workspace': 'Current workspace',
