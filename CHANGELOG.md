@@ -8,6 +8,18 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Scope tabs: the composer panel now separates **Annotations** (current session) from **Prompts**
+  (current workspace); the sidebar separates **Current session**, **Current workspace** and **Global
+  shared pool**. Both default to the current session. Existing list rows, icons and actions are reused.
+- Workspace prompts no longer use group tabs; they are filtered by a single prompt type. The global
+  shared pool keeps the existing built-in/custom group tabs.
+- Prompt types: decision / question / opinion / idea / supplement / to-do / inspiration, with a single
+  optional value per prompt. Annotation kinds seed the type on save; the type is filterable and editable.
+- A save-as-prompt step for notes and reviewed batches: edit the title, body, images, type and target
+  group, with a reminder that the conversation context is not carried over.
+- Outbox entries now carry their target session, so queued prompt items are shown and released only in
+  the session they were queued for. Legacy entries without a target remain visible everywhere.
+- Action icons are slightly tighter (24px buttons, no inter-button gap) while keeping the 24px hit area.
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 

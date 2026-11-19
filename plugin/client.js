@@ -293,6 +293,7 @@ window.__ModuleLoader__.load({
       'note.store': '存成提示词',
       'note.stored': '已存入 {group}',
       'note.composeStore': '存成提示词',
+      'note.save.contextWarning': '转为提示词后不会保留会话上下文，请确认内容可以独立理解。',
       'note.composeStored': '已存成提示词到 {group}',
       'note.inserted': '已插入输入框',
       'note.insertFailed': '输入框暂不可用，稍后再试',
@@ -572,6 +573,7 @@ window.__ModuleLoader__.load({
       'note.store': 'Save as prompt',
       'note.stored': 'Saved to {group}',
       'note.composeStore': 'Save as prompt',
+      'note.save.contextWarning': 'Saving as a prompt does not keep the conversation context; make sure the text stands on its own.',
       'note.composeStored': 'Saved as a prompt in {group}',
       'note.inserted': 'Inserted into the composer',
       'note.insertFailed': 'The composer is not available; try again',
@@ -1632,7 +1634,7 @@ window.__ModuleLoader__.load({
     function normalizeTrayEntry(raw, byId) {
       if (typeof raw === 'string') {
         const item = byId.get(raw);
-        return item ? { key: uid(), itemId: raw, body: item.body, images: normalizeImages(item.images) } : null;
+        return item ? { key: uid(), itemId: raw, body: item.body, images: normalizeImages(item.images), targetSessionId: '' } : null;
       }
       if (!raw || typeof raw !== 'object') return null;
       const itemId = typeof raw.itemId === 'string' ? raw.itemId : '';
@@ -1640,7 +1642,13 @@ window.__ModuleLoader__.load({
       const body = typeof raw.body === 'string' ? raw.body : source ? source.body : '';
       const images = normalizeImages(Array.isArray(raw.images) ? raw.images : source ? source.images : []);
       if (!body.trim() && images.length === 0) return null;
-      return { key: typeof raw.key === 'string' && raw.key ? raw.key : uid(), itemId, body, images };
+      return {
+        key: typeof raw.key === 'string' && raw.key ? raw.key : uid(),
+        itemId,
+        body,
+        images,
+        targetSessionId: typeof raw.targetSessionId === 'string' ? raw.targetSessionId : '',
+      };
     }
 
     function normalizePool(data) {
@@ -2319,11 +2327,20 @@ window.__ModuleLoader__.load({
           return { ...state, items };
         });
       },
-      addToTray(itemId) {
+      addToTray(itemId, sessionId) {
         mutate((state) => {
           const item = state.items.find((candidate) => candidate.id === itemId);
           if (!item) return null;
-          return { ...state, tray: [...state.tray, { key: uid(), itemId, body: item.body, images: normalizeImages(item.images) }] };
+          return {
+            ...state,
+            tray: [...state.tray, {
+              key: uid(),
+              itemId,
+              body: item.body,
+              images: normalizeImages(item.images),
+              targetSessionId: typeof sessionId === 'string' ? sessionId : '',
+            }],
+          };
         });
       },
       patchTray(key, fields) {
@@ -2911,8 +2928,8 @@ window.__ModuleLoader__.load({
     function PromptPoolQueueDock(props) {
       useLocaleTick();
       const state = usePoolState();
-      const entries = state.tray;
       const sessionId = (props && props.sessionId) || '';
+      const entries = state.tray.filter((entry) => !entry.targetSessionId || entry.targetSessionId === sessionId);
       // The seat always injects useProjection; the guard only serves render
       // stubs. The prop identity is stable per mount, so the hook order holds.
       const useProjection = props && typeof props.useProjection === 'function' ? props.useProjection : null;
@@ -3572,7 +3589,8 @@ window.__ModuleLoader__.load({
       // A failed write outranks a transient toast: the change is not saved.
       const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
       const trayRef = useRef(null);
-      const trayCount = state.tray.length;
+      const sessionTray = state.tray.filter((entry) => !entry.targetSessionId || entry.targetSessionId === activeSessionId);
+      const trayCount = sessionTray.length;
       const lastTrayCount = useRef(trayCount);
       useEffect(() => {
         if (trayCount > lastTrayCount.current) {
@@ -3806,7 +3824,7 @@ window.__ModuleLoader__.load({
       };
 
       /** Store the session's annotations as one prompt, from the page header. */
-      const storeNotesPrompt = (event) => {
+      const storeNotesPrompt = () => {
         if (selectedNotes.length === 0) {
           flash({ kind: 'error', text: translate('note.noneSelected') });
           return;
@@ -3818,38 +3836,16 @@ window.__ModuleLoader__.load({
         const ordered = choices.some((entry) => entry.value === preferred)
           ? [...choices.filter((entry) => entry.value === preferred), ...choices.filter((entry) => entry.value !== preferred)]
           : choices;
-        const rect = event && event.currentTarget && event.currentTarget.getBoundingClientRect
-          ? event.currentTarget.getBoundingClientRect()
-          : null;
-        notePrompt.set({
-          open: true,
-          target: { kind: 'reply' },
+        const text = composeNotesReply(selectedNotes);
+        openNoteSave({
+          noteIds: selectedNotes.map((note) => note.id),
+          markStored: false,
+          title: draftTitle(text),
+          body: text,
+          images: imagesForNotes(selectedNotes),
+          type: promptTypeForNotes(selectedNotes),
           choices: ordered,
-          defaultValue: preferred,
-          anchor: rect
-            ? { left: Math.round(rect.left), right: Math.round(rect.right), top: Math.round(rect.top), bottom: Math.round(rect.bottom) }
-            : { left: 120, right: 160, top: 60, bottom: 90 },
-          token: Date.now(),
-          onPick: (group) => {
-            closeNotePrompt();
-            if (!group) return;
-            const text = composeNotesReply(selectedNotes);
-            poolActions.add({
-              id: uid(),
-              group,
-              title: draftTitle(text),
-              body: text,
-              images: imagesForNotes(selectedNotes),
-              type: promptTypeForNotes(selectedNotes),
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-            });
-            if (normalizeSettings(state.settings).noteKeepAfterStore === false) {
-              notesActions.removeMany(selectedNotes.map((note) => note.id));
-            }
-            const resolved = resolveGroup(group, state.categories, workspaceList);
-            showToast(translate('note.composeStored', { group: resolved ? resolved.label : translate('row.noCategory') }), 'ok');
-          },
+          defaultGroup: preferred,
         });
       };
 
@@ -3903,7 +3899,7 @@ window.__ModuleLoader__.load({
       /** Queue one occurrence, dropping it from the pool when retention is off. */
       const queueItem = (item) => {
         const before = pool.get().tray.length;
-        poolActions.addToTray(item.id);
+        poolActions.addToTray(item.id, activeSessionId);
         if (pool.get().tray.length === before) return;
         if (!normalizeSettings(state.settings).keepAfterQueue) removeItem(item, translate('status.queuedAndRemoved'));
       };
@@ -4075,12 +4071,12 @@ window.__ModuleLoader__.load({
             )
           : null,
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
-        confirmClear && state.tray.length > 0
+        confirmClear && sessionTray.length > 0
           ? h(TrayClearConfirm, {
-              count: state.tray.length,
+              count: sessionTray.length,
               onConfirm: () => {
-                const entries = pool.get().tray.slice();
-                poolActions.clearTray();
+                const entries = sessionTray.slice();
+                poolActions.removeTrayKeys(entries.map((entry) => entry.key));
                 setConfirmClear(false);
                 if (entries.length === 0) return;
                 flash({
@@ -4104,7 +4100,7 @@ window.__ModuleLoader__.load({
               },
             })
           : null,
-        pendingRemove && state.tray.some((entry) => entry.key === pendingRemove.key)
+        pendingRemove && sessionTray.some((entry) => entry.key === pendingRemove.key)
           ? h(TrayRemoveConfirm, {
               onCancel: () => setPendingRemove(null),
               onConfirm: () => {
@@ -4192,7 +4188,7 @@ window.__ModuleLoader__.load({
             : null,
           !settingsOpen
             ? renderTrayCard({
-                entries: state.tray,
+                entries: sessionTray,
                 queuePending,
                 collapsed: queueCollapsed,
                 sessionId: activeSessionId,
@@ -5305,6 +5301,34 @@ window.__ModuleLoader__.load({
     })();
     const closeNotePrompt = () => notePrompt.set({ open: false, target: null, choices: [], anchor: null, defaultValue: '', onPick: null, token: 0 });
 
+    /** The explicit save-as-prompt step shared by single notes and batches. */
+    const noteSave = (() => {
+      const empty = {
+        open: false, noteIds: [], markStored: false, title: '', body: '', images: [],
+        type: '', choices: [], defaultGroup: '', token: 0,
+      };
+      if (typeof window === 'undefined') return createStore(empty);
+      if (!window.__dshPromptPoolNoteSaveV1) window.__dshPromptPoolNoteSaveV1 = createStore(empty);
+      return window.__dshPromptPoolNoteSaveV1;
+    })();
+    const closeNoteSave = () => noteSave.set({
+      open: false, noteIds: [], markStored: false, title: '', body: '', images: [],
+      type: '', choices: [], defaultGroup: '', token: 0,
+    });
+    const openNoteSave = (draft) => noteSave.set({
+      open: true,
+      noteIds: Array.isArray(draft.noteIds) ? draft.noteIds : [],
+      markStored: draft.markStored === true,
+      title: typeof draft.title === 'string' ? draft.title : '',
+      body: typeof draft.body === 'string' ? draft.body : '',
+      images: normalizeImages(draft.images),
+      type: normalizePromptType(draft.type),
+      choices: Array.isArray(draft.choices) ? draft.choices : [],
+      defaultGroup: typeof draft.defaultGroup === 'string' ? draft.defaultGroup : '',
+      token: Date.now(),
+    });
+    const useNoteSave = () => useSyncExternalStore(noteSave.subscribe, noteSave.get, noteSave.get);
+
     /** The "delete this annotation?" popup; the confirmation floats, never inline. */
     const noteConfirm = (() => {
       const empty = { open: false, anchor: null, onConfirm: null, token: 0 };
@@ -5802,6 +5826,120 @@ window.__ModuleLoader__.load({
      * The markdown DOM is never touched: live ranges are measured and the layer is
      * positioned over them, so selection, copy and the host's rendering still work.
      */
+    /** The save-as-prompt step: make the prompt self-contained before filing it. */
+    function NoteSaveSheet(props) {
+      useLocaleTick();
+      const draft = props.draft;
+      const [title, setTitle] = useState(draft.title || '');
+      const [body, setBody] = useState(draft.body || '');
+      const [type, setType] = useState(normalizePromptType(draft.type));
+      const [group, setGroup] = useState(draft.defaultGroup || (draft.choices[0] && draft.choices[0].value) || BUILTIN_GROUP.note);
+      const [images, setImages] = useState(normalizeImages(draft.images));
+      const { preview, openImage, closeImage } = useImagePreview();
+
+      const close = () => props.onClose();
+      const save = () => {
+        const text = body.trim();
+        if (!text && images.length === 0) {
+          showToast(translate('status.emptyBody'), 'error');
+          return;
+        }
+        const choice = (draft.choices || []).find((entry) => entry.value === group);
+        poolActions.add({
+          id: uid(),
+          group,
+          title: title.trim(),
+          body,
+          images,
+          type: normalizePromptType(type),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        const keep = normalizeSettings(pool.get().settings).noteKeepAfterStore !== false;
+        const noteIds = Array.isArray(draft.noteIds) ? draft.noteIds : [];
+        if (!keep) notesActions.removeMany(noteIds);
+        else if (draft.markStored) {
+          for (const id of noteIds) notesActions.patch(id, { promotedGroup: group, promotedAt: Date.now() });
+        }
+        showToast(translate('note.composeStored', {
+          group: choice ? choice.label : translate('row.noCategory'),
+        }), 'ok');
+        close();
+      };
+
+      return h(
+        'div',
+        {
+          className: 'pp-note-save-mask',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) close();
+          },
+        },
+        h(
+          'div',
+          { className: 'pp-note-save-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': translate('note.composeStore') },
+          h(
+            'div',
+            { className: 'pp-note-save-head' },
+            h('strong', null, translate('note.composeStore')),
+            h('button', { type: 'button', className: 'pp-note-save-x', title: translate('note.cancel'), onClick: close }, '✕'),
+          ),
+          h('input', {
+            className: 'pp-note-input',
+            value: title,
+            placeholder: translate('row.titlePlaceholder'),
+            onChange: (event) => setTitle(event.target.value),
+          }),
+          h('textarea', {
+            className: 'pp-note-input pp-note-save-body',
+            value: body,
+            rows: 5,
+            placeholder: translate('row.bodyPlaceholder'),
+            onChange: (event) => setBody(event.target.value),
+          }),
+          h(
+            'div',
+            { className: 'pp-note-save-row' },
+            h(
+              'select',
+              {
+                className: 'pp-note-save-select',
+                value: type,
+                'aria-label': translate('row.type'),
+                onChange: (event) => setType(normalizePromptType(event.target.value)),
+              },
+              h('option', { value: '' }, translate('row.typeNone')),
+              PROMPT_TYPES.map((entry) => h('option', { key: entry.id, value: entry.id }, translate(entry.label))),
+            ),
+            h(
+              'select',
+              {
+                className: 'pp-note-save-select',
+                value: group,
+                'aria-label': translate('row.classification'),
+                onChange: (event) => setGroup(event.target.value),
+              },
+              (draft.choices || []).map((entry) => h('option', { key: entry.value, value: entry.value }, entry.label)),
+            ),
+          ),
+          h(ImagePicker, {
+            images,
+            onChange: setImages,
+            onError: (text) => showToast(text, 'error'),
+            onOpen: openImage,
+          }),
+          h('div', { className: 'pp-note-save-hint' }, translate('note.save.contextWarning')),
+          h(
+            'div',
+            { className: 'pp-note-save-actions' },
+            h('button', { type: 'button', className: 'pp-note-btn', onClick: close }, translate('note.cancel')),
+            h('button', { type: 'button', className: 'pp-note-btn pp-note-btn-primary', onClick: save }, translate('row.save')),
+          ),
+        ),
+        h(ImageLightbox, { preview, onClose: closeImage }),
+      );
+    }
+
     function NotesLayer() {
       useLocaleTick();
       const notesState = useNotesState();
@@ -5809,6 +5947,7 @@ window.__ModuleLoader__.load({
       const draft = useNoteDraft();
       const focus = useNoteFocus();
       const prompt = useNotePrompt();
+      const savePrompt = useNoteSave();
       const confirm = useNoteConfirm();
       const pool = usePoolState();
       const [editing, setEditing] = useState(null);
@@ -6453,6 +6592,13 @@ window.__ModuleLoader__.load({
               ),
             )
           : null,
+        savePrompt.open
+          ? h(NoteSaveSheet, {
+              key: savePrompt.token,
+              draft: savePrompt,
+              onClose: closeNoteSave,
+            })
+          : null,
         h(ImageLightbox, { key: 'lightbox', preview, onClose: closeImage }),
       );
     }
@@ -6610,26 +6756,25 @@ window.__ModuleLoader__.load({
         flash(translate('note.composeStored', { group: labelOfGroup(group) }), 'ok');
       };
 
-      /** Open the group popup just under the button that asked for it. */
-      const openPrompt = (target, event) => {
-        const rect = event && event.currentTarget && event.currentTarget.getBoundingClientRect
-          ? event.currentTarget.getBoundingClientRect()
-          : null;
-        notePrompt.set({
-          open: true,
-          target,
+      /** Open the explicit save step with the current draft. */
+      const openPrompt = (target) => {
+        const notes = target && target.kind === 'note' && target.note ? [target.note] : picked;
+        if (notes.length === 0) {
+          flash(translate('note.noneSelected'), 'error');
+          return;
+        }
+        const text = target && target.kind === 'note' && target.note
+          ? composeNoteLine(target.note)
+          : composeNotesReply(notes);
+        openNoteSave({
+          noteIds: notes.map((note) => note.id),
+          markStored: target && target.kind === 'note',
+          title: draftTitle(target && target.kind === 'note' && target.note ? target.note.quote : text),
+          body: text,
+          images: imagesForNotes(notes),
+          type: target && target.kind === 'note' && target.note ? promptTypeForNote(target.note) : promptTypeForNotes(notes),
           choices: ordered,
-          defaultValue: preferred,
-          anchor: rect
-            ? { left: Math.round(rect.left), right: Math.round(rect.right), top: Math.round(rect.top), bottom: Math.round(rect.bottom) }
-            : { left: Math.round((window.innerWidth || 0) / 2), right: Math.round((window.innerWidth || 0) / 2) + 40, top: 60, bottom: 90 },
-          onPick: (group) => {
-            closeNotePrompt();
-            if (!group) return;
-            if (target && target.kind === 'note' && target.note) promote(target.note, group);
-            else storePrompt(group, target && Array.isArray(target.notes) ? target.notes : picked);
-          },
-          token: Date.now(),
+          defaultGroup: preferred,
         });
       };
 
@@ -7804,14 +7949,14 @@ window.__ModuleLoader__.load({
       /** Queue one occurrence, dropping it from the pool when retention is off. */
       const queueItem = (item) => {
         const before = pool.get().tray.length;
-        poolActions.addToTray(item.id);
+        poolActions.addToTray(item.id, notesSessionId);
         if (pool.get().tray.length === before) return;
         if (!normalizeSettings(state.settings).keepAfterQueue) deleteItem(item, translate('status.queuedAndRemoved'));
       };
 
       const release = async () => {
         if (busyRef.current) return;
-        const entries = state.tray.slice();
+        const entries = tray.slice();
         if (entries.length === 0) return;
         const direct = resolveDirectQueue(props.sessionId);
         if (!direct && draftRef.current.trim() !== '') {
@@ -7948,7 +8093,7 @@ window.__ModuleLoader__.load({
         onError: (text) => flash({ kind: 'error', text }),
       });
 
-      const tray = state.tray;
+      const tray = state.tray.filter((entry) => !entry.targetSessionId || entry.targetSessionId === notesSessionId);
       const queueCollapsed = normalizeSettings(state.settings).queueCollapsed;
 
       // A capture appends to the end of the list; keep the new row in view.
@@ -8070,7 +8215,7 @@ window.__ModuleLoader__.load({
       };
 
       /** Store the session's annotations as one prompt, from the panel header. */
-      const storeNotesPrompt = (event) => {
+      const storeNotesPrompt = () => {
         if (selectedNotes.length === 0) {
           showToast(translate('note.noneSelected'), 'error');
           return;
@@ -8082,38 +8227,16 @@ window.__ModuleLoader__.load({
         const ordered = choices.some((entry) => entry.value === preferred)
           ? [...choices.filter((entry) => entry.value === preferred), ...choices.filter((entry) => entry.value !== preferred)]
           : choices;
-        const rect = event && event.currentTarget && event.currentTarget.getBoundingClientRect
-          ? event.currentTarget.getBoundingClientRect()
-          : null;
-        notePrompt.set({
-          open: true,
-          target: { kind: 'reply' },
+        const text = composeNotesReply(selectedNotes);
+        openNoteSave({
+          noteIds: selectedNotes.map((note) => note.id),
+          markStored: false,
+          title: draftTitle(text),
+          body: text,
+          images: imagesForNotes(selectedNotes),
+          type: promptTypeForNotes(selectedNotes),
           choices: ordered,
-          defaultValue: preferred,
-          anchor: rect
-            ? { left: Math.round(rect.left), right: Math.round(rect.right), top: Math.round(rect.top), bottom: Math.round(rect.bottom) }
-            : { left: 120, right: 160, top: 60, bottom: 90 },
-          token: Date.now(),
-          onPick: (group) => {
-            closeNotePrompt();
-            if (!group) return;
-            const text = composeNotesReply(selectedNotes);
-            poolActions.add({
-              id: uid(),
-              group,
-              title: draftTitle(text),
-              body: text,
-              images: imagesForNotes(selectedNotes),
-              type: promptTypeForNotes(selectedNotes),
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-            });
-            if (normalizeSettings(state.settings).noteKeepAfterStore === false) {
-              notesActions.removeMany(selectedNotes.map((note) => note.id));
-            }
-            const resolved = resolveGroup(group, state.categories, workspaces.items);
-            showToast(translate('note.composeStored', { group: resolved ? resolved.label : translate('row.noCategory') }), 'ok');
-          },
+          defaultGroup: preferred,
         });
       };
 
@@ -8382,8 +8505,8 @@ window.__ModuleLoader__.load({
           ? h(TrayClearConfirm, {
               count: tray.length,
               onConfirm: () => {
-                const entries = pool.get().tray.slice();
-                poolActions.clearTray();
+                const entries = tray.slice();
+                poolActions.removeTrayKeys(entries.map((entry) => entry.key));
                 setConfirmClear(false);
                 if (entries.length === 0) return;
                 flash({
@@ -8946,6 +9069,15 @@ window.__ModuleLoader__.load({
       '.pp-note-layer .pp-lightbox-close,.pp-notes .pp-lightbox-close{width:26px;height:26px;border:1px solid rgba(255,255,255,.35);border-radius:50%;background:rgba(0,0,0,.35);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;font:inherit}' +
       '.pp-note-layer .pp-lightbox-close:hover,.pp-notes .pp-lightbox-close:hover{background:rgba(0,0,0,.6)}' +
       '.pp-notes-tag{flex:none;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--dsw-alias-state-success-primary,#2f9e63) 14%,transparent);color:var(--dsw-alias-state-success-primary,#2f9e63);font-size:10px;line-height:16px}' +
+      '.pp-note-save-mask{position:fixed;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.32);pointer-events:auto}' +
+      '.pp-note-save-card{display:flex;flex-direction:column;gap:8px;width:min(420px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:14px;border:1px solid var(--pp-note-line);border-radius:12px;background:var(--pp-note-surface);box-shadow:0 18px 48px rgba(0,0,0,.22);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left}' +
+      '.pp-note-save-head{display:flex;align-items:center;gap:8px}.pp-note-save-head strong{flex:1;font-size:13px}' +
+      '.pp-note-save-x{width:24px;height:24px;border:0;border-radius:6px;background:transparent;color:var(--pp-note-ink-2);font:inherit;cursor:pointer}.pp-note-save-x:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}' +
+      '.pp-note-save-body{min-height:96px;max-height:220px;resize:vertical}' +
+      '.pp-note-save-card input.pp-note-input{height:28px;min-height:28px;max-height:28px;padding:0 8px}' +
+      '.pp-note-save-row{display:flex;gap:6px}.pp-note-save-select{flex:1;min-width:0;height:28px;padding:0 6px;border:1px solid var(--pp-note-line);border-radius:7px;background:var(--pp-note-surface);color:inherit;font:inherit;font-size:11px}' +
+      '.pp-note-save-hint{color:var(--pp-note-ink-2);font-size:10.5px;line-height:1.45}' +
+      '.pp-note-save-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:2px}' +
       '.pp-notes-row[data-promoted="true"]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary,#2f9e63) 35%,var(--pp-note-line))}' +
       '.pp-notes-kind{flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-right:4px;border-radius:4px;background:rgba(var(--pp-inline-tint),.26);color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)));font-size:10px;line-height:1}' +
       '.pp-note-inline[data-kind="comment"],.pp-notes-kind[data-kind="comment"],.pp-note-kind[data-kind="comment"]{--pp-inline-tint:139,92,246;--pp-inline-ink:124,58,237}' +

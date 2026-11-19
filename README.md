@@ -16,18 +16,22 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 
 **Annotate while you read.** Select a passage and add a note right where it belongs, without leaving the
 reply; the original wording stays attached, so the context is easy to follow and no key point slips away.
-The **Annotations** tab on the right collects the whole set — locate a passage, insert one note, save it
-as a prompt, or turn every note into one quoted draft.
+The **Current session** tab on the right collects the notes for that session — locate a passage, insert one
+note, save it as a prompt, or turn every note into one quoted draft. Annotations stay with their own
+session and never leak into another conversation.
 
 ![The prompt pool panel open above the composer, with per-group counts and the trigger showing the queued count](docs/images/panel.png)
 
-The composer panel: group tabs with their counts, the row actions (insert, queue, edit, duplicate,
-delete), and the send queue at the bottom. The trigger beside the composer carries the queued count.
+The composer panel has two scopes: **Annotations** for the current session and **Prompts** for the current
+workspace. Prompt rows keep the same insert / queue / edit / duplicate / delete actions and the shared send
+queue sits at the bottom. Switching scopes never replaces the row styles.
 
 ![The prompt pool as a full page in the right sidebar](docs/images/sidebar.png)
 
-The same pool as a right-sidebar page — a native tab on DSH 0.2+, with the group tabs and one tab per
-workspace.
+The sidebar is the full workbench — **Current session / Current workspace / Global shared pool** on
+DSH 0.2+. Workspace prompts are filtered by type; the global shared pool keeps its built-in and custom group
+tabs. Saving a note as a prompt opens a confirmation step where the title, body, images, type and target
+group can be edited, with a reminder that the conversation context is not carried over.
 
 ![Prompt pool settings: the Annotations tab, retention switches, and the plugin info card](docs/images/settings.png)
 
@@ -68,10 +72,10 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   thumbnails stay with the annotation. The badge follows the conversation's text size, so it grows with
   the reading font instead of staying small.
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
-  losing the point in a separate scratchpad; click the badge to edit. The **Annotations** tab always
+  losing the point in a separate scratchpad; click the badge to edit. The **Current session** tab always
   exists: each row leads with a checkbox (all checked by default); **Locate** scrolls to the passage,
-  **Insert** writes one note into the composer, and **Save as prompt** files one note into a pool group
-  (the chooser leads with the session's workspace, then 常用). The header's **Review** opens a
+  **Insert** writes one note into the composer, and **Save as prompt** opens a confirmation step for the
+  title, body, images, type and target group before filing the prompt. The header's **Review** opens a
   review card in the bottom dock (like the send queue): adjust the checked notes, then choose
   **Preview prompt** to inspect the generated prompt and send it, or go back to adjust. The prompt is grouped
   by kind with a type-specific response contract; additional info is used to revisit the related conclusions
@@ -82,17 +86,30 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   option. To-dos set to Save as prompt are not sent and are saved to the current workspace's prompt pool
   instead. After a successful send, the sent annotations leave the annotation list; the parked to-dos are
   in the prompt pool, and the batch log keeps the audit record. There are no open/handled status filters to
-  maintain. Saved notes keep a green marker; notes are stored per session and survive reloads.
-- **Composer panel** — search, group tabs, per-row insert / queue / edit / duplicate / delete, and the
-  send-queue card with collapse, clear and send. Drag its top edge to change the height, or its left
-  edge to change the width; pin it to keep it open over the conversation.
-- **Sidebar page** — the same pool as a full-height page in the right sidebar.
+  maintain. Saved notes keep a green marker; notes are stored per session, survive reloads, and are not
+  shown in another session.
+- **Prompt types** — each prompt has at most one fixed type: decision / question / opinion / idea /
+  supplement / to-do / inspiration, or unclassified. Saving a note seeds it from the annotation kind
+  (agree and disagree both map to decision); the type can be changed in the save step or the editor and
+  filtered from the list header. Templates, habits and notes are groups, not types.
+- **Composer panel** — search, the current workspace's prompt list, type filtering, per-row insert / queue /
+  edit / duplicate / delete, and the shared send-queue card with collapse, clear and send. Its two scopes
+  are **Annotations** (current session) and **Prompts** (current workspace); the panel never shows the
+  global shared pool. Drag its top edge to change the height, or its left edge to change the width; pin it
+  to keep it open over the conversation.
+- **Sidebar page** — the full workbench over the same data: **Current session / Current workspace / Global
+  shared pool**, defaulting to the current session. Workspace prompts use the type filter; the global
+  shared pool keeps the existing group tabs for the built-in and custom groups.
+- **Save step** — saving a note as a prompt no longer writes immediately. It opens a confirmation with the
+  title, body, images, type and destination group, plus a reminder that the conversation context is not
+  carried over. The source session, node and quote are not stored on the prompt.
 - **Right-click to save** — select text in a reply or in one of your own messages, then right-click: the
   menu offers **Copy** and **Add to the prompt pool**, whose submenu lists the groups currently on show;
   picking one stores the selection as a new item there. The group used last time leads the submenu;
   Shift+F10 opens the same menu, and a right-click without a selection keeps the browser menu.
-- **Groups** — frequent / notes / templates built in, plus your own categories and one tab per workspace.
-  Each family can be expanded, folded into a single tab, or hidden; the **All** tab can be hidden too.
+- **Groups** — the global shared pool keeps frequent / notes / templates built in, plus your own categories;
+  each workspace has its own prompt pool instead of a global workspace group. Each family can be expanded,
+  folded into a single tab, or hidden; the **All** tab can be hidden too.
 - **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
   can reset the built-in set in the current interface language. Edited built-ins can be kept as
   ordinary items; custom items and the queue are left alone.

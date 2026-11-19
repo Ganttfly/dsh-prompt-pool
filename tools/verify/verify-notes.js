@@ -209,6 +209,15 @@ else {
         const node = findComponent(render(), 'NotesView');
         return node ? renderChild(node) : null;
       };
+      const saveSheet = () => {
+        const layer = booted.registrations.find((entry) => entry.slot === 'shell.overlay');
+        if (!layer) return null;
+        const tree = layer.component({});
+        const node = findComponent(tree, 'NoteSaveSheet');
+        if (!node) return null;
+        childStores.delete('NoteSaveSheet');
+        return renderChild(node);
+      };
       const view = notesView();
       if (!view) fail('the notes tab did not render the annotation list');
       else {
@@ -242,25 +251,33 @@ else {
         }
       }
 
-      // Promote one note; the chooser is a frame-level popup driven by a store.
+      // Promote one note through the explicit save step.
       const storeLink = findAll(notesView() || [], (node) => node.type === 'button' && node.props && node.props['aria-label'] === 'note.store')[0];
       if (!storeLink) fail('the row store control is missing');
       else {
         storeLink.props.onClick();
-        const chooser = window.__dshPromptPoolNotePromptV1 ? window.__dshPromptPoolNotePromptV1.get() : null;
-        if (!chooser || chooser.open !== true || !Array.isArray(chooser.choices) || chooser.choices.length === 0) fail('the group chooser did not open');
+        const draft = window.__dshPromptPoolNoteSaveV1 ? window.__dshPromptPoolNoteSaveV1.get() : null;
+        if (!draft || draft.open !== true || !Array.isArray(draft.choices) || draft.choices.length === 0) fail('the save step did not open');
         else {
-          if (chooser.choices[0].value !== 'builtin:oftenuse') fail('the default group is not first');
-          chooser.onPick(chooser.choices[0].value);
-          const pool = window.__dshPromptPoolStoreV1.get();
-          const added = pool.items[pool.items.length - 1];
-          if (!added || added.group !== 'builtin:oftenuse') fail(`promoted into ${added && added.group}`);
-          else if (added.type !== 'opinion') fail(`promoted type ${added && added.type}`);
-          else if (added.body !== '【note.kind.comment】「构建是否接受参数？」：接受分支参数') fail(`promoted body ${JSON.stringify(added.body)}`);
-          const note = window.__dshPromptPoolNotesV1.get().items.find((entry) => entry.id === 'n2');
-          if (!note || note.promotedGroup !== 'builtin:oftenuse') fail('the note was not marked as stored');
-          if (textOf(notesView() || []).indexOf('note.stored') < 0) fail('the stored note has no marker');
-          else console.log('[ok] a note promotes into the default group and keeps its marker');
+          if (draft.choices[0].value !== 'builtin:oftenuse') fail('the default group is not first');
+          if (draft.type !== 'opinion') fail(`the save step lost the type: ${draft.type}`);
+          if (draft.body !== '【note.kind.comment】「构建是否接受参数？」：接受分支参数') fail('the save step lost the composed body');
+          const sheet = saveSheet();
+          const saveButton = sheet && findAll(sheet, (node) => node.type === 'button'
+            && String(node.props && node.props.className || '').indexOf('pp-note-btn-primary') >= 0)[0];
+          if (!saveButton) fail('the save step has no save action');
+          else {
+            saveButton.props.onClick();
+            const pool = window.__dshPromptPoolStoreV1.get();
+            const added = pool.items[pool.items.length - 1];
+            if (!added || added.group !== 'builtin:oftenuse') fail(`promoted into ${added && added.group}`);
+            else if (added.type !== 'opinion') fail(`promoted type ${added && added.type}`);
+            else if (added.body !== '【note.kind.comment】「构建是否接受参数？」：接受分支参数') fail(`promoted body ${JSON.stringify(added.body)}`);
+            const note = window.__dshPromptPoolNotesV1.get().items.find((entry) => entry.id === 'n2');
+            if (!note || note.promotedGroup !== 'builtin:oftenuse') fail('the note was not marked as stored');
+            if (textOf(notesView() || []).indexOf('note.stored') < 0) fail('the stored note has no marker');
+            else console.log('[ok] a note promotes into the default group and keeps its marker');
+          }
         }
       }
 
@@ -271,16 +288,22 @@ else {
       else {
         inserted = null;
         composeStore.props.onClick();
-        const chooser = window.__dshPromptPoolNotePromptV1 ? window.__dshPromptPoolNotePromptV1.get() : null;
-        if (!chooser || chooser.open !== true || !Array.isArray(chooser.choices) || chooser.choices.length === 0) fail('the store-as-prompt chooser did not open');
+        const draft = window.__dshPromptPoolNoteSaveV1 ? window.__dshPromptPoolNoteSaveV1.get() : null;
+        if (!draft || draft.open !== true || !Array.isArray(draft.choices) || draft.choices.length === 0) fail('the store-as-prompt save step did not open');
         else {
-          chooser.onPick(chooser.choices[0].value);
-          const composed = '1. 【note.kind.comment】「构建是否接受参数？」：接受分支参数\n2. 【note.kind.comment】「报告类型 → job 映射：…，对吗？」：对，按你说的映射';
-          if (inserted !== null) fail(`store-as-prompt inserted ${JSON.stringify(inserted)}`);
-          const pool = window.__dshPromptPoolStoreV1.get();
-          const added = pool.items[pool.items.length - 1];
-          if (!added || added.body !== composed) fail('store-as-prompt did not save the prompt');
-          else console.log('[ok] store-as-prompt saves the prompt without touching the composer');
+          const sheet = saveSheet();
+          const saveButton = sheet && findAll(sheet, (node) => node.type === 'button'
+            && String(node.props && node.props.className || '').indexOf('pp-note-btn-primary') >= 0)[0];
+          if (!saveButton) fail('the store-as-prompt save step has no save action');
+          else {
+            saveButton.props.onClick();
+            const composed = '1. 【note.kind.comment】「构建是否接受参数？」：接受分支参数\n2. 【note.kind.comment】「报告类型 → job 映射：…，对吗？」：对，按你说的映射';
+            if (inserted !== null) fail(`store-as-prompt inserted ${JSON.stringify(inserted)}`);
+            const pool = window.__dshPromptPoolStoreV1.get();
+            const added = pool.items[pool.items.length - 1];
+            if (!added || added.body !== composed) fail('store-as-prompt did not save the prompt');
+            else console.log('[ok] store-as-prompt saves the prompt without touching the composer');
+          }
         }
       }
 

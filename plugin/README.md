@@ -14,11 +14,18 @@ The pool keeps the draft, the next action and the exact wording next to the conv
 
 - Composer trigger beside the send controls (accent + count while something is queued)
 - Starter prompts follow the host language; Settings can reset them in the current interface language, keeping edits as ordinary items
-- Composer panel with search, group tabs, row actions and a send-queue card
+- Composer panel scoped to **Annotations** (current session) and **Prompts** (current workspace), with search,
+  type filtering, row actions and a session-scoped send queue
 - Right-click on selected conversation text to copy it or save it into a group (the last destination leads the menu)
-- Annotate while you read: choose a kind from the right-click submenu, keep notes on the exact passage with image attachments, collect them in one tab, and send the checked ones as one review prompt straight to the session queue (new notes default to Agree)
-- Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback)
-- Groups: built-in, custom and one tab per workspace; each can be expanded, folded or hidden
+- Annotate while you read: choose a kind from the right-click submenu, keep notes on the exact passage with image
+  attachments, collect them in the current-session tab, and send the checked ones as one review prompt straight to
+  the session queue (new notes default to Agree)
+- Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback) with **Current
+  session / Current workspace / Global shared pool** scopes
+- Single prompt type per item (decision / question / opinion / idea / supplement / to-do / inspiration), seeded
+  from the annotation kind and editable in the save step
+- A save step for title, body, images, type and destination, with a reminder that the conversation context is not kept
+- Global shared pool keeps the built-in, custom and display-mode group tabs; workspace prompts use type filters
 - Settings for group order/display (including hiding the All tab), visible workspaces, retention, the built-in prompt reset and annotations
 - A release shows progress and can be stopped; the unsent queue stays
 - A dock strip above the composer sits beside the host's own queued messages and pushes the whole send
