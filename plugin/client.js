@@ -3554,10 +3554,10 @@ window.__ModuleLoader__.load({
       const globalTabs = tabs.filter((entry) => entry.id === 'all' || entry.group === 'builtin' || entry.group === 'custom');
       const workspaceGroup = currentWorkspaceId ? 'workspace:' + currentWorkspaceId : '';
       const captureGroups = captureChoices(state.categories, workspaceList, currentWorkspaceId, state.settings);
-      const tabCounts = {
-        ...tabCountsOf(state.items),
-        notes: notesList.length,
-      };
+      const tabCounts = tabCountsOf(state.items.filter((item) => {
+        const family = familyOf(groupOf(item));
+        return family === 'builtin' || family === 'custom';
+      }));
       const [tab, setPageTab] = useState(() => {
         const stored = pageTabState.get().id;
         return stored && tabs.some((entry) => entry.id === stored) ? stored : fallbackTabFor(tabs);
@@ -8425,10 +8425,10 @@ window.__ModuleLoader__.load({
         setReviewOpen(false);
         if (next === 'global' && !globalTabs.some((entry) => entry.id === tab)) setTab(activeGlobalTab);
       };
-      const tabCounts = {
-        ...tabCountsOf(state.items),
-        notes: notesList.length,
-      };
+      const tabCounts = tabCountsOf(state.items.filter((item) => {
+        const family = familyOf(groupOf(item));
+        return family === 'builtin' || family === 'custom';
+      }));
 
       // A folded family renders its groups as chips inside one tab.
       const customGroups = state.categories.map((category) => ({ id: 'custom:' + category.id, name: category.name }));
