@@ -47,7 +47,7 @@ Working with an agent is rarely one prompt. The friction sits between messages:
 | You are still shaping the prompt, but the send button is one keystroke away. | Park the draft in a group; nothing runs until you release it. |
 | The next prompts are already in your head, and retyping them breaks the sequence. | Queue them in order and release one by one, with progress and Stop. |
 | A long answer needs a precise reply on one sentence, not a vague “looks good”. | Annotate the passage inline; the note stays on the exact words, and **Review** sends the checked notes to the session queue as one quoted prompt. |
-| The constraint lives in an earlier message or another workspace. | Right-click capture and workspace tabs keep selections and prompts grouped where you can find them. |
+| The constraint lives in an earlier message or another workspace. | Right-click capture saves to the current workspace or the global shared pool, so project-specific prompts stay with the project. |
 
 The goal is not another notes app. It is to keep the context, the exact wording and the next action next to
 the conversation, so the agent gets a precise instruction and you do not lose the thread.
@@ -115,9 +115,11 @@ the conversation, so the agent gets a precise instruction and you do not lose th
 - **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
   can reset the built-in set in the current interface language. Edited built-ins can be kept as
   ordinary items; custom items and the queue are left alone.
-- **Settings** — group order and display (including whether the **All** tab shows), visible workspaces,
-  two switches for post-use retention, a reset for the built-in prompt set, and an **Annotations** tab
-  (session binding explained, plus the keep-after-save switch).
+- **Settings** — annotation retention, the two post-use retention switches, the built-in prompt reset,
+  and the global shared pool's group order/display (including whether the **All** tab shows). The page has
+  three tabs — **Annotations / Prompts / Global shared pool** — and opens on Annotations. Workspaces no
+  longer have their own settings page; save and capture destinations are the current workspace plus the
+  global shared pool.
 - **Guarded destructive actions** — deleting an item, clearing the queue and removing a queued entry all
   ask first; deletes and clears can be undone from the toast.
 - **Chinese and English** — every label follows the harness language, including the sidebar tab name.

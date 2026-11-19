@@ -79,7 +79,7 @@ store.set(STORAGE_KEY, JSON.stringify({
 new Function('window', 'localStorage', 'require', source)(global.window, global.localStorage, () => reactStub);
 
 /** Render the panel against one composer state and capture it. */
-const capture = (draft, attachmentIds, occurrences, pick = 'group.note') => {
+const capture = (draft, attachmentIds, occurrences, pick = 'group.note', workspaces) => {
   const panelProps = {
     sessionId: 's1',
     initialScope: 'workspace',
@@ -90,7 +90,7 @@ const capture = (draft, attachmentIds, occurrences, pick = 'group.note') => {
       setDraft: () => {}, submit: () => {},
       addAttachments: () => true, removeAttachment: () => true, pruneAttachments: () => {}, persistDraft: () => {},
     },
-    useWorkspaces: () => ({ items: [], currentId: '' }),
+    useWorkspaces: () => workspaces || ({ items: [], currentId: '' }),
     useSession: () => ({}),
   };
   const entry = registrations.find((candidate) => candidate.slot === 'conversation.input.overlay');
@@ -145,7 +145,10 @@ const capture = (draft, attachmentIds, occurrences, pick = 'group.note') => {
     if (node.children) node.children.forEach(collectOptions);
   };
   collectOptions(menuTree);
-  const option = optionNodes.find((node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf(pick) >= 0);
+  const optionIndex = (captureMenu.props.groups || [])
+    .findIndex((group) => group.value === pick || group.label === pick);
+  const option = optionNodes.filter((node) => node.type === 'button'
+    && String(node.props && node.props.className || '').indexOf('pp-capture-option') >= 0)[optionIndex];
   if (!option) throw new Error(`the ${pick} destination was not found`);
   option.props.onClick();
   // Re-render to read the status the capture surfaced; keep the hook cells so
@@ -166,7 +169,7 @@ const capture = (draft, attachmentIds, occurrences, pick = 'group.note') => {
   walkAfter(after);
   const statusNode = afterNodes.find((node) => node.props && String(node.props.className || '').indexOf('pp-status') >= 0);
   const statusText = statusNode && statusNode.children[0] && statusNode.children[0].children ? statusNode.children[0].children[0] : null;
-  return { pool, added: pool.get().items[pool.get().items.length - 1], status: statusText };
+  return { pool, groups: captureMenu.props.groups || [], added: pool.get().items[pool.get().items.length - 1], status: statusText };
 };
 
 const failures = [];
@@ -186,6 +189,25 @@ else {
   if (file.added.body !== fileDraft) failures.push('file draft: the body changed');
   if (file.added.title.indexOf('C:\\Users') >= 0) failures.push(`file draft: the title still carries the path (${file.added.title})`);
   if (file.added.title.indexOf('子算甲申请兼确定予算書') < 0) failures.push(`file draft: the title lost the file name (${file.added.title})`);
+}
+
+const workspaceScoped = capture('工作区目标测试', [], [], 'workspace:w1', {
+  items: [
+    { workspaceId: 'w1', name: 'W1', sessionIds: ['s1'] },
+    { workspaceId: 'w2', name: 'W2', sessionIds: [] },
+  ],
+  currentId: 'w1',
+});
+const workspaceValues = workspaceScoped.groups
+  .map((group) => group.value)
+  .filter((value) => String(value).indexOf('workspace:') === 0);
+if (workspaceValues.join(',') !== 'workspace:w1') {
+  failures.push(`the capture menu offered ${JSON.stringify(workspaceValues)}, expected only workspace:w1`);
+}
+if (!workspaceScoped.added || workspaceScoped.added.group !== 'workspace:w1') {
+  failures.push('the workspace capture did not land in workspace:w1');
+} else {
+  console.log('[ok] capture destinations are the current workspace plus global groups');
 }
 
 for (const failure of failures) console.error('[fail]', failure);
@@ -216,3 +238,4 @@ const templated = capture('模板草稿', [], [], 'group.template');
 if (!templated.added) console.error('[fail] template destination: nothing was captured');
 else if (templated.added.group !== 'builtin:template') console.error('[fail] template destination: group was ' + templated.added.group);
 else console.log('[ok] capture uses the chosen group');
+

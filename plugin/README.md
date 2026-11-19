@@ -26,7 +26,7 @@ The pool keeps the draft, the next action and the exact wording next to the conv
   from the annotation kind and editable in the save step
 - A save step for title, body, images, type and destination, with a reminder that the conversation context is not kept
 - Global shared pool keeps the built-in, custom and display-mode group tabs; workspace prompts use type filters
-- Settings for group order/display (including hiding the All tab), visible workspaces, retention, the built-in prompt reset and annotations
+- Settings for annotation retention, post-use retention, the built-in prompt reset, and global shared-pool group order/display; the page opens on Annotations and has no workspace-tab controls
 - A release shows progress and can be stopped; the unsent queue stays
 - A dock strip above the composer sits beside the host's own queued messages and pushes the whole send
   queue into it in one click

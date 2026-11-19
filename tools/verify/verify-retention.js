@@ -113,9 +113,9 @@ const findUndo = (tree) => nodes(tree, []).find(
     && Array.isArray(node.children) && node.children.indexOf('status.undo') >= 0,
 );
 
-const load = (settings, slotName, props) => {
-  const data = JSON.parse(fixture(settings));
-  if (slotName === 'conversation.input.overlay') {
+const load = (settings, slotName, props, dataOverride) => {
+  const data = dataOverride ? JSON.parse(JSON.stringify(dataOverride)) : JSON.parse(fixture(settings));
+  if (!dataOverride && slotName === 'conversation.input.overlay') {
     data.items = data.items.map((item) => ({ ...item, group: 'workspace:w1' }));
   }
   store.set(STORAGE_KEY, JSON.stringify(data));
@@ -126,12 +126,13 @@ const load = (settings, slotName, props) => {
   const entry = registrations.slice(before).find((candidate) => candidate.slot === slotName);
   const pool = global.window.__dshPromptPoolStoreV1;
   cells = [];
-  const tree = () => {
+  const tree = (nextProps) => {
+    const targetProps = nextProps || props;
     resetHooks();
-    const out = entry.component(props);
+    const out = entry.component(targetProps);
     if (out && typeof out.type === 'function') {
       resetHooks();
-      return out.type(out.props || props);
+      return out.type(out.props || targetProps);
     }
     return out;
   };
@@ -185,8 +186,60 @@ const main = async () => {
     if (run.pool.get().items.length !== 2) failures.push('on/queue: ' + run.pool.get().items.length + ' item(s) left, expected 2');
   }
 
+  // 5. The workspace scope follows the current workspace; prompts are not copied
+  // between workspaces and no data migration is needed.
+  {
+    const workspaceData = {
+      version: 2,
+      seeded: 2,
+      categories: [],
+      items: [
+        { id: 'w1-a', group: 'workspace:w1', title: 'W1 prompt', body: 'a', images: [] },
+        { id: 'w2-b', group: 'workspace:w2', title: 'W2 prompt', body: 'b', images: [] },
+      ],
+      tray: [],
+      settings: {},
+    };
+    const wsSnapshot = {
+      items: [
+        { workspaceId: 'w1', name: 'W1', sessionIds: ['s1'] },
+        { workspaceId: 'w2', name: 'W2', sessionIds: ['s2'] },
+      ],
+      currentId: 'w1',
+    };
+    const propsFor = (sessionId) => ({
+      ...panelProps,
+      sessionId,
+      initialScope: 'workspace',
+      useWorkspaces: () => wsSnapshot,
+    });
+    const textsOf = (run) => {
+      const out = [];
+      const collect = (node) => {
+        if (typeof node === 'string') out.push(node);
+        else if (Array.isArray(node)) node.forEach(collect);
+        else if (node && typeof node === 'object' && node.children) node.children.forEach(collect);
+      };
+      collect(run.tree());
+      return out;
+    };
+    const first = load({}, 'conversation.input.overlay', propsFor('s1'), workspaceData);
+    const firstTexts = textsOf(first);
+    if (firstTexts.indexOf('W1 prompt') < 0 || firstTexts.indexOf('W2 prompt') >= 0) {
+      failures.push(`workspace w1 showed ${JSON.stringify(firstTexts)}`);
+    }
+    const second = load({}, 'conversation.input.overlay', propsFor('s2'), workspaceData);
+    const secondTexts = textsOf(second);
+    if (secondTexts.indexOf('W2 prompt') < 0 || secondTexts.indexOf('W1 prompt') >= 0) {
+      failures.push(`workspace w2 showed ${JSON.stringify(secondTexts)}`);
+    }
+    if (first.pool.get().items.length !== 2 || second.pool.get().items.length !== 2) {
+      failures.push('workspace scoping mutated the prompt data');
+    }
+  }
+
   for (const failure of failures) console.error('[fail]', failure);
-  console.log(failures.length === 0 ? '[ok] retention switches behave' : '[fail] ' + failures.length + ' check(s)');
+  console.log(failures.length === 0 ? '[ok] retention switches and workspace scoping behave' : '[fail] ' + failures.length + ' check(s)');
   if (failures.length > 0) process.exitCode = 1;
 };
 

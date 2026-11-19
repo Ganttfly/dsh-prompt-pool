@@ -22,6 +22,10 @@ All notable changes to this project are documented here. The format follows
 - A reviewed batch can be added to the outbox instead of being sent immediately, and the outbox can
   combine multiple entries into one numbered prompt with **Merge & send**.
 - Action icons are slightly tighter (24px buttons, no inter-button gap) while keeping the 24px hit area.
+- Settings were rebased on the scope model: the page has **Annotations / Prompts / Global shared pool**
+  and opens on Annotations. The old default-tab, workspace-visibility, current-workspace-first and
+  workspace group-display controls are removed; stored copies are cleaned on load. Save and capture
+  destinations now list the current workspace plus the global shared pool only.
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 

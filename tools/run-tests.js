@@ -11,7 +11,6 @@ const scripts = [
   'tools/render-smoke.js',
   'tools/group-model-test.js',
   'tools/seed-sim.js',
-  'tools/workspace-rail-test.js',
   ...fs
     .readdirSync(verifyDir)
     .filter((name) => name.endsWith('.js'))

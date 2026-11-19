@@ -78,6 +78,35 @@ check(migrated.items.filter((item) => item.group === 'builtin:template').length 
 check(migrated.tray.length === 1 && migrated.tray[0].itemId === 'legacy-pinned', 'the queued legacy entry was dropped');
 check(store.get(BACKUP) === legacyRaw, 'the pre-migration payload was not kept in the backup key');
 
+// Settings from the old workspace-tab model are cleaned up and written back,
+// not merely ignored in memory.
+const oldSettingsRaw = JSON.stringify({
+  version: 2,
+  seeded: 2,
+  categories: [],
+  items: [],
+  tray: [],
+  settings: {
+    defaultTab: 'tab:all',
+    currentWorkspaceTab: false,
+    hiddenWorkspaces: ['w2'],
+    display: { builtin: 'tabs', custom: 'nested', workspace: 'hidden' },
+    order: ['workspace', 'builtin', 'custom'],
+    showAllTab: false,
+    keepAfterInsert: false,
+  },
+});
+const cleanedStore = load({ [KEY]: oldSettingsRaw });
+const cleaned = JSON.parse(cleanedStore.get(KEY));
+check(!('defaultTab' in cleaned.settings), 'defaultTab survived the settings cleanup');
+check(!('currentWorkspaceTab' in cleaned.settings), 'currentWorkspaceTab survived the settings cleanup');
+check(!('hiddenWorkspaces' in cleaned.settings), 'hiddenWorkspaces survived the settings cleanup');
+check(!('workspace' in cleaned.settings.display), 'display.workspace survived the settings cleanup');
+check(cleaned.settings.order.join(',') === 'builtin,custom', `settings order is ${cleaned.settings.order.join(',')}`);
+check(cleaned.settings.showAllTab === false, 'unrelated settings were not preserved');
+check(cleaned.settings.keepAfterInsert === false, 'the retention setting was not preserved');
+console.log('[ok] old workspace-tab settings are cleaned and written back');
+
 const v2Raw = JSON.stringify({
   version: 2,
   seeded: 2,

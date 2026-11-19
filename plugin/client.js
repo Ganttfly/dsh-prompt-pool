@@ -75,7 +75,7 @@ window.__ModuleLoader__.load({
       'tab.all': '全部',
       'tab.oftenuse': '常用',
       'ws.none': '没有可用的工作区',
-      'ws.empty': '这个工作区还没有条目',
+
       'tab.note': '便签',
       'tab.template': '模板',
       'tab.add': '新建分组',
@@ -113,30 +113,24 @@ window.__ModuleLoader__.load({
       'settings.nav': '提示池',
       'settings.open': '提示池设置',
       'settings.button': '设置',
-      'settings.tab.order': '分组',
-      'settings.defaultTab': '打开时默认选中',
-      'settings.defaultTabNotes': '批注',
-      'settings.defaultTabWorkspace': '当前工作区',
-      'settings.defaultTabOther': '其他',
       'settings.tab.notes': '批注',
       'settings.notesIntro': '批注和当前会话绑定。\n在正文中添加的批注同时也会出现在提示池的【批注】页面，可以存为提示词、直接插入输入框，或汇总审阅后发送到会话队列。',
       'settings.notesKeepStore': '存为提示词后，仍旧保留',
-      'settings.notesKeepStoreHint': '关闭后，存成提示词成功的批注会从列表移除。',
-      'settings.table': '分组的顺序与显示',
-      'settings.tableHint': '箭头调整先后顺序；右侧三列决定这一组怎么显示。',
+      'settings.notesKeepStoreHint': '关闭后，存成提示词成功的批注会从列表移除。保存步骤不会把会话、原文节点和上下文带进提示词。',
+      'settings.table': '全局共享池的分组',
+      'settings.tableHint': '箭头调整先后顺序；右侧三列决定这一组在全局共享池里怎么显示。工作区提示词不参与这些分组。',
       'settings.showAllTab': '显示「全部」标签页',
-      'settings.showAllTabHint': '关闭后在标签栏里隐藏「全部」；其他分组页签仍可正常切换，停在「全部」的视图会自动落到第一个可用页签。',
+      'settings.showAllTabHint': '关闭后在全局共享池的标签栏里隐藏「全部」；其他分组页签仍可正常切换，停在「全部」的视图会自动落到第一个可用页签。',
       'settings.tableGroup': '分组',
       'settings.tableOrder': '顺序',
       'settings.moveUp': '上移',
       'settings.moveDown': '下移',
       'settings.display.builtin': '内置分组',
       'settings.display.custom': '自定义分组',
-      'settings.display.workspace': '工作区分组',
       'settings.mode.tabs': '展开',
       'settings.mode.nested': '折叠',
       'settings.mode.hidden': '隐藏',
-      'settings.tab.workspace': '工作区',
+      'settings.tab.global': '全局共享池',
       'settings.tab.prompts': '提示词',
       'settings.keep': '用过之后，条目留在池子里吗',
       'settings.keepInsert': '插入输入框后，仍旧保留在池子中',
@@ -157,14 +151,8 @@ window.__ModuleLoader__.load({
       'settings.about': '插件信息',
       'settings.aboutAuthor': '作者',
       'settings.aboutRepo': '仓库',
-      'settings.workspaceCard': '工作区如何展示',
-        'settings.workspacesVisible': '显示哪些工作区',
-        'settings.workspacesCurrent': '当前',
-        'settings.workspacesEmpty': '还没有读到工作区列表。打开一次提示池页面后，这里会列出全部工作区。',
       'settings.title': '提示池',
-      'settings.desc': '控制分组顺序、显示方式和工作区 Tab。改动立即生效。',
-      'settings.currentWorkspaceTab': '当前工作区排在最前',
-      'settings.currentWorkspaceTabHint': '当前会话所属的工作区固定排第一；其余按原顺序。',
+      'settings.desc': '控制批注保留、提示词使用后的保留，以及全局共享池的分组显示。改动立即生效。',
       'row.edit': '编辑',
       'row.delete': '删除',
       'row.deleteTitle': '删除这条提示词',
@@ -359,7 +347,7 @@ window.__ModuleLoader__.load({
       'tab.all': 'All',
       'tab.oftenuse': 'Frequent',
       'ws.none': 'No workspaces available',
-      'ws.empty': 'No items in this workspace yet',
+
       'tab.note': 'Notes',
       'tab.template': 'Templates',
       'tab.add': 'New group',
@@ -397,30 +385,24 @@ window.__ModuleLoader__.load({
       'settings.nav': 'Prompt pool',
       'settings.open': 'Prompt pool settings',
       'settings.button': 'Settings',
-      'settings.tab.order': 'Groups',
-      'settings.defaultTab': 'Open on',
-      'settings.defaultTabNotes': 'Annotations',
-      'settings.defaultTabWorkspace': 'Current workspace',
-      'settings.defaultTabOther': 'Other',
       'settings.tab.notes': 'Annotations',
       'settings.notesIntro': 'Annotations are bound to the current session.\nAnnotations added in the transcript also appear in the prompt pool\'s Annotations tab; they can be saved as a prompt, inserted into the composer, or reviewed and sent to the session queue.',
       'settings.notesKeepStore': 'Keep annotations after saving as a prompt',
-      'settings.notesKeepStoreHint': 'Turned off, annotations leave the list once saved as a prompt.',
-      'settings.table': 'Group order and display',
-      'settings.tableHint': 'Use the arrows to reorder; the three columns decide how each family shows up.',
+      'settings.notesKeepStoreHint': 'Turned off, annotations leave the list once saved as a prompt. The save step does not copy the session, source node or context into the prompt.',
+      'settings.table': 'Groups in the global shared pool',
+      'settings.tableHint': 'Use the arrows to reorder; the three columns decide how each family shows up in the global shared pool. Workspace prompts do not use these groups.',
       'settings.showAllTab': 'Show the “All” tab',
-      'settings.showAllTabHint': 'Turned off, the tab bar hides “All”; group tabs still switch normally, and a view parked on “All” lands on the first available tab.',
+      'settings.showAllTabHint': 'Turned off, the global shared pool hides “All”; group tabs still switch normally, and a view parked on “All” lands on the first available tab.',
       'settings.tableGroup': 'Group',
       'settings.tableOrder': 'Order',
       'settings.moveUp': 'Move up',
       'settings.moveDown': 'Move down',
       'settings.display.builtin': 'Built-in groups',
       'settings.display.custom': 'Custom groups',
-      'settings.display.workspace': 'Workspace groups',
       'settings.mode.tabs': 'Expanded',
       'settings.mode.nested': 'Folded',
       'settings.mode.hidden': 'Hidden',
-      'settings.tab.workspace': 'Workspaces',
+      'settings.tab.global': 'Global shared pool',
       'settings.tab.prompts': 'Prompts',
       'settings.keep': 'What happens to an item once it is used',
       'settings.keepInsert': 'Keep it in the pool after inserting it into the composer',
@@ -441,14 +423,8 @@ window.__ModuleLoader__.load({
       'settings.about': 'Plugin info',
       'settings.aboutAuthor': 'Author',
       'settings.aboutRepo': 'Repository',
-      'settings.workspaceCard': 'How workspaces appear',
-        'settings.workspacesVisible': 'Workspaces to show',
-        'settings.workspacesCurrent': 'current',
-        'settings.workspacesEmpty': 'No workspace roster yet. Open the prompt pool page once and every workspace will be listed here.',
       'settings.title': 'Prompt pool',
-      'settings.desc': 'Controls group order, how each family is displayed, and the workspace tabs. Changes apply immediately.',
-      'settings.currentWorkspaceTab': 'Put the current workspace first',
-      'settings.currentWorkspaceTabHint': 'The workspace owning this session stays first; the rest keep their order.',
+      'settings.desc': 'Controls annotation retention, prompt retention after use, and how the global shared pool groups are displayed. Changes apply immediately.',
       'row.edit': 'Edit',
       'row.delete': 'Delete',
       'row.deleteTitle': 'Delete this prompt',
@@ -1314,33 +1290,10 @@ window.__ModuleLoader__.load({
       };
     }
 
-    /**
-     * The ordered vertical workspace rail: the current workspace first, then
-     * the other workspaces when the "all workspaces" preference is on.
-     */
-    function workspaceRail(workspaces, settings, currentWorkspaceId) {
-      const flags = normalizeSettings(settings);
-      const all = workspaces || [];
-      const hidden = new Set(flags.hiddenWorkspaces);
-      const current = currentWorkspaceId ? all.find((workspace) => workspace.workspaceId === currentWorkspaceId) : undefined;
-      // The current workspace is never hidden: its items would be unreachable otherwise.
-      const visible = all.filter((workspace) => workspace.workspaceId === currentWorkspaceId || !hidden.has(workspace.workspaceId));
-      // Everything hidden still shows the current workspace, so the tab never disappears.
-      const list = visible.length > 0 ? visible : current ? [current] : all.slice(0, 1);
-      if (!flags.currentWorkspaceTab || !current) return list.slice();
-      return [current, ...list.filter((workspace) => workspace.id !== current.id)];
-    }
-
     /** Every family's tab block, ordered by the leading-group preference. */
     function buildTabs(categories, workspaces, settings, currentWorkspaceId) {
       const flags = normalizeSettings(settings);
-      const rail = workspaceRail(workspaces, settings, currentWorkspaceId);
       const blocks = {
-        workspace: displayBlock(
-          'workspace',
-          rail.map((workspace) => ({ id: 'workspace:' + workspace.workspaceId, label: workspace.name, group: 'workspace' })),
-          settings,
-        ),
         builtin: displayBlock(
           'builtin',
           [
@@ -1361,7 +1314,7 @@ window.__ModuleLoader__.load({
       const all = flags.showAllTab === false ? [] : [{ id: 'all', label: translate('tab.all'), group: 'all' }];
       return [
         ...all,
-        ...rest.reduce((list, name) => list.concat(blocks[name]), []),
+        ...rest.reduce((list, name) => list.concat(blocks[name] || []), []),
       ];
     }
 
@@ -1379,23 +1332,6 @@ window.__ModuleLoader__.load({
       // the landing spot when "all" is hidden.
       const groupTab = list.find((tab) => tab && tab.id !== 'notes');
       return groupTab ? groupTab.id : (list[0] && list[0].id) || '';
-    }
-
-    function resolveDefaultTab(pref, tabs, currentWorkspaceId, hasNotes) {
-      if (!pref) return '';
-      const ids = (tabs || []).map((tab) => tab.id);
-      const fallback = () => fallbackTabFor(tabs) || (hasNotes ? 'notes' : '');
-      // The annotation tab always exists now, so the preference always applies.
-      if (pref === 'notes') return 'notes';
-      if (pref === '__workspace__') {
-        const id = currentWorkspaceId ? 'workspace:' + currentWorkspaceId : '';
-        return id && ids.indexOf(id) >= 0 ? id : fallback();
-      }
-      if (pref.indexOf('tab:') === 0) {
-        const id = pref.slice(4);
-        return ids.indexOf(id) >= 0 ? id : fallback();
-      }
-      return '';
     }
 
     /** Small chooser: where should the captured draft go? */
@@ -1842,6 +1778,14 @@ window.__ModuleLoader__.load({
       return seedsAbove(level, Date.now(), locale).filter((item) => !taken.has(item.id));
     }
 
+    function needsSettingsMigration(raw) {
+      const settings = raw && typeof raw === 'object' ? raw : null;
+      if (!settings) return false;
+      if ('defaultTab' in settings || 'currentWorkspaceTab' in settings || 'hiddenWorkspaces' in settings) return true;
+      if (settings.display && typeof settings.display === 'object' && 'workspace' in settings.display) return true;
+      return Array.isArray(settings.order) && settings.order.indexOf('workspace') >= 0;
+    }
+
     function loadPool() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -1858,7 +1802,15 @@ window.__ModuleLoader__.load({
           }
         }
         // Seed batches are added in apply(), where the host locale is known.
-        return normalizePool(parsed);
+        const next = normalizePool(parsed);
+        if (needsSettingsMigration(parsed && parsed.settings)) {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          } catch (_error) {
+            /* the in-memory cleaned settings still apply */
+          }
+        }
+        return next;
       } catch (_error) {
         return emptyPool();
       }
@@ -1961,22 +1913,18 @@ window.__ModuleLoader__.load({
 
     function normalizeSettings(raw) {
       const settings = raw && typeof raw === 'object' ? raw : {};
-      const leaders = ['builtin', 'workspace', 'custom'];
+      const leaders = ['builtin', 'custom'];
       const modes = ['tabs', 'nested', 'hidden'];
-      const defaults = { builtin: 'tabs', custom: 'tabs', workspace: 'nested' };
+      const defaults = { builtin: 'tabs', custom: 'tabs' };
       const stored = settings.display && typeof settings.display === 'object' ? settings.display : {};
       const display = {};
-      for (const family of ['builtin', 'custom', 'workspace']) {
+      for (const family of leaders) {
         const value = stored[family];
         // Legacy: the old customNested flag folded custom groups.
         const legacy = family === 'custom' && settings.customNested === true ? 'nested' : undefined;
         display[family] = modes.indexOf(value) >= 0 ? value : legacy || defaults[family];
       }
       return {
-        hiddenWorkspaces: Array.isArray(settings.hiddenWorkspaces)
-          ? settings.hiddenWorkspaces.filter((value) => typeof value === 'string' && value !== '')
-          : [],
-        currentWorkspaceTab: settings.currentWorkspaceTab !== false,
         // The "all" tab is the catch-all view; hiding it leaves the group tabs.
         showAllTab: settings.showAllTab !== false,
         queueCollapsed: settings.queueCollapsed === true,
@@ -1984,9 +1932,6 @@ window.__ModuleLoader__.load({
         lastCaptureGroup: typeof settings.lastCaptureGroup === 'string' ? settings.lastCaptureGroup : '',
         // Annotations: where their markers draw, not what they hold.
         notesHighlight: settings.notesHighlight !== false,
-        // Which tab a freshly opened pool lands on: notes, this workspace, or a
-        // concrete tab ("tab:<id>").
-        defaultTab: typeof settings.defaultTab === 'string' ? settings.defaultTab : '',
         // Annotations survive Store unless the user opts out.
         noteKeepAfterStore: settings.noteKeepAfterStore !== false,
         // Whether an item leaves the pool after it is used.
@@ -2006,17 +1951,8 @@ window.__ModuleLoader__.load({
         panelPinned: settings.panelPinned === true,
         orderExplicit: settings.orderExplicit === true,
         order: (() => {
-          const stored = Array.isArray(settings.order) ? settings.order.filter((name) => leaders.indexOf(name) >= 0) : [];
-          // The pre-table default (workspace, custom, builtin) is replaced once by the
-          // new default; any order the user picked in the table is kept.
-          const legacyDefault =
-            settings.orderExplicit !== true &&
-            stored.length === 3 &&
-            stored[0] === 'workspace' &&
-            stored[1] === 'custom' &&
-            stored[2] === 'builtin';
-          const seed = stored.length === 3 && !legacyDefault ? stored : leaders;
-          return [...seed, ...leaders.filter((name) => seed.indexOf(name) < 0)];
+          const storedOrder = Array.isArray(settings.order) ? settings.order.filter((name) => leaders.indexOf(name) >= 0) : [];
+          return [...storedOrder, ...leaders.filter((name) => storedOrder.indexOf(name) < 0)];
         })(),
         display,
       };
@@ -2065,10 +2001,12 @@ window.__ModuleLoader__.load({
       if (flags.custom !== 'hidden') {
         for (const category of categories || []) list.push({ value: 'custom:' + category.id, label: category.name });
       }
-      if (flags.workspace !== 'hidden') {
-        for (const workspace of workspaceRail(workspaces, settings, currentWorkspaceId)) {
-          list.push({ value: 'workspace:' + workspace.workspaceId, label: workspace.name });
-        }
+      if (currentWorkspaceId) {
+        const current = (workspaces || []).find((workspace) => workspace.workspaceId === currentWorkspaceId);
+        list.push({
+          value: 'workspace:' + currentWorkspaceId,
+          label: current ? current.name : translate('scope.workspace'),
+        });
       }
       // A pool with every family hidden still needs one destination.
       if (list.length === 0) list.push({ value: BUILTIN_GROUP.note, label: translate('group.note') });
@@ -3569,14 +3507,6 @@ window.__ModuleLoader__.load({
         setPageTab(id);
       };
       // The page opens on the tab chosen in Settings (once per mount).
-      const defaultAppliedRef = useRef(false);
-      useEffect(() => {
-        if (defaultAppliedRef.current) return;
-        defaultAppliedRef.current = true;
-        const pref = normalizeSettings(state.settings).defaultTab;
-        const resolved = resolveDefaultTab(pref, tabs, currentWorkspaceId, notesList.length > 0);
-        if (resolved) setTab(resolved);
-      }, []);
       const [query, setQuery] = useState('');
       const [typeFilter, setTypeFilter] = useState('all');
       const [scope, setScope] = useState(() => (
@@ -3589,9 +3519,6 @@ window.__ModuleLoader__.load({
       const [pendingDelete, setPendingDelete] = useState(null);
       const [pendingRemove, setPendingRemove] = useState(null);
       const [captureOpen, setCaptureOpen] = useState(false);
-      const [wsSelected, setWsSelected] = useState('');
-      const [customPick, setCustomPick] = useState('');
-      const [builtinPick, setBuiltinPick] = useState('');
       const [status, setStatus] = useState(null);
       const { preview, openImage, closeImage } = useImagePreview();
       const statusTimer = useRef(0);
@@ -3668,20 +3595,6 @@ window.__ModuleLoader__.load({
         poolActions.removeCategory(target.slice(7));
         if (tab === target) setTab(fallbackTabFor(tabs.filter((entry) => entry.id !== target)));
       };
-
-      const rail = workspaceRail(workspaces.items, state.settings, currentWorkspaceId);
-      const wsActive = rail.some((entry) => entry.id === wsSelected) ? wsSelected : rail.length > 0 ? rail[0].id : '';
-      const wsCounts = useMemo(() => {
-        const counts = {};
-        for (const item of state.items) {
-          const group = groupOf(item);
-          if (familyOf(group) === 'workspace') {
-            const key = 'ws:' + group.slice(10);
-            counts[key] = (counts[key] || 0) + 1;
-          }
-        }
-        return counts;
-      }, [state.items]);
 
       const items = useMemo(() => {
         if (scope === 'notes') return [];
@@ -4002,49 +3915,6 @@ window.__ModuleLoader__.load({
         onError: (text) => flash({ kind: 'error', text }),
       });
 
-      // A folded family renders its groups as chips inside one tab.
-      const customGroups = state.categories.map((category) => ({ id: 'custom:' + category.id, name: category.name }));
-      const customActive = customGroups.some((entry) => entry.id === customPick)
-        ? customPick
-        : customGroups.length > 0
-          ? customGroups[0].id
-          : '';
-      const customCounts = groupCounts(state.items, 'custom');
-      const builtinCounts = groupCounts(state.items, 'builtin');
-      const builtinList = builtinGroups();
-      const builtinActive = builtinList.some((entry) => entry.id === builtinPick) ? builtinPick : builtinList[0].id;
-      const nestedView =
-        tab === 'nested:workspace'
-          ? {
-              rail: rail,
-              activeId: wsActive,
-              onSelect: setWsSelected,
-              counts: wsCounts,
-              emptyText: translate('ws.empty'),
-              scoped: state.items.filter((item) => groupOf(item) === (wsActive ? 'workspace:' + wsActive.slice(3) : '')),
-            }
-          : tab === 'nested:custom'
-            ? {
-                rail: customGroups,
-                activeId: customActive,
-                onSelect: setCustomPick,
-                counts: customCounts,
-                editable: true,
-                onDelete: (id) => setPendingCategory(id),
-                emptyText: translate('panel.emptyTab'),
-                scoped: state.items.filter((item) => groupOf(item) === customActive),
-              }
-            : tab === 'nested:builtin'
-              ? {
-                  rail: builtinList,
-                  activeId: builtinActive,
-                  onSelect: setBuiltinPick,
-                  counts: builtinCounts,
-                  emptyText: translate('panel.emptyTab'),
-                  scoped: state.items.filter((item) => groupOf(item) === builtinActive),
-                }
-              : null;
-
       return h(
         'div',
         { className: 'pp-page' },
@@ -4282,26 +4152,7 @@ window.__ModuleLoader__.load({
       useLocaleTick();
       const state = usePoolState();
       const settings = normalizeSettings(state.settings);
-      const wsDir = useWorkspaceDir();
-      const wsItems = wsDir && Array.isArray(wsDir.items) ? wsDir.items : [];
-      const wsCurrentId = (props && typeof props.currentWorkspaceId === 'string' && props.currentWorkspaceId) || (wsDir && typeof wsDir.currentId === 'string' ? wsDir.currentId : '');
-      const hiddenWorkspaces = settings.hiddenWorkspaces;
-      const toggleWorkspace = (workspaceId) => {
-        const next = hiddenWorkspaces.indexOf(workspaceId) >= 0
-          ? hiddenWorkspaces.filter((value) => value !== workspaceId)
-          : [...hiddenWorkspaces, workspaceId];
-        poolActions.setSetting('hiddenWorkspaces', next);
-      };
-      const [section, setSection] = useState('order');
-      const tabOptions = buildTabs(state.categories, wsItems, settings, wsCurrentId);
-      const defaultTab = settings.defaultTab || '';
-      const defaultTabMode = defaultTab === 'notes'
-        ? 'notes'
-        : defaultTab === '__workspace__'
-          ? 'workspace'
-          : defaultTab.indexOf('tab:') === 0
-            ? 'custom'
-            : '';
+      const [section, setSection] = useState('notes');
       const [seedKeepEdited, setSeedKeepEdited] = useState(true);
       const [seedConfirm, setSeedConfirm] = useState(false);
       const [seedStatus, setSeedStatus] = useState('');
@@ -4355,20 +4206,11 @@ window.__ModuleLoader__.load({
             {
               type: 'button',
               className: 'pp-tab',
-              'data-active': section === 'order' ? 'true' : 'false',
-              onClick: () => setSection('order'),
+              'data-group': 'notes',
+              'data-active': section === 'notes' ? 'true' : 'false',
+              onClick: () => setSection('notes'),
             },
-            translate('settings.tab.order'),
-          ),
-          h(
-            'button',
-            {
-              type: 'button',
-              className: 'pp-tab',
-              'data-active': section === 'workspace' ? 'true' : 'false',
-              onClick: () => setSection('workspace'),
-            },
-            translate('settings.tab.workspace'),
+            translate('settings.tab.notes'),
           ),
           h(
             'button',
@@ -4385,10 +4227,10 @@ window.__ModuleLoader__.load({
             {
               type: 'button',
               className: 'pp-tab',
-              'data-active': section === 'notes' ? 'true' : 'false',
-              onClick: () => setSection('notes'),
+              'data-active': section === 'global' ? 'true' : 'false',
+              onClick: () => setSection('global'),
             },
-            translate('settings.tab.notes'),
+            translate('settings.tab.global'),
           ),
         ),
         h(
@@ -4449,87 +4291,7 @@ window.__ModuleLoader__.load({
         ),
         h(
           'div',
-          { className: 'pp-set-group pp-set-card', style: { display: section === 'workspace' ? '' : 'none' } },
-          h('div', { className: 'pp-set-label' }, translate('settings.workspaceCard')),
-          check('currentWorkspaceTab', 'settings.currentWorkspaceTab', 'settings.currentWorkspaceTabHint'),
-          h('div', { className: 'pp-set-divider' }),
-          h('div', { className: 'pp-set-label' }, translate('settings.workspacesVisible')),
-          wsItems.length === 0
-            ? h('div', { className: 'pp-hint' }, translate('settings.workspacesEmpty'))
-            : wsItems.map((workspace) =>
-                h(
-                  'label',
-                  { key: workspace.workspaceId, className: 'pp-set-ws' },
-                  h('input', {
-                    type: 'checkbox',
-                    disabled: workspace.workspaceId === wsCurrentId,
-                    checked: workspace.workspaceId === wsCurrentId || hiddenWorkspaces.indexOf(workspace.workspaceId) < 0,
-                    onChange: () => toggleWorkspace(workspace.workspaceId),
-                  }),
-                  h('span', { className: 'pp-set-ws-name' },
-                    workspace.name,
-                    workspace.workspaceId === wsCurrentId ? h('span', { className: 'pp-set-ws-tag' }, translate('settings.workspacesCurrent')) : null,
-                  ),
-                  workspace.path ? h('span', { className: 'pp-set-ws-path' }, workspace.path) : null,
-                ),
-              ),
-        ),
-        h(
-          'div',
-          { className: 'pp-set-group pp-set-card', style: { display: section === 'order' ? '' : 'none' } },
-          h('div', { className: 'pp-set-label' }, translate('settings.defaultTab')),
-          h(
-            'div',
-            { className: 'pp-set-radios' },
-            [
-              { mode: 'notes', key: 'settings.defaultTabNotes', value: 'notes' },
-              { mode: 'workspace', key: 'settings.defaultTabWorkspace', value: '__workspace__' },
-              { mode: 'custom', key: 'settings.defaultTabOther', value: '' },
-            ].map((entry) => h(
-              'div',
-              { key: entry.mode, className: 'pp-set-radio-row' },
-              h(
-                'label',
-                { className: 'pp-set-radio' },
-                h('input', {
-                  type: 'radio',
-                  name: 'pp-default-tab',
-                  checked: defaultTabMode === entry.mode,
-                  onChange: () => {
-                    if (entry.mode === 'custom') {
-                      const previous = defaultTab.indexOf('tab:') === 0 ? defaultTab : '';
-                      const first = tabOptions[0];
-                      poolActions.setSetting('defaultTab', previous || (first ? 'tab:' + first.id : ''));
-                      return;
-                    }
-                    poolActions.setSetting('defaultTab', entry.value);
-                  },
-                }),
-                h('span', null, translate(entry.key)),
-              ),
-              entry.mode === 'custom'
-                ? h(
-                    'select',
-                    {
-                      className: 'pp-select',
-                      // Always visible next to "other"; picking a tab here also
-                      // switches the choice to it.
-                      value: defaultTabMode === 'custom' ? defaultTab.slice(4) : (tabOptions[0] ? tabOptions[0].id : ''),
-                      onChange: (event) => poolActions.setSetting('defaultTab', 'tab:' + event.target.value),
-                    },
-                    tabOptions.map((tab) => h(
-                      'option',
-                      { key: tab.id, value: tab.id },
-                      tab.label,
-                    )),
-                  )
-                : null,
-            )),
-          ),
-        ),
-        h(
-          'div',
-          { className: 'pp-set-group pp-set-card', style: { display: section === 'order' ? '' : 'none' } },
+          { className: 'pp-set-group pp-set-card', style: { display: section === 'global' ? '' : 'none' } },
           h('div', { className: 'pp-set-label' }, translate('settings.table')),
           h(
             'div',
@@ -4541,13 +4303,7 @@ window.__ModuleLoader__.load({
                 type: 'checkbox',
                 name: 'pp-show-all-tab',
                 checked: settings.showAllTab !== false,
-                onChange: () => {
-                  const next = settings.showAllTab === false;
-                  poolActions.setSetting('showAllTab', next);
-                  // A default tab that pointed at the hidden "all" tab would
-                  // otherwise leave the preference picker on a missing option.
-                  if (!next && settings.defaultTab === 'tab:all') poolActions.setSetting('defaultTab', '');
-                },
+                onChange: () => poolActions.setSetting('showAllTab', settings.showAllTab === false),
               }),
               h('span', null, translate('settings.showAllTab')),
             ),
@@ -7649,9 +7405,6 @@ window.__ModuleLoader__.load({
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [reviewOpen, setReviewOpen] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
-      const [wsSelected, setWsSelected] = useState('');
-      const [customPick, setCustomPick] = useState('');
-      const [builtinPick, setBuiltinPick] = useState('');
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
       const [pendingRemove, setPendingRemove] = useState(null);
@@ -7825,20 +7578,6 @@ window.__ModuleLoader__.load({
         window.addEventListener('keydown', onKey, true);
         return () => window.removeEventListener('keydown', onKey, true);
       }, [view.open, editing, preview, captureOpen]);
-
-      const rail = workspaceRail(workspaces.items, state.settings, currentWorkspaceId);
-      const wsActive = rail.some((entry) => entry.id === wsSelected) ? wsSelected : rail.length > 0 ? rail[0].id : '';
-      const wsCounts = useMemo(() => {
-        const counts = {};
-        for (const item of state.items) {
-          const group = groupOf(item);
-          if (familyOf(group) === 'workspace') {
-            const key = 'ws:' + group.slice(10);
-            counts[key] = (counts[key] || 0) + 1;
-          }
-        }
-        return counts;
-      }, [state.items]);
 
       const items = useMemo(() => {
         if (scope === 'notes') return [];
@@ -8395,21 +8134,6 @@ window.__ModuleLoader__.load({
         });
       }, []);
 
-      // The panel lands on the Settings default each time it opens. The tab list
-      // is built here because render-time tabs are computed after this hook.
-      const wasOpenRef = useRef(false);
-      useEffect(() => {
-        const open = view.open === true;
-        if (open && !wasOpenRef.current) {
-          const pref = normalizeSettings(state.settings).defaultTab;
-          const baseTabs = buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId);
-          const tabsWithNotes = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
-          const resolved = resolveDefaultTab(pref, tabsWithNotes, currentWorkspaceId, notesList.length > 0);
-          if (resolved) setTab(resolved);
-        }
-        wasOpenRef.current = open;
-      }, [view.open]);
-
       // Hiding "all" (or a group) while the panel is open must not leave the
       // active tab pointing at a tab that no longer exists.
       useEffect(() => {
@@ -8422,66 +8146,12 @@ window.__ModuleLoader__.load({
 
       if (!view.open) return null;
 
-      const panelCount = state.items.length;
       const captureGroups = captureChoices(state.categories, workspaces.items, currentWorkspaceId, state.settings);
-      const baseTabs = buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId);
-      // The annotation tab is always present, so the feature stays discoverable.
-      const tabs = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
-      const globalTabs = tabs.filter((entry) => entry.id === 'all' || entry.group === 'builtin' || entry.group === 'custom');
-      const activeGlobalTab = globalTabs.some((entry) => entry.id === tab) ? tab : (globalTabs.find((entry) => entry.id === 'all') || globalTabs[0] || { id: 'all' }).id;
       const changeScope = (next) => {
         setScope(next);
         setSettingsOpen(false);
         setReviewOpen(false);
-        if (next === 'global' && !globalTabs.some((entry) => entry.id === tab)) setTab(activeGlobalTab);
       };
-      const tabCounts = tabCountsOf(state.items.filter((item) => {
-        const family = familyOf(groupOf(item));
-        return family === 'builtin' || family === 'custom';
-      }));
-
-      // A folded family renders its groups as chips inside one tab.
-      const customGroups = state.categories.map((category) => ({ id: 'custom:' + category.id, name: category.name }));
-      const customActive = customGroups.some((entry) => entry.id === customPick)
-        ? customPick
-        : customGroups.length > 0
-          ? customGroups[0].id
-          : '';
-      const customCounts = groupCounts(state.items, 'custom');
-      const builtinCounts = groupCounts(state.items, 'builtin');
-      const builtinList = builtinGroups();
-      const builtinActive = builtinList.some((entry) => entry.id === builtinPick) ? builtinPick : builtinList[0].id;
-      const nestedView =
-        tab === 'nested:workspace'
-          ? {
-              rail: rail,
-              activeId: wsActive,
-              onSelect: setWsSelected,
-              counts: wsCounts,
-              emptyText: translate('ws.empty'),
-              scoped: state.items.filter((item) => groupOf(item) === (wsActive ? 'workspace:' + wsActive.slice(3) : '')),
-            }
-          : tab === 'nested:custom'
-            ? {
-                rail: customGroups,
-                activeId: customActive,
-                onSelect: setCustomPick,
-                counts: customCounts,
-                editable: true,
-                onDelete: (id) => setPendingCategory(id),
-                emptyText: translate('panel.emptyTab'),
-                scoped: state.items.filter((item) => groupOf(item) === customActive),
-              }
-            : tab === 'nested:builtin'
-              ? {
-                  rail: builtinList,
-                  activeId: builtinActive,
-                  onSelect: setBuiltinPick,
-                  counts: builtinCounts,
-                  emptyText: translate('panel.emptyTab'),
-                  scoped: state.items.filter((item) => groupOf(item) === builtinActive),
-                }
-              : null;
 
       // --pp-room carries the measured cap into the stylesheet; a dragged height
       // is capped by the same value, so no path can push the header above the

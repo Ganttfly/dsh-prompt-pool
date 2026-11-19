@@ -139,7 +139,26 @@ for (const showAllTab of [true, false]) {
     if (panelGroups) fail(`showAllTab=${showAllTab}: the panel still renders group tabs`);
   }
 
-  const check = nodes(settings.component({}), []).find((node) => node.type === 'input'
+  const settingsTree = settings.component({});
+  const settingsNodes = nodes(settingsTree, []);
+  const settingsTabs = settingsNodes.filter((node) => node.type === 'button'
+    && String(node.props && node.props.className || '') === 'pp-tab');
+  if (settingsTabs.length !== 3) fail(`showAllTab=${showAllTab}: settings has ${settingsTabs.length} tabs, expected 3`);
+  const activeSettingsTab = settingsTabs.find((node) => node.props && node.props['data-active'] === 'true');
+  if (!activeSettingsTab || !Array.isArray(activeSettingsTab.children) || activeSettingsTab.children[0] !== 'settings.tab.notes') {
+    fail(`showAllTab=${showAllTab}: settings does not open on 批注`);
+  }
+  if (settingsNodes.some((node) => node.props && node.props.name === 'pp-default-tab')) {
+    fail(`showAllTab=${showAllTab}: the old default-tab setting is still rendered`);
+  }
+  const settingsRadios = settingsNodes
+    .filter((node) => node.type === 'input' && node.props && String(node.props.name || '').indexOf('pp-display-') === 0)
+    .map((node) => node.props.name);
+  if (settingsRadios.some((name) => name === 'pp-display-workspace')) {
+    fail(`showAllTab=${showAllTab}: workspace group display is still rendered`);
+  }
+
+  const check = settingsNodes.find((node) => node.type === 'input'
     && node.props && node.props.name === 'pp-show-all-tab');
   if (!check) fail(`showAllTab=${showAllTab}: the settings checkbox is missing`);
   else {
