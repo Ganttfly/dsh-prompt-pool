@@ -19,6 +19,8 @@ All notable changes to this project are documented here. The format follows
   group, with a reminder that the conversation context is not carried over.
 - Outbox entries now carry their target session, so queued prompt items are shown and released only in
   the session they were queued for. Legacy entries without a target remain visible everywhere.
+- A reviewed batch can be added to the outbox instead of being sent immediately, and the outbox can
+  combine multiple entries into one numbered prompt with **Merge & send**.
 - Action icons are slightly tighter (24px buttons, no inter-button gap) while keeping the 24px hit area.
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.

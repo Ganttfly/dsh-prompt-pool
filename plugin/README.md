@@ -19,7 +19,7 @@ The pool keeps the draft, the next action and the exact wording next to the conv
 - Right-click on selected conversation text to copy it or save it into a group (the last destination leads the menu)
 - Annotate while you read: choose a kind from the right-click submenu, keep notes on the exact passage with image
   attachments, collect them in the current-session tab, and send the checked ones as one review prompt straight to
-  the session queue (new notes default to Agree)
+  the session queue or into the outbox (new notes default to Agree)
 - Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback) with **Current
   session / Current workspace / Global shared pool** scopes
 - Single prompt type per item (decision / question / opinion / idea / supplement / to-do / inspiration), seeded

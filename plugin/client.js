@@ -198,6 +198,7 @@ window.__ModuleLoader__.load({
       'tray.title': '待发送队列',
       'tray.selected': '已选 {n} 条',
       'tray.release': '发送',
+      'tray.digest': '合并发送',
       'tray.clear': '清空',
       'tray.clearTitle': '清空待发送队列',
       'tray.clearConfirm': '队列里的 {n} 条会被一起移出。',
@@ -270,6 +271,8 @@ window.__ModuleLoader__.load({
       'note.review.back': '返回批注',
       'note.review.previewHint': '确认无误后发送；需要调整请返回批注。',
       'note.review.send': '发送到会话队列',
+      'note.review.outbox': '加入待发送',
+      'note.review.outboxDone': '已加入待发送',
       'note.review.sending': '正在发送…',
       'note.review.queued': '已送入会话队列：{id}',
       'note.review.failed': '发送失败：{reason}',
@@ -478,6 +481,7 @@ window.__ModuleLoader__.load({
       'tray.title': 'Send queue',
       'tray.selected': '{n} selected',
       'tray.release': 'Send',
+      'tray.digest': 'Merge & send',
       'tray.clear': 'Clear',
       'tray.clearTitle': 'Clear the send queue',
       'tray.clearConfirm': 'All {n} queued items are removed at once.',
@@ -550,6 +554,8 @@ window.__ModuleLoader__.load({
       'note.review.back': 'Back to annotations',
       'note.review.previewHint': 'Send when ready, or go back to adjust.',
       'note.review.send': 'Send to session queue',
+      'note.review.outbox': 'Add to outbox',
+      'note.review.outboxDone': 'Added to the outbox',
       'note.review.sending': 'Sending…',
       'note.review.queued': 'Sent to the session queue: {id}',
       'note.review.failed': 'Could not send: {reason}',
@@ -1634,7 +1640,7 @@ window.__ModuleLoader__.load({
     function normalizeTrayEntry(raw, byId) {
       if (typeof raw === 'string') {
         const item = byId.get(raw);
-        return item ? { key: uid(), itemId: raw, body: item.body, images: normalizeImages(item.images), targetSessionId: '' } : null;
+        return item ? { key: uid(), itemId: raw, body: item.body, images: normalizeImages(item.images), targetSessionId: '', type: 'prompt' } : null;
       }
       if (!raw || typeof raw !== 'object') return null;
       const itemId = typeof raw.itemId === 'string' ? raw.itemId : '';
@@ -1648,6 +1654,7 @@ window.__ModuleLoader__.load({
         body,
         images,
         targetSessionId: typeof raw.targetSessionId === 'string' ? raw.targetSessionId : '',
+        type: raw.type === 'review' ? 'review' : 'prompt',
       };
     }
 
@@ -2339,9 +2346,26 @@ window.__ModuleLoader__.load({
               body: item.body,
               images: normalizeImages(item.images),
               targetSessionId: typeof sessionId === 'string' ? sessionId : '',
+              type: 'prompt',
             }],
           };
         });
+      },
+      /** Add a pre-composed message, such as a review batch, to the outbox. */
+      addTextToTray(entry) {
+        const body = entry && typeof entry.body === 'string' ? entry.body : '';
+        const images = normalizeImages(entry && entry.images);
+        if (!body.trim() && images.length === 0) return null;
+        const row = {
+          key: uid(),
+          itemId: '',
+          body,
+          images,
+          targetSessionId: typeof entry.targetSessionId === 'string' ? entry.targetSessionId : '',
+          type: entry.type === 'review' ? 'review' : 'prompt',
+        };
+        mutate((state) => ({ ...state, tray: [...state.tray, row] }));
+        return row;
       },
       patchTray(key, fields) {
         mutate((state) => {
@@ -2612,7 +2636,7 @@ window.__ModuleLoader__.load({
       const {
         entries, queuePending, collapsed, busy, sessionId, trayRef,
         editing, setEditing, onSaveEdit, onPasteImages, onClear, onRelease,
-        onRemove, onOpenImage, onError,
+        onDigest, onRemove, onOpenImage, onError,
       } = props;
 
       if (collapsed) {
@@ -2656,6 +2680,9 @@ window.__ModuleLoader__.load({
           queuePending > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queuePending })) : null,
           h('span', { className: 'pp-grow' }),
           entries.length > 0 ? h('button', { type: 'button', className: 'pp-link', onClick: onClear }, translate('tray.clear')) : null,
+          entries.length > 1 && onDigest
+            ? h('button', { type: 'button', className: 'pp-link', disabled: busy, onClick: onDigest }, translate('tray.digest'))
+            : null,
           entries.length > 0
             ? h('button', { type: 'button', className: 'pp-primary', disabled: busy, onClick: onRelease }, translate('tray.release'))
             : null,
@@ -3823,6 +3850,21 @@ window.__ModuleLoader__.load({
         return { ok: true };
       };
 
+      /** Park the reviewed batch in the shared outbox instead of sending it now. */
+      const outboxReview = async (review) => {
+        poolActions.addTextToTray({
+          body: review.text,
+          images: review.images,
+          targetSessionId: activeSessionId,
+          type: 'review',
+        });
+        commitReviewBatch({ ...review, sessionId: activeSessionId });
+        moveReviewTodos(review);
+        setReviewOpen(false);
+        flash({ kind: 'ok', text: translate('note.review.outboxDone') });
+        return { ok: true };
+      };
+
       /** Store the session's annotations as one prompt, from the page header. */
       const storeNotesPrompt = () => {
         if (selectedNotes.length === 0) {
@@ -4183,6 +4225,7 @@ window.__ModuleLoader__.load({
                 sessionId: activeSessionId,
                 onClose: () => setReviewOpen(false),
                 onQueue: queueReview,
+                onOutbox: outboxReview,
                 onPark: parkReviewTodos,
               })
             : null,
@@ -4199,6 +4242,7 @@ window.__ModuleLoader__.load({
                 onPasteImages: pasteTrayImages,
                 onClear: () => setConfirmClear(true),
                 onRelease: () => sendToComposer({ type: 'release' }, translate('status.releaseSent')),
+                onDigest: () => sendToComposer({ type: 'digest' }, translate('status.releaseSent')),
                 onRemove: setPendingRemove,
                 onOpenImage: openImage,
                 onError: (text) => flash({ kind: 'error', text }),
@@ -7203,6 +7247,19 @@ window.__ModuleLoader__.load({
               ]
             : [
                 h('button', { key: 'back', type: 'button', className: 'pp-note-btn pp-review-cancel', onClick: () => setStep('notes') }, translate('note.review.back')),
+                props.onOutbox
+                  ? h(
+                      'button',
+                      {
+                        key: 'outbox',
+                        type: 'button',
+                        className: 'pp-note-btn',
+                        disabled: primaryDisabled,
+                        onClick: () => submit(props.onOutbox),
+                      },
+                      translate('note.review.outbox'),
+                    )
+                  : null,
                 h(
                   'button',
                   {
@@ -8068,6 +8125,25 @@ window.__ModuleLoader__.load({
         }
       };
 
+      const digest = async () => {
+        if (busyRef.current) return;
+        const entries = tray.slice();
+        if (entries.length < 2) return;
+        const text = entries.map((entry, index) => `${index + 1}. ${entry.body}`).join('\n\n');
+        const images = normalizeImages(entries.reduce((list, entry) => list.concat(entry.images || []), []), Number.MAX_SAFE_INTEGER);
+        busyRef.current = true;
+        setBusy(true);
+        const result = await queueReviewText(text, props.sessionId, images);
+        busyRef.current = false;
+        setBusy(false);
+        if (!result || result.ok !== true) {
+          flash({ kind: 'error', text: (result && result.reason) || translate('note.review.unsupported') });
+          return;
+        }
+        poolActions.removeTrayKeys(entries.map((entry) => entry.key));
+        flash({ kind: 'ok', text: translate('status.released', { n: 1 }) });
+      };
+
       const rowOf = (item, index) => renderPoolRow({
         key: item.id,
         item,
@@ -8214,6 +8290,20 @@ window.__ModuleLoader__.load({
         return { ok: true };
       };
 
+      const outboxReview = async (review) => {
+        poolActions.addTextToTray({
+          body: review.text,
+          images: review.images,
+          targetSessionId: notesSessionId,
+          type: 'review',
+        });
+        commitReviewBatch({ ...review, sessionId: notesSessionId });
+        moveReviewTodos(review);
+        setReviewOpen(false);
+        showToast(translate('note.review.outboxDone'), 'ok');
+        return { ok: true };
+      };
+
       /** Store the session's annotations as one prompt, from the panel header. */
       const storeNotesPrompt = () => {
         if (selectedNotes.length === 0) {
@@ -8240,7 +8330,7 @@ window.__ModuleLoader__.load({
         });
       };
 
-      bridgeRef.current = { insert: insertItem, release, capture: captureDraft, composeNotes: composeSessionNotes, insertText: insertComposerText, insertImages: addImages, queueReview: queueReviewText };
+      bridgeRef.current = { insert: insertItem, release, digest, capture: captureDraft, composeNotes: composeSessionNotes, insertText: insertComposerText, insertImages: addImages, queueReview: queueReviewText };
       useEffect(() => {
         return bridge.listen((command) => {
           const api = bridgeRef.current;
@@ -8270,6 +8360,10 @@ window.__ModuleLoader__.load({
             if (draftRef.current.trim() !== '') return { ok: false, reason: 'draft-busy' };
             api.release();
             return { ok: true };
+          }
+          if (command.type === 'digest') {
+            if (typeof api.digest !== 'function') return { ok: false, reason: 'unavailable' };
+            return api.digest();
           }
           if (command.type === 'stop') {
             return { ok: requestReleaseStop() };
@@ -8607,6 +8701,7 @@ window.__ModuleLoader__.load({
               sessionId: notesSessionId,
               onClose: () => setReviewOpen(false),
               onQueue: queueReview,
+              onOutbox: outboxReview,
               onPark: parkReviewTodos,
             })
           : null,
@@ -8623,6 +8718,7 @@ window.__ModuleLoader__.load({
               onPasteImages: pasteTrayImages,
               onClear: () => setConfirmClear(true),
               onRelease: release,
+              onDigest: digest,
               onRemove: setPendingRemove,
               onOpenImage: openImage,
               onError: (text) => flash({ kind: 'error', text }),

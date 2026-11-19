@@ -59,7 +59,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   waits for the composer to be accepted before the next starts. On hosts that expose the conversation
   queue, items go straight into the queue without touching the composer; otherwise the composer path
   is used. While a release runs, both views show progress and a Stop control; the queue is locked
-  until it finishes.
+  until it finishes. With more than one entry the queue can also **Merge & send**, numbering the entries
+  into one prompt before handing it to the session queue.
 - **One-click handoff** — a strip above the composer sits beside the host's own queued messages and
   shows both counts; **Push** hands the pool's send queue to the host queue in order, without the
   release progress overlay and without touching the composer. Pushed entries leave the send queue, and
@@ -77,7 +78,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   **Insert** writes one note into the composer, and **Save as prompt** opens a confirmation step for the
   title, body, images, type and target group before filing the prompt. The header's **Review** opens a
   review card in the bottom dock (like the send queue): adjust the checked notes, then choose
-  **Preview prompt** to inspect the generated prompt and send it, or go back to adjust. The prompt is grouped
+  **Preview prompt** to inspect the generated prompt and send it, add it to the outbox for later, or go
+  back to adjust. The prompt is grouped
   by kind with a type-specific response contract; additional info is used to revisit the related conclusions
   rather than to execute anything. Opinions, ideas and agreements can be marked
   **Implement if adopted / feasible / approved** to authorize the same-turn execution; the flag is off by

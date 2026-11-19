@@ -198,8 +198,10 @@ else {
         const previewPanes = findAll(previewSheet, (node) => node.props && node.props.className === 'pp-review-pane');
         const previewSteps = findAll(previewSheet, (node) => node.props && node.props.className === 'pp-review-step');
         const back = findAll(previewSheet, (node) => node.type === 'button' && textOf(node) === 'note.review.back')[0];
+        const outboxAction = findAll(previewSheet, (node) => node.type === 'button' && textOf(node) === 'note.review.outbox')[0];
         if (!previewPanes[1] || previewPanes[1].props.hidden !== false || !previewSteps[1] || previewSteps[1].props['data-active'] !== 'true') fail('the preview step did not reveal the preview pane');
         else if (!back) fail('the preview step has no back button');
+        else if (!outboxAction) fail('the preview step has no outbox action');
         const preview = findAll(previewSheet, (node) => node.type === 'textarea' && node.props && node.props.className === 'pp-review-text')[0];
         const value = preview ? String(preview.props.value) : '';
         if (value.indexOf('note.review.heading') < 0 || value.indexOf('note.review.intro') < 0) fail('the review preview lost its contract');
