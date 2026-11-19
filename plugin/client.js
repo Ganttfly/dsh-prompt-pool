@@ -107,6 +107,7 @@ window.__ModuleLoader__.load({
       'page.empty': '还没有内容。点右上角「＋ 提示词」开始。',
       'page.noMatch': '没有匹配的条目。',
       'status.noComposer': '没有可用的输入框：请先打开一个对话页签',
+      'status.noWorkspace': '当前会话还没有工作区，无法新建工作区提示词。',
       'status.releaseSent': '已交给输入框，按顺序排队中',
       'status.savedToPool': '已保存',
       'settings.nav': '提示池',
@@ -390,6 +391,7 @@ window.__ModuleLoader__.load({
       'page.empty': 'Nothing yet. Use “+ Prompt” in the top right.',
       'page.noMatch': 'No matching item.',
       'status.noComposer': 'No composer available: open a conversation tab first',
+      'status.noWorkspace': 'This session has no workspace yet, so a workspace prompt cannot be created.',
       'status.releaseSent': 'Handed to the composer; queuing in order',
       'status.savedToPool': 'Saved',
       'settings.nav': 'Prompt pool',
@@ -3948,8 +3950,12 @@ window.__ModuleLoader__.load({
 
       /** The active scope decides the new item's classification. */
       const create = () => {
+        if (scope === 'workspace' && !workspaceGroup) {
+          flash({ kind: 'error', text: translate('status.noWorkspace') });
+          return;
+        }
         const group = scope === 'workspace'
-          ? (workspaceGroup || BUILTIN_GROUP.note)
+          ? workspaceGroup
           : groupForTab(activeGlobalTab, '');
         setQuery('');
         const item = poolActions.add({
@@ -7247,7 +7253,7 @@ window.__ModuleLoader__.load({
               ]
             : [
                 h('button', { key: 'back', type: 'button', className: 'pp-note-btn pp-review-cancel', onClick: () => setStep('notes') }, translate('note.review.back')),
-                props.onOutbox
+                props.onOutbox && sentNotes.length > 0
                   ? h(
                       'button',
                       {
@@ -7975,7 +7981,11 @@ window.__ModuleLoader__.load({
       };
 
       const newItem = () => {
-        const group = workspaceGroup || BUILTIN_GROUP.note;
+        if (!workspaceGroup) {
+          flash({ kind: 'error', text: translate('status.noWorkspace') });
+          return;
+        }
+        const group = workspaceGroup;
         setQuery('');
         const item = poolActions.add({
           id: uid(),
