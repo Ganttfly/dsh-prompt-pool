@@ -2906,7 +2906,10 @@ window.__ModuleLoader__.load({
         case 'review':
           return h('svg', base, h('path', { d: 'M2 2.5h3.2M2 6h3.2M2 9.5h3.2' }), h('path', { d: 'M6.3 3.2l1.1 1.1 2-2.2M6.3 7.2l1.1 1.1 2-2.2M6.3 11l1.1 1.1 2-2.2' }));
         case 'queue':
-          return h('svg', base, h('path', { d: 'M2 7.4h8v3H2z' }), h('path', { d: 'M6 1.5v4.4M3.8 3.7h4.4' }));
+          return h('svg', base,
+            h('path', { d: 'M2 2.5h8M2 5.5h8M2 8.5h5.2' }),
+            h('path', { d: 'M9.5 7.4v3.2M7.9 9h3.2' }),
+          );
         case 'locate':
           return h('svg', base, h('circle', { cx: 6, cy: 6, r: 2.5 }), h('path', { d: 'M6 1v1.6M6 9.4V11M1 6h1.6M9.4 6H11' }));
         case 'starFill':
