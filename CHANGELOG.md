@@ -44,6 +44,8 @@ All notable changes to this project are documented here. The format follows
 - The composer dock strip, its **Push** action and the two queue counts were removed, along with the
   pending badge on the composer trigger. Outbox keeps its per-session send path, release progress/stop
   and direct host-queue admission.
+- **Save draft** now uses an archive-box mark and **Save as prompt** uses a document-plus mark, so the
+  two save actions no longer share the bookmark glyph.
 - The panel header now has a dedicated title/slogan row and a second row for search, type filtering
   and the primary actions; Settings, pin and close stay in the title row.
 - Settings is now an icon-only control. The annotation header no longer renders the old bulk store

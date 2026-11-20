@@ -2888,7 +2888,17 @@ window.__ModuleLoader__.load({
             h('circle', { cx: 12, cy: 12, r: 3 }),
           );
         case 'store':
-          return h('svg', base, h('path', { d: 'M3.2 1.5h5.6v9L6 8.6l-2.8 1.9z' }));
+          return h('svg', base,
+            h('path', { d: 'M2.5 1.5h5l2 2v7h-7z' }),
+            h('path', { d: 'M7.5 1.5v2h2' }),
+            h('path', { d: 'M6 5v3.5M4.2 6.7h3.6' }),
+          );
+        case 'capture':
+          return h('svg', base,
+            h('path', { d: 'M2 2.4h8v2H2z' }),
+            h('path', { d: 'M3 4.4v5.2h6V4.4' }),
+            h('path', { d: 'M5 6.7h2' }),
+          );
         case 'review':
           return h('svg', base, h('path', { d: 'M2 2.5h3.2M2 6h3.2M2 9.5h3.2' }), h('path', { d: 'M6.3 3.2l1.1 1.1 2-2.2M6.3 7.2l1.1 1.1 2-2.2M6.3 11l1.1 1.1 2-2.2' }));
         case 'queue':
@@ -4006,7 +4016,7 @@ window.__ModuleLoader__.load({
                   h('span', { className: 'pp-btn-icon' }, icon('plus')),
                   translate('page.new')),
                 h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture },
-                  h('span', { className: 'pp-btn-icon' }, icon('store')),
+                  h('span', { className: 'pp-btn-icon' }, icon('capture')),
                   translate('panel.capture')),
               ],
           h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
@@ -8342,7 +8352,7 @@ window.__ModuleLoader__.load({
                       h('span', { className: 'pp-btn-icon' }, icon('plus')),
                       translate('page.new')),
                     h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture },
-                      h('span', { className: 'pp-btn-icon' }, icon('store')),
+                      h('span', { className: 'pp-btn-icon' }, icon('capture')),
                       translate('panel.capture')),
                   ],
             ),
