@@ -178,16 +178,16 @@ const panelCapture = panelNodes.some(
 console.log(`[check] panel header search=${panelSearch} close=${panelClose} grip=${panelGrip} queueToggle=${panelQueueToggle} captureHint=${panelCapture} page-item rows=${panelRows}`);
 if (!panelSearch || !panelClose || !panelGrip || !panelQueueToggle || !panelCapture || panelRows === 0) process.exitCode = 1;
 
-// The composer trigger names itself, and flags the queue with an accent badge.
+// The composer trigger names itself and no longer carries a queue badge.
 const triggerEntry = registrations.find((entry) => entry.slot === 'conversation.input.right');
 const triggerNodes = [];
 walkTree(triggerEntry.component({}), (node) => triggerNodes.push(node));
 const trigger = triggerNodes.find((node) => node.type === 'button' && hasClass(node, 'pp-trigger'));
 const triggerLabel = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-trigger-label') && node.children[0] === 'button.label');
-const triggerBadge = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-badge') && node.children[0] === '1');
+const triggerBadge = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-badge'));
 const queued = trigger && trigger.props['data-queued'] === 'true';
 console.log(`[check] trigger label=${triggerLabel} queued=${queued} badge=${triggerBadge}`);
-if (!trigger || !triggerLabel || !queued || !triggerBadge) process.exitCode = 1;
+if (!trigger || !triggerLabel || queued || triggerBadge) process.exitCode = 1;
 
 // The settings page names the plugin and its author.
 const settingsEntry = registrations.find((entry) => entry.slot === 'settings.section');

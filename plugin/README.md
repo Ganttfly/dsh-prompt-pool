@@ -31,8 +31,6 @@ The pool keeps the draft, the next action and the exact wording next to the conv
 - Annotations queue from their row action with kind and quote metadata preserved; prompts queue with the
   existing ⊕ control, and Outbox is the only send path
 - Merging outbox entries opens a preview with entry selection and source labels
-- A dock strip above the composer sits beside the host's own queued messages and pushes the whole send
-  queue into it in one click
 - Confirmations for destructive actions, with undo on deletes and clears
 
 Requires DSH >= 0.2.0-rc.1 (verified on 0.2.2-rc.1). This is a **bundle**: install the package, then

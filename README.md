@@ -61,10 +61,6 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   is used. While a release runs, both views show progress and a Stop control; the queue is locked
   until it finishes. With more than one entry the queue can also **Merge & send**: preview the
   checked entries and their order first, then hand one numbered prompt to the session queue.
-- **One-click handoff** — a strip above the composer sits beside the host's own queued messages and
-  shows both counts; **Push** hands the pool's send queue to the host queue in order, without the
-  release progress overlay and without touching the composer. Pushed entries leave the send queue, and
-  a host that exposes no queue admission keeps them and says so.
 - **Annotate while you read** — select a passage in an assistant reply and right-click **Annotate**:
   pick a kind from its submenu (note / question / agree / disagree / idea / additional info / to-do), type up to 100
   full-width or 200 half-width characters (or leave it empty for a glyph-only badge), and the badge lands

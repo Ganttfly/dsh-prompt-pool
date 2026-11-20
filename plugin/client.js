@@ -61,7 +61,6 @@ window.__ModuleLoader__.load({
     // ---------------------------------------------------------------- locale
     const ZH = {
       'button.label': '提示池',
-      'button.pending': '待发送 {n} 条',
       'panel.title': '提示池',
       'panel.slogan': '整理好，再发送',
       'panel.close': '关闭',
@@ -207,16 +206,9 @@ window.__ModuleLoader__.load({
       'tray.removeConfirm': '移出后不可撤销；这条如果在队列里改过，改动不会保留。',
       'tray.removeAction': '移出',
       'tray.duplicate': '复制一份，追加到末尾',
-      'tray.queue': '队列中 {n}',
+
       'tray.collapseTitle': '收起待发送队列',
       'tray.expandTitle': '展开待发送队列',
-      'dock.pool': '待发 {n} 条',
-      'dock.host': '会话队列 {n} 条',
-      'dock.push': '把待发的 {n} 条压入会话队列',
-      'dock.pushShort': '压入队列',
-      'dock.pushing': '压入 {sent}/{total}…',
-      'dock.pushed': '已压入 {n} 条',
-      'dock.unavailable': '这个宿主没有开放的入队接口，请用面板里的「发送」',
       'status.saved': '已存入池子',
       'status.savedPartial': '已存入池子，但这 {n} 个附件没有一起保存',
       'status.savedTo': '已存入「{group}」',
@@ -345,7 +337,6 @@ window.__ModuleLoader__.load({
 
     const EN = {
       'button.label': 'Prompt pool',
-      'button.pending': '{n} waiting to send',
       'panel.title': 'Prompt pool',
       'panel.slogan': 'Organize, then send',
       'panel.close': 'Close',
@@ -491,16 +482,9 @@ window.__ModuleLoader__.load({
       'tray.removeConfirm': 'This cannot be undone. Edits made to this queued copy are lost.',
       'tray.removeAction': 'Remove',
       'tray.duplicate': 'Duplicate and append to the end',
-      'tray.queue': '{n} in queue',
+
       'tray.collapseTitle': 'Collapse the send queue',
       'tray.expandTitle': 'Expand the send queue',
-      'dock.pool': '{n} ready',
-      'dock.host': '{n} in the session queue',
-      'dock.push': 'Push the {n} queued item(s) into the session queue',
-      'dock.pushShort': 'Push',
-      'dock.pushing': 'Pushing {sent}/{total}…',
-      'dock.pushed': 'Pushed {n}',
-      'dock.unavailable': 'This host exposes no queue admission; use Send in the panel',
       'status.saved': 'Saved to the pool',
       'status.savedPartial': 'Saved to the pool; {n} attachment(s) were not captured',
       'status.savedTo': 'Saved to {group}',
@@ -1910,14 +1894,8 @@ window.__ModuleLoader__.load({
     /** The composer panel knows the active session; the sidebar page does not. */
     const sessionDir = createStore({ sessionId: '' });
     /** The composer knows how many submissions are still waiting; the page does not. */
-    const queueDir = createStore({ pending: 0 });
-
     function useSessionDir() {
       return useSyncExternalStore(sessionDir.subscribe, sessionDir.get, sessionDir.get);
-    }
-
-    function useQueueDir() {
-      return useSyncExternalStore(queueDir.subscribe, queueDir.get, queueDir.get);
     }
 
     function useWorkspaceDir() {
@@ -2688,7 +2666,7 @@ window.__ModuleLoader__.load({
     /** The send-queue card, shared by the panel and the page. */
     function renderTrayCard(props) {
       const {
-        entries, queuePending, collapsed, busy, sessionId, trayRef,
+        entries, collapsed, busy, sessionId, trayRef,
         editing, setEditing, onSaveEdit, onPasteImages, onClear, onRelease,
         onDigest, onRemove, onOpenImage, onError,
       } = props;
@@ -2731,7 +2709,6 @@ window.__ModuleLoader__.load({
           ),
           h('span', { className: 'pp-foot-title' }, translate('tray.title')),
           h('span', { className: 'pp-hint' }, translate('tray.selected', { n: entries.length })),
-          queuePending > 0 ? h('span', { className: 'pp-hint' }, translate('tray.queue', { n: queuePending })) : null,
           h('span', { className: 'pp-grow' }),
           entries.length > 0 ? h('button', { type: 'button', className: 'pp-link', onClick: onClear }, translate('tray.clear')) : null,
           entries.length > 1 && onDigest
@@ -2982,13 +2959,9 @@ window.__ModuleLoader__.load({
     // ----------------------------------------------------------------- button
     function PromptPoolButton() {
       useLocaleTick();
-      const state = usePoolState();
       const view = useUiState();
       const release = useReleaseState();
       const label = translate('button.label');
-      const count = state.tray.length;
-      const queued = count > 0;
-      const hint = queued ? translate('button.pending', { n: count }) : label;
       return h(
         React.Fragment,
         null,
@@ -3001,10 +2974,9 @@ window.__ModuleLoader__.load({
             className: 'pp-btn pp-root pp-trigger',
             'data-pp-trigger': 'true',
             'data-open': view.open ? 'true' : 'false',
-            'data-queued': queued ? 'true' : 'false',
             disabled: release.active,
-            title: hint,
-            'aria-label': hint,
+            title: label,
+            'aria-label': label,
             'aria-haspopup': 'dialog',
             'aria-expanded': view.open ? 'true' : 'false',
             onMouseDown: (event) => event.preventDefault(),
@@ -3015,142 +2987,6 @@ window.__ModuleLoader__.load({
           },
           icon('pool'),
           h('span', { className: 'pp-trigger-label' }, label),
-          queued ? h('span', { className: 'pp-badge' }, String(count)) : null,
-        ),
-      );
-    }
-
-    // ------------------------------------------------------------------- dock
-    /**
-     * The bridge above the composer: what the pool still has to send, what the
-     * session queue already holds, and one action that hands the whole pool
-     * send queue to the host queue without touching the composer.
-     *
-     * The session queue itself belongs to the base QueueDock; this strip only
-     * reads it through the `inbox` projection so the two numbers sit next to
-     * each other. With nothing on either side it renders nothing at all.
-     */
-    function PromptPoolQueueDock(props) {
-      useLocaleTick();
-      const state = usePoolState();
-      const sessionId = (props && props.sessionId) || '';
-      const entries = state.tray.filter((entry) => !entry.targetSessionId || entry.targetSessionId === sessionId);
-      // The seat always injects useProjection; the guard only serves render
-      // stubs. The prop identity is stable per mount, so the hook order holds.
-      const useProjection = props && typeof props.useProjection === 'function' ? props.useProjection : null;
-      const inbox = useProjection ? useProjection('inbox') : null;
-      const hostQueue = inbox && Array.isArray(inbox['next-turn']) ? inbox['next-turn'].length : 0;
-      const [busy, setBusy] = useState(false);
-      const [note, setNote] = useState(null);
-      const noteTimer = useRef(0);
-      // One release may already be draining the same queue from the panel or
-      // the page; handing it over twice would send every entry twice.
-      const release = useReleaseState();
-
-      useEffect(() => () => {
-        if (noteTimer.current) clearTimeout(noteTimer.current);
-      }, []);
-
-      if (entries.length === 0 && hostQueue === 0) return null;
-
-      /** Show one line of temporary feedback and let it fade. */
-      const report = (kind, text) => {
-        setNote({ kind, text });
-        if (noteTimer.current) clearTimeout(noteTimer.current);
-        noteTimer.current = typeof setTimeout === 'function'
-          ? setTimeout(() => setNote(null), kind === 'error' ? 6000 : 2600)
-          : 0;
-      };
-
-      /** Progress replaces any pending fade, so it cannot vanish mid-push. */
-      const showProgress = (text) => {
-        if (noteTimer.current) clearTimeout(noteTimer.current);
-        noteTimer.current = 0;
-        setNote({ kind: 'info', text });
-      };
-
-      /** Hand every queued pool entry to the host queue, in order. */
-      const push = async () => {
-        if (busy || release.active) return;
-        const direct = resolveDirectQueue(sessionId);
-        if (!direct) {
-          report('error', translate('dock.unavailable'));
-          return;
-        }
-        const batch = entries.slice();
-        if (batch.length === 0) return;
-        setBusy(true);
-        let sent = 0;
-        let failure = '';
-        const done = [];
-        try {
-          for (const entry of batch) {
-            const body = typeof entry.body === 'string' ? entry.body : '';
-            const images = normalizeImages(entry.images);
-            if (!body.trim() && images.length === 0) {
-              done.push(entry.key);
-              continue;
-            }
-            showProgress(translate('dock.pushing', { sent, total: batch.length }));
-            try {
-              await sendDirect(direct, sessionId, body, images);
-            } catch (error) {
-              failure = String((error && error.message) || error);
-              break;
-            }
-            sent += 1;
-            done.push(entry.key);
-          }
-        } finally {
-          poolActions.removeTrayKeys(done);
-          setBusy(false);
-        }
-        if (failure) report('error', failure);
-        else if (sent > 0) report('ok', translate('dock.pushed', { n: sent }));
-      };
-
-      return h(
-        React.Fragment,
-        null,
-        h('style', { key: 'css' }, CSS),
-        h(
-          'div',
-          {
-            key: 'dock',
-            className: 'pp-dock pp-root',
-            'data-pool': String(entries.length),
-            'data-host': String(hostQueue),
-            'data-busy': busy ? 'true' : 'false',
-          },
-          h('span', { className: 'pp-dock-mark' }, icon('pool')),
-          entries.length > 0
-            ? h('span', { className: 'pp-dock-count' }, translate('dock.pool', { n: entries.length }))
-            : null,
-          entries.length > 0 && hostQueue > 0 ? h('span', { className: 'pp-dock-sep', 'aria-hidden': 'true' }) : null,
-          hostQueue > 0
-            ? h('span', { className: 'pp-dock-host' }, translate('dock.host', { n: hostQueue }))
-            : null,
-          note
-            ? h('span', { className: 'pp-dock-note', 'data-kind': note.kind, role: 'status', 'aria-live': 'polite' }, note.text)
-            : null,
-          h('span', { className: 'pp-grow' }),
-          entries.length > 0
-            ? h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'pp-dock-btn',
-                  title: translate('dock.push', { n: entries.length }),
-                  'aria-label': translate('dock.push', { n: entries.length }),
-                  disabled: busy || release.active,
-                  onMouseDown: (event) => event.preventDefault(),
-                  onClick: () => {
-                    void push();
-                  },
-                },
-                translate('dock.pushShort'),
-              )
-            : null,
         ),
       );
     }
@@ -3629,7 +3465,6 @@ window.__ModuleLoader__.load({
       const queueCollapsed = state.settings && state.settings.queueCollapsed === true;
       const workspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
-      const queuePending = useQueueDir().pending;
       const pageSessionId = (props && ((props.scope && props.scope.sessionId) || props.sessionId)) || '';
       const workspaceList = workspaces && Array.isArray(workspaces.items) ? workspaces.items : [];
       const pageWorkspace = pageSessionId
@@ -4318,7 +4153,6 @@ window.__ModuleLoader__.load({
           !settingsOpen && !mergeOpen
             ? renderTrayCard({
                 entries: sessionTray,
-                queuePending,
                 collapsed: queueCollapsed,
                 sessionId: activeSessionId,
                 trayRef,
@@ -7585,11 +7419,6 @@ window.__ModuleLoader__.load({
       phaseRef.current = phase;
       const queueRef = useRef([]);
       queueRef.current = queue;
-      // The sidebar page shows the same count from this shared value.
-      useEffect(() => {
-        if (queueDir.get().pending === queue.length) return;
-        queueDir.set({ pending: queue.length });
-      }, [queue.length]);
       const sessionSelector = typeof props.useSession === 'function' ? props.useSession : null;
       const pendingSubmissions = sessionSelector
         ? sessionSelector((snapshot) => (snapshot && Array.isArray(snapshot.pendingSubmissions) ? snapshot.pendingSubmissions : EMPTY_PENDING))
@@ -8635,7 +8464,6 @@ window.__ModuleLoader__.load({
         !settingsOpen && !mergeOpen
           ? renderTrayCard({
               entries: tray,
-              queuePending: queue.length,
               collapsed: queueCollapsed,
               busy,
               sessionId: props.sessionId,
@@ -8688,15 +8516,10 @@ window.__ModuleLoader__.load({
       '.pp-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;min-width:28px;padding:0 6px;border:0;border-radius:8px;background:transparent;color:var(--pp-ink-2);cursor:pointer;font:inherit;font-size:12px;line-height:1}' +
       '.pp-btn:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-btn[data-open="true"]{background:var(--pp-hover);color:var(--pp-ink)}' +
-      '.pp-badge{min-width:15px;height:15px;padding:0 4px;border-radius:8px;border:1px solid var(--pp-line-2);color:var(--pp-ink-2);font-size:10px;line-height:13px;text-align:center;font-variant-numeric:tabular-nums}' +
-      // The composer trigger names itself, and switches to the accent colour once
-      // something is queued so the pending count is hard to miss.
+      // The composer trigger names itself.
       '.pp-trigger{gap:6px;padding:0 9px;border:1px solid transparent}' +
       '.pp-trigger[disabled]{opacity:.55;cursor:not-allowed}' +
       '.pp-trigger-label{white-space:nowrap}' +
-      '.pp-trigger[data-queued="true"]{border-color:var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
-      '.pp-trigger[data-queued="true"]:hover{background:color-mix(in srgb,var(--pp-accent) 20%,transparent);color:var(--pp-accent)}' +
-      '.pp-trigger[data-queued="true"] .pp-badge{border-color:var(--pp-accent);background:var(--pp-accent);color:var(--pp-on-accent);font-weight:600}' +
       '.pp-panel{position:absolute;left:auto;right:0;bottom:0;margin:0;width:min(var(--pp-w,920px),100%);min-width:min(440px,100%);max-width:min(var(--pp-w,920px),100%);z-index:40;display:flex;flex-direction:column;--pp-h:min(70vh,720px,var(--pp-room,100vh));height:var(--pp-h);max-height:var(--pp-h);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;overflow:clip;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
       // The grip above the header resizes the panel; a long queue may keep half the list.
       '.pp-panel-grip{flex:none;display:flex;align-items:center;justify-content:center;height:11px;cursor:ns-resize;touch-action:none}' +
@@ -8955,20 +8778,6 @@ window.__ModuleLoader__.load({
       '.pp-panel .pp-status-float{pointer-events:auto}' +
       // The page's status float stays click-through, so only the undo link takes clicks.
       '.pp-status-float .pp-link{pointer-events:auto}' +
-      // The composer dock strip bridges the pool's send queue to the host queue.
-      // Its box follows the host's own dock geometry so it lines up with the
-      // composer card and with the base queue panel above/below it.
-      '.pp-dock{box-sizing:border-box;flex:none;display:flex;align-items:center;gap:8px;width:calc(100% - 2*var(--dsh-composer-side-clearance,0px) - 4*var(--dsh-composer-dock-inset,0px));max-width:calc(var(--dsh-composer-card-max-width,920px) - 4*var(--dsh-composer-dock-inset,0px));margin:0 auto;min-width:0;padding:5px 10px;border:1px solid var(--pp-line);border-radius:10px;background:var(--pp-queue-bg);color:var(--pp-ink);font-size:12px;line-height:1.5}' +
-      '.pp-dock-mark{display:inline-flex;align-items:center;color:var(--pp-ink-2)}' +
-      '.pp-dock-count,.pp-dock-host{white-space:nowrap;font-variant-numeric:tabular-nums}' +
-      '.pp-dock-host{color:var(--pp-ink-2)}' +
-      '.pp-dock-sep{flex:none;width:1px;height:12px;background:var(--pp-line-2)}' +
-      '.pp-dock-note{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2)}' +
-      '.pp-dock-note[data-kind="error"]{color:var(--pp-danger)}' +
-      '.pp-dock-note[data-kind="ok"]{color:var(--pp-ok)}' +
-      '.pp-dock-btn{flex:none;height:24px;padding:0 10px;border:1px solid var(--pp-accent-line);border-radius:7px;background:var(--pp-accent-soft);color:var(--pp-accent);font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}' +
-      '.pp-dock-btn:hover:not([disabled]){background:color-mix(in srgb,var(--pp-accent) 20%,transparent)}' +
-      '.pp-dock-btn[disabled]{opacity:.55;cursor:not-allowed}' +
       '@keyframes pp-status-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}';
 
     /**
@@ -9287,20 +9096,6 @@ window.__ModuleLoader__.load({
             PromptPoolPanel,
           ),
         );
-        // The bridge to the host's own queue: it sits with the other composer
-        // dock entries (the base QueueDock is one of them), above the input.
-        // An older host may not declare this slot; the pool then keeps working
-        // without the strip instead of failing to mount.
-        try {
-          ctx.slots.inject('conversation.input.dock', () =>
-            ctx.slots.register(
-              { name: 'conversation.input.dock', id: 'prompt-pool-queue', order: 15, label: () => translate('tray.title') },
-              PromptPoolQueueDock,
-            ),
-          );
-        } catch (_error) {
-          /* the composer dock slot is a newer host surface */
-        }
         // The Chat view renders the surface the interaction above opened, keyed by
         // that interaction's id. The slot is declared only while Chat is mounted.
         ctx.slots.inject('conversation.chat.text-interaction', () =>
