@@ -36,8 +36,9 @@ All notable changes to this project are documented here. The format follows
 ### Changed
 
 - Scope tabs now carry restrained active colors: amber for annotations, blue for the current
-  workspace and graphite for the global shared pool. Settings tabs remain neutral, and the content
-  rows, icons and type chips keep their existing colors.
+  workspace and muted teal for the global shared pool. The global pool's group tabs use the same teal
+  accent; Settings tabs remain neutral, and the content rows, icons and type chips keep their existing
+  colors.
 - The panel header now has a dedicated title/slogan row and a second row for search, type filtering
   and the primary actions; Settings, pin and close stay in the title row.
 - Settings is now an icon-only control. The annotation header no longer renders the old bulk store
