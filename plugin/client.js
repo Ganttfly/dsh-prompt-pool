@@ -183,7 +183,7 @@ window.__ModuleLoader__.load({
       'row.typeNone': '未分类',
       'row.allTypes': '全部类型',
       'page.new': '提示词',
-      'page.inspiration': '记录灵感',
+
       'row.noCategory': '未分组',
       'tray.title': '待发送队列',
       'tray.source.prompt': '提示词',
@@ -467,7 +467,7 @@ window.__ModuleLoader__.load({
       'row.typeNone': 'Unclassified',
       'row.allTypes': 'All types',
       'page.new': 'Prompt',
-      'page.inspiration': 'Capture inspiration',
+
       'row.noCategory': 'Ungrouped',
       'tray.title': 'Send queue',
       'tray.source.prompt': 'Prompt',
@@ -2910,8 +2910,6 @@ window.__ModuleLoader__.load({
             }),
             h('circle', { cx: 12, cy: 12, r: 3 }),
           );
-        case 'star':
-          return h('svg', base, h('path', { d: 'M6 1.9l1.24 2.6 2.86.4-2.08 2 .5 2.83L6 8.4l-2.52 1.33.5-2.83-2.08-2 2.86-.4z' }));
         case 'store':
           return h('svg', base, h('path', { d: 'M3.2 1.5h5.6v9L6 8.6l-2.8 1.9z' }));
         case 'review':
@@ -2938,8 +2936,6 @@ window.__ModuleLoader__.load({
             h('path', { d: 'M6 1.8 10.2 4 6 6.2 1.8 4z' }),
             h('path', { d: 'M1.8 6 6 8.2 10.2 6M1.8 8 6 10.2 10.2 8' }),
           );
-        case 'starFill':
-          return h('svg', { ...base, fill: 'currentColor' }, h('path', { d: 'M6 1.9l1.24 2.6 2.86.4-2.08 2 .5 2.83L6 8.4l-2.52 1.33.5-2.83-2.08-2 2.86-.4z' }));
         case 'plus':
           return h('svg', base, h('path', { d: 'M6 2.2v7.6M2.2 6h7.6' }));
         case 'pool':
@@ -4107,28 +4103,6 @@ window.__ModuleLoader__.load({
         setEditing({ id: item.id, group, title: '', body: '', images: [], type: '' });
       };
 
-      /** A lightweight global inspiration: a note-typed prompt with 灵感 preselected. */
-      const createInspiration = () => {
-        const normal = normalizeSettings(state.settings);
-        let group = BUILTIN_GROUP.note;
-        if (normal.display.builtin === 'hidden' && normal.display.custom !== 'hidden' && state.categories[0]) {
-          group = 'custom:' + state.categories[0].id;
-        }
-        setQuery('');
-        setTypeFilter('all');
-        const item = poolActions.add({
-          id: uid(),
-          group,
-          title: '',
-          body: '',
-          images: [],
-          type: 'inspiration',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-        setEditing({ id: item.id, group, title: '', body: '', images: [], type: 'inspiration' });
-      };
-
       const rowOf = (item, index) => renderPoolRow({
         key: item.id,
         item,
@@ -4199,11 +4173,6 @@ window.__ModuleLoader__.load({
                 h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture },
                   h('span', { className: 'pp-btn-icon' }, icon('store')),
                   translate('panel.capture')),
-                scope === 'global'
-                  ? h('button', { key: 'inspiration', type: 'button', className: 'pp-mini', onClick: createInspiration },
-                      h('span', { className: 'pp-btn-icon' }, icon('star')),
-                      translate('page.inspiration'))
-                  : null,
               ],
           h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
         ),
