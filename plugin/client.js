@@ -2834,12 +2834,12 @@ window.__ModuleLoader__.load({
     // ------------------------------------------------------------------ icons
     function icon(name) {
       const base = {
-        width: 15,
-        height: 15,
+        width: 14,
+        height: 14,
         viewBox: '0 0 12 12',
         fill: 'none',
         stroke: 'currentColor',
-        strokeWidth: 1.5,
+        strokeWidth: 1.25,
         strokeLinecap: 'round',
         strokeLinejoin: 'round',
         'aria-hidden': true,
@@ -2884,12 +2884,12 @@ window.__ModuleLoader__.load({
           return h(
             'svg',
             {
-              width: 15,
-              height: 15,
+              width: 14,
+              height: 14,
               viewBox: '0 0 24 24',
               fill: 'none',
               stroke: 'currentColor',
-              strokeWidth: 1.7,
+              strokeWidth: 1.5,
               strokeLinecap: 'round',
               strokeLinejoin: 'round',
               'aria-hidden': true,
@@ -8867,7 +8867,7 @@ window.__ModuleLoader__.load({
       '.pp-row-action[data-danger="true"]:hover:not([disabled]){color:var(--pp-danger)}' +
       '.pp-row-actions{display:flex;align-items:center;gap:2px;flex:none}' +
       '.pp-row-leading{display:inline-flex;align-items:center;flex:none;min-width:20px}' +
-      '.pp-type-mark{flex:none;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;font-size:10px;line-height:1;font-weight:600}' +
+      '.pp-type-mark{flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:4px;font-size:9.5px;line-height:1;font-weight:600}' +
       '.pp-type-mark-empty{border:1px dashed var(--pp-line);background:transparent;color:var(--pp-ink-2);font-weight:400}' +
       '.pp-type-empty{border-color:var(--pp-line);background:transparent;color:var(--pp-ink-2);font-weight:400}' +
       '.pp-edit{padding:8px;border-radius:8px;background:var(--pp-surface);border:1px solid var(--pp-line);display:flex;flex-direction:column;gap:6px}' +
