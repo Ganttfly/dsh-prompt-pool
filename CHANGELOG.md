@@ -54,7 +54,8 @@ All notable changes to this project are documented here. The format follows
   container shadow; the group menu and summary window are anchored above it.
 - The quick bar is now one continuous control with internal dividers. A brand cap with the prompt-pool
   mark and accent-tinted label makes the product identity stand out, while the save/summary actions stay
-  neutral until opened.
+  neutral until opened. The brand mark and label are slightly larger than the two domain menus, and the
+  annotation count lives only inside its menu.
 - The panel header now has a dedicated title/slogan row and a second row for search, type filtering
   and the primary actions; Settings, pin and close stay in the title row.
 - Settings is now an icon-only control. The annotation header no longer renders the old bulk store
