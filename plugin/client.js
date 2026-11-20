@@ -65,7 +65,6 @@ window.__ModuleLoader__.load({
       'panel.slogan': '整理好，再发送',
       'panel.close': '关闭',
       'panel.capture': '保存草稿',
-      'panel.captureShort': '存草稿',
       'panel.captureHint': '把输入框里的内容复制一份存进池子（图片附件一起存）；输入框里的字会保留',
       'panel.resize': '拖动调整高度，双击还原',
       'panel.resizeWidth': '拖动调整宽度，双击还原',
@@ -265,8 +264,6 @@ window.__ModuleLoader__.load({
       'note.queueOutbox': '加入待发送',
       'note.queuedOutbox': '已加入待发送',
       'note.summary.title': '汇总批注',
-      'note.summary.short': '汇总',
-      'note.summary.hint': '把当前会话的 {n} 条批注生成一条提示词并放入输入框',
       'note.summary.count': '{n} 条批注',
       'note.summary.desc': '把当前会话的全部批注合并成一条带编号和回应要求的提示词，放入输入框；不会自动发送。',
       'note.summary.keep': '完成后保留批注',
@@ -276,6 +273,10 @@ window.__ModuleLoader__.load({
       'note.summary.working': '正在生成…',
       'note.summary.done': '已生成草稿',
       'note.summary.failed': '无法写入输入框，请稍后再试。',
+      'note.menu.view': '查看批注',
+      'prompt.menu.save': '保存草稿',
+      'prompt.menu.new': '新建提示词',
+      'prompt.menu.view': '查看提示词',
       'note.review.savePrompt': '存成提示词',
       'note.review.outbox': '加入待发送',
       'note.review.outboxDone': '已加入待发送',
@@ -354,7 +355,6 @@ window.__ModuleLoader__.load({
       'panel.slogan': 'Organize, then send',
       'panel.close': 'Close',
       'panel.capture': 'Save draft',
-      'panel.captureShort': 'Draft',
       'panel.captureHint': 'Copy the composer draft into the pool; the composer keeps its text',
       'panel.resize': 'Drag to resize, double-click to reset',
       'panel.resizeWidth': 'Drag to resize the width, double-click to reset',
@@ -554,8 +554,6 @@ window.__ModuleLoader__.load({
       'note.queueOutbox': 'Add to outbox',
       'note.queuedOutbox': 'Added to the outbox',
       'note.summary.title': 'Summarize annotations',
-      'note.summary.short': 'Summary',
-      'note.summary.hint': 'Generate one prompt from the {n} annotations in this session and put it in the composer',
       'note.summary.count': '{n} annotation(s)',
       'note.summary.desc': 'Combine every annotation in this session into one numbered prompt with response requirements and put it in the composer; nothing is sent automatically.',
       'note.summary.keep': 'Keep annotations after generating',
@@ -565,6 +563,10 @@ window.__ModuleLoader__.load({
       'note.summary.working': 'Generating…',
       'note.summary.done': 'Draft generated',
       'note.summary.failed': 'Could not write to the composer. Try again later.',
+      'note.menu.view': 'View annotations',
+      'prompt.menu.save': 'Save draft',
+      'prompt.menu.new': 'New prompt',
+      'prompt.menu.view': 'View prompts',
       'note.review.savePrompt': 'Save as prompt',
       'note.review.outbox': 'Add to outbox',
       'note.review.outboxDone': 'Added to the outbox',
@@ -3002,6 +3004,7 @@ window.__ModuleLoader__.load({
       const sessionId = (props && props.sessionId) || useSessionDir().sessionId || '';
       const notes = notesState.items.filter((note) => note.sessionId === sessionId);
       const [summaryOpen, setSummaryOpen] = useState(false);
+      const [domainMenu, setDomainMenu] = useState(null);
       const [keepNotes, setKeepNotes] = useState(true);
       const [allowImmediate, setAllowImmediate] = useState(false);
       const [summaryBusy, setSummaryBusy] = useState(false);
@@ -3019,16 +3022,18 @@ window.__ModuleLoader__.load({
       }, []);
 
       useEffect(() => {
-        if (!captureOpen && !summaryOpen) return undefined;
+        if (!captureOpen && !summaryOpen && !domainMenu) return undefined;
         const onDown = (event) => {
           if (barRef.current && barRef.current.contains(event.target)) return;
           setCaptureOpen(false);
           setSummaryOpen(false);
+          setDomainMenu(null);
         };
         const onKey = (event) => {
           if (event.key !== 'Escape') return;
           setCaptureOpen(false);
           setSummaryOpen(false);
+          setDomainMenu(null);
         };
         document.addEventListener('pointerdown', onDown, true);
         window.addEventListener('keydown', onKey, true);
@@ -3040,7 +3045,7 @@ window.__ModuleLoader__.load({
           window.removeEventListener('resize', onDown);
           window.removeEventListener('scroll', onDown, true);
         };
-      }, [captureOpen, summaryOpen]);
+      }, [captureOpen, summaryOpen, domainMenu]);
 
       const showNotice = (kind, text) => {
         setNotice({ kind, text });
@@ -3050,12 +3055,35 @@ window.__ModuleLoader__.load({
           : 0;
       };
 
+      const openDomain = (which) => {
+        if (release.active) return;
+        if (domainMenu === which) {
+          setDomainMenu(null);
+          return;
+        }
+        setCaptureOpen(false);
+        setSummaryOpen(false);
+        setNotice(null);
+        setDomainMenu(which);
+      };
+
+      const openPanelView = (scopeName, create) => {
+        setDomainMenu(null);
+        ui.set({ open: true });
+        try {
+          bridge.request({ type: 'open-view', scope: scopeName, create: create === true });
+        } catch (_error) {
+          /* the panel will report an unavailable workspace if needed */
+        }
+      };
+
       const openCaptureMenu = async () => {
         if (release.active || captureBusy) return;
         if (captureOpen) {
           setCaptureOpen(false);
           return;
         }
+        setDomainMenu(null);
         setNotice(null);
         setSummaryOpen(false);
         setCaptureBusy(true);
@@ -3111,6 +3139,7 @@ window.__ModuleLoader__.load({
           return;
         }
         setCaptureOpen(false);
+        setDomainMenu(null);
         setNotice(null);
         setKeepNotes(normalizeSettings(pool.settings).noteKeepAfterStore !== false);
         setAllowImmediate(false);
@@ -3167,6 +3196,9 @@ window.__ModuleLoader__.load({
               onMouseDown: (event) => event.preventDefault(),
               onClick: () => {
                 if (release.active) return;
+                setDomainMenu(null);
+                setCaptureOpen(false);
+                setSummaryOpen(false);
                 ui.set({ open: !ui.get().open });
               },
             },
@@ -3178,33 +3210,106 @@ window.__ModuleLoader__.load({
             {
               type: 'button',
               className: 'pp-trigger-action',
-              title: translate('panel.captureHint'),
-              'aria-label': translate('panel.capture'),
-              'data-open': captureOpen ? 'true' : 'false',
-              disabled: release.active || captureBusy,
+              title: translate('scope.notes'),
+              'aria-label': translate('scope.notes'),
+              'aria-haspopup': 'menu',
+              'aria-expanded': domainMenu === 'annotations' ? 'true' : 'false',
+              'data-open': domainMenu === 'annotations' ? 'true' : 'false',
+              disabled: release.active,
               onMouseDown: (event) => event.preventDefault(),
-              onClick: () => { void openCaptureMenu(); },
+              onClick: () => openDomain('annotations'),
             },
-            icon('capture'),
-            h('span', null, translate('panel.captureShort')),
+            icon('annotation'),
+            h('span', null, translate('scope.notes')),
+            notes.length > 0 ? h('span', { className: 'pp-trigger-count' }, String(notes.length)) : null,
+            h('span', { className: 'pp-trigger-chevron', 'aria-hidden': true }, icon('chevronDown')),
           ),
           h(
             'button',
             {
               type: 'button',
               className: 'pp-trigger-action',
-              title: notes.length > 0 ? translate('note.summary.hint', { n: notes.length }) : translate('note.noneSelected'),
-              'aria-label': translate('note.summary.title'),
-              'data-open': summaryOpen ? 'true' : 'false',
-              disabled: release.active || notes.length === 0,
+              title: translate('scope.prompts'),
+              'aria-label': translate('scope.prompts'),
+              'aria-haspopup': 'menu',
+              'aria-expanded': domainMenu === 'prompts' ? 'true' : 'false',
+              'data-open': domainMenu === 'prompts' ? 'true' : 'false',
+              disabled: release.active,
               onMouseDown: (event) => event.preventDefault(),
-              onClick: openSummary,
+              onClick: () => openDomain('prompts'),
             },
-            icon('annotation'),
-            h('span', null, translate('note.summary.short')),
-            notes.length > 0 ? h('span', { className: 'pp-trigger-count' }, String(notes.length)) : null,
+            icon('prompt'),
+            h('span', null, translate('scope.prompts')),
+            h('span', { className: 'pp-trigger-chevron', 'aria-hidden': true }, icon('chevronDown')),
           ),
         ),
+        domainMenu
+          ? h(
+              'div',
+              {
+                key: 'domain-menu',
+                className: 'pp-trigger-menu pp-root',
+                role: 'menu',
+                'aria-label': translate(domainMenu === 'annotations' ? 'scope.notes' : 'scope.prompts'),
+              },
+              h('div', { className: 'pp-trigger-menu-title' }, translate(domainMenu === 'annotations' ? 'scope.notes' : 'scope.prompts')),
+              domainMenu === 'annotations'
+                ? [
+                    h('button', {
+                      key: 'summary',
+                      type: 'button',
+                      role: 'menuitem',
+                      className: 'pp-trigger-menu-item',
+                      disabled: notes.length === 0,
+                      onClick: () => {
+                        setDomainMenu(null);
+                        openSummary();
+                      },
+                    },
+                    h('span', { className: 'pp-trigger-menu-mark' }, icon('annotation')),
+                    h('span', { className: 'pp-trigger-menu-label' }, translate('note.summary.title')),
+                    notes.length > 0 ? h('span', { className: 'pp-trigger-menu-count' }, String(notes.length)) : null),
+                    h('button', {
+                      key: 'view',
+                      type: 'button',
+                      role: 'menuitem',
+                      className: 'pp-trigger-menu-item',
+                      onClick: () => openPanelView('notes', false),
+                    },
+                    h('span', { className: 'pp-trigger-menu-mark' }, icon('annotation')),
+                    h('span', { className: 'pp-trigger-menu-label' }, translate('note.menu.view'))),
+                  ]
+                : [
+                    h('button', {
+                      key: 'save',
+                      type: 'button',
+                      role: 'menuitem',
+                      className: 'pp-trigger-menu-item',
+                      onClick: () => { void openCaptureMenu(); },
+                    },
+                    h('span', { className: 'pp-trigger-menu-mark' }, icon('capture')),
+                    h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.save'))),
+                    h('button', {
+                      key: 'new',
+                      type: 'button',
+                      role: 'menuitem',
+                      className: 'pp-trigger-menu-item',
+                      onClick: () => openPanelView('workspace', true),
+                    },
+                    h('span', { className: 'pp-trigger-menu-mark' }, icon('plus')),
+                    h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.new'))),
+                    h('button', {
+                      key: 'view',
+                      type: 'button',
+                      role: 'menuitem',
+                      className: 'pp-trigger-menu-item',
+                      onClick: () => openPanelView('workspace', false),
+                    },
+                    h('span', { className: 'pp-trigger-menu-mark' }, icon('prompt')),
+                    h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.view'))),
+                  ],
+            )
+          : null,
         captureOpen
           ? h(
               'div',
@@ -8506,6 +8611,13 @@ window.__ModuleLoader__.load({
           if (command.type === 'capture-check') {
             return { ok: true, ready: draftRef.current.trim() !== '' };
           }
+          if (command.type === 'open-view') {
+            setSettingsOpen(false);
+            setReviewOpen(false);
+            if (command.scope === 'notes' || command.scope === 'workspace') setScope(command.scope);
+            if (command.create === true) newItem();
+            return { ok: true };
+          }
           if (command.type === 'capture-options') {
             return {
               ok: true,
@@ -8854,8 +8966,15 @@ window.__ModuleLoader__.load({
       '.pp-summary-pop{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:min(300px,calc(100vw - 16px));padding:12px;border:1px solid var(--pp-line-2);border-radius:11px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px;line-height:1.5}' +
       '.pp-trigger-menu{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:min(240px,calc(100vw - 16px));max-height:280px;overflow:auto;padding:6px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px}' +
       '.pp-trigger-menu-title{padding:3px 7px 6px;color:var(--pp-ink-2);font-size:11px}' +
-      '.pp-trigger-menu-item{display:block;width:100%;padding:6px 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
-      '.pp-trigger-menu-item:hover{background:var(--pp-hover)}' +
+      '.pp-trigger-chevron{display:inline-flex;align-items:center;margin-left:-1px;opacity:.55}' +
+      '.pp-trigger-chevron svg{width:11px;height:11px}' +
+      '.pp-trigger-menu-item{display:flex;align-items:center;gap:7px;width:100%;padding:6px 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden}' +
+      '.pp-trigger-menu-item:hover:not([disabled]){background:var(--pp-hover)}' +
+      '.pp-trigger-menu-item[disabled]{opacity:.45;cursor:not-allowed}' +
+      '.pp-trigger-menu-mark{display:inline-flex;align-items:center;flex:none;color:var(--pp-ink-2)}' +
+      '.pp-trigger-menu-mark svg{width:14px;height:14px}' +
+      '.pp-trigger-menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
+      '.pp-trigger-menu-count{min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:color-mix(in srgb,var(--pp-accent) 13%,transparent);color:var(--pp-accent);font-size:10px;font-weight:600;line-height:15px;text-align:center}' +
       '.pp-trigger-notice{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;max-width:min(300px,calc(100vw - 16px));padding:6px 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface-2);color:var(--pp-ink-2);box-shadow:0 8px 24px rgba(0,0,0,.16);font-size:11px;line-height:1.4;pointer-events:none}' +
       '.pp-trigger-notice[data-kind="ok"]{color:var(--pp-ok)}' +
       '.pp-trigger-notice[data-kind="error"]{color:var(--pp-danger)}' +

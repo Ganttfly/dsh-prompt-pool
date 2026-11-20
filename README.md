@@ -25,8 +25,9 @@ session and never leak into another conversation.
 The composer panel has two scopes: **Annotations** for the current session and **Prompts** for the current
 workspace. Prompt rows keep the same insert / queue / edit / duplicate / delete actions and the shared send
 queue sits at the bottom. Switching scopes never replaces the row styles. The composer trigger is a split
-bar: open the panel, save the current draft, or turn all annotations in the session into one prompt in the
-composer.
+bar: the brand cap opens the panel; the **Annotations** menu summarizes the session's annotations or opens
+the annotations view; the **Prompts** menu saves the current draft, creates a prompt, or opens the prompts
+view.
 
 ![The prompt pool as a full page in the right sidebar](docs/images/sidebar.png)
 

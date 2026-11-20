@@ -46,10 +46,10 @@ All notable changes to this project are documented here. The format follows
   and direct host-queue admission.
 - **Save draft** now uses an archive-box mark and **Save as prompt** uses a document-plus mark, so the
   two save actions no longer share the bookmark glyph.
-- The composer trigger is now a segmented bar: **Prompt pool**, **Save draft**, and **Summarize
-  annotations** with a count. Save draft opens an anchored group menu; Summarize opens an anchored
-  small window with keep-annotations and allow-immediate-execution options, then generates one review
-  prompt into the composer without sending.
+- The composer trigger is now a segmented bar: the **Prompt pool** brand cap plus **Annotations** and
+  **Prompts** domain menus. The annotation menu offers summarized review and opening the annotations
+  view; the prompt menu offers saving the current draft, creating a prompt and opening the prompts view.
+  The summary window still generates one review prompt into the composer without sending.
 - The composer quick bar uses compact pill segments, shorter labels, accent active states and a light
   container shadow; the group menu and summary window are anchored above it.
 - The quick bar is now one continuous control with internal dividers. A brand cap with the prompt-pool

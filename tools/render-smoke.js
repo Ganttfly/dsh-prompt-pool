@@ -186,11 +186,11 @@ const trigger = triggerNodes.find((node) => node.type === 'button' && hasClass(n
 const triggerLabel = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-trigger-label') && node.children[0] === 'button.label');
 const triggerBadge = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-badge'));
 const triggerActions = triggerNodes.filter((node) => node.type === 'button' && hasClass(node, 'pp-trigger-action'));
-const hasCapture = triggerActions.some((node) => JSON.stringify(node).indexOf('panel.captureShort') >= 0);
-const hasSummary = triggerActions.some((node) => JSON.stringify(node).indexOf('note.summary.short') >= 0);
+const hasAnnotations = triggerActions.some((node) => JSON.stringify(node).indexOf('scope.notes') >= 0);
+const hasPrompts = triggerActions.some((node) => JSON.stringify(node).indexOf('scope.prompts') >= 0);
 const queued = trigger && trigger.props['data-queued'] === 'true';
-console.log(`[check] trigger label=${triggerLabel} queued=${queued} badge=${triggerBadge} actions=${triggerActions.length} capture=${hasCapture} summary=${hasSummary}`);
-if (!trigger || !triggerLabel || queued || triggerBadge || triggerActions.length !== 2 || !hasCapture || !hasSummary) process.exitCode = 1;
+console.log(`[check] trigger label=${triggerLabel} queued=${queued} badge=${triggerBadge} actions=${triggerActions.length} annotations=${hasAnnotations} prompts=${hasPrompts}`);
+if (!trigger || !triggerLabel || queued || triggerBadge || triggerActions.length !== 2 || !hasAnnotations || !hasPrompts) process.exitCode = 1;
 
 // The settings page names the plugin and its author.
 const settingsEntry = registrations.find((entry) => entry.slot === 'settings.section');
