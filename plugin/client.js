@@ -2839,7 +2839,7 @@ window.__ModuleLoader__.load({
         viewBox: '0 0 12 12',
         fill: 'none',
         stroke: 'currentColor',
-        strokeWidth: 1.25,
+        strokeWidth: 1.1,
         strokeLinecap: 'round',
         strokeLinejoin: 'round',
         'aria-hidden': true,
@@ -2889,7 +2889,7 @@ window.__ModuleLoader__.load({
               viewBox: '0 0 24 24',
               fill: 'none',
               stroke: 'currentColor',
-              strokeWidth: 1.5,
+              strokeWidth: 1.35,
               strokeLinecap: 'round',
               strokeLinejoin: 'round',
               'aria-hidden': true,
@@ -2919,7 +2919,7 @@ window.__ModuleLoader__.load({
         case 'pool':
           return h(
             'svg',
-            { width: 15, height: 15, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.3, strokeLinecap: 'round', 'aria-hidden': true },
+            { width: 15, height: 15, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.15, strokeLinecap: 'round', 'aria-hidden': true },
             h('path', { d: 'M2.6 6.2h10.8M2.6 9.6h10.8M2.6 13h6' }),
             h('path', { d: 'M11.6 2.4v4.4M9.4 4.6h4.4' }),
           );
@@ -3145,7 +3145,7 @@ window.__ModuleLoader__.load({
           viewBox: '0 0 20 20',
           fill: 'none',
           stroke: 'currentColor',
-          strokeWidth: active ? 1.7 : 1.5,
+          strokeWidth: active ? 1.5 : 1.3,
           strokeLinecap: 'round',
           'aria-hidden': true,
           style: { display: 'block' },
