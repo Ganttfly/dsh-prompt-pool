@@ -40,6 +40,8 @@ All notable changes to this project are documented here. The format follows
   annotations, plus/store for prompts, and a star for the global Capture inspiration action.
 - The panel title row now has a soft accent-tinted background with a subtle separator, while the
   search and action row stays on the normal surface.
+- The panel toolbar uses stable search / type-slot / action columns, so switching between 批注 and
+  提示词 no longer moves the buttons. The type slot is reserved in the 批注 scope.
 
 ## [1.5.0] — 2026-11-16
 

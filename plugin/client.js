@@ -8286,7 +8286,7 @@ window.__ModuleLoader__.load({
               onChange: (event) => setQuery(event.target.value),
             }),
             scope === 'notes'
-              ? null
+              ? h('span', { className: 'pp-type-placeholder', 'aria-hidden': 'true' })
               : h(
                   'select',
                   {
@@ -8300,37 +8300,41 @@ window.__ModuleLoader__.load({
                   h('option', { value: 'none' }, translate('row.typeNone')),
                   PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
                 ),
-            scope === 'notes'
-              ? [
-                  h('button', {
-                    key: 'store',
-                    type: 'button',
-                    className: 'pp-mini',
-                    title: selectedNotes.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
-                    disabled: selectedNotes.length === 0,
-                    onClick: storeNotesPrompt,
-                  },
-                  h('span', { className: 'pp-btn-icon' }, icon('store')),
-                  translate('note.composeStore')),
-                  h('button', {
-                    key: 'draft',
-                    type: 'button',
-                    className: 'pp-mini',
-                    title: selectedNotes.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
-                    disabled: selectedNotes.length === 0,
-                    onClick: openReview,
-                  },
-                  h('span', { className: 'pp-btn-icon' }, icon('review')),
-                  translate('note.compose')),
-                ]
-              : [
-                  h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: newItem },
-                    h('span', { className: 'pp-btn-icon' }, icon('plus')),
-                    translate('page.new')),
-                  h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture },
+            h(
+              'div',
+              { className: 'pp-panel-actions' },
+              scope === 'notes'
+                ? [
+                    h('button', {
+                      key: 'store',
+                      type: 'button',
+                      className: 'pp-mini',
+                      title: selectedNotes.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
+                      disabled: selectedNotes.length === 0,
+                      onClick: storeNotesPrompt,
+                    },
                     h('span', { className: 'pp-btn-icon' }, icon('store')),
-                    translate('panel.capture')),
-                ],
+                    translate('note.composeStore')),
+                    h('button', {
+                      key: 'draft',
+                      type: 'button',
+                      className: 'pp-mini',
+                      title: selectedNotes.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
+                      disabled: selectedNotes.length === 0,
+                      onClick: openReview,
+                    },
+                    h('span', { className: 'pp-btn-icon' }, icon('review')),
+                    translate('note.compose')),
+                  ]
+                : [
+                    h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: newItem },
+                      h('span', { className: 'pp-btn-icon' }, icon('plus')),
+                      translate('page.new')),
+                    h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture },
+                      h('span', { className: 'pp-btn-icon' }, icon('store')),
+                      translate('panel.capture')),
+                  ],
+            ),
           ),
         ),
         h(ScopeBar, { mode: 'panel', value: scope, onChange: changeScope }),
@@ -8585,13 +8589,16 @@ window.__ModuleLoader__.load({
       '.pp-panel-head{flex-direction:column;align-items:stretch;gap:0;padding:0}' +
       '.pp-panel-headline{display:flex;align-items:center;gap:8px;min-width:0;padding:10px 12px 8px;border-bottom:1px solid color-mix(in srgb,var(--pp-accent) 14%,var(--pp-line));background:linear-gradient(180deg,color-mix(in srgb,var(--pp-accent) 11%,var(--pp-surface-2)),color-mix(in srgb,var(--pp-accent) 4%,var(--pp-surface-2)))}' +
       '.pp-panel-slogan{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px}' +
-      '.pp-panel-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px}' +
-      '.pp-panel-tools .pp-search{min-width:140px}' +
+      '.pp-panel-tools{display:grid;grid-template-columns:minmax(56px,1fr) 104px 208px;align-items:center;gap:8px;padding:8px 12px}' +
+      '.pp-panel-actions{display:flex;align-items:center;gap:8px;width:208px;flex:none}' +
+      '.pp-panel-actions .pp-mini{width:100px;min-width:100px;padding:0 5px;justify-content:center;overflow:hidden;text-overflow:ellipsis}' +
+      '.pp-type-placeholder{box-sizing:border-box;width:104px;height:26px;flex:none;visibility:hidden}' +
+      '.pp-panel-tools .pp-search{min-width:0;width:100%}' +
       '.pp-page-title{font-size:14px;font-weight:600}' +
       '.pp-panel-title{display:inline-flex;align-items:center;gap:6px;flex:none;margin-right:2px}' +
       '.pp-page-sub{color:var(--pp-ink-2);font-size:12px}' +
-      '.pp-search{height:26px;flex:1;min-width:120px;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-surface);color:inherit;font:inherit;font-size:12px;padding:0 9px;outline:none}' +
-      '.pp-type-filter{height:26px;flex:none;width:auto;max-width:112px;padding:0 6px;border-radius:8px;font-size:11px;cursor:pointer}' +
+      '.pp-search{box-sizing:border-box;height:26px;flex:1;min-width:120px;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-surface);color:inherit;font:inherit;font-size:12px;padding:0 9px;outline:none}' +
+      '.pp-type-filter{height:26px;flex:none;width:104px;max-width:104px;padding:0 6px;border-radius:8px;font-size:11px;cursor:pointer}' +
       '.pp-search:focus{border-color:var(--pp-accent)}' +
       '.pp-settings{max-width:640px;padding:16px 20px;color:var(--pp-ink);font-size:13px;line-height:1.6}' +
       '.pp-set-title{font-size:15px;font-weight:600;margin-bottom:4px}' +
