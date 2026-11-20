@@ -108,7 +108,8 @@ const findTrayClose = (tree) => nodes(tree, []).find(
   (node) => typeof node.type === 'function' && node.type.name === 'IconButton' && node.props && node.props.name === 'close',
 );
 const findTrash = (tree) => nodes(tree, []).find(
-  (node) => typeof node.type === 'function' && node.type.name === 'IconButton' && node.props && node.props.name === 'trash',
+  (node) => typeof node.type === 'function' && node.type.name === 'RowActionIcon'
+    && node.props && node.props.name === 'trash',
 );
 const findUndo = (tree) => nodes(tree, []).find(
   (node) => node.type === 'button'
@@ -123,7 +124,7 @@ const findClearLink = (tree) => nodes(tree, []).find(
 // The row's duplicate action, not the one on a queued entry.
 const findCopy = (tree) => nodes(tree, []).find(
   (node) => typeof node.type === 'function'
-    && node.type.name === 'IconButton'
+    && node.type.name === 'RowActionIcon'
     && node.props
     && node.props.name === 'copy'
     && node.props.label === 'row.duplicate',

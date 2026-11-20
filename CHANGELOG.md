@@ -46,6 +46,10 @@ All notable changes to this project are documented here. The format follows
   search and action row stays on the normal surface.
 - The panel toolbar uses stable search / type-slot / action columns, so switching between 批注 and
   提示词 no longer moves the buttons. The type slot is reserved in the 批注 scope.
+- Row actions are unified: locate/category on the left; insert-draft, add-to-outbox, source-specific
+  actions and delete on the right. Action icons share one 24px hit area and 2px gap. Prompt-library
+  reordering and annotation numbering were removed; Outbox reordering remains. The panel's minimum
+  width is now 440px so the five right-side actions leave readable text.
 
 ## [1.5.0] — 2026-11-16
 

@@ -106,8 +106,10 @@ const nodes = (node, out) => {
   return out;
 };
 
-const findInsert = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function' && node.type.name === 'IconButton' && node.props && node.props.name === 'insert');
-const findQueue = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function' && node.type.name === 'TrayAdd');
+const findInsert = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function'
+  && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'insert');
+const findQueue = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function'
+  && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'queue');
 const findUndo = (tree) => nodes(tree, []).find(
   (node) => node.type === 'button' && String(node.props && node.props.className).indexOf('pp-link') >= 0
     && Array.isArray(node.children) && node.children.indexOf('status.undo') >= 0,

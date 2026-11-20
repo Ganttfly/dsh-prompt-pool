@@ -236,7 +236,8 @@ else {
       else console.log('[ok] the annotation header no longer exposes summary review');
 
       // Promote one note through the explicit save step.
-      const storeLink = findAll(notesView() || [], (node) => node.type === 'button' && node.props && node.props['aria-label'] === 'note.store')[0];
+      const storeLink = findAll(notesView() || [], (node) => typeof node.type === 'function'
+        && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'store')[0];
       if (!storeLink) fail('the row store control is missing');
       else {
         storeLink.props.onClick();
@@ -270,8 +271,8 @@ else {
       if (composeStore) fail('the old header store-as-prompt control is still present');
       else console.log('[ok] the annotation header has no bulk store or review actions');
 
-      const deleteLink = findAll(notesView() || [], (node) => node.type === 'button'
-        && String(node.props && node.props.className || '').indexOf('pp-note-link-danger') >= 0)[0];
+      const deleteLink = findAll(notesView() || [], (node) => typeof node.type === 'function'
+        && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'trash')[0];
       if (!deleteLink) fail('the row delete control is missing');
       else {
         deleteLink.props.onClick();
@@ -289,8 +290,8 @@ else {
       }
 
       // Queue the last annotation directly from its row.
-      const queueButton = findAll(notesView() || [], (node) => node.type === 'button'
-        && node.props && node.props['aria-label'] === 'note.queueOutbox')[0];
+      const queueButton = findAll(notesView() || [], (node) => typeof node.type === 'function'
+        && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'queue')[0];
       if (!queueButton) fail('the row queue control is missing');
       else {
         queueButton.props.onClick();

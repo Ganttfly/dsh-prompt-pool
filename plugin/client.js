@@ -238,7 +238,7 @@ window.__ModuleLoader__.load({
       'scope.global': '全局共享池',
       'note.placeholder': '写点什么：回答、疑问或修改意见',
       'note.limitHint': '最多 100 个全角或 200 个半角字符',
-      'note.select': '选择这条批注',
+
       'note.noneSelected': '先勾选至少一条批注',
       'note.review.title': '汇总审阅',
       'note.review.heading': '【批注审阅 {id}】',
@@ -522,7 +522,7 @@ window.__ModuleLoader__.load({
       'scope.global': 'Global shared pool',
       'note.placeholder': 'Write an answer, a question or a correction',
       'note.limitHint': 'Up to 100 full-width or 200 half-width characters',
-      'note.select': 'Select this annotation',
+
       'note.noneSelected': 'Select at least one annotation first',
       'note.review.title': 'Review annotations',
       'note.review.heading': '[Annotation review {id}]',
@@ -2583,8 +2583,13 @@ window.__ModuleLoader__.load({
       return h(
         'div',
         { key: item.id, className: 'pp-row pp-page-item' },
-        h(IconButton, { name: 'insert', label: translate('row.insert'), onClick: () => onInsert(item) }),
-        h(TrayAdd, { label: translate('row.select'), onClick: () => onQueue(item) }),
+        h(
+          'span',
+          { className: 'pp-row-leading' },
+          normalizePromptType(item.type)
+            ? h('span', { className: 'pp-tag pp-type-tag' }, translate(promptTypeLabel(item.type)))
+            : h('span', { className: 'pp-tag pp-type-empty' }, translate('row.typeNone')),
+        ),
         h(
           'div',
           { className: 'pp-main', ...(mainTitle ? { title: mainTitle } : {}), onClick: () => (onMain || onStartEdit)(item) },
@@ -2592,19 +2597,14 @@ window.__ModuleLoader__.load({
           item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
           h(ImageStrip, { images: item.images, compact: true, onOpen: onOpenImage }),
         ),
-        normalizePromptType(item.type)
-          ? h('span', { className: 'pp-tag pp-type-tag' }, translate(promptTypeLabel(item.type)))
-          : showTag
-            ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, categories, workspaces)))
-            : null,
         h(
           'div',
-          { className: 'pp-actions' },
-          h(IconButton, { name: 'up', label: translate('row.up'), disabled: index === 0, onClick: () => poolActions.move(item.id, -1) }),
-          h(IconButton, { name: 'down', label: translate('row.down'), disabled: index === total - 1, onClick: () => poolActions.move(item.id, 1) }),
-          h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => onStartEdit(item) }),
-          h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
-          h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => onDelete(item) }),
+          { className: 'pp-row-actions' },
+          h(RowActionIcon, { name: 'insert', label: translate('row.insert'), onClick: () => onInsert(item) }),
+          h(RowActionIcon, { name: 'queue', label: translate('row.select'), onClick: () => onQueue(item) }),
+          h(RowActionIcon, { name: 'edit', label: translate('row.edit'), onClick: () => onStartEdit(item) }),
+          h(RowActionIcon, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
+          h(RowActionIcon, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => onDelete(item) }),
         ),
       );
     }
@@ -2905,6 +2905,8 @@ window.__ModuleLoader__.load({
           return h('svg', base, h('path', { d: 'M2 2.5h3.2M2 6h3.2M2 9.5h3.2' }), h('path', { d: 'M6.3 3.2l1.1 1.1 2-2.2M6.3 7.2l1.1 1.1 2-2.2M6.3 11l1.1 1.1 2-2.2' }));
         case 'queue':
           return h('svg', base, h('path', { d: 'M2 7.4h8v3H2z' }), h('path', { d: 'M6 1.4v4.6M4.3 4.4 6 6.1l1.7-1.7' }));
+        case 'locate':
+          return h('svg', base, h('circle', { cx: 6, cy: 6, r: 2.5 }), h('path', { d: 'M6 1v1.6M6 9.4V11M1 6h1.6M9.4 6H11' }));
         case 'starFill':
           return h('svg', { ...base, fill: 'currentColor' }, h('path', { d: 'M6 1.9l1.24 2.6 2.86.4-2.08 2 .5 2.83L6 8.4l-2.52 1.33.5-2.83-2.08-2 2.86-.4z' }));
         case 'plus':
@@ -3148,27 +3150,23 @@ window.__ModuleLoader__.load({
     }
 
     /** Round "add one occurrence" control; the same item may be added repeatedly. */
-    function TrayAdd(props) {
-      const label = props.label || '';
+    function RowActionIcon({ name, label, onClick, disabled, danger }) {
       return h(
         'button',
         {
           type: 'button',
-          className: 'pp-toggle',
+          className: 'pp-row-action',
           title: label,
           'aria-label': label,
+          disabled: disabled === true,
+          'data-danger': danger === true ? 'true' : 'false',
           onMouseDown: (event) => event.preventDefault(),
           onClick: (event) => {
             event.stopPropagation();
-            props.onClick();
+            onClick();
           },
         },
-        h(
-          'svg',
-          { width: 15, height: 15, viewBox: '0 0 14 14', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
-          h('circle', { cx: 7, cy: 7, r: 5.5 }),
-          h('path', { d: 'M7 4.4v5.2M4.4 7h5.2' }),
-        ),
+        icon(name),
       );
     }
 
@@ -6839,10 +6837,9 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-notes-list' },
-          list.map((note, index) => {
+          list.map((note) => {
             if (!matches(note)) return null;
             const meta = noteKind(note.kind);
-            const selectLabel = translate('note.select') + '：' + noteQuoteText(note.quote, 20);
             return h(
               'div',
               {
@@ -6850,29 +6847,11 @@ window.__ModuleLoader__.load({
                 key: note.id,
                 'data-promoted': note.promotedGroup ? 'true' : undefined,
               },
-              h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'pp-note-icon pp-note-insert',
-                  title: translate('note.insert'),
-                  'aria-label': translate('note.insert'),
-                  onClick: () => insertNote(note),
-                },
-                h(NoteActionIcon, { kind: 'insert' }),
-              ),
-              h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'pp-note-icon pp-note-locate',
-                  title: translate('note.locate'),
-                  'aria-label': translate('note.locate'),
-                  onClick: () => locate(note),
-                },
-                h(NoteActionIcon, { kind: 'locate' }),
-              ),
-              h('span', { className: 'pp-notes-n' }, String(index + 1)),
+              h(RowActionIcon, {
+                name: 'locate',
+                label: translate('note.locate'),
+                onClick: () => locate(note),
+              }),
               h(
                 'div',
                 { className: 'pp-notes-main' },
@@ -6891,39 +6870,31 @@ window.__ModuleLoader__.load({
                   : null,
               ),
               h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'pp-note-icon',
-                  title: translate('note.store'),
-                  'aria-label': translate('note.store'),
-                  onClick: (event) => openPrompt({ kind: 'note', note }, event),
-                },
-                h(NoteActionIcon, { kind: 'store' }),
-              ),
-              props.onQueueNote
-                ? h(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'pp-note-icon',
-                      title: translate('note.queueOutbox'),
-                      'aria-label': translate('note.queueOutbox'),
+                'div',
+                { className: 'pp-row-actions' },
+                h(RowActionIcon, {
+                  name: 'insert',
+                  label: translate('note.insert'),
+                  onClick: () => insertNote(note),
+                }),
+                props.onQueueNote
+                  ? h(RowActionIcon, {
+                      name: 'queue',
+                      label: translate('note.queueOutbox'),
                       onClick: () => props.onQueueNote(note),
-                    },
-                    icon('queue'),
-                  )
-                : null,
-              h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'pp-note-icon pp-note-link-danger',
-                  title: translate('note.delete'),
-                  'aria-label': translate('note.delete'),
-                  onClick: (event) => openNoteConfirm(() => notesActions.remove(note.id), event),
-                },
-                h(NoteActionIcon, { kind: 'delete' }),
+                    })
+                  : null,
+                h(RowActionIcon, {
+                  name: 'store',
+                  label: translate('note.store'),
+                  onClick: () => openPrompt({ kind: 'note', note }),
+                }),
+                h(RowActionIcon, {
+                  name: 'trash',
+                  label: translate('note.delete'),
+                  danger: true,
+                  onClick: () => openNoteConfirm(() => notesActions.remove(note.id)),
+                }),
               ),
             );
           }),
@@ -8690,7 +8661,7 @@ window.__ModuleLoader__.load({
       '.pp-trigger[data-queued="true"]{border-color:var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
       '.pp-trigger[data-queued="true"]:hover{background:color-mix(in srgb,var(--pp-accent) 20%,transparent);color:var(--pp-accent)}' +
       '.pp-trigger[data-queued="true"] .pp-badge{border-color:var(--pp-accent);background:var(--pp-accent);color:var(--pp-on-accent);font-weight:600}' +
-      '.pp-panel{position:absolute;left:auto;right:0;bottom:0;margin:0;width:min(var(--pp-w,920px),100%);max-width:min(var(--pp-w,920px),100%);z-index:40;display:flex;flex-direction:column;--pp-h:min(70vh,720px,var(--pp-room,100vh));height:var(--pp-h);max-height:var(--pp-h);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;overflow:clip;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
+      '.pp-panel{position:absolute;left:auto;right:0;bottom:0;margin:0;width:min(var(--pp-w,920px),100%);min-width:min(440px,100%);max-width:min(var(--pp-w,920px),100%);z-index:40;display:flex;flex-direction:column;--pp-h:min(70vh,720px,var(--pp-room,100vh));height:var(--pp-h);max-height:var(--pp-h);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;overflow:clip;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
       // The grip above the header resizes the panel; a long queue may keep half the list.
       '.pp-panel-grip{flex:none;display:flex;align-items:center;justify-content:center;height:11px;cursor:ns-resize;touch-action:none}' +
       '.pp-panel-grip-x{position:absolute;left:0;top:0;bottom:0;width:8px;z-index:5;display:flex;align-items:center;justify-content:center;cursor:ew-resize;touch-action:none}' +
@@ -8867,6 +8838,13 @@ window.__ModuleLoader__.load({
       '.pp-icon:disabled{opacity:.35;cursor:default}' +
       '.pp-icon[data-danger="true"]:hover{color:var(--pp-danger)}' +
       '.pp-icon[data-active="true"]{color:var(--pp-accent)}' +
+      '.pp-row-action{width:24px;height:24px;flex:none;display:inline-flex;align-items:center;justify-content:center;padding:0;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);font:inherit;cursor:pointer}' +
+      '.pp-row-action:hover:not([disabled]){background:var(--pp-hover);color:var(--pp-ink)}' +
+      '.pp-row-action[disabled]{opacity:.35;cursor:default}' +
+      '.pp-row-action[data-danger="true"]:hover:not([disabled]){color:var(--pp-danger)}' +
+      '.pp-row-actions{display:flex;align-items:center;gap:2px;flex:none}' +
+      '.pp-row-leading{display:inline-flex;align-items:center;flex:none;min-width:40px}' +
+      '.pp-type-empty{border-color:var(--pp-line);background:transparent;color:var(--pp-ink-2);font-weight:400}' +
       '.pp-edit{padding:8px;border-radius:8px;background:var(--pp-surface);border:1px solid var(--pp-line);display:flex;flex-direction:column;gap:6px}' +
       '.pp-input,.pp-textarea{width:100%;box-sizing:border-box;border:1px solid var(--pp-line);border-radius:6px;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font:inherit;font-size:12px;padding:5px 7px;outline:none;resize:vertical}' +
       '.pp-input:focus,.pp-textarea:focus{border-color:var(--pp-accent)}' +
