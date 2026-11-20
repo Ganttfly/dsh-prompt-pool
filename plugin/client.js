@@ -3300,6 +3300,7 @@ window.__ModuleLoader__.load({
             className: 'pp-tab',
             role: 'tab',
             'aria-selected': props.value === entry.id ? 'true' : 'false',
+            'data-scope': entry.id,
             'data-group': entry.id === 'notes' ? 'notes' : undefined,
             'data-active': props.value === entry.id ? 'true' : 'false',
             onClick: () => props.onChange(entry.id),
@@ -8508,6 +8509,12 @@ window.__ModuleLoader__.load({
       '.pp-tab:hover{background:var(--pp-hover)}' +
       '.pp-tab[data-active="true"]{border-color:var(--pp-accent);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
       '.pp-tab[data-group="notes"][data-active="true"]{border-color:rgba(232,176,40,.9);background:rgba(232,176,40,.2);color:#9a6b00}' +
+      // Scope tabs carry the theme: session amber, workspace blue, global graphite.
+      // Only the active tab is tinted; settings tabs stay neutral.
+      '.pp-scope-bar .pp-tab:not([data-active="true"]){color:var(--pp-ink-2)}' +
+      '.pp-scope-bar .pp-tab[data-scope="notes"][data-active="true"]{border-color:rgba(232,176,40,.9);background:rgba(232,176,40,.18);color:#8a6200}' +
+      '.pp-scope-bar .pp-tab[data-scope="workspace"][data-active="true"]{border-color:var(--pp-accent);background:var(--pp-accent-soft);color:var(--pp-accent)}' +
+      '.pp-scope-bar .pp-tab[data-scope="global"][data-active="true"]{border-color:color-mix(in srgb,var(--pp-ink-2) 45%,var(--pp-line));background:color-mix(in srgb,var(--pp-ink-2) 10%,transparent);color:var(--pp-ink)}' +
       '.pp-tab[data-group="notes"] .pp-tab-count{background:rgba(232,176,40,.22);color:#8a6200}' +
       '.pp-tab-count{margin-left:5px;padding:0 5px;vertical-align:1px;border-radius:999px;background:color-mix(in srgb, currentColor 12%, transparent);color:inherit;font-size:10px;font-weight:600;line-height:16px;height:16px;display:inline-flex;align-items:center}' +
       '.pp-tab:not([data-group="notes"]) .pp-tab-count{background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent)}' +

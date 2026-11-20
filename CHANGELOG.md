@@ -29,6 +29,12 @@ All notable changes to this project are documented here. The format follows
 - Non-image attachment capture: store the composer's files in the pool and re-attach them on insert
   and release.
 
+### Changed
+
+- Scope tabs now carry restrained active colors: amber for annotations, blue for the current
+  workspace and graphite for the global shared pool. Settings tabs remain neutral, and the content
+  rows, icons and type chips keep their existing colors.
+
 ## [1.5.0] — 2026-11-16
 
 ### Added
