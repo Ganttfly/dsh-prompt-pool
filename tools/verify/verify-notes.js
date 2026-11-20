@@ -281,31 +281,10 @@ else {
         }
       }
 
-      // Store as a prompt: the composed text is filed in the pool, and the
-      // composer is left untouched.
+      // The header bulk store was folded into the review sheet's save step.
       const composeStore = findAll(render() || [], (node) => node.type === 'button' && textOf(node).join('') === 'note.composeStore')[0];
-      if (!composeStore) fail('the store-as-prompt control is missing');
-      else {
-        inserted = null;
-        composeStore.props.onClick();
-        const draft = window.__dshPromptPoolNoteSaveV1 ? window.__dshPromptPoolNoteSaveV1.get() : null;
-        if (!draft || draft.open !== true || !Array.isArray(draft.choices) || draft.choices.length === 0) fail('the store-as-prompt save step did not open');
-        else {
-          const sheet = saveSheet();
-          const saveButton = sheet && findAll(sheet, (node) => node.type === 'button'
-            && String(node.props && node.props.className || '').indexOf('pp-note-btn-primary') >= 0)[0];
-          if (!saveButton) fail('the store-as-prompt save step has no save action');
-          else {
-            saveButton.props.onClick();
-            const composed = '1. 【note.kind.comment】「构建是否接受参数？」：接受分支参数\n2. 【note.kind.comment】「报告类型 → job 映射：…，对吗？」：对，按你说的映射';
-            if (inserted !== null) fail(`store-as-prompt inserted ${JSON.stringify(inserted)}`);
-            const pool = window.__dshPromptPoolStoreV1.get();
-            const added = pool.items[pool.items.length - 1];
-            if (!added || added.body !== composed) fail('store-as-prompt did not save the prompt');
-            else console.log('[ok] store-as-prompt saves the prompt without touching the composer');
-          }
-        }
-      }
+      if (composeStore) fail('the old header store-as-prompt control is still present');
+      else console.log('[ok] the annotation header keeps only review; save-as-prompt lives in the review card');
 
       const deleteLink = findAll(notesView() || [], (node) => node.type === 'button'
         && String(node.props && node.props.className || '').indexOf('pp-note-link-danger') >= 0)[0];

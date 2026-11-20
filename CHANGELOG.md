@@ -36,8 +36,9 @@ All notable changes to this project are documented here. The format follows
   rows, icons and type chips keep their existing colors.
 - The panel header now has a dedicated title/slogan row and a second row for search, type filtering
   and the primary actions; Settings, pin and close stay in the title row.
-- Settings is now an icon-only control, and the header actions carry icons: store/review for
-  annotations, plus/store for prompts, and a star for the global Capture inspiration action.
+- Settings is now an icon-only control. The annotation header keeps only the review action (the old
+  bulk store button was removed); the review preview now offers **Save as prompt**, alongside direct
+  send and **Add to outbox**.
 - The panel title row now has a light accent-tinted background with a subtle separator, while the
   search and action row stays on the normal surface.
 - The panel toolbar uses stable search / type-slot / action columns, so switching between 批注 and

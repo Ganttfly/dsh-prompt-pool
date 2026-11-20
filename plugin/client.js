@@ -261,6 +261,7 @@ window.__ModuleLoader__.load({
       'note.review.back': '返回批注',
       'note.review.previewHint': '确认无误后发送；需要调整请返回批注。',
       'note.review.send': '发送到会话队列',
+      'note.review.savePrompt': '存成提示词',
       'note.review.outbox': '加入待发送',
       'note.review.outboxDone': '已加入待发送',
       'note.review.sending': '正在发送…',
@@ -534,6 +535,7 @@ window.__ModuleLoader__.load({
       'note.review.back': 'Back to annotations',
       'note.review.previewHint': 'Send when ready, or go back to adjust.',
       'note.review.send': 'Send to session queue',
+      'note.review.savePrompt': 'Save as prompt',
       'note.review.outbox': 'Add to outbox',
       'note.review.outboxDone': 'Added to the outbox',
       'note.review.sending': 'Sending…',
@@ -3787,12 +3789,9 @@ window.__ModuleLoader__.load({
         return { ok: true };
       };
 
-      /** Store the session's annotations as one prompt, from the page header. */
-      const storeNotesPrompt = () => {
-        if (selectedNotes.length === 0) {
-          flash({ kind: 'error', text: translate('note.noneSelected') });
-          return;
-        }
+      /** Save the reviewed text as a normal prompt, without sending or queueing it. */
+      const saveReviewPrompt = (review) => {
+        const chosen = notesList.filter((note) => review.noteIds.indexOf(note.id) >= 0);
         const choices = captureChoices(state.categories, workspaceList, currentWorkspaceId, state.settings);
         const preferred = currentWorkspaceId && choices.some((entry) => entry.value === 'workspace:' + currentWorkspaceId)
           ? 'workspace:' + currentWorkspaceId
@@ -3800,17 +3799,18 @@ window.__ModuleLoader__.load({
         const ordered = choices.some((entry) => entry.value === preferred)
           ? [...choices.filter((entry) => entry.value === preferred), ...choices.filter((entry) => entry.value !== preferred)]
           : choices;
-        const text = composeNotesReply(selectedNotes);
+        setReviewOpen(false);
         openNoteSave({
-          noteIds: selectedNotes.map((note) => note.id),
+          noteIds: review.noteIds,
           markStored: false,
-          title: draftTitle(text),
-          body: text,
-          images: imagesForNotes(selectedNotes),
-          type: promptTypeForNotes(selectedNotes),
+          title: draftTitle(review.text),
+          body: review.text,
+          images: review.images,
+          type: promptTypeForNotes(chosen),
           choices: ordered,
           defaultGroup: preferred,
         });
+        return { ok: true };
       };
 
       /** The page cannot read the composer, so the mounted panel performs it. */
@@ -3977,16 +3977,6 @@ window.__ModuleLoader__.load({
           scope === 'notes'
             ? [
                 h('button', {
-                  key: 'store',
-                  type: 'button',
-                  className: 'pp-mini',
-                  title: selectedNotes.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
-                  disabled: selectedNotes.length === 0,
-                  onClick: storeNotesPrompt,
-                },
-                h('span', { className: 'pp-btn-icon' }, icon('store')),
-                translate('note.composeStore')),
-                h('button', {
                   key: 'draft',
                   type: 'button',
                   className: 'pp-mini',
@@ -4144,6 +4134,7 @@ window.__ModuleLoader__.load({
                 onClose: () => setReviewOpen(false),
                 onQueue: queueReview,
                 onOutbox: outboxReview,
+                onSavePrompt: saveReviewPrompt,
                 onPark: parkReviewTodos,
               })
             : null,
@@ -7051,6 +7042,19 @@ window.__ModuleLoader__.load({
               ]
             : [
                 h('button', { key: 'back', type: 'button', className: 'pp-note-btn pp-review-cancel', onClick: () => setStep('notes') }, translate('note.review.back')),
+                props.onSavePrompt && sentNotes.length > 0
+                  ? h(
+                      'button',
+                      {
+                        key: 'save-prompt',
+                        type: 'button',
+                        className: 'pp-note-btn',
+                        disabled: primaryDisabled,
+                        onClick: () => submit(props.onSavePrompt),
+                      },
+                      translate('note.review.savePrompt'),
+                    )
+                  : null,
                 props.onOutbox && sentNotes.length > 0
                   ? h(
                       'button',
@@ -8095,12 +8099,9 @@ window.__ModuleLoader__.load({
         return { ok: true };
       };
 
-      /** Store the session's annotations as one prompt, from the panel header. */
-      const storeNotesPrompt = () => {
-        if (selectedNotes.length === 0) {
-          showToast(translate('note.noneSelected'), 'error');
-          return;
-        }
+      /** Save the reviewed text as a normal prompt, without sending or queueing it. */
+      const saveReviewPrompt = (review) => {
+        const chosen = notesList.filter((note) => review.noteIds.indexOf(note.id) >= 0);
         const choices = captureChoices(state.categories, workspaces.items, currentWorkspaceId, state.settings);
         const preferred = currentWorkspaceId && choices.some((entry) => entry.value === 'workspace:' + currentWorkspaceId)
           ? 'workspace:' + currentWorkspaceId
@@ -8108,17 +8109,18 @@ window.__ModuleLoader__.load({
         const ordered = choices.some((entry) => entry.value === preferred)
           ? [...choices.filter((entry) => entry.value === preferred), ...choices.filter((entry) => entry.value !== preferred)]
           : choices;
-        const text = composeNotesReply(selectedNotes);
+        setReviewOpen(false);
         openNoteSave({
-          noteIds: selectedNotes.map((note) => note.id),
+          noteIds: review.noteIds,
           markStored: false,
-          title: draftTitle(text),
-          body: text,
-          images: imagesForNotes(selectedNotes),
-          type: promptTypeForNotes(selectedNotes),
+          title: draftTitle(review.text),
+          body: review.text,
+          images: review.images,
+          type: promptTypeForNotes(chosen),
           choices: ordered,
           defaultGroup: preferred,
         });
+        return { ok: true };
       };
 
       bridgeRef.current = { insert: insertItem, release, digest, capture: captureDraft, composeNotes: composeSessionNotes, insertText: insertComposerText, insertImages: addImages, queueReview: queueReviewText };
@@ -8306,16 +8308,6 @@ window.__ModuleLoader__.load({
               scope === 'notes'
                 ? [
                     h('button', {
-                      key: 'store',
-                      type: 'button',
-                      className: 'pp-mini',
-                      title: selectedNotes.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
-                      disabled: selectedNotes.length === 0,
-                      onClick: storeNotesPrompt,
-                    },
-                    h('span', { className: 'pp-btn-icon' }, icon('store')),
-                    translate('note.composeStore')),
-                    h('button', {
                       key: 'draft',
                       type: 'button',
                       className: 'pp-mini',
@@ -8446,6 +8438,7 @@ window.__ModuleLoader__.load({
               onClose: () => setReviewOpen(false),
               onQueue: queueReview,
               onOutbox: outboxReview,
+              onSavePrompt: saveReviewPrompt,
               onPark: parkReviewTodos,
             })
           : null,

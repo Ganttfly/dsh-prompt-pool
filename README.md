@@ -78,8 +78,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   **Insert** writes one note into the composer, and **Save as prompt** opens a confirmation step for the
   title, body, images, type and target group before filing the prompt. The header's **Review** opens a
   review card in the bottom dock (like the send queue): adjust the checked notes, then choose
-  **Preview prompt** to inspect the generated prompt and send it, add it to the outbox for later, or go
-  back to adjust. The prompt is grouped
+  **Preview prompt** to inspect the generated prompt and send it, add it to the outbox, save it as a
+  prompt, or go back to adjust. The prompt is grouped
   by kind with a type-specific response contract; additional info is used to revisit the related conclusions
   rather than to execute anything. Opinions, ideas and agreements can be marked
   **Implement if adopted / feasible / approved** to authorize the same-turn execution; the flag is off by
