@@ -2919,9 +2919,8 @@ window.__ModuleLoader__.load({
           );
         case 'prompt':
           return h('svg', base,
-            h('rect', { x: 1.8, y: 2.3, width: 8.4, height: 7.5, rx: 1.2 }),
-            h('path', { d: 'M3.7 4.7h4.4M3.7 6.5h3' }),
-            h('path', { d: 'M9.6 1.2l.32.78.78.32-.78.32-.32.78-.32-.78-.78-.32.78-.32z' }),
+            h('path', { d: 'M2 2.6 5.4 6 2 9.4' }),
+            h('path', { d: 'M6.7 9.4h3.3' }),
           );
         case 'layers':
           return h('svg', base,
