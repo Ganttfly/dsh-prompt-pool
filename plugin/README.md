@@ -18,8 +18,8 @@ The pool keeps the draft, the next action and the exact wording next to the conv
   type filtering, row actions and a session-scoped send queue
 - Right-click on selected conversation text to copy it or save it into a group (the last destination leads the menu)
 - Annotate while you read: choose a kind from the right-click submenu, keep notes on the exact passage with image
-  attachments, collect them in the current-session tab, and send the checked ones as one review prompt straight to
-  the session queue or into the outbox (new notes default to Agree)
+  attachments, collect them in the current-session tab, and queue each note with its kind and quote preserved
+  (new notes default to Agree)
 - Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback) with **Current
   session / Current workspace / Global shared pool** scopes
 - Single prompt type per item (decision / question / opinion / idea / supplement / to-do / inspiration), seeded
@@ -28,8 +28,9 @@ The pool keeps the draft, the next action and the exact wording next to the conv
 - Global shared pool keeps the built-in, custom and display-mode group tabs; workspace prompts use type filters
 - Settings for annotation retention, post-use retention, the built-in prompt reset, and global shared-pool group order/display; the page opens on Annotations and has no workspace-tab controls
 - A release shows progress and can be stopped; the unsent queue stays
-- Single annotations/prompts can be sent immediately or added to the outbox from a row overflow menu;
-  merging outbox entries opens a preview with entry selection and source labels
+- Annotations queue from their row action with kind and quote metadata preserved; prompts queue with the
+  existing ⊕ control, and Outbox is the only send path
+- Merging outbox entries opens a preview with entry selection and source labels
 - A dock strip above the composer sits beside the host's own queued messages and pushes the whole send
   queue into it in one click
 - Confirmations for destructive actions, with undo on deletes and clears

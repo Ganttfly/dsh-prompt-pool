@@ -224,39 +224,16 @@ else {
         const rows = findAll(view, (node) => node.props && String(node.props.className || '') === 'pp-notes-row');
         if (rows.length !== 2) fail(`the notes tab rendered ${rows.length} rows, expected 2`);
         else console.log('[ok] a 批注 tab lists the session annotations');
-        const moreMenus = findAll(view, (node) => typeof node.type === 'function' && node.type.name === 'RowMoreMenu');
-        const moreLabels = moreMenus.flatMap((node) => (node.props.items || []).map((item) => item.label));
-        if (moreLabels.indexOf('note.sendNow') < 0 || moreLabels.indexOf('note.queueOutbox') < 0) {
-          fail(`annotation rows are missing send/queue actions: ${JSON.stringify(moreLabels)}`);
-        } else {
-          console.log('[ok] annotation rows expose direct send and add-to-outbox');
-        }
         const checks = findAll(view, (node) => node.type === 'input'
           && String(node.props && node.props.className || '').indexOf('pp-note-check') >= 0);
-        if (checks.length !== 2) fail(`the notes tab rendered ${checks.length} checkboxes, expected 2`);
-        else if (checks.some((check) => check.props.checked !== true)) fail('annotations do not start checked');
-        else console.log('[ok] every annotation starts with a checked checkbox');
+        if (checks.length > 0) fail('annotation rows still render selection checkboxes');
+        else console.log('[ok] annotation rows no longer use selection checkboxes');
       }
 
-      // The header action now opens the review sheet instead of inserting a
-      // composer draft; the sheet itself is covered in verify-review.js.
+      // The header summary-review action is gone; annotations queue per row.
       const reviewButton = findAll(render() || [], (node) => node.type === 'button' && textOf(node).join('') === 'note.compose')[0];
-      if (!reviewButton) fail('the review button is missing');
-      else {
-        reviewButton.props.onClick();
-        const reviewNode = findComponent(render(), 'ReviewSheet');
-        if (!reviewNode) fail('the review button did not open the review sheet');
-        else {
-          const sheet = renderChild(reviewNode);
-          const preview = findAll(sheet, (node) => node.type === 'textarea' && node.props && node.props.className === 'pp-review-text')[0];
-          if (!preview || String(preview.props.value).indexOf('构建是否接受参数？') < 0) fail('the review preview lost the selected annotations');
-          else if (!findAll(sheet, (node) => node.type === 'button'
-            && String(node.props && node.props.className || '').indexOf('pp-note-btn-primary') >= 0).length) fail('the review sheet has no send action');
-          else console.log('[ok] the header action opens the annotation review sheet');
-          const close = findAll(sheet, (node) => node.type === 'button' && node.props && node.props.title === 'note.cancel')[0];
-          if (close) close.props.onClick();
-        }
-      }
+      if (reviewButton) fail('the old summary review header action is still present');
+      else console.log('[ok] the annotation header no longer exposes summary review');
 
       // Promote one note through the explicit save step.
       const storeLink = findAll(notesView() || [], (node) => node.type === 'button' && node.props && node.props['aria-label'] === 'note.store')[0];
@@ -288,10 +265,10 @@ else {
         }
       }
 
-      // The header bulk store was folded into the review sheet's save step.
+      // Both old header bulk actions are gone; the row owns queue/store.
       const composeStore = findAll(render() || [], (node) => node.type === 'button' && textOf(node).join('') === 'note.composeStore')[0];
       if (composeStore) fail('the old header store-as-prompt control is still present');
-      else console.log('[ok] the annotation header keeps only review; save-as-prompt lives in the review card');
+      else console.log('[ok] the annotation header has no bulk store or review actions');
 
       const deleteLink = findAll(notesView() || [], (node) => node.type === 'button'
         && String(node.props && node.props.className || '').indexOf('pp-note-link-danger') >= 0)[0];
@@ -308,6 +285,24 @@ else {
           else if (left[0].id !== 'n1') fail('delete removed the wrong note');
           if (!notesSaved() || notesSaved().items.length !== 1) fail('delete was not persisted');
           else console.log('[ok] annotations can be deleted from the pool tab');
+        }
+      }
+
+      // Queue the last annotation directly from its row.
+      const queueButton = findAll(notesView() || [], (node) => node.type === 'button'
+        && node.props && node.props['aria-label'] === 'note.queueOutbox')[0];
+      if (!queueButton) fail('the row queue control is missing');
+      else {
+        queueButton.props.onClick();
+        const pool = window.__dshPromptPoolStoreV1.get();
+        const queued = pool.tray[pool.tray.length - 1];
+        if (!queued || queued.type !== 'annotation') fail('the annotation did not enter the outbox as an annotation');
+        else if (!queued.source || queued.source.noteId !== 'n1' || !queued.source.quote) {
+          fail(`the queued annotation lost its source metadata: ${JSON.stringify(queued.source)}`);
+        } else if (window.__dshPromptPoolNotesV1.get().items.length !== 0) {
+          fail('a queued annotation was not removed from the annotation list');
+        } else {
+          console.log('[ok] an annotation queues with structured source metadata');
         }
       }
     }

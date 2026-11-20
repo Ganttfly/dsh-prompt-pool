@@ -46,7 +46,7 @@ Working with an agent is rarely one prompt. The friction sits between messages:
 |---|---|
 | You are still shaping the prompt, but the send button is one keystroke away. | Park the draft in a group; nothing runs until you release it. |
 | The next prompts are already in your head, and retyping them breaks the sequence. | Queue them in order and release one by one, with progress and Stop. |
-| A long answer needs a precise reply on one sentence, not a vague “looks good”. | Annotate the passage inline; the note stays on the exact words, and **Review** sends the checked notes to the session queue as one quoted prompt. |
+| A long answer needs a precise reply on one sentence, not a vague “looks good”. | Annotate the passage inline; the note stays on the exact words and can be added to the Outbox, then sent alone or merged with other entries. |
 | The constraint lives in an earlier message or another workspace. | Right-click capture saves to the current workspace or the global shared pool, so project-specific prompts stay with the project. |
 
 The goal is not another notes app. It is to keep the context, the exact wording and the next action next to
@@ -74,31 +74,19 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   the reading font instead of staying small.
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
   losing the point in a separate scratchpad; click the badge to edit. The **Current session** tab always
-  exists: each row leads with a checkbox (all checked by default); **Locate** scrolls to the passage,
-  **Insert** writes one note into the composer, and **Save as prompt** opens a confirmation step for the
-  title, body, images, type and target group before filing the prompt. The row's overflow menu can
-  **Send now** or **Add to outbox** for a single annotation. The header's **Review** opens a
-  review card in the bottom dock (like the send queue): adjust the checked notes, then choose
-  **Preview prompt** to inspect the generated prompt and send it, add it to the outbox, save it as a
-  prompt, or go back to adjust. The prompt is grouped
-  by kind with a type-specific response contract; additional info is used to revisit the related conclusions
-  rather than to execute anything. Opinions, ideas and agreements can be marked
-  **Implement if adopted / feasible / approved** to authorize the same-turn execution; the flag is off by
-  default and is only acted on when no further discussion is needed. To-dos choose between **Execute now**
-  and **Save as prompt** (the safe default). Questions, disagreements and additional info have no immediate
-  option. To-dos set to Save as prompt are not sent and are saved to the current workspace's prompt pool
-  instead. After a successful send, the sent annotations leave the annotation list; the parked to-dos are
-  in the prompt pool, and the batch log keeps the audit record. There are no open/handled status filters to
-  maintain. Saved notes keep a green marker; notes are stored per session, survive reloads, and are not
-  shown in another session.
+  exists: **Locate** scrolls to the passage, **Insert draft** writes one note into the composer,
+  **Save as prompt** opens a confirmation step for the title, body, images, type and target group, and
+  the row's **Add to outbox** action queues the annotation as one formatted message with its kind and
+  quote preserved. Single annotations have no direct-send control; Outbox is the only send path.
+  Saved notes keep a green marker; notes are stored per session, survive reloads, and are not shown in
+  another session.
 - **Prompt types** — each prompt has at most one fixed type: decision / question / opinion / idea /
   supplement / to-do / inspiration, or unclassified. Saving a note seeds it from the annotation kind
   (agree and disagree both map to decision); the type can be changed in the save step or the editor and
   filtered from the list header. Templates, habits and notes are groups, not types. The global shared pool
   offers a **Capture inspiration** shortcut that creates a global note with the inspiration type preselected.
 - **Composer panel** — search, the current workspace's prompt list, type filtering, per-row insert / queue /
-  edit / duplicate / delete, a row overflow action for direct send, and the shared send-queue card with
-  collapse, clear and send. Its two scopes
+  edit / duplicate / delete, and the shared send-queue card with collapse, clear and send. Its two scopes
   are **Annotations** (current session) and **Prompts** (current workspace); the panel never shows the
   global shared pool. Drag its top edge to change the height, or its left edge to change the width; pin it
   to keep it open over the conversation.
@@ -149,18 +137,19 @@ does not turn it on.
 
 1. Click **提示池 / Prompt pool** beside the composer (or open the sidebar page).
 2. **Save draft** copies the composer content — text and image attachments — into the pool. A small popup
-   offers the groups currently shown in the tab bar — built-in, custom, and every displayed
-   workspace — and the toast names the destination. The composer keeps its text.
+   offers the current workspace and the global shared-pool groups, and the toast names the destination.
+   The composer keeps its text.
 3. Select text in a conversation and right-click: the menu offers **Copy** and **Add to the prompt
-   pool**; open the submenu and picking a group turns the selection into a new item there.
+   pool**; open the submenu and pick the current workspace or a global group.
 4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 100
    full-width or 200 half-width characters, and the badge appears right after the passage. The pool's
-   **Annotations** tab collects every note in the session; **Locate** scrolls to a passage, **Insert**
-   writes one note into the composer, and **Save as prompt** files one note into a group. **Review**
-   opens the batch sheet; optionally mark items to execute, send the checked notes to the session queue,
-   and those notes leave the list. To-dos set to Save as prompt are saved to the prompt pool instead.
-5. Add rows to the queue with the ⊕ control, reorder them in the queue card, then press **发送**.
-6. Each queued item is written into the composer and submitted in turn.
+   **Current session** tab collects the notes; **Locate** scrolls to a passage, **Insert draft**
+   writes one note into the composer, **Save as prompt** files one note into a group, and **Add to
+   outbox** queues it with its kind and quote preserved.
+5. Add rows to the queue with the ⊕ control (annotations use their row queue action), reorder them in
+   the queue card, then send them one by one or use **Merge & send** for a preview.
+6. Sequential sends are written into the composer and submitted in turn; merged sends become one
+   message after confirmation.
 
 ## Compatibility
 

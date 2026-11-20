@@ -162,9 +162,6 @@ window.__ModuleLoader__.load({
       'row.down': '下移',
       'row.save': '保存',
       'row.cancel': '取消',
-      'row.more': '更多操作',
-      'row.sendNow': '直接发送',
-      'row.sentNow': '已直接发送到会话队列',
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
       'image.add': '添加图片',
@@ -272,9 +269,7 @@ window.__ModuleLoader__.load({
       'note.review.back': '返回批注',
       'note.review.previewHint': '确认无误后发送；需要调整请返回批注。',
       'note.review.send': '发送到会话队列',
-      'note.sendNow': '直接发送',
       'note.queueOutbox': '加入待发送',
-      'note.sentNow': '已直接发送到会话队列',
       'note.queuedOutbox': '已加入待发送',
       'note.review.savePrompt': '存成提示词',
       'note.review.outbox': '加入待发送',
@@ -451,9 +446,6 @@ window.__ModuleLoader__.load({
       'row.down': 'Move down',
       'row.save': 'Save',
       'row.cancel': 'Cancel',
-      'row.more': 'More actions',
-      'row.sendNow': 'Send now',
-      'row.sentNow': 'Sent to the session queue',
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
       'image.add': 'Add image',
@@ -561,9 +553,7 @@ window.__ModuleLoader__.load({
       'note.review.back': 'Back to annotations',
       'note.review.previewHint': 'Send when ready, or go back to adjust.',
       'note.review.send': 'Send to session queue',
-      'note.sendNow': 'Send now',
       'note.queueOutbox': 'Add to outbox',
-      'note.sentNow': 'Sent to the session queue',
       'note.queuedOutbox': 'Added to the outbox',
       'note.review.savePrompt': 'Save as prompt',
       'note.review.outbox': 'Add to outbox',
@@ -1609,10 +1599,22 @@ window.__ModuleLoader__.load({
      * than once, and each occurrence carries its own text so editing one never
      * rewrites the saved template.
      */
+    function normalizeTraySource(raw) {
+      if (!raw || typeof raw !== 'object') return null;
+      const source = {
+        noteId: typeof raw.noteId === 'string' ? raw.noteId : '',
+        kind: typeof raw.kind === 'string' ? raw.kind : '',
+        quote: typeof raw.quote === 'string' ? raw.quote : '',
+        body: typeof raw.body === 'string' ? raw.body : '',
+        order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : 0,
+      };
+      return source.noteId || source.kind || source.quote ? source : null;
+    }
+
     function normalizeTrayEntry(raw, byId) {
       if (typeof raw === 'string') {
         const item = byId.get(raw);
-        return item ? { key: uid(), itemId: raw, body: item.body, images: normalizeImages(item.images), targetSessionId: '', type: 'prompt' } : null;
+        return item ? { key: uid(), itemId: raw, body: item.body, images: normalizeImages(item.images), targetSessionId: '', type: 'prompt', source: null } : null;
       }
       if (!raw || typeof raw !== 'object') return null;
       const itemId = typeof raw.itemId === 'string' ? raw.itemId : '';
@@ -1627,6 +1629,7 @@ window.__ModuleLoader__.load({
         images,
         targetSessionId: typeof raw.targetSessionId === 'string' ? raw.targetSessionId : '',
         type: raw.type === 'review' ? 'review' : raw.type === 'annotation' ? 'annotation' : 'prompt',
+        source: normalizeTraySource(raw.source),
       };
     }
 
@@ -2337,6 +2340,7 @@ window.__ModuleLoader__.load({
           images,
           targetSessionId: typeof entry.targetSessionId === 'string' ? entry.targetSessionId : '',
           type: entry.type === 'review' ? 'review' : entry.type === 'annotation' ? 'annotation' : 'prompt',
+          source: normalizeTraySource(entry.source),
         };
         mutate((state) => ({ ...state, tray: [...state.tray, row] }));
         return row;
@@ -2489,7 +2493,7 @@ window.__ModuleLoader__.load({
       const {
         item, index, total, editing, setEditing, categories, workspaces, sessionId,
         editRows, editStyle, mainTitle, showTag, onInsert, onMain, onStartEdit,
-        onQueue, onSend, onDelete, onSave, onCancel, onPasteImages, onOpenImage, onError,
+        onQueue, onDelete, onSave, onCancel, onPasteImages, onOpenImage, onError,
       } = props;
 
       if (editing && editing.id === item.id) {
@@ -2593,17 +2597,6 @@ window.__ModuleLoader__.load({
           : showTag
             ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, categories, workspaces)))
             : null,
-        onSend
-          ? h(RowMoreMenu, {
-              label: translate('row.more'),
-              items: [{
-                key: 'send',
-                icon: 'send',
-                label: translate('row.sendNow'),
-                onClick: () => onSend(item),
-              }],
-            })
-          : null,
         h(
           'div',
           { className: 'pp-actions' },
@@ -2910,12 +2903,8 @@ window.__ModuleLoader__.load({
           return h('svg', base, h('path', { d: 'M6 1.6v4.8M3.8 4.4 6 6.6l2.2-2.2M2 7.6v2.8h8V7.6' }));
         case 'review':
           return h('svg', base, h('path', { d: 'M2 2.5h3.2M2 6h3.2M2 9.5h3.2' }), h('path', { d: 'M6.3 3.2l1.1 1.1 2-2.2M6.3 7.2l1.1 1.1 2-2.2M6.3 11l1.1 1.1 2-2.2' }));
-        case 'send':
-          return h('svg', base, h('path', { d: 'M1.6 5.6 10.4 2 6.8 10.4 5.5 6.9z' }), h('path', { d: 'M5.5 6.9 10.4 2' }));
         case 'queue':
           return h('svg', base, h('path', { d: 'M2 7.4h8v3H2z' }), h('path', { d: 'M6 1.4v4.6M4.3 4.4 6 6.1l1.7-1.7' }));
-        case 'more':
-          return h('svg', { ...base, fill: 'currentColor', stroke: 'none' }, h('circle', { cx: 2.6, cy: 6, r: 1 }), h('circle', { cx: 6, cy: 6, r: 1 }), h('circle', { cx: 9.4, cy: 6, r: 1 }));
         case 'starFill':
           return h('svg', { ...base, fill: 'currentColor' }, h('path', { d: 'M6 1.9l1.24 2.6 2.86.4-2.08 2 .5 2.83L6 8.4l-2.52 1.33.5-2.83-2.08-2 2.86-.4z' }));
         case 'plus':
@@ -3180,100 +3169,6 @@ window.__ModuleLoader__.load({
           h('circle', { cx: 7, cy: 7, r: 5.5 }),
           h('path', { d: 'M7 4.4v5.2M4.4 7h5.2' }),
         ),
-      );
-    }
-
-    /** A compact overflow menu for row-level shortcuts such as direct send. */
-    function RowMoreMenu(props) {
-      const [open, setOpen] = useState(false);
-      const [position, setPosition] = useState(null);
-      const wrapRef = useRef(null);
-      const items = Array.isArray(props.items) ? props.items.filter(Boolean) : [];
-
-      useEffect(() => {
-        if (!open || typeof document === 'undefined') return undefined;
-        const close = (event) => {
-          if (wrapRef.current && event && event.target instanceof Node && wrapRef.current.contains(event.target)) return;
-          setOpen(false);
-        };
-        const onKey = (event) => {
-          if (event.key === 'Escape') setOpen(false);
-        };
-        document.addEventListener('pointerdown', close, true);
-        document.addEventListener('keydown', onKey, true);
-        window.addEventListener('resize', close);
-        window.addEventListener('scroll', close, true);
-        return () => {
-          document.removeEventListener('pointerdown', close, true);
-          document.removeEventListener('keydown', onKey, true);
-          window.removeEventListener('resize', close);
-          window.removeEventListener('scroll', close, true);
-        };
-      }, [open]);
-
-      if (items.length === 0) return null;
-
-      const toggle = (event) => {
-        event.stopPropagation();
-        if (open) {
-          setOpen(false);
-          return;
-        }
-        const rect = event.currentTarget.getBoundingClientRect();
-        const width = 176;
-        const height = 8 + items.length * 30;
-        const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width));
-        const below = rect.bottom + 4;
-        const top = below + height > window.innerHeight - 8 ? Math.max(8, rect.top - height - 4) : below;
-        setPosition({ left, top });
-        setOpen(true);
-      };
-
-      return h(
-        'span',
-        { className: 'pp-more-wrap', ref: wrapRef },
-        h(
-          'button',
-          {
-            type: 'button',
-            className: 'pp-icon pp-more-btn',
-            title: props.label || translate('row.more'),
-            'aria-label': props.label || translate('row.more'),
-            'aria-haspopup': 'menu',
-            'aria-expanded': open ? 'true' : 'false',
-            onMouseDown: (event) => event.preventDefault(),
-            onClick: toggle,
-          },
-          icon('more'),
-        ),
-        open && position
-          ? h(
-              'div',
-              {
-                className: 'pp-more-menu',
-                role: 'menu',
-                style: { left: position.left + 'px', top: position.top + 'px' },
-                onPointerDown: (event) => event.stopPropagation(),
-              },
-              items.map((item) => h(
-                'button',
-                {
-                  key: item.key,
-                  type: 'button',
-                  role: 'menuitem',
-                  className: 'pp-more-item',
-                  disabled: item.disabled === true,
-                  'data-danger': item.danger === true ? 'true' : 'false',
-                  onClick: () => {
-                    setOpen(false);
-                    item.onClick();
-                  },
-                },
-                h('span', { className: 'pp-more-icon' }, icon(item.icon)),
-                h('span', { className: 'pp-more-label' }, item.label),
-              )),
-            )
-          : null,
       );
     }
 
@@ -3920,24 +3815,6 @@ window.__ModuleLoader__.load({
         );
       };
 
-      /** Direct-send one annotation through the mounted panel. */
-      const sendNote = async (note) => {
-        const text = composeNoteLine(note);
-        let result;
-        try {
-          result = await bridge.request({ type: 'queue-review', text, sessionId: activeSessionId, images: normalizeImages(note.images) });
-        } catch (error) {
-          result = { ok: false, reason: String((error && error.message) || error) };
-        }
-        if (!result || result.ok !== true) {
-          flash({ kind: 'error', text: (result && result.reason) || translate('note.review.unsupported') });
-          return;
-        }
-        notesActions.remove(note.id);
-        deselectNotes(activeSessionId, [note.id]);
-        flash({ kind: 'ok', text: translate('note.sentNow') });
-      };
-
       /** Put one annotation into the shared outbox without routing it through review. */
       const queueNote = (note) => {
         poolActions.addTextToTray({
@@ -3945,30 +3822,17 @@ window.__ModuleLoader__.load({
           images: normalizeImages(note.images),
           targetSessionId: activeSessionId,
           type: 'annotation',
+          source: {
+            noteId: note.id,
+            kind: note.kind,
+            quote: note.quote,
+            body: note.body,
+            order: note.order,
+          },
         });
         notesActions.remove(note.id);
         deselectNotes(activeSessionId, [note.id]);
         flash({ kind: 'ok', text: translate('note.queuedOutbox') });
-      };
-
-      /** Direct-send one prompt through the mounted panel. */
-      const sendItem = async (item) => {
-        let result;
-        try {
-          result = await bridge.request({
-            type: 'queue-review',
-            text: item.body,
-            sessionId: activeSessionId,
-            images: normalizeImages(item.images),
-          });
-        } catch (error) {
-          result = { ok: false, reason: String((error && error.message) || error) };
-        }
-        if (!result || result.ok !== true) {
-          flash({ kind: 'error', text: (result && result.reason) || translate('status.noComposer') });
-          return;
-        }
-        flash({ kind: 'ok', text: translate('row.sentNow') });
       };
 
       /** The page has no composer, so the mounted panel inserts the reply. */
@@ -4232,7 +4096,6 @@ window.__ModuleLoader__.load({
         onMain: startEdit,
         onStartEdit: startEdit,
         onQueue: queueItem,
-        onSend: sendItem,
         onDelete: setPendingDelete,
         onSave: save,
         onCancel: cancelEdit,
@@ -4272,18 +4135,7 @@ window.__ModuleLoader__.load({
                 PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
               ),
           scope === 'notes'
-            ? [
-                h('button', {
-                  key: 'draft',
-                  type: 'button',
-                  className: 'pp-mini',
-                  title: selectedNotes.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
-                  disabled: selectedNotes.length === 0,
-                  onClick: openReview,
-                },
-                h('span', { className: 'pp-btn-icon' }, icon('review')),
-                translate('note.compose')),
-              ]
+            ? null
             : [
                 h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: create },
                   h('span', { className: 'pp-btn-icon' }, icon('plus')),
@@ -4377,7 +4229,6 @@ window.__ModuleLoader__.load({
                   sessionId: activeSessionId,
                   onCompose: composeSessionNotes,
                   onInsertNote: insertNote,
-                  onSendNote: sendNote,
                   onQueueNote: queueNote,
                   hideActions: true,
                   filter: query,
@@ -4425,17 +4276,6 @@ window.__ModuleLoader__.load({
                     )
                   : null,
               )
-            : null,
-          !settingsOpen && scope === 'notes' && reviewOpen
-            ? renderReviewCard({
-                notes: notesList,
-                sessionId: activeSessionId,
-                onClose: () => setReviewOpen(false),
-                onQueue: queueReview,
-                onOutbox: outboxReview,
-                onSavePrompt: saveReviewPrompt,
-                onPark: parkReviewTodos,
-              })
             : null,
           !settingsOpen && mergeOpen
             ? h(MergeReviewCard, {
@@ -7011,18 +6851,6 @@ window.__ModuleLoader__.load({
                 'data-promoted': note.promotedGroup ? 'true' : undefined,
               },
               h(
-                'input',
-                {
-                  key: 'select',
-                  type: 'checkbox',
-                  className: 'pp-note-check',
-                  checked: noteSelected(selection, sessionId, note.id),
-                  title: selectLabel,
-                  'aria-label': selectLabel,
-                  onChange: () => toggleNoteSelected(sessionId, note.id),
-                },
-              ),
-              h(
                 'button',
                 {
                   type: 'button',
@@ -7073,23 +6901,19 @@ window.__ModuleLoader__.load({
                 },
                 h(NoteActionIcon, { kind: 'store' }),
               ),
-              h(RowMoreMenu, {
-                label: translate('row.more'),
-                items: [
-                  props.onSendNote ? {
-                    key: 'send',
-                    icon: 'send',
-                    label: translate('note.sendNow'),
-                    onClick: () => props.onSendNote(note),
-                  } : null,
-                  props.onQueueNote ? {
-                    key: 'queue',
-                    icon: 'queue',
-                    label: translate('note.queueOutbox'),
-                    onClick: () => props.onQueueNote(note),
-                  } : null,
-                ].filter(Boolean),
-              }),
+              props.onQueueNote
+                ? h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'pp-note-icon',
+                      title: translate('note.queueOutbox'),
+                      'aria-label': translate('note.queueOutbox'),
+                      onClick: () => props.onQueueNote(note),
+                    },
+                    icon('queue'),
+                  )
+                : null,
               h(
                 'button',
                 {
@@ -8304,7 +8128,6 @@ window.__ModuleLoader__.load({
         onMain: insertItem,
         onStartEdit: startEdit,
         onQueue: queueItem,
-        onSend: sendItem,
         onDelete: setPendingDelete,
         onSave: save,
         onCancel: cancelEdit,
@@ -8473,18 +8296,6 @@ window.__ModuleLoader__.load({
         return { ok: true };
       };
 
-      /** Direct-send one annotation. */
-      const sendNote = async (note) => {
-        const result = await queueReviewText(composeNoteLine(note), notesSessionId, normalizeImages(note.images));
-        if (!result || result.ok !== true) {
-          showToast((result && result.reason) || translate('note.review.unsupported'), 'error');
-          return;
-        }
-        notesActions.remove(note.id);
-        deselectNotes(notesSessionId, [note.id]);
-        showToast(translate('note.sentNow'), 'ok');
-      };
-
       /** Add one annotation to the outbox without entering review. */
       const queueNote = (note) => {
         poolActions.addTextToTray({
@@ -8492,20 +8303,17 @@ window.__ModuleLoader__.load({
           images: normalizeImages(note.images),
           targetSessionId: notesSessionId,
           type: 'annotation',
+          source: {
+            noteId: note.id,
+            kind: note.kind,
+            quote: note.quote,
+            body: note.body,
+            order: note.order,
+          },
         });
         notesActions.remove(note.id);
         deselectNotes(notesSessionId, [note.id]);
         showToast(translate('note.queuedOutbox'), 'ok');
-      };
-
-      /** Direct-send one prompt item. */
-      const sendItem = async (item) => {
-        const result = await queueReviewText(item.body, notesSessionId, normalizeImages(item.images));
-        if (!result || result.ok !== true) {
-          showToast((result && result.reason) || translate('status.noComposer'), 'error');
-          return;
-        }
-        showToast(translate('row.sentNow'), 'ok');
       };
 
       bridgeRef.current = { insert: insertItem, release, digest: () => { openMerge(); return { ok: true }; }, capture: captureDraft, composeNotes: composeSessionNotes, insertText: insertComposerText, insertImages: addImages, queueReview: queueReviewText };
@@ -8691,18 +8499,7 @@ window.__ModuleLoader__.load({
               'div',
               { className: 'pp-panel-actions' },
               scope === 'notes'
-                ? [
-                    h('button', {
-                      key: 'draft',
-                      type: 'button',
-                      className: 'pp-mini',
-                      title: selectedNotes.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
-                      disabled: selectedNotes.length === 0,
-                      onClick: openReview,
-                    },
-                    h('span', { className: 'pp-btn-icon' }, icon('review')),
-                    translate('note.compose')),
-                  ]
+                ? null
                 : [
                     h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: newItem },
                       h('span', { className: 'pp-btn-icon' }, icon('plus')),
@@ -8775,7 +8572,6 @@ window.__ModuleLoader__.load({
                   sessionId: notesSessionId,
                   onCompose: composeSessionNotes,
                   onInsertNote: insertNoteText,
-                  onSendNote: sendNote,
                   onQueueNote: queueNote,
                   hideActions: true,
                   filter: query,
@@ -8817,17 +8613,6 @@ window.__ModuleLoader__.load({
                   )
                 : null,
             )
-          : null,
-        !settingsOpen && scope === 'notes' && reviewOpen
-          ? renderReviewCard({
-              notes: notesList,
-              sessionId: notesSessionId,
-              onClose: () => setReviewOpen(false),
-              onQueue: queueReview,
-              onOutbox: outboxReview,
-              onSavePrompt: saveReviewPrompt,
-              onPark: parkReviewTodos,
-            })
           : null,
         !settingsOpen && mergeOpen
           ? h(MergeReviewCard, {
@@ -9082,14 +8867,6 @@ window.__ModuleLoader__.load({
       '.pp-icon:disabled{opacity:.35;cursor:default}' +
       '.pp-icon[data-danger="true"]:hover{color:var(--pp-danger)}' +
       '.pp-icon[data-active="true"]{color:var(--pp-accent)}' +
-      '.pp-more-wrap{position:relative;display:inline-flex;flex:none}' +
-      '.pp-more-menu{position:fixed;z-index:2147483002;width:176px;box-sizing:border-box;padding:4px;border:1px solid var(--pp-line-2);border-radius:9px;background:var(--pp-surface-2);box-shadow:0 12px 32px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:1px}' +
-      '.pp-more-item{display:flex;align-items:center;gap:8px;width:100%;height:28px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}' +
-      '.pp-more-item:hover:not([disabled]){background:var(--pp-hover)}' +
-      '.pp-more-item[disabled]{opacity:.45;cursor:not-allowed}' +
-      '.pp-more-item[data-danger="true"]{color:var(--pp-danger)}' +
-      '.pp-more-icon{display:inline-flex;align-items:center;flex:none;color:var(--pp-ink-2)}' +
-      '.pp-more-item[data-danger="true"] .pp-more-icon{color:var(--pp-danger)}' +
       '.pp-edit{padding:8px;border-radius:8px;background:var(--pp-surface);border:1px solid var(--pp-line);display:flex;flex-direction:column;gap:6px}' +
       '.pp-input,.pp-textarea{width:100%;box-sizing:border-box;border:1px solid var(--pp-line);border-radius:6px;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font:inherit;font-size:12px;padding:5px 7px;outline:none;resize:vertical}' +
       '.pp-input:focus,.pp-textarea:focus{border-color:var(--pp-accent)}' +

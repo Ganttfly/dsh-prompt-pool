@@ -15,14 +15,14 @@ All notable changes to this project are documented here. The format follows
   shared pool keeps the existing built-in/custom group tabs.
 - Prompt types: decision / question / opinion / idea / supplement / to-do / inspiration, with a single
   optional value per prompt. Annotation kinds seed the type on save; the type is filterable and editable.
-- A save-as-prompt step for notes and reviewed batches: edit the title, body, images, type and target
-  group, with a reminder that the conversation context is not carried over.
+- A save-as-prompt step for notes: edit the title, body, images, type and target group, with a reminder
+  that the conversation context is not carried over.
 - Outbox entries now carry their target session, so queued prompt items are shown and released only in
   the session they were queued for. Legacy entries without a target remain visible everywhere.
-- A reviewed batch can be added to the outbox instead of being sent immediately, and the outbox can
-  combine multiple entries into one numbered prompt with **Merge & send**.
-- Single annotations and prompts expose **Send now** and (for annotations) **Add to outbox** in a row
-  overflow menu. Outbox entries are labelled by source: prompt, annotation or review.
+- Annotations queue individually from the row, with kind, quote and body kept as structured source
+  metadata. The selection checkboxes and the header Summary Review action were removed; annotations
+  and prompts no longer expose a direct-send action, so Outbox is the only send path.
+- Outbox entries are labelled by source: prompt, annotation or review.
 - **Merge & send** now opens a read-only merge preview with per-entry selection, order, source labels
   and a combined-text preview before anything is submitted.
 - Action icons are slightly tighter (24px buttons, no inter-button gap) while keeping the 24px hit area.
@@ -40,9 +40,8 @@ All notable changes to this project are documented here. The format follows
   rows, icons and type chips keep their existing colors.
 - The panel header now has a dedicated title/slogan row and a second row for search, type filtering
   and the primary actions; Settings, pin and close stay in the title row.
-- Settings is now an icon-only control. The annotation header keeps only the review action (the old
-  bulk store button was removed); the review preview now offers **Save as prompt**, alongside direct
-  send and **Add to outbox**.
+- Settings is now an icon-only control. The annotation header no longer renders the old bulk store
+  or summary-review actions; each annotation queues from its row instead.
 - The panel title row now has a light accent-tinted background with a subtle separator, while the
   search and action row stays on the normal surface.
 - The panel toolbar uses stable search / type-slot / action columns, so switching between 批注 and
