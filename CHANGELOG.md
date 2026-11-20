@@ -38,6 +38,8 @@ All notable changes to this project are documented here. The format follows
   and the primary actions; Settings, pin and close stay in the title row.
 - Settings is now an icon-only control, and the header actions carry icons: store/review for
   annotations, plus/store for prompts, and a star for the global Capture inspiration action.
+- The panel title row now has a soft accent-tinted background with a subtle separator, while the
+  search and action row stays on the normal surface.
 
 ## [1.5.0] — 2026-11-16
 
