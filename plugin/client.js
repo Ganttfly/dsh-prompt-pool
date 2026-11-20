@@ -113,7 +113,6 @@ window.__ModuleLoader__.load({
       'status.savedToPool': '已保存',
       'settings.nav': '提示池',
       'settings.open': '提示池设置',
-      'settings.button': '设置',
       'settings.tab.notes': '批注',
       'settings.notesIntro': '批注和当前会话绑定。\n在正文中添加的批注同时也会出现在提示池的【批注】页面，可以存为提示词、直接插入输入框，或汇总审阅后发送到会话队列。',
       'settings.notesKeepStore': '存为提示词后，仍旧保留',
@@ -387,7 +386,6 @@ window.__ModuleLoader__.load({
       'status.savedToPool': 'Saved',
       'settings.nav': 'Prompt pool',
       'settings.open': 'Prompt pool settings',
-      'settings.button': 'Settings',
       'settings.tab.notes': 'Annotations',
       'settings.notesIntro': 'Annotations are bound to the current session.\nAnnotations added in the transcript also appear in the prompt pool\'s Annotations tab; they can be saved as a prompt, inserted into the composer, or reviewed and sent to the session queue.',
       'settings.notesKeepStore': 'Keep annotations after saving as a prompt',
@@ -2800,6 +2798,10 @@ window.__ModuleLoader__.load({
           );
         case 'star':
           return h('svg', base, h('path', { d: 'M6 1.9l1.24 2.6 2.86.4-2.08 2 .5 2.83L6 8.4l-2.52 1.33.5-2.83-2.08-2 2.86-.4z' }));
+        case 'store':
+          return h('svg', base, h('path', { d: 'M6 1.6v4.8M3.8 4.4 6 6.6l2.2-2.2M2 7.6v2.8h8V7.6' }));
+        case 'review':
+          return h('svg', base, h('path', { d: 'M2 2.5h3.2M2 6h3.2M2 9.5h3.2' }), h('path', { d: 'M6.3 3.2l1.1 1.1 2-2.2M6.3 7.2l1.1 1.1 2-2.2M6.3 11l1.1 1.1 2-2.2' }));
         case 'starFill':
           return h('svg', { ...base, fill: 'currentColor' }, h('path', { d: 'M6 1.9l1.24 2.6 2.86.4-2.08 2 .5 2.83L6 8.4l-2.52 1.33.5-2.83-2.08-2 2.86-.4z' }));
         case 'plus':
@@ -3452,13 +3454,13 @@ window.__ModuleLoader__.load({
         'button',
         {
           type: 'button',
-          className: 'pp-mini pp-set-btn',
+          className: 'pp-icon pp-set-btn',
           'data-active': props.active === true ? 'true' : 'false',
           title: translate('settings.open'),
+          'aria-label': translate('settings.open'),
           onClick: props.onClick,
         },
         h('span', { className: 'pp-set-btn-icon' }, icon('gear')),
-        translate('settings.button'),
       );
     }
 
@@ -3981,7 +3983,9 @@ window.__ModuleLoader__.load({
                   title: selectedNotes.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
                   disabled: selectedNotes.length === 0,
                   onClick: storeNotesPrompt,
-                }, translate('note.composeStore')),
+                },
+                h('span', { className: 'pp-btn-icon' }, icon('store')),
+                translate('note.composeStore')),
                 h('button', {
                   key: 'draft',
                   type: 'button',
@@ -3989,13 +3993,21 @@ window.__ModuleLoader__.load({
                   title: selectedNotes.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
                   disabled: selectedNotes.length === 0,
                   onClick: openReview,
-                }, translate('note.compose')),
+                },
+                h('span', { className: 'pp-btn-icon' }, icon('review')),
+                translate('note.compose')),
               ]
             : [
-                h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: create }, '＋ ', translate('page.new')),
-                h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
+                h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: create },
+                  h('span', { className: 'pp-btn-icon' }, icon('plus')),
+                  translate('page.new')),
+                h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture },
+                  h('span', { className: 'pp-btn-icon' }, icon('store')),
+                  translate('panel.capture')),
                 scope === 'global'
-                  ? h('button', { key: 'inspiration', type: 'button', className: 'pp-mini', onClick: createInspiration }, translate('page.inspiration'))
+                  ? h('button', { key: 'inspiration', type: 'button', className: 'pp-mini', onClick: createInspiration },
+                      h('span', { className: 'pp-btn-icon' }, icon('star')),
+                      translate('page.inspiration'))
                   : null,
               ],
           h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
@@ -8297,7 +8309,9 @@ window.__ModuleLoader__.load({
                     title: selectedNotes.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
                     disabled: selectedNotes.length === 0,
                     onClick: storeNotesPrompt,
-                  }, translate('note.composeStore')),
+                  },
+                  h('span', { className: 'pp-btn-icon' }, icon('store')),
+                  translate('note.composeStore')),
                   h('button', {
                     key: 'draft',
                     type: 'button',
@@ -8305,11 +8319,17 @@ window.__ModuleLoader__.load({
                     title: selectedNotes.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
                     disabled: selectedNotes.length === 0,
                     onClick: openReview,
-                  }, translate('note.compose')),
+                  },
+                  h('span', { className: 'pp-btn-icon' }, icon('review')),
+                  translate('note.compose')),
                 ]
               : [
-                  h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('page.new')),
-                  h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
+                  h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: newItem },
+                    h('span', { className: 'pp-btn-icon' }, icon('plus')),
+                    translate('page.new')),
+                  h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture },
+                    h('span', { className: 'pp-btn-icon' }, icon('store')),
+                    translate('panel.capture')),
                 ],
           ),
         ),
@@ -8552,12 +8572,13 @@ window.__ModuleLoader__.load({
       '.pp-modal-actions{display:flex;justify-content:flex-end;gap:8px}' +
       '.pp-capture-options{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto}' +
       '.pp-capture-option{justify-content:flex-start;height:auto;min-height:26px;padding:5px 9px;text-align:left;white-space:normal}' +
-      '.pp-mini{height:24px;padding:0 9px;border-radius:7px;border:1px solid var(--pp-line);background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
+      '.pp-mini{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:7px;border:1px solid var(--pp-line);background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
       '.pp-mini:hover:not([disabled]){background:var(--pp-hover)}' +
       '.pp-mini:disabled{opacity:.5;cursor:not-allowed}' +
       '.pp-set-btn{display:inline-flex;align-items:center;gap:5px;padding:0 9px}' +
       '.pp-set-btn[data-active="true"]{border-color:var(--pp-accent);color:var(--pp-accent)}' +
       '.pp-set-btn-icon{display:inline-flex;align-items:center}' +
+      '.pp-btn-icon{display:inline-flex;align-items:center;flex:none}' +
       '.pp-list{overflow-y:auto;padding:6px 8px 20px;flex:1;min-height:0}' +
       '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
       '.pp-page-head{display:flex;align-items:center;gap:8px;padding:12px 12px 8px;border-bottom:1px solid var(--pp-line);flex-wrap:wrap}' +

@@ -36,6 +36,8 @@ All notable changes to this project are documented here. The format follows
   rows, icons and type chips keep their existing colors.
 - The panel header now has a dedicated title/slogan row and a second row for search, type filtering
   and the primary actions; Settings, pin and close stay in the title row.
+- Settings is now an icon-only control, and the header actions carry icons: store/review for
+  annotations, plus/store for prompts, and a star for the global Capture inspiration action.
 
 ## [1.5.0] — 2026-11-16
 
