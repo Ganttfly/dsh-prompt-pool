@@ -3010,9 +3010,7 @@ window.__ModuleLoader__.load({
       const [captureGroups, setCaptureGroups] = useState([]);
       const [captureBusy, setCaptureBusy] = useState(false);
       const [notice, setNotice] = useState(null);
-      const [popPos, setPopPos] = useState({ left: 16, bottom: 80 });
       const barRef = useRef(null);
-      const popRef = useRef(null);
       const noticeTimer = useRef(0);
       const label = translate('button.label');
 
@@ -3024,7 +3022,6 @@ window.__ModuleLoader__.load({
         if (!captureOpen && !summaryOpen) return undefined;
         const onDown = (event) => {
           if (barRef.current && barRef.current.contains(event.target)) return;
-          if (popRef.current && popRef.current.contains(event.target)) return;
           setCaptureOpen(false);
           setSummaryOpen(false);
         };
@@ -3045,23 +3042,7 @@ window.__ModuleLoader__.load({
         };
       }, [captureOpen, summaryOpen]);
 
-      const placePopover = () => {
-        const rect = barRef.current && barRef.current.getBoundingClientRect
-          ? barRef.current.getBoundingClientRect()
-          : null;
-        if (!rect || typeof window === 'undefined') {
-          setPopPos({ left: 16, bottom: 80 });
-          return;
-        }
-        const width = Math.min(300, window.innerWidth - 16);
-        setPopPos({
-          left: Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width)),
-          bottom: Math.max(8, window.innerHeight - rect.top + 8),
-        });
-      };
-
       const showNotice = (kind, text) => {
-        placePopover();
         setNotice({ kind, text });
         if (noticeTimer.current) clearTimeout(noticeTimer.current);
         noticeTimer.current = typeof setTimeout === 'function'
@@ -3095,7 +3076,6 @@ window.__ModuleLoader__.load({
           if (right.value === last) return 1;
           return 0;
         });
-        placePopover();
         setCaptureGroups(groups);
         setCaptureOpen(true);
       };
@@ -3132,7 +3112,6 @@ window.__ModuleLoader__.load({
         }
         setCaptureOpen(false);
         setNotice(null);
-        placePopover();
         setKeepNotes(normalizeSettings(pool.settings).noteKeepAfterStore !== false);
         setAllowImmediate(false);
         setSummaryError('');
@@ -3170,7 +3149,10 @@ window.__ModuleLoader__.load({
         h('style', { key: 'css' }, CSS),
         h(
           'div',
-          { key: 'bar', className: 'pp-trigger-bar pp-root', 'data-pp-trigger': 'true', ref: barRef },
+          { key: 'shell', className: 'pp-trigger-shell pp-root', 'data-pp-trigger': 'true', ref: barRef },
+          h(
+            'div',
+            { className: 'pp-trigger-bar' },
           h(
             'button',
             {
@@ -3228,11 +3210,9 @@ window.__ModuleLoader__.load({
               'div',
               {
                 key: 'capture-menu',
-                ref: popRef,
                 className: 'pp-trigger-menu pp-root',
                 role: 'menu',
                 'aria-label': translate('capture.title'),
-                style: { left: popPos.left + 'px', bottom: popPos.bottom + 'px' },
               },
               h('div', { className: 'pp-trigger-menu-title' }, translate('capture.title')),
               captureGroups.map((group) => h(
@@ -3253,11 +3233,9 @@ window.__ModuleLoader__.load({
               'div',
               {
                 key: 'summary',
-                ref: popRef,
                 className: 'pp-summary-pop pp-root',
                 role: 'dialog',
                 'aria-label': translate('note.summary.title'),
-                style: { left: popPos.left + 'px', bottom: popPos.bottom + 'px' },
               },
               h(
                 'div',
@@ -3316,11 +3294,11 @@ window.__ModuleLoader__.load({
                 'data-kind': notice.kind,
                 role: 'status',
                 'aria-live': 'polite',
-                style: { left: popPos.left + 'px', bottom: popPos.bottom + 'px' },
               },
               notice.text,
             )
           : null,
+        ),
       );
     }
 
@@ -8859,6 +8837,7 @@ window.__ModuleLoader__.load({
       '.pp-trigger{gap:6px;padding:0 9px;border:1px solid transparent}' +
       '.pp-trigger[disabled]{opacity:.55;cursor:not-allowed}' +
       '.pp-trigger-label{white-space:nowrap}' +
+      '.pp-trigger-shell{position:relative;display:inline-flex;flex:none}' +
       '.pp-trigger-bar{display:inline-flex;align-items:center;gap:2px;height:30px;padding:2px;flex:none;border:1px solid var(--pp-line);border-radius:10px;background:var(--pp-surface);box-shadow:0 1px 2px rgba(0,0,0,.06),0 1px 1px rgba(0,0,0,.03)}' +
       '.pp-trigger-bar .pp-trigger{height:26px;border:0;border-radius:7px;padding:0 9px;gap:5px;font-weight:500}' +
       '.pp-trigger-bar .pp-trigger > svg{color:var(--pp-accent)}' +
@@ -8872,12 +8851,12 @@ window.__ModuleLoader__.load({
       '.pp-trigger-action[disabled]{opacity:.45;cursor:not-allowed}' +
       '.pp-trigger-action:focus-visible,.pp-trigger-bar .pp-trigger:focus-visible{outline:2px solid var(--pp-accent-line);outline-offset:1px}' +
       '.pp-trigger-count{min-width:16px;height:16px;padding:0 5px;border-radius:8px;background:color-mix(in srgb,var(--pp-accent) 13%,transparent);color:var(--pp-accent);font-size:10px;font-weight:600;line-height:16px;text-align:center;font-variant-numeric:tabular-nums}' +
-      '.pp-summary-pop{position:fixed;z-index:2147483000;box-sizing:border-box;width:min(300px,calc(100vw - 16px));padding:12px;border:1px solid var(--pp-line-2);border-radius:11px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px;line-height:1.5}' +
-      '.pp-trigger-menu{position:fixed;z-index:2147483000;box-sizing:border-box;width:min(240px,calc(100vw - 16px));max-height:280px;overflow:auto;padding:6px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px}' +
+      '.pp-summary-pop{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:min(300px,calc(100vw - 16px));padding:12px;border:1px solid var(--pp-line-2);border-radius:11px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px;line-height:1.5}' +
+      '.pp-trigger-menu{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:min(240px,calc(100vw - 16px));max-height:280px;overflow:auto;padding:6px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px}' +
       '.pp-trigger-menu-title{padding:3px 7px 6px;color:var(--pp-ink-2);font-size:11px}' +
       '.pp-trigger-menu-item{display:block;width:100%;padding:6px 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-trigger-menu-item:hover{background:var(--pp-hover)}' +
-      '.pp-trigger-notice{position:fixed;z-index:2147483000;max-width:min(300px,calc(100vw - 16px));padding:6px 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface-2);color:var(--pp-ink-2);box-shadow:0 8px 24px rgba(0,0,0,.16);font-size:11px;line-height:1.4;pointer-events:none}' +
+      '.pp-trigger-notice{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;max-width:min(300px,calc(100vw - 16px));padding:6px 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface-2);color:var(--pp-ink-2);box-shadow:0 8px 24px rgba(0,0,0,.16);font-size:11px;line-height:1.4;pointer-events:none}' +
       '.pp-trigger-notice[data-kind="ok"]{color:var(--pp-ok)}' +
       '.pp-trigger-notice[data-kind="error"]{color:var(--pp-danger)}' +
       '.pp-summary-head{display:flex;align-items:center;gap:6px;margin-bottom:7px}' +
