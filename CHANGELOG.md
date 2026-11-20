@@ -52,7 +52,8 @@ All notable changes to this project are documented here. The format follows
   the same icon language instead of text chips). Insert-draft, add-to-outbox and save-as-prompt use
   three distinct silhouettes: composer box + arrow, queue lines + plus, and bookmark.
 - Scope tabs now carry dedicated icons: a speech bubble for annotations, a command-prompt mark for
-  prompts, and a layers mark for the global pool. Prompt-library reordering and annotation numbering
+  prompts, and a layers mark for the global pool. The same domain marks now appear on Outbox source
+  chips, empty states and settings tabs. Prompt-library reordering and annotation numbering
   were removed; Outbox reordering remains. The panel's minimum width is now 440px so the five right-side
   actions leave readable text.
 

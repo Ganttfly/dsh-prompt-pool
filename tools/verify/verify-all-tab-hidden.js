@@ -145,7 +145,8 @@ for (const showAllTab of [true, false]) {
     && String(node.props && node.props.className || '') === 'pp-tab');
   if (settingsTabs.length !== 3) fail(`showAllTab=${showAllTab}: settings has ${settingsTabs.length} tabs, expected 3`);
   const activeSettingsTab = settingsTabs.find((node) => node.props && node.props['data-active'] === 'true');
-  if (!activeSettingsTab || !Array.isArray(activeSettingsTab.children) || activeSettingsTab.children[0] !== 'settings.tab.notes') {
+  if (!activeSettingsTab || !Array.isArray(activeSettingsTab.children)
+    || activeSettingsTab.children.indexOf('settings.tab.notes') < 0) {
     fail(`showAllTab=${showAllTab}: settings does not open on 批注`);
   }
   if (settingsNodes.some((node) => node.props && node.props.name === 'pp-default-tab')) {

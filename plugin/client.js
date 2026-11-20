@@ -2622,6 +2622,12 @@ window.__ModuleLoader__.load({
       return translate('tray.source.prompt');
     }
 
+    function traySourceIcon(type) {
+      if (type === 'review') return 'review';
+      if (type === 'annotation') return 'annotation';
+      return 'prompt';
+    }
+
     /** A read-only confirmation step before several outbox entries become one message. */
     function MergeReviewCard(props) {
       const entries = Array.isArray(props.entries) ? props.entries : [];
@@ -2656,7 +2662,10 @@ window.__ModuleLoader__.load({
               checked: props.selected[entry.key] !== false,
               onChange: () => props.onToggle(entry.key),
             }),
-            h('span', { className: 'pp-chip-source', 'data-type': entry.type || 'prompt' }, traySourceLabel(entry.type)),
+            h('span', { className: 'pp-chip-source', 'data-type': entry.type || 'prompt' },
+              h('span', { className: 'pp-chip-source-icon', 'aria-hidden': true }, icon(traySourceIcon(entry.type))),
+              traySourceLabel(entry.type),
+            ),
             h('span', { className: 'pp-merge-row-text' }, entry.body),
           )),
         ),
@@ -2778,7 +2787,9 @@ window.__ModuleLoader__.load({
                 h('span', {
                   className: 'pp-chip-source',
                   'data-type': entry.type || 'prompt',
-                }, traySourceLabel(entry.type)),
+                },
+                h('span', { className: 'pp-chip-source-icon', 'aria-hidden': true }, icon(traySourceIcon(entry.type))),
+                traySourceLabel(entry.type)),
                 h('div', { className: 'pp-chip-t', title: entry.body }, entry.body),
                 h(ImageStrip, { images: entry.images, compact: true, max: 4, onOpen: onOpenImage }),
                 h(
@@ -3180,6 +3191,16 @@ window.__ModuleLoader__.load({
           style: tint && ink ? { background: `rgba(${tint},.26)`, color: `rgb(${ink})` } : undefined,
         },
         icon || '·',
+      );
+    }
+
+    /** Shared empty state with a domain mark. */
+    function EmptyState({ iconName, text, className }) {
+      return h(
+        'div',
+        { className: className || 'pp-empty' },
+        h('span', { className: 'pp-empty-mark', 'aria-hidden': true }, icon(iconName)),
+        h('span', null, text),
       );
     }
 
@@ -4274,15 +4295,17 @@ window.__ModuleLoader__.load({
                 })
               : items.length === 0
                 ? h(
-                    'div',
-                    { className: 'pp-empty' },
-                    translate(
-                      query.trim() || typeFilter !== 'all'
-                        ? 'page.noMatch'
-                        : scope === 'global' && activeGlobalTab === 'all'
-                          ? 'page.empty'
-                          : 'page.emptyTab',
-                    ),
+                    EmptyState,
+                    {
+                      iconName: scope === 'global' ? 'layers' : 'prompt',
+                      text: translate(
+                        query.trim() || typeFilter !== 'all'
+                          ? 'page.noMatch'
+                          : scope === 'global' && activeGlobalTab === 'all'
+                            ? 'page.empty'
+                            : 'page.emptyTab',
+                      ),
+                    },
                   )
                 : items.map(rowOf),
         ),
@@ -4428,6 +4451,7 @@ window.__ModuleLoader__.load({
               'data-active': section === 'notes' ? 'true' : 'false',
               onClick: () => setSection('notes'),
             },
+            h('span', { className: 'pp-tab-icon', 'aria-hidden': true }, icon('annotation')),
             translate('settings.tab.notes'),
           ),
           h(
@@ -4438,6 +4462,7 @@ window.__ModuleLoader__.load({
               'data-active': section === 'prompts' ? 'true' : 'false',
               onClick: () => setSection('prompts'),
             },
+            h('span', { className: 'pp-tab-icon', 'aria-hidden': true }, icon('prompt')),
             translate('settings.tab.prompts'),
           ),
           h(
@@ -4448,6 +4473,7 @@ window.__ModuleLoader__.load({
               'data-active': section === 'global' ? 'true' : 'false',
               onClick: () => setSection('global'),
             },
+            h('span', { className: 'pp-tab-icon', 'aria-hidden': true }, icon('layers')),
             translate('settings.tab.global'),
           ),
         ),
@@ -6942,9 +6968,9 @@ window.__ModuleLoader__.load({
           }),
         ),
         list.length === 0
-          ? h('div', { key: 'intro', className: 'pp-notes-empty' }, translate('note.emptyIntro'))
+          ? h(EmptyState, { key: 'intro', iconName: 'annotation', className: 'pp-notes-empty', text: translate('note.emptyIntro') })
           : filter && !list.some(matches)
-            ? h('div', { key: 'empty', className: 'pp-notes-empty' }, translate('note.empty'))
+            ? h(EmptyState, { key: 'empty', iconName: 'annotation', className: 'pp-notes-empty', text: translate('note.empty') })
             : null,
         h(ImageLightbox, { key: 'lightbox', preview, onClose: closeImage }),
       );
@@ -8594,11 +8620,10 @@ window.__ModuleLoader__.load({
                   settings: state.settings,
                 })
               : items.length === 0
-                ? h(
-                    'div',
-                    { className: 'pp-empty' },
-                    translate(query.trim() || typeFilter !== 'all' ? 'panel.emptyTab' : 'panel.empty'),
-                  )
+                ? h(EmptyState, {
+                    iconName: 'prompt',
+                    text: translate(query.trim() || typeFilter !== 'all' ? 'panel.emptyTab' : 'panel.empty'),
+                  })
                 : items.map(rowOf),
         ),
         h(
@@ -8865,6 +8890,8 @@ window.__ModuleLoader__.load({
       '.pp-page-item .pp-actions{opacity:.35}' +
       '.pp-page-item:hover .pp-actions{opacity:1}' +
       '.pp-empty{padding:22px 16px;color:var(--pp-ink-2);text-align:center;font-size:12px}' +
+      '.pp-empty-mark{display:flex;align-items:center;justify-content:center;margin-bottom:7px;color:var(--pp-ink-2);opacity:.45}' +
+      '.pp-empty-mark svg{width:20px;height:20px}' +
       '.pp-row{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:8px}' +
       '.pp-row:hover{background:color-mix(in srgb,var(--pp-accent) 10%,transparent)}' +
       '.pp-toggle{width:26px;height:26px;flex:none;margin-top:-1px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}' +
@@ -8940,7 +8967,8 @@ window.__ModuleLoader__.load({
       '.pp-chip:hover .pp-chip-actions,.pp-chip:focus-within .pp-chip-actions{opacity:1}' +
       '@media (hover:none){.pp-chip-actions{opacity:1}}' +
       '.pp-chip-n{flex:none;padding-top:1px;font-size:11px;line-height:1.55;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
-      '.pp-chip-source{flex:none;align-self:flex-start;margin-top:2px;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--pp-ink-2) 10%,transparent);color:var(--pp-ink-2);font-size:9.5px;line-height:15px}' +
+      '.pp-chip-source{flex:none;align-self:flex-start;display:inline-flex;align-items:center;gap:3px;margin-top:2px;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--pp-ink-2) 10%,transparent);color:var(--pp-ink-2);font-size:9.5px;line-height:15px}' +
+      '.pp-chip-source-icon{display:inline-flex;align-items:center}.pp-chip-source-icon svg{width:10px;height:10px}' +
       '.pp-chip-t{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:12px;line-height:1.55;color:var(--pp-ink);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}' +
       '.pp-chip .pp-icon{width:22px;height:22px}' +
       '.pp-actions .pp-icon svg,.pp-chip-actions .pp-icon svg{width:13px;height:13px;stroke-width:1.2}' +
@@ -9054,6 +9082,8 @@ window.__ModuleLoader__.load({
       '.pp-notes-quote{display:flex;align-items:center;gap:6px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap;overflow:hidden}' +
       '.pp-notes-quote-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-notes-empty{padding:14px 12px;color:var(--pp-note-ink-2);font-size:12px;line-height:1.6}' +
+      '.pp-notes-empty .pp-empty-mark{justify-content:flex-start;margin-bottom:4px;opacity:.5}' +
+      '.pp-notes-empty .pp-empty-mark svg{width:16px;height:16px}' +
       '.pp-page-foot.pp-review-foot{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary,#2563eb));--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);padding:0;gap:0;border-color:color-mix(in srgb,var(--pp-note-accent) 22%,var(--pp-note-line));background:linear-gradient(180deg,color-mix(in srgb,var(--pp-note-accent) 7%,var(--pp-note-surface)) 0,var(--pp-note-surface) 140px);box-shadow:0 10px 30px rgba(0,0,0,.08)}' +
       '.pp-review-foot>.pp-review{padding:0;gap:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}' +
       '.pp-review{display:flex;flex-direction:column;min-height:0}' +
