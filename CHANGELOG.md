@@ -50,6 +50,8 @@ All notable changes to this project are documented here. The format follows
   annotations** with a count. Save draft opens an anchored group menu; Summarize opens an anchored
   small window with keep-annotations and allow-immediate-execution options, then generates one review
   prompt into the composer without sending.
+- The composer quick bar uses compact pill segments, shorter labels, accent active states and a light
+  container shadow; the group menu and summary window are anchored above it.
 - The panel header now has a dedicated title/slogan row and a second row for search, type filtering
   and the primary actions; Settings, pin and close stay in the title row.
 - Settings is now an icon-only control. The annotation header no longer renders the old bulk store

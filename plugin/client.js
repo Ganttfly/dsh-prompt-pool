@@ -65,6 +65,7 @@ window.__ModuleLoader__.load({
       'panel.slogan': '整理好，再发送',
       'panel.close': '关闭',
       'panel.capture': '保存草稿',
+      'panel.captureShort': '存草稿',
       'panel.captureHint': '把输入框里的内容复制一份存进池子（图片附件一起存）；输入框里的字会保留',
       'panel.resize': '拖动调整高度，双击还原',
       'panel.resizeWidth': '拖动调整宽度，双击还原',
@@ -264,6 +265,7 @@ window.__ModuleLoader__.load({
       'note.queueOutbox': '加入待发送',
       'note.queuedOutbox': '已加入待发送',
       'note.summary.title': '汇总批注',
+      'note.summary.short': '汇总',
       'note.summary.hint': '把当前会话的 {n} 条批注生成一条提示词并放入输入框',
       'note.summary.count': '{n} 条批注',
       'note.summary.desc': '把当前会话的全部批注合并成一条带编号和回应要求的提示词，放入输入框；不会自动发送。',
@@ -352,6 +354,7 @@ window.__ModuleLoader__.load({
       'panel.slogan': 'Organize, then send',
       'panel.close': 'Close',
       'panel.capture': 'Save draft',
+      'panel.captureShort': 'Draft',
       'panel.captureHint': 'Copy the composer draft into the pool; the composer keeps its text',
       'panel.resize': 'Drag to resize, double-click to reset',
       'panel.resizeWidth': 'Drag to resize the width, double-click to reset',
@@ -551,6 +554,7 @@ window.__ModuleLoader__.load({
       'note.queueOutbox': 'Add to outbox',
       'note.queuedOutbox': 'Added to the outbox',
       'note.summary.title': 'Summarize annotations',
+      'note.summary.short': 'Summary',
       'note.summary.hint': 'Generate one prompt from the {n} annotations in this session and put it in the composer',
       'note.summary.count': '{n} annotation(s)',
       'note.summary.desc': 'Combine every annotation in this session into one numbered prompt with response requirements and put it in the composer; nothing is sent automatically.',
@@ -3194,12 +3198,13 @@ window.__ModuleLoader__.load({
               className: 'pp-trigger-action',
               title: translate('panel.captureHint'),
               'aria-label': translate('panel.capture'),
+              'data-open': captureOpen ? 'true' : 'false',
               disabled: release.active || captureBusy,
               onMouseDown: (event) => event.preventDefault(),
               onClick: () => { void openCaptureMenu(); },
             },
             icon('capture'),
-            h('span', null, translate('panel.capture')),
+            h('span', null, translate('panel.captureShort')),
           ),
           h(
             'button',
@@ -3208,12 +3213,13 @@ window.__ModuleLoader__.load({
               className: 'pp-trigger-action',
               title: notes.length > 0 ? translate('note.summary.hint', { n: notes.length }) : translate('note.noneSelected'),
               'aria-label': translate('note.summary.title'),
+              'data-open': summaryOpen ? 'true' : 'false',
               disabled: release.active || notes.length === 0,
               onMouseDown: (event) => event.preventDefault(),
               onClick: openSummary,
             },
             icon('annotation'),
-            h('span', null, translate('note.summary.title')),
+            h('span', null, translate('note.summary.short')),
             notes.length > 0 ? h('span', { className: 'pp-trigger-count' }, String(notes.length)) : null,
           ),
         ),
@@ -8853,12 +8859,19 @@ window.__ModuleLoader__.load({
       '.pp-trigger{gap:6px;padding:0 9px;border:1px solid transparent}' +
       '.pp-trigger[disabled]{opacity:.55;cursor:not-allowed}' +
       '.pp-trigger-label{white-space:nowrap}' +
-      '.pp-trigger-bar{display:inline-flex;align-items:stretch;height:28px;flex:none;border:1px solid var(--pp-line);border-radius:8px;background:transparent;overflow:hidden}' +
-      '.pp-trigger-bar .pp-trigger{height:28px;border:0;border-radius:0;padding:0 8px}' +
-      '.pp-trigger-action{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 8px;border:0;border-left:1px solid var(--pp-line);background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;line-height:1;cursor:pointer;white-space:nowrap}' +
+      '.pp-trigger-bar{display:inline-flex;align-items:center;gap:2px;height:30px;padding:2px;flex:none;border:1px solid var(--pp-line);border-radius:10px;background:var(--pp-surface);box-shadow:0 1px 2px rgba(0,0,0,.06),0 1px 1px rgba(0,0,0,.03)}' +
+      '.pp-trigger-bar .pp-trigger{height:26px;border:0;border-radius:7px;padding:0 9px;gap:5px;font-weight:500}' +
+      '.pp-trigger-bar .pp-trigger > svg{color:var(--pp-accent)}' +
+      '.pp-trigger-bar .pp-trigger:hover{background:var(--pp-hover)}' +
+      '.pp-trigger-bar .pp-trigger[data-open="true"]{background:var(--pp-accent-soft);color:var(--pp-accent)}' +
+      '.pp-trigger-action{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px;border:0;border-radius:7px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;line-height:1;cursor:pointer;white-space:nowrap}' +
+      '.pp-trigger-action > svg{flex:none;opacity:.82}' +
       '.pp-trigger-action:hover:not([disabled]){background:var(--pp-hover);color:var(--pp-ink)}' +
+      '.pp-trigger-action[data-open="true"]{background:var(--pp-accent-soft);color:var(--pp-accent)}' +
+      '.pp-trigger-action[data-open="true"] > svg{opacity:1}' +
       '.pp-trigger-action[disabled]{opacity:.45;cursor:not-allowed}' +
-      '.pp-trigger-count{min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:color-mix(in srgb,var(--pp-accent) 14%,transparent);color:var(--pp-accent);font-size:10px;font-weight:600;line-height:15px;text-align:center;font-variant-numeric:tabular-nums}' +
+      '.pp-trigger-action:focus-visible,.pp-trigger-bar .pp-trigger:focus-visible{outline:2px solid var(--pp-accent-line);outline-offset:1px}' +
+      '.pp-trigger-count{min-width:16px;height:16px;padding:0 5px;border-radius:8px;background:color-mix(in srgb,var(--pp-accent) 13%,transparent);color:var(--pp-accent);font-size:10px;font-weight:600;line-height:16px;text-align:center;font-variant-numeric:tabular-nums}' +
       '.pp-summary-pop{position:fixed;z-index:2147483000;box-sizing:border-box;width:min(300px,calc(100vw - 16px));padding:12px;border:1px solid var(--pp-line-2);border-radius:11px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px;line-height:1.5}' +
       '.pp-trigger-menu{position:fixed;z-index:2147483000;box-sizing:border-box;width:min(240px,calc(100vw - 16px));max-height:280px;overflow:auto;padding:6px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px}' +
       '.pp-trigger-menu-title{padding:3px 7px 6px;color:var(--pp-ink-2);font-size:11px}' +
