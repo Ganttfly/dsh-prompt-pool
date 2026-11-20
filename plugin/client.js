@@ -263,6 +263,16 @@ window.__ModuleLoader__.load({
       'note.review.send': '发送到会话队列',
       'note.queueOutbox': '加入待发送',
       'note.queuedOutbox': '已加入待发送',
+      'note.summary.title': '汇总批注',
+      'note.summary.hint': '把当前会话的 {n} 条批注生成一条提示词并放入输入框',
+      'note.summary.count': '{n} 条批注',
+      'note.summary.desc': '把当前会话的全部批注合并成一条带编号和回应要求的提示词，放入输入框；不会自动发送。',
+      'note.summary.keep': '完成后保留批注',
+      'note.summary.immediate': '允许立即执行',
+      'note.summary.immediateHint': '勾选后，同意、意见、思路、待办会带上【立即实施…】标记；提问、反对、补充信息只回应。',
+      'note.summary.ok': '生成草稿',
+      'note.summary.working': '正在生成…',
+      'note.summary.failed': '无法写入输入框，请稍后再试。',
       'note.review.savePrompt': '存成提示词',
       'note.review.outbox': '加入待发送',
       'note.review.outboxDone': '已加入待发送',
@@ -539,6 +549,16 @@ window.__ModuleLoader__.load({
       'note.review.send': 'Send to session queue',
       'note.queueOutbox': 'Add to outbox',
       'note.queuedOutbox': 'Added to the outbox',
+      'note.summary.title': 'Summarize annotations',
+      'note.summary.hint': 'Generate one prompt from the {n} annotations in this session and put it in the composer',
+      'note.summary.count': '{n} annotation(s)',
+      'note.summary.desc': 'Combine every annotation in this session into one numbered prompt with response requirements and put it in the composer; nothing is sent automatically.',
+      'note.summary.keep': 'Keep annotations after generating',
+      'note.summary.immediate': 'Allow immediate execution',
+      'note.summary.immediateHint': 'When checked, agreements, opinions, ideas and to-dos carry an [Execute now…] marker; questions, disagreements and additional info only get a response.',
+      'note.summary.ok': 'Generate draft',
+      'note.summary.working': 'Generating…',
+      'note.summary.failed': 'Could not write to the composer. Try again later.',
       'note.review.savePrompt': 'Save as prompt',
       'note.review.outbox': 'Add to outbox',
       'note.review.outboxDone': 'Added to the outbox',
@@ -2967,37 +2987,188 @@ window.__ModuleLoader__.load({
     }
 
     // ----------------------------------------------------------------- button
-    function PromptPoolButton() {
+    function PromptPoolButton(props) {
       useLocaleTick();
       const view = useUiState();
       const release = useReleaseState();
+      const pool = usePoolState();
+      const notesState = useNotesState();
+      const sessionId = (props && props.sessionId) || useSessionDir().sessionId || '';
+      const notes = notesState.items.filter((note) => note.sessionId === sessionId);
+      const [summaryOpen, setSummaryOpen] = useState(false);
+      const [keepNotes, setKeepNotes] = useState(true);
+      const [allowImmediate, setAllowImmediate] = useState(false);
+      const [summaryBusy, setSummaryBusy] = useState(false);
+      const [summaryError, setSummaryError] = useState('');
       const label = translate('button.label');
+
+      const openCapture = () => {
+        if (release.active) return;
+        ui.set({ open: true });
+        try {
+          bridge.request({ type: 'open-capture' });
+        } catch (_error) {
+          /* the panel will report an unavailable composer */
+        }
+      };
+
+      const openSummary = () => {
+        if (release.active || notes.length === 0) return;
+        setKeepNotes(normalizeSettings(pool.settings).noteKeepAfterStore !== false);
+        setAllowImmediate(false);
+        setSummaryError('');
+        setSummaryOpen(true);
+      };
+
+      const runSummary = async () => {
+        if (summaryBusy) return;
+        setSummaryBusy(true);
+        setSummaryError('');
+        const images = imagesForNotes(notes);
+        const immediateIds = allowImmediate
+          ? notes.filter((note) => REVIEW_IMMEDIATE_MARKERS[note.kind]).map((note) => note.id)
+          : [];
+        const text = buildReviewPrompt(notes, newBatchId(), images, immediateIds);
+        let result;
+        try {
+          result = await bridge.request({ type: 'insert-text', text, images });
+        } catch (error) {
+          result = { ok: false, reason: String((error && error.message) || error) };
+        }
+        setSummaryBusy(false);
+        if (!result || result.ok !== true) {
+          setSummaryError(translate('note.summary.failed'));
+          return;
+        }
+        if (!keepNotes) notesActions.removeMany(notes.map((note) => note.id));
+        setSummaryOpen(false);
+      };
+
       return h(
         React.Fragment,
         null,
         h('style', { key: 'css' }, CSS),
         h(
-          'button',
-          {
-            key: 'btn',
-            type: 'button',
-            className: 'pp-btn pp-root pp-trigger',
-            'data-pp-trigger': 'true',
-            'data-open': view.open ? 'true' : 'false',
-            disabled: release.active,
-            title: label,
-            'aria-label': label,
-            'aria-haspopup': 'dialog',
-            'aria-expanded': view.open ? 'true' : 'false',
-            onMouseDown: (event) => event.preventDefault(),
-            onClick: () => {
-              if (release.active) return;
-              ui.set({ open: !ui.get().open });
+          'div',
+          { key: 'bar', className: 'pp-trigger-bar pp-root', 'data-pp-trigger': 'true' },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-btn pp-trigger',
+              'data-open': view.open ? 'true' : 'false',
+              disabled: release.active,
+              title: label,
+              'aria-label': label,
+              'aria-haspopup': 'dialog',
+              'aria-expanded': view.open ? 'true' : 'false',
+              onMouseDown: (event) => event.preventDefault(),
+              onClick: () => {
+                if (release.active) return;
+                ui.set({ open: !ui.get().open });
+              },
             },
-          },
-          icon('pool'),
-          h('span', { className: 'pp-trigger-label' }, label),
+            icon('pool'),
+            h('span', { className: 'pp-trigger-label' }, label),
+          ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-trigger-action',
+              title: translate('panel.captureHint'),
+              'aria-label': translate('panel.capture'),
+              disabled: release.active,
+              onMouseDown: (event) => event.preventDefault(),
+              onClick: openCapture,
+            },
+            icon('capture'),
+            h('span', null, translate('panel.capture')),
+          ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-trigger-action',
+              title: notes.length > 0 ? translate('note.summary.hint', { n: notes.length }) : translate('note.noneSelected'),
+              'aria-label': translate('note.summary.title'),
+              disabled: release.active || notes.length === 0,
+              onMouseDown: (event) => event.preventDefault(),
+              onClick: openSummary,
+            },
+            icon('annotation'),
+            h('span', null, translate('note.summary.title')),
+            notes.length > 0 ? h('span', { className: 'pp-trigger-count' }, String(notes.length)) : null,
+          ),
         ),
+        summaryOpen
+          ? h(
+              'div',
+              {
+                key: 'summary',
+                className: 'pp-summary-overlay',
+                onClick: () => {
+                  if (!summaryBusy) setSummaryOpen(false);
+                },
+              },
+              h(
+                'div',
+                {
+                  className: 'pp-summary-pop pp-root',
+                  role: 'dialog',
+                  'aria-modal': 'true',
+                  'aria-label': translate('note.summary.title'),
+                  onClick: (event) => event.stopPropagation(),
+                },
+                h(
+                  'div',
+                  { className: 'pp-summary-head' },
+                  h('span', { className: 'pp-summary-mark' }, icon('annotation')),
+                  h('strong', null, translate('note.summary.title')),
+                  h('span', { className: 'pp-summary-count' }, translate('note.summary.count', { n: notes.length })),
+                ),
+                h('div', { className: 'pp-summary-desc' }, translate('note.summary.desc')),
+                h(
+                  'label',
+                  { className: 'pp-summary-check' },
+                  h('input', {
+                    type: 'checkbox',
+                    checked: keepNotes,
+                    onChange: () => setKeepNotes((current) => !current),
+                  }),
+                  h('span', null, translate('note.summary.keep')),
+                ),
+                h(
+                  'label',
+                  { className: 'pp-summary-check' },
+                  h('input', {
+                    type: 'checkbox',
+                    checked: allowImmediate,
+                    onChange: () => setAllowImmediate((current) => !current),
+                  }),
+                  h('span', null, translate('note.summary.immediate')),
+                ),
+                h('div', { className: 'pp-summary-note' }, translate('note.summary.immediateHint')),
+                summaryError ? h('div', { className: 'pp-summary-error', role: 'alert' }, summaryError) : null,
+                h(
+                  'div',
+                  { className: 'pp-summary-actions' },
+                  h('button', {
+                    type: 'button',
+                    className: 'pp-mini',
+                    disabled: summaryBusy,
+                    onClick: () => setSummaryOpen(false),
+                  }, translate('row.cancel')),
+                  h('button', {
+                    type: 'button',
+                    className: 'pp-primary',
+                    disabled: summaryBusy,
+                    onClick: () => { void runSummary(); },
+                  }, translate(summaryBusy ? 'note.summary.working' : 'note.summary.ok')),
+                ),
+              ),
+            )
+          : null,
       );
     }
 
@@ -8205,6 +8376,10 @@ window.__ModuleLoader__.load({
           if (command.type === 'capture-check') {
             return { ok: true, ready: draftRef.current.trim() !== '' };
           }
+          if (command.type === 'open-capture') {
+            setCaptureOpen(true);
+            return { ok: true };
+          }
           if (command.type === 'capture') {
             // The capture is async (it copies attachments), so the answer is a promise;
             // reading `.ok` off it always failed and reported an empty composer.
@@ -8530,6 +8705,24 @@ window.__ModuleLoader__.load({
       '.pp-trigger{gap:6px;padding:0 9px;border:1px solid transparent}' +
       '.pp-trigger[disabled]{opacity:.55;cursor:not-allowed}' +
       '.pp-trigger-label{white-space:nowrap}' +
+      '.pp-trigger-bar{display:inline-flex;align-items:stretch;height:28px;flex:none;border:1px solid var(--pp-line);border-radius:8px;background:transparent;overflow:hidden}' +
+      '.pp-trigger-bar .pp-trigger{height:28px;border:0;border-radius:0;padding:0 8px}' +
+      '.pp-trigger-action{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 8px;border:0;border-left:1px solid var(--pp-line);background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;line-height:1;cursor:pointer;white-space:nowrap}' +
+      '.pp-trigger-action:hover:not([disabled]){background:var(--pp-hover);color:var(--pp-ink)}' +
+      '.pp-trigger-action[disabled]{opacity:.45;cursor:not-allowed}' +
+      '.pp-trigger-count{min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:color-mix(in srgb,var(--pp-accent) 14%,transparent);color:var(--pp-accent);font-size:10px;font-weight:600;line-height:15px;text-align:center;font-variant-numeric:tabular-nums}' +
+      '.pp-summary-overlay{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:flex-end;padding:16px;background:rgba(0,0,0,.16)}' +
+      '.pp-summary-pop{box-sizing:border-box;width:min(320px,calc(100vw - 32px));padding:12px;border:1px solid var(--pp-line-2);border-radius:11px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px;line-height:1.5}' +
+      '.pp-summary-head{display:flex;align-items:center;gap:6px;margin-bottom:7px}' +
+      '.pp-summary-head strong{font-size:13px;font-weight:600}' +
+      '.pp-summary-mark{display:inline-flex;color:var(--pp-accent)}' +
+      '.pp-summary-count{margin-left:auto;color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-summary-desc{color:var(--pp-ink-2);margin-bottom:8px}' +
+      '.pp-summary-check{display:flex;align-items:flex-start;gap:6px;padding:3px 0;cursor:pointer}' +
+      '.pp-summary-check input{margin:3px 0 0;accent-color:var(--pp-accent);cursor:pointer}' +
+      '.pp-summary-note{padding:0 0 2px 18px;color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-summary-error{margin-top:7px;color:var(--pp-danger);font-size:11px}' +
+      '.pp-summary-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}' +
       '.pp-panel{position:absolute;left:auto;right:0;bottom:0;margin:0;width:min(var(--pp-w,920px),100%);min-width:min(440px,100%);max-width:min(var(--pp-w,920px),100%);z-index:40;display:flex;flex-direction:column;--pp-h:min(70vh,720px,var(--pp-room,100vh));height:var(--pp-h);max-height:var(--pp-h);border:1px solid var(--pp-line);border-radius:var(--dsw-radius-panel,12px);background:var(--dsw-alias-bg-base,var(--pp-surface-2));box-shadow:var(--dsw-elevation-soft,0 10px 30px rgba(0,0,0,.16));overflow:hidden;overflow:clip;font-size:13px;line-height:1.5;color:var(--pp-ink);text-align:left}' +
       // The grip above the header resizes the panel; a long queue may keep half the list.
       '.pp-panel-grip{flex:none;display:flex;align-items:center;justify-content:center;height:11px;cursor:ns-resize;touch-action:none}' +

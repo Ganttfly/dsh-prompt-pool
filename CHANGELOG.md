@@ -46,6 +46,9 @@ All notable changes to this project are documented here. The format follows
   and direct host-queue admission.
 - **Save draft** now uses an archive-box mark and **Save as prompt** uses a document-plus mark, so the
   two save actions no longer share the bookmark glyph.
+- The composer trigger is now a segmented bar: **Prompt pool**, **Save draft**, and **Summarize
+  annotations** with a count. Summarize opens a small window with keep-annotations and
+  allow-immediate-execution options, then generates one review prompt into the composer without sending.
 - The panel header now has a dedicated title/slogan row and a second row for search, type filtering
   and the primary actions; Settings, pin and close stay in the title row.
 - Settings is now an icon-only control. The annotation header no longer renders the old bulk store
