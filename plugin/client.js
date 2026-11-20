@@ -2912,6 +2912,22 @@ window.__ModuleLoader__.load({
           );
         case 'locate':
           return h('svg', base, h('circle', { cx: 6, cy: 6, r: 2.5 }), h('path', { d: 'M6 1v1.6M6 9.4V11M1 6h1.6M9.4 6H11' }));
+        case 'annotation':
+          return h('svg', base,
+            h('path', { d: 'M1.8 2.2h8.4v5.8H6.2L3.7 10.2V8H1.8z' }),
+            h('path', { d: 'M3.7 4.2h4.6M3.7 5.9h3.1' }),
+          );
+        case 'prompt':
+          return h('svg', base,
+            h('rect', { x: 1.8, y: 2.3, width: 8.4, height: 7.5, rx: 1.2 }),
+            h('path', { d: 'M3.7 4.7h4.4M3.7 6.5h3' }),
+            h('path', { d: 'M9.6 1.2l.32.78.78.32-.78.32-.32.78-.32-.78-.78-.32.78-.32z' }),
+          );
+        case 'layers':
+          return h('svg', base,
+            h('path', { d: 'M6 1.8 10.2 4 6 6.2 1.8 4z' }),
+            h('path', { d: 'M1.8 6 6 8.2 10.2 6M1.8 8 6 10.2 10.2 8' }),
+          );
         case 'starFill':
           return h('svg', { ...base, fill: 'currentColor' }, h('path', { d: 'M6 1.9l1.24 2.6 2.86.4-2.08 2 .5 2.83L6 8.4l-2.52 1.33.5-2.83-2.08-2 2.86-.4z' }));
         case 'plus':
@@ -3428,6 +3444,10 @@ window.__ModuleLoader__.load({
             'data-active': props.value === entry.id ? 'true' : 'false',
             onClick: () => props.onChange(entry.id),
           },
+          h('span', {
+            className: 'pp-tab-icon',
+            'aria-hidden': true,
+          }, icon(entry.id === 'notes' ? 'annotation' : entry.id === 'workspace' ? 'prompt' : 'layers')),
           translate(entry.label),
         )),
       );
@@ -8710,6 +8730,7 @@ window.__ModuleLoader__.load({
       '.pp-x:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-bar{display:flex;align-items:center;gap:6px;padding:0 12px 8px;flex-wrap:wrap}' +
       '.pp-tab{height:24px;padding:0 9px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;cursor:pointer}' +
+      '.pp-tab-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-right:4px;vertical-align:-2px}' +
       '.pp-tab:not([data-active="true"]){color:color-mix(in srgb,var(--pp-accent) 78%,var(--pp-ink-2))}' +
       '.pp-tab[data-group="notes"]:not([data-active="true"]){color:#8a6200}' +
       '.pp-tab:hover{background:var(--pp-hover)}' +

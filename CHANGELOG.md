@@ -50,7 +50,9 @@ All notable changes to this project are documented here. The format follows
   actions and delete on the right. Action icons share one 14px glyph, 1.1px stroke and 24px hit area,
   with 2px gaps. Annotation and prompt types now share one 15px coloured type badge (prompt types use
   the same icon language instead of text chips). Insert-draft, add-to-outbox and save-as-prompt use
-  three distinct silhouettes: composer box + arrow, queue lines + plus, and bookmark. Prompt-library reordering and annotation numbering
+  three distinct silhouettes: composer box + arrow, queue lines + plus, and bookmark.
+- Scope tabs now carry dedicated icons: a speech bubble for annotations, a prompt card for prompts,
+  and a layers mark for the global pool. Prompt-library reordering and annotation numbering
   were removed; Outbox reordering remains. The panel's minimum width is now 440px so the five right-side
   actions leave readable text.
 
