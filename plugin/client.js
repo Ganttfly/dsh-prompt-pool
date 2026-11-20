@@ -1134,13 +1134,13 @@ window.__ModuleLoader__.load({
 
     /** One fixed semantic type per prompt; the user can leave it empty. */
     const PROMPT_TYPES = [
-      { id: 'decision', label: 'prompt.type.decision' },
-      { id: 'question', label: 'prompt.type.question' },
-      { id: 'opinion', label: 'prompt.type.opinion' },
-      { id: 'idea', label: 'prompt.type.idea' },
-      { id: 'supplement', label: 'prompt.type.supplement' },
-      { id: 'todo', label: 'prompt.type.todo' },
-      { id: 'inspiration', label: 'prompt.type.inspiration' },
+      { id: 'decision', label: 'prompt.type.decision', icon: '✓', tint: '34,197,94', ink: '22,163,74' },
+      { id: 'question', label: 'prompt.type.question', icon: '?', tint: '249,115,22', ink: '234,88,12' },
+      { id: 'opinion', label: 'prompt.type.opinion', icon: '✎', tint: '139,92,246', ink: '124,58,237' },
+      { id: 'idea', label: 'prompt.type.idea', icon: '💡', tint: '59,130,246', ink: '37,99,235' },
+      { id: 'supplement', label: 'prompt.type.supplement', icon: 'ℹ', tint: '20,184,166', ink: '13,148,136' },
+      { id: 'todo', label: 'prompt.type.todo', icon: '□', tint: '250,204,21', ink: '202,138,4' },
+      { id: 'inspiration', label: 'prompt.type.inspiration', icon: '✦', tint: '219,39,119', ink: '190,24,93' },
     ];
     const PROMPT_TYPE_IDS = PROMPT_TYPES.map((entry) => entry.id);
     const NOTE_PROMPT_TYPES = {
@@ -1157,9 +1157,8 @@ window.__ModuleLoader__.load({
       return PROMPT_TYPE_IDS.indexOf(value) >= 0 ? value : '';
     }
 
-    function promptTypeLabel(value) {
-      const type = PROMPT_TYPES.find((entry) => entry.id === normalizePromptType(value));
-      return type ? type.label : '';
+    function promptTypeMeta(value) {
+      return PROMPT_TYPES.find((entry) => entry.id === normalizePromptType(value)) || null;
     }
 
     function promptTypeForNote(note) {
@@ -2586,9 +2585,16 @@ window.__ModuleLoader__.load({
         h(
           'span',
           { className: 'pp-row-leading' },
-          normalizePromptType(item.type)
-            ? h('span', { className: 'pp-tag pp-type-tag' }, translate(promptTypeLabel(item.type)))
-            : h('span', { className: 'pp-tag pp-type-empty' }, translate('row.typeNone')),
+          (() => {
+            const meta = promptTypeMeta(item.type);
+            return h(TypeMark, {
+              icon: meta ? meta.icon : '',
+              tint: meta ? meta.tint : '',
+              ink: meta ? meta.ink : '',
+              title: meta ? translate(meta.label) : translate('row.typeNone'),
+              empty: !meta,
+            });
+          })(),
         ),
         h(
           'div',
@@ -2833,7 +2839,7 @@ window.__ModuleLoader__.load({
         viewBox: '0 0 12 12',
         fill: 'none',
         stroke: 'currentColor',
-        strokeWidth: 1.4,
+        strokeWidth: 1.5,
         strokeLinecap: 'round',
         strokeLinejoin: 'round',
         'aria-hidden': true,
@@ -2855,14 +2861,10 @@ window.__ModuleLoader__.load({
             h('path', { d: 'M4.3 7.6H2.6A1.2 1.2 0 0 1 1.4 6.4V2.6A1.2 1.2 0 0 1 2.6 1.4h3.8a1.2 1.2 0 0 1 1.2 1.2v1.7' }),
           );
         case 'insert':
-          // The same glyph as an annotation's "generate draft" action: an arrow
-          // dropping into the composer box.
-          return h(
-            'svg',
-            { width: 15, height: 15, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
-            h('path', { d: 'M3.6 12.4h12.8v3.4H3.6z' }),
-            h('path', { d: 'M10 3v6.4' }),
-            h('path', { d: 'M7.4 6.9 10 9.4l2.6-2.5' }),
+          return h('svg', base,
+            h('path', { d: 'M1.6 7.2h8.8v3.2H1.6z' }),
+            h('path', { d: 'M6 1.6v4.8' }),
+            h('path', { d: 'M3.8 4.2 6 6.4l2.2-2.2' }),
           );
         case 'close':
           return h('svg', base, h('path', { d: 'M3 3l6 6M9 3l-6 6' }));
@@ -2882,12 +2884,12 @@ window.__ModuleLoader__.load({
           return h(
             'svg',
             {
-              width: 12,
-              height: 12,
+              width: 15,
+              height: 15,
               viewBox: '0 0 24 24',
               fill: 'none',
               stroke: 'currentColor',
-              strokeWidth: 1.9,
+              strokeWidth: 1.7,
               strokeLinecap: 'round',
               strokeLinejoin: 'round',
               'aria-hidden': true,
@@ -2900,11 +2902,11 @@ window.__ModuleLoader__.load({
         case 'star':
           return h('svg', base, h('path', { d: 'M6 1.9l1.24 2.6 2.86.4-2.08 2 .5 2.83L6 8.4l-2.52 1.33.5-2.83-2.08-2 2.86-.4z' }));
         case 'store':
-          return h('svg', base, h('path', { d: 'M6 1.6v4.8M3.8 4.4 6 6.6l2.2-2.2M2 7.6v2.8h8V7.6' }));
+          return h('svg', base, h('path', { d: 'M3.2 1.5h5.6v9L6 8.6l-2.8 1.9z' }));
         case 'review':
           return h('svg', base, h('path', { d: 'M2 2.5h3.2M2 6h3.2M2 9.5h3.2' }), h('path', { d: 'M6.3 3.2l1.1 1.1 2-2.2M6.3 7.2l1.1 1.1 2-2.2M6.3 11l1.1 1.1 2-2.2' }));
         case 'queue':
-          return h('svg', base, h('path', { d: 'M2 7.4h8v3H2z' }), h('path', { d: 'M6 1.4v4.6M4.3 4.4 6 6.1l1.7-1.7' }));
+          return h('svg', base, h('path', { d: 'M2 7.4h8v3H2z' }), h('path', { d: 'M6 1.5v4.4M3.8 3.7h4.4' }));
         case 'locate':
           return h('svg', base, h('circle', { cx: 6, cy: 6, r: 2.5 }), h('path', { d: 'M6 1v1.6M6 9.4V11M1 6h1.6M9.4 6H11' }));
         case 'starFill':
@@ -3150,6 +3152,19 @@ window.__ModuleLoader__.load({
     }
 
     /** Round "add one occurrence" control; the same item may be added repeatedly. */
+    /** One shared 16px type badge for annotations and prompts. */
+    function TypeMark({ icon, tint, ink, title, empty }) {
+      return h(
+        'span',
+        {
+          className: 'pp-type-mark' + (empty ? ' pp-type-mark-empty' : ''),
+          title: title || '',
+          style: tint && ink ? { background: `rgba(${tint},.26)`, color: `rgb(${ink})` } : undefined,
+        },
+        icon || '·',
+      );
+    }
+
     function RowActionIcon({ name, label, onClick, disabled, danger }) {
       return h(
         'button',
@@ -6858,7 +6873,12 @@ window.__ModuleLoader__.load({
                 h(
                   'div',
                   { className: 'pp-notes-quote', title: note.quote },
-                  h('span', { className: 'pp-notes-kind', 'data-kind': meta.id, title: translate(meta.label) }, meta.icon),
+                  h(TypeMark, {
+                    icon: meta.icon,
+                    tint: meta.tint,
+                    ink: meta.ink,
+                    title: translate(meta.label),
+                  }),
                   h('span', { className: 'pp-notes-quote-text' }, noteQuoteText(note.quote)),
                   note.promotedGroup
                     ? h('span', { className: 'pp-notes-tag' }, translate('note.stored', { group: labelOfGroup(note.promotedGroup) }))
@@ -8843,7 +8863,9 @@ window.__ModuleLoader__.load({
       '.pp-row-action[disabled]{opacity:.35;cursor:default}' +
       '.pp-row-action[data-danger="true"]:hover:not([disabled]){color:var(--pp-danger)}' +
       '.pp-row-actions{display:flex;align-items:center;gap:2px;flex:none}' +
-      '.pp-row-leading{display:inline-flex;align-items:center;flex:none;min-width:40px}' +
+      '.pp-row-leading{display:inline-flex;align-items:center;flex:none;min-width:20px}' +
+      '.pp-type-mark{flex:none;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;font-size:10px;line-height:1;font-weight:600}' +
+      '.pp-type-mark-empty{border:1px dashed var(--pp-line);background:transparent;color:var(--pp-ink-2);font-weight:400}' +
       '.pp-type-empty{border-color:var(--pp-line);background:transparent;color:var(--pp-ink-2);font-weight:400}' +
       '.pp-edit{padding:8px;border-radius:8px;background:var(--pp-surface);border:1px solid var(--pp-line);display:flex;flex-direction:column;gap:6px}' +
       '.pp-input,.pp-textarea{width:100%;box-sizing:border-box;border:1px solid var(--pp-line);border-radius:6px;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font:inherit;font-size:12px;padding:5px 7px;outline:none;resize:vertical}' +

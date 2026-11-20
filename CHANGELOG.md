@@ -47,9 +47,11 @@ All notable changes to this project are documented here. The format follows
 - The panel toolbar uses stable search / type-slot / action columns, so switching between 批注 and
   提示词 no longer moves the buttons. The type slot is reserved in the 批注 scope.
 - Row actions are unified: locate/category on the left; insert-draft, add-to-outbox, source-specific
-  actions and delete on the right. Action icons share one 24px hit area and 2px gap. Prompt-library
-  reordering and annotation numbering were removed; Outbox reordering remains. The panel's minimum
-  width is now 440px so the five right-side actions leave readable text.
+  actions and delete on the right. Action icons share one 15px glyph, 1.5px stroke and 24px hit area,
+  with 2px gaps. Annotation and prompt types now share one 16px coloured type badge (prompt types use
+  the same icon language instead of text chips). Prompt-library reordering and annotation numbering
+  were removed; Outbox reordering remains. The panel's minimum width is now 440px so the five right-side
+  actions leave readable text.
 
 ## [1.5.0] — 2026-11-16
 
