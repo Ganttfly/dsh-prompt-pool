@@ -34,6 +34,8 @@ All notable changes to this project are documented here. The format follows
 - Scope tabs now carry restrained active colors: amber for annotations, blue for the current
   workspace and graphite for the global shared pool. Settings tabs remain neutral, and the content
   rows, icons and type chips keep their existing colors.
+- The panel header now has a dedicated title/slogan row and a second row for search, type filtering
+  and the primary actions; Settings, pin and close stay in the title row.
 
 ## [1.5.0] — 2026-11-16
 

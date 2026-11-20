@@ -63,6 +63,7 @@ window.__ModuleLoader__.load({
       'button.label': '提示池',
       'button.pending': '待发送 {n} 条',
       'panel.title': '提示池',
+      'panel.slogan': '整理好，再发送',
       'panel.close': '关闭',
       'panel.capture': '保存草稿',
       'panel.captureHint': '把输入框里的内容复制一份存进池子（图片附件一起存）；输入框里的字会保留',
@@ -336,6 +337,7 @@ window.__ModuleLoader__.load({
       'button.label': 'Prompt pool',
       'button.pending': '{n} waiting to send',
       'panel.title': 'Prompt pool',
+      'panel.slogan': 'Organize, then send',
       'panel.close': 'Close',
       'panel.capture': 'Save draft',
       'panel.captureHint': 'Copy the composer draft into the pool; the composer keeps its text',
@@ -8235,70 +8237,80 @@ window.__ModuleLoader__.load({
         // Same header and tab strip as the sidebar page, so both views read alike.
         h(
           'div',
-          { className: 'pp-page-head' },
+          { className: 'pp-page-head pp-panel-head' },
           h(
-            'span',
-            { className: 'pp-page-title pp-panel-title' },
-            h(PromptPoolIcon, { key: 'icon', size: 16 }),
-            translate('panel.title'),
+            'div',
+            { className: 'pp-panel-headline' },
+            h(
+              'span',
+              { className: 'pp-page-title pp-panel-title' },
+              h(PromptPoolIcon, { key: 'icon', size: 16 }),
+              translate('panel.title'),
+            ),
+            h('span', { className: 'pp-panel-slogan' }, translate('panel.slogan')),
+            h('span', { className: 'pp-grow' }),
+            h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
+            h(IconButton, {
+              name: 'pin',
+              label: panelPinned ? translate('panel.unpin') : translate('panel.pin'),
+              active: panelPinned,
+              onClick: () => poolActions.setSetting('panelPinned', !panelPinned),
+            }),
+            h(
+              'button',
+              { type: 'button', className: 'pp-x', title: translate('panel.close'), 'aria-label': translate('panel.close'), onClick: () => ui.set({ open: false }) },
+              '✕',
+            ),
           ),
-          h('input', {
-            key: 'search',
-            className: 'pp-search',
-            value: query,
-            placeholder: translate('page.search'),
-            'aria-label': translate('page.search'),
-            onChange: (event) => setQuery(event.target.value),
-          }),
-          scope === 'notes'
-            ? null
-            : h(
-                'select',
-                {
-                  key: 'type-filter',
-                  className: 'pp-input pp-type-filter',
-                  value: typeFilter,
-                  'aria-label': translate('row.type'),
-                  onChange: (event) => setTypeFilter(event.target.value),
-                },
-                h('option', { value: 'all' }, translate('row.allTypes')),
-                h('option', { value: 'none' }, translate('row.typeNone')),
-                PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
-              ),
-          scope === 'notes'
-            ? [
-                h('button', {
-                  key: 'store',
-                  type: 'button',
-                  className: 'pp-mini',
-                  title: selectedNotes.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
-                  disabled: selectedNotes.length === 0,
-                  onClick: storeNotesPrompt,
-                }, translate('note.composeStore')),
-                h('button', {
-                  key: 'draft',
-                  type: 'button',
-                  className: 'pp-mini',
-                  title: selectedNotes.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
-                  disabled: selectedNotes.length === 0,
-                  onClick: openReview,
-                }, translate('note.compose')),
-              ]
-            : [
-                h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('page.new')),
-                h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
-              ],
-          h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
-          h(IconButton, {
-            name: 'pin',
-            label: panelPinned ? translate('panel.unpin') : translate('panel.pin'),
-            active: panelPinned,
-            onClick: () => poolActions.setSetting('panelPinned', !panelPinned),
-          }),
           h(
-            'button',
-            { type: 'button', className: 'pp-x', title: translate('panel.close'), 'aria-label': translate('panel.close'), onClick: () => ui.set({ open: false }) },
-            '✕',
+            'div',
+            { className: 'pp-panel-tools' },
+            h('input', {
+              key: 'search',
+              className: 'pp-search',
+              value: query,
+              placeholder: translate('page.search'),
+              'aria-label': translate('page.search'),
+              onChange: (event) => setQuery(event.target.value),
+            }),
+            scope === 'notes'
+              ? null
+              : h(
+                  'select',
+                  {
+                    key: 'type-filter',
+                    className: 'pp-input pp-type-filter',
+                    value: typeFilter,
+                    'aria-label': translate('row.type'),
+                    onChange: (event) => setTypeFilter(event.target.value),
+                  },
+                  h('option', { value: 'all' }, translate('row.allTypes')),
+                  h('option', { value: 'none' }, translate('row.typeNone')),
+                  PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
+                ),
+            scope === 'notes'
+              ? [
+                  h('button', {
+                    key: 'store',
+                    type: 'button',
+                    className: 'pp-mini',
+                    title: selectedNotes.length > 0 ? translate('note.composeStoreHint') : translate('note.noneSelected'),
+                    disabled: selectedNotes.length === 0,
+                    onClick: storeNotesPrompt,
+                  }, translate('note.composeStore')),
+                  h('button', {
+                    key: 'draft',
+                    type: 'button',
+                    className: 'pp-mini',
+                    title: selectedNotes.length > 0 ? translate('note.composeHint') : translate('note.noneSelected'),
+                    disabled: selectedNotes.length === 0,
+                    onClick: openReview,
+                  }, translate('note.compose')),
+                ]
+              : [
+                  h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: newItem }, '＋ ', translate('page.new')),
+                  h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture }, translate('panel.capture')),
+                ],
           ),
         ),
         h(ScopeBar, { mode: 'panel', value: scope, onChange: changeScope }),
@@ -8549,6 +8561,11 @@ window.__ModuleLoader__.load({
       '.pp-list{overflow-y:auto;padding:6px 8px 20px;flex:1;min-height:0}' +
       '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
       '.pp-page-head{display:flex;align-items:center;gap:8px;padding:12px 12px 8px;border-bottom:1px solid var(--pp-line);flex-wrap:wrap}' +
+      '.pp-panel-head{flex-direction:column;align-items:stretch;gap:7px;padding:10px 12px 8px}' +
+      '.pp-panel-headline{display:flex;align-items:center;gap:8px;min-width:0}' +
+      '.pp-panel-slogan{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-panel-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}' +
+      '.pp-panel-tools .pp-search{min-width:140px}' +
       '.pp-page-title{font-size:14px;font-weight:600}' +
       '.pp-panel-title{display:inline-flex;align-items:center;gap:6px;flex:none;margin-right:2px}' +
       '.pp-page-sub{color:var(--pp-ink-2);font-size:12px}' +
