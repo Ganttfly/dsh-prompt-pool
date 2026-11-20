@@ -224,6 +224,13 @@ else {
         const rows = findAll(view, (node) => node.props && String(node.props.className || '') === 'pp-notes-row');
         if (rows.length !== 2) fail(`the notes tab rendered ${rows.length} rows, expected 2`);
         else console.log('[ok] a 批注 tab lists the session annotations');
+        const moreMenus = findAll(view, (node) => typeof node.type === 'function' && node.type.name === 'RowMoreMenu');
+        const moreLabels = moreMenus.flatMap((node) => (node.props.items || []).map((item) => item.label));
+        if (moreLabels.indexOf('note.sendNow') < 0 || moreLabels.indexOf('note.queueOutbox') < 0) {
+          fail(`annotation rows are missing send/queue actions: ${JSON.stringify(moreLabels)}`);
+        } else {
+          console.log('[ok] annotation rows expose direct send and add-to-outbox');
+        }
         const checks = findAll(view, (node) => node.type === 'input'
           && String(node.props && node.props.className || '').indexOf('pp-note-check') >= 0);
         if (checks.length !== 2) fail(`the notes tab rendered ${checks.length} checkboxes, expected 2`);

@@ -162,6 +162,9 @@ window.__ModuleLoader__.load({
       'row.down': '下移',
       'row.save': '保存',
       'row.cancel': '取消',
+      'row.more': '更多操作',
+      'row.sendNow': '直接发送',
+      'row.sentNow': '已直接发送到会话队列',
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
       'image.add': '添加图片',
@@ -186,9 +189,17 @@ window.__ModuleLoader__.load({
       'page.inspiration': '记录灵感',
       'row.noCategory': '未分组',
       'tray.title': '待发送队列',
+      'tray.source.prompt': '提示词',
+      'tray.source.review': '审阅',
+      'tray.source.annotation': '批注',
       'tray.selected': '已选 {n} 条',
       'tray.release': '发送',
-      'tray.digest': '合并发送',
+      'tray.digest': '合并发送…',
+      'merge.title': '合并发送',
+      'merge.count': '{n} 条 → 1 条',
+      'merge.hint': '按当前顺序合并为一条消息，共 {images} 张图片。',
+      'merge.preview': '合并预览',
+      'merge.confirm': '合并发送',
       'tray.clear': '清空',
       'tray.clearTitle': '清空待发送队列',
       'tray.clearConfirm': '队列里的 {n} 条会被一起移出。',
@@ -261,6 +272,10 @@ window.__ModuleLoader__.load({
       'note.review.back': '返回批注',
       'note.review.previewHint': '确认无误后发送；需要调整请返回批注。',
       'note.review.send': '发送到会话队列',
+      'note.sendNow': '直接发送',
+      'note.queueOutbox': '加入待发送',
+      'note.sentNow': '已直接发送到会话队列',
+      'note.queuedOutbox': '已加入待发送',
       'note.review.savePrompt': '存成提示词',
       'note.review.outbox': '加入待发送',
       'note.review.outboxDone': '已加入待发送',
@@ -436,6 +451,9 @@ window.__ModuleLoader__.load({
       'row.down': 'Move down',
       'row.save': 'Save',
       'row.cancel': 'Cancel',
+      'row.more': 'More actions',
+      'row.sendNow': 'Send now',
+      'row.sentNow': 'Sent to the session queue',
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
       'image.add': 'Add image',
@@ -460,9 +478,17 @@ window.__ModuleLoader__.load({
       'page.inspiration': 'Capture inspiration',
       'row.noCategory': 'Ungrouped',
       'tray.title': 'Send queue',
+      'tray.source.prompt': 'Prompt',
+      'tray.source.review': 'Review',
+      'tray.source.annotation': 'Annotation',
       'tray.selected': '{n} selected',
       'tray.release': 'Send',
-      'tray.digest': 'Merge & send',
+      'tray.digest': 'Merge & send…',
+      'merge.title': 'Merge & send',
+      'merge.count': '{n} → 1',
+      'merge.hint': 'Merged into one message in the current order, with {images} image(s).',
+      'merge.preview': 'Merged preview',
+      'merge.confirm': 'Merge & send',
       'tray.clear': 'Clear',
       'tray.clearTitle': 'Clear the send queue',
       'tray.clearConfirm': 'All {n} queued items are removed at once.',
@@ -535,6 +561,10 @@ window.__ModuleLoader__.load({
       'note.review.back': 'Back to annotations',
       'note.review.previewHint': 'Send when ready, or go back to adjust.',
       'note.review.send': 'Send to session queue',
+      'note.sendNow': 'Send now',
+      'note.queueOutbox': 'Add to outbox',
+      'note.sentNow': 'Sent to the session queue',
+      'note.queuedOutbox': 'Added to the outbox',
       'note.review.savePrompt': 'Save as prompt',
       'note.review.outbox': 'Add to outbox',
       'note.review.outboxDone': 'Added to the outbox',
@@ -1596,7 +1626,7 @@ window.__ModuleLoader__.load({
         body,
         images,
         targetSessionId: typeof raw.targetSessionId === 'string' ? raw.targetSessionId : '',
-        type: raw.type === 'review' ? 'review' : 'prompt',
+        type: raw.type === 'review' ? 'review' : raw.type === 'annotation' ? 'annotation' : 'prompt',
       };
     }
 
@@ -2306,7 +2336,7 @@ window.__ModuleLoader__.load({
           body,
           images,
           targetSessionId: typeof entry.targetSessionId === 'string' ? entry.targetSessionId : '',
-          type: entry.type === 'review' ? 'review' : 'prompt',
+          type: entry.type === 'review' ? 'review' : entry.type === 'annotation' ? 'annotation' : 'prompt',
         };
         mutate((state) => ({ ...state, tray: [...state.tray, row] }));
         return row;
@@ -2459,7 +2489,7 @@ window.__ModuleLoader__.load({
       const {
         item, index, total, editing, setEditing, categories, workspaces, sessionId,
         editRows, editStyle, mainTitle, showTag, onInsert, onMain, onStartEdit,
-        onQueue, onDelete, onSave, onCancel, onPasteImages, onOpenImage, onError,
+        onQueue, onSend, onDelete, onSave, onCancel, onPasteImages, onOpenImage, onError,
       } = props;
 
       if (editing && editing.id === item.id) {
@@ -2563,6 +2593,17 @@ window.__ModuleLoader__.load({
           : showTag
             ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, categories, workspaces)))
             : null,
+        onSend
+          ? h(RowMoreMenu, {
+              label: translate('row.more'),
+              items: [{
+                key: 'send',
+                icon: 'send',
+                label: translate('row.sendNow'),
+                onClick: () => onSend(item),
+              }],
+            })
+          : null,
         h(
           'div',
           { className: 'pp-actions' },
@@ -2571,6 +2612,67 @@ window.__ModuleLoader__.load({
           h(IconButton, { name: 'edit', label: translate('row.edit'), onClick: () => onStartEdit(item) }),
           h(IconButton, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
           h(IconButton, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => onDelete(item) }),
+        ),
+      );
+    }
+
+    /** Human label for an outbox entry's source. */
+    function traySourceLabel(type) {
+      if (type === 'review') return translate('tray.source.review');
+      if (type === 'annotation') return translate('tray.source.annotation');
+      return translate('tray.source.prompt');
+    }
+
+    /** A read-only confirmation step before several outbox entries become one message. */
+    function MergeReviewCard(props) {
+      const entries = Array.isArray(props.entries) ? props.entries : [];
+      const chosen = entries.filter((entry) => props.selected[entry.key] !== false);
+      const text = chosen.map((entry, index) => `${index + 1}. ${entry.body}`).join('\n\n');
+      const imageCount = chosen.reduce((count, entry) => count + (Array.isArray(entry.images) ? entry.images.length : 0), 0);
+      return h(
+        'div',
+        { className: 'pp-page-foot pp-merge-foot' },
+        h(
+          'div',
+          { className: 'pp-merge-head' },
+          h('span', { className: 'pp-foot-title' }, translate('merge.title')),
+          h('span', { className: 'pp-hint' }, translate('merge.count', { n: chosen.length })),
+          h('span', { className: 'pp-grow' }),
+          h('button', {
+            type: 'button',
+            className: 'pp-x',
+            title: translate('row.cancel'),
+            'aria-label': translate('row.cancel'),
+            onClick: props.onClose,
+          }, '✕'),
+        ),
+        h(
+          'div',
+          { className: 'pp-merge-list' },
+          entries.map((entry) => h(
+            'label',
+            { key: entry.key, className: 'pp-merge-row' },
+            h('input', {
+              type: 'checkbox',
+              checked: props.selected[entry.key] !== false,
+              onChange: () => props.onToggle(entry.key),
+            }),
+            h('span', { className: 'pp-chip-source', 'data-type': entry.type || 'prompt' }, traySourceLabel(entry.type)),
+            h('span', { className: 'pp-merge-row-text' }, entry.body),
+          )),
+        ),
+        h('div', { className: 'pp-hint pp-merge-hint' }, translate('merge.hint', { images: imageCount })),
+        h('div', { className: 'pp-merge-preview', 'aria-label': translate('merge.preview') }, text),
+        h(
+          'div',
+          { className: 'pp-merge-actions' },
+          h('button', { type: 'button', className: 'pp-mini', onClick: props.onClose }, translate('row.cancel')),
+          h('button', {
+            type: 'button',
+            className: 'pp-primary',
+            disabled: props.busy || chosen.length === 0,
+            onClick: props.onConfirm,
+          }, translate('merge.confirm')),
         ),
       );
     }
@@ -2674,6 +2776,10 @@ window.__ModuleLoader__.load({
                 'div',
                 { key: entry.key, className: 'pp-chip' },
                 h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
+                h('span', {
+                  className: 'pp-chip-source',
+                  'data-type': entry.type || 'prompt',
+                }, traySourceLabel(entry.type)),
                 h('div', { className: 'pp-chip-t', title: entry.body }, entry.body),
                 h(ImageStrip, { images: entry.images, compact: true, max: 4, onOpen: onOpenImage }),
                 h(
@@ -2804,6 +2910,12 @@ window.__ModuleLoader__.load({
           return h('svg', base, h('path', { d: 'M6 1.6v4.8M3.8 4.4 6 6.6l2.2-2.2M2 7.6v2.8h8V7.6' }));
         case 'review':
           return h('svg', base, h('path', { d: 'M2 2.5h3.2M2 6h3.2M2 9.5h3.2' }), h('path', { d: 'M6.3 3.2l1.1 1.1 2-2.2M6.3 7.2l1.1 1.1 2-2.2M6.3 11l1.1 1.1 2-2.2' }));
+        case 'send':
+          return h('svg', base, h('path', { d: 'M1.6 5.6 10.4 2 6.8 10.4 5.5 6.9z' }), h('path', { d: 'M5.5 6.9 10.4 2' }));
+        case 'queue':
+          return h('svg', base, h('path', { d: 'M2 7.4h8v3H2z' }), h('path', { d: 'M6 1.4v4.6M4.3 4.4 6 6.1l1.7-1.7' }));
+        case 'more':
+          return h('svg', { ...base, fill: 'currentColor', stroke: 'none' }, h('circle', { cx: 2.6, cy: 6, r: 1 }), h('circle', { cx: 6, cy: 6, r: 1 }), h('circle', { cx: 9.4, cy: 6, r: 1 }));
         case 'starFill':
           return h('svg', { ...base, fill: 'currentColor' }, h('path', { d: 'M6 1.9l1.24 2.6 2.86.4-2.08 2 .5 2.83L6 8.4l-2.52 1.33.5-2.83-2.08-2 2.86-.4z' }));
         case 'plus':
@@ -3068,6 +3180,100 @@ window.__ModuleLoader__.load({
           h('circle', { cx: 7, cy: 7, r: 5.5 }),
           h('path', { d: 'M7 4.4v5.2M4.4 7h5.2' }),
         ),
+      );
+    }
+
+    /** A compact overflow menu for row-level shortcuts such as direct send. */
+    function RowMoreMenu(props) {
+      const [open, setOpen] = useState(false);
+      const [position, setPosition] = useState(null);
+      const wrapRef = useRef(null);
+      const items = Array.isArray(props.items) ? props.items.filter(Boolean) : [];
+
+      useEffect(() => {
+        if (!open || typeof document === 'undefined') return undefined;
+        const close = (event) => {
+          if (wrapRef.current && event && event.target instanceof Node && wrapRef.current.contains(event.target)) return;
+          setOpen(false);
+        };
+        const onKey = (event) => {
+          if (event.key === 'Escape') setOpen(false);
+        };
+        document.addEventListener('pointerdown', close, true);
+        document.addEventListener('keydown', onKey, true);
+        window.addEventListener('resize', close);
+        window.addEventListener('scroll', close, true);
+        return () => {
+          document.removeEventListener('pointerdown', close, true);
+          document.removeEventListener('keydown', onKey, true);
+          window.removeEventListener('resize', close);
+          window.removeEventListener('scroll', close, true);
+        };
+      }, [open]);
+
+      if (items.length === 0) return null;
+
+      const toggle = (event) => {
+        event.stopPropagation();
+        if (open) {
+          setOpen(false);
+          return;
+        }
+        const rect = event.currentTarget.getBoundingClientRect();
+        const width = 176;
+        const height = 8 + items.length * 30;
+        const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width));
+        const below = rect.bottom + 4;
+        const top = below + height > window.innerHeight - 8 ? Math.max(8, rect.top - height - 4) : below;
+        setPosition({ left, top });
+        setOpen(true);
+      };
+
+      return h(
+        'span',
+        { className: 'pp-more-wrap', ref: wrapRef },
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'pp-icon pp-more-btn',
+            title: props.label || translate('row.more'),
+            'aria-label': props.label || translate('row.more'),
+            'aria-haspopup': 'menu',
+            'aria-expanded': open ? 'true' : 'false',
+            onMouseDown: (event) => event.preventDefault(),
+            onClick: toggle,
+          },
+          icon('more'),
+        ),
+        open && position
+          ? h(
+              'div',
+              {
+                className: 'pp-more-menu',
+                role: 'menu',
+                style: { left: position.left + 'px', top: position.top + 'px' },
+                onPointerDown: (event) => event.stopPropagation(),
+              },
+              items.map((item) => h(
+                'button',
+                {
+                  key: item.key,
+                  type: 'button',
+                  role: 'menuitem',
+                  className: 'pp-more-item',
+                  disabled: item.disabled === true,
+                  'data-danger': item.danger === true ? 'true' : 'false',
+                  onClick: () => {
+                    setOpen(false);
+                    item.onClick();
+                  },
+                },
+                h('span', { className: 'pp-more-icon' }, icon(item.icon)),
+                h('span', { className: 'pp-more-label' }, item.label),
+              )),
+            )
+          : null,
       );
     }
 
@@ -3523,6 +3729,9 @@ window.__ModuleLoader__.load({
       ));
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [reviewOpen, setReviewOpen] = useState(false);
+      const [mergeOpen, setMergeOpen] = useState(false);
+      const [mergeSelected, setMergeSelected] = useState({});
+      const [mergeBusy, setMergeBusy] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
@@ -3556,6 +3765,41 @@ window.__ModuleLoader__.load({
       const trayRef = useRef(null);
       const sessionTray = state.tray.filter((entry) => !entry.targetSessionId || entry.targetSessionId === activeSessionId);
       const trayCount = sessionTray.length;
+      const openMerge = () => {
+        if (sessionTray.length < 2) return;
+        setReviewOpen(false);
+        setMergeSelected(Object.fromEntries(sessionTray.map((entry) => [entry.key, true])));
+        setMergeOpen(true);
+      };
+      const closeMerge = () => {
+        setMergeOpen(false);
+        setMergeSelected({});
+      };
+      const toggleMerge = (key) => {
+        setMergeSelected((current) => ({ ...current, [key]: current[key] === false }));
+      };
+      const confirmMerge = async () => {
+        if (mergeBusy) return;
+        const entries = sessionTray.filter((entry) => mergeSelected[entry.key] !== false);
+        if (entries.length === 0) return;
+        setMergeBusy(true);
+        const text = entries.map((entry, index) => `${index + 1}. ${entry.body}`).join('\n\n');
+        const images = normalizeImages(entries.reduce((list, entry) => list.concat(entry.images || []), []), Number.MAX_SAFE_INTEGER);
+        let result;
+        try {
+          result = await bridge.request({ type: 'queue-review', text, sessionId: activeSessionId, images });
+        } catch (error) {
+          result = { ok: false, reason: String((error && error.message) || error) };
+        }
+        setMergeBusy(false);
+        if (!result || result.ok !== true) {
+          flash({ kind: 'error', text: (result && result.reason) || translate('note.review.unsupported') });
+          return;
+        }
+        poolActions.removeTrayKeys(entries.map((entry) => entry.key));
+        closeMerge();
+        flash({ kind: 'ok', text: translate('status.released', { n: 1 }) });
+      };
       const lastTrayCount = useRef(trayCount);
       useEffect(() => {
         if (trayCount > lastTrayCount.current) {
@@ -3676,6 +3920,57 @@ window.__ModuleLoader__.load({
         );
       };
 
+      /** Direct-send one annotation through the mounted panel. */
+      const sendNote = async (note) => {
+        const text = composeNoteLine(note);
+        let result;
+        try {
+          result = await bridge.request({ type: 'queue-review', text, sessionId: activeSessionId, images: normalizeImages(note.images) });
+        } catch (error) {
+          result = { ok: false, reason: String((error && error.message) || error) };
+        }
+        if (!result || result.ok !== true) {
+          flash({ kind: 'error', text: (result && result.reason) || translate('note.review.unsupported') });
+          return;
+        }
+        notesActions.remove(note.id);
+        deselectNotes(activeSessionId, [note.id]);
+        flash({ kind: 'ok', text: translate('note.sentNow') });
+      };
+
+      /** Put one annotation into the shared outbox without routing it through review. */
+      const queueNote = (note) => {
+        poolActions.addTextToTray({
+          body: composeNoteLine(note),
+          images: normalizeImages(note.images),
+          targetSessionId: activeSessionId,
+          type: 'annotation',
+        });
+        notesActions.remove(note.id);
+        deselectNotes(activeSessionId, [note.id]);
+        flash({ kind: 'ok', text: translate('note.queuedOutbox') });
+      };
+
+      /** Direct-send one prompt through the mounted panel. */
+      const sendItem = async (item) => {
+        let result;
+        try {
+          result = await bridge.request({
+            type: 'queue-review',
+            text: item.body,
+            sessionId: activeSessionId,
+            images: normalizeImages(item.images),
+          });
+        } catch (error) {
+          result = { ok: false, reason: String((error && error.message) || error) };
+        }
+        if (!result || result.ok !== true) {
+          flash({ kind: 'error', text: (result && result.reason) || translate('status.noComposer') });
+          return;
+        }
+        flash({ kind: 'ok', text: translate('row.sentNow') });
+      };
+
       /** The page has no composer, so the mounted panel inserts the reply. */
       const composeSessionNotes = (notes) => {
         const chosen = Array.isArray(notes) ? notes : selectedNotes;
@@ -3710,6 +4005,7 @@ window.__ModuleLoader__.load({
           flash({ kind: 'error', text: translate('note.noneSelected') });
           return;
         }
+        closeMerge();
         setReviewOpen(true);
       };
 
@@ -3936,6 +4232,7 @@ window.__ModuleLoader__.load({
         onMain: startEdit,
         onStartEdit: startEdit,
         onQueue: queueItem,
+        onSend: sendItem,
         onDelete: setPendingDelete,
         onSave: save,
         onCancel: cancelEdit,
@@ -4080,6 +4377,8 @@ window.__ModuleLoader__.load({
                   sessionId: activeSessionId,
                   onCompose: composeSessionNotes,
                   onInsertNote: insertNote,
+                  onSendNote: sendNote,
+                  onQueueNote: queueNote,
                   hideActions: true,
                   filter: query,
                   categories: state.categories,
@@ -4138,7 +4437,18 @@ window.__ModuleLoader__.load({
                 onPark: parkReviewTodos,
               })
             : null,
-          !settingsOpen
+          !settingsOpen && mergeOpen
+            ? h(MergeReviewCard, {
+                entries: sessionTray,
+                selected: mergeSelected,
+                busy: mergeBusy,
+                sessionId: activeSessionId,
+                onToggle: toggleMerge,
+                onClose: closeMerge,
+                onConfirm: confirmMerge,
+              })
+            : null,
+          !settingsOpen && !mergeOpen
             ? renderTrayCard({
                 entries: sessionTray,
                 queuePending,
@@ -4151,7 +4461,7 @@ window.__ModuleLoader__.load({
                 onPasteImages: pasteTrayImages,
                 onClear: () => setConfirmClear(true),
                 onRelease: () => sendToComposer({ type: 'release' }, translate('status.releaseSent')),
-                onDigest: () => sendToComposer({ type: 'digest' }, translate('status.releaseSent')),
+                onDigest: openMerge,
                 onRemove: setPendingRemove,
                 onOpenImage: openImage,
                 onError: (text) => flash({ kind: 'error', text }),
@@ -6763,6 +7073,23 @@ window.__ModuleLoader__.load({
                 },
                 h(NoteActionIcon, { kind: 'store' }),
               ),
+              h(RowMoreMenu, {
+                label: translate('row.more'),
+                items: [
+                  props.onSendNote ? {
+                    key: 'send',
+                    icon: 'send',
+                    label: translate('note.sendNow'),
+                    onClick: () => props.onSendNote(note),
+                  } : null,
+                  props.onQueueNote ? {
+                    key: 'queue',
+                    icon: 'queue',
+                    label: translate('note.queueOutbox'),
+                    onClick: () => props.onQueueNote(note),
+                  } : null,
+                ].filter(Boolean),
+              }),
               h(
                 'button',
                 {
@@ -7450,6 +7777,9 @@ window.__ModuleLoader__.load({
       ));
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [reviewOpen, setReviewOpen] = useState(false);
+      const [mergeOpen, setMergeOpen] = useState(false);
+      const [mergeSelected, setMergeSelected] = useState({});
+      const [mergeBusy, setMergeBusy] = useState(false);
       const [pendingCategory, setPendingCategory] = useState(null);
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
@@ -7920,10 +8250,27 @@ window.__ModuleLoader__.load({
         }
       };
 
-      const digest = async () => {
-        if (busyRef.current) return;
+      const openMerge = () => {
         const entries = tray.slice();
         if (entries.length < 2) return;
+        setReviewOpen(false);
+        setMergeSelected(Object.fromEntries(entries.map((entry) => [entry.key, true])));
+        setMergeOpen(true);
+      };
+
+      const closeMerge = () => {
+        setMergeOpen(false);
+        setMergeSelected({});
+      };
+
+      const toggleMerge = (key) => {
+        setMergeSelected((current) => ({ ...current, [key]: current[key] === false }));
+      };
+
+      const confirmMerge = async () => {
+        if (busyRef.current) return;
+        const entries = tray.filter((entry) => mergeSelected[entry.key] !== false);
+        if (entries.length === 0) return;
         const text = entries.map((entry, index) => `${index + 1}. ${entry.body}`).join('\n\n');
         const images = normalizeImages(entries.reduce((list, entry) => list.concat(entry.images || []), []), Number.MAX_SAFE_INTEGER);
         busyRef.current = true;
@@ -7936,6 +8283,7 @@ window.__ModuleLoader__.load({
           return;
         }
         poolActions.removeTrayKeys(entries.map((entry) => entry.key));
+        closeMerge();
         flash({ kind: 'ok', text: translate('status.released', { n: 1 }) });
       };
 
@@ -7956,6 +8304,7 @@ window.__ModuleLoader__.load({
         onMain: insertItem,
         onStartEdit: startEdit,
         onQueue: queueItem,
+        onSend: sendItem,
         onDelete: setPendingDelete,
         onSave: save,
         onCancel: cancelEdit,
@@ -8019,6 +8368,7 @@ window.__ModuleLoader__.load({
           showToast(translate('note.noneSelected'), 'error');
           return;
         }
+        closeMerge();
         setReviewOpen(true);
       };
 
@@ -8123,7 +8473,42 @@ window.__ModuleLoader__.load({
         return { ok: true };
       };
 
-      bridgeRef.current = { insert: insertItem, release, digest, capture: captureDraft, composeNotes: composeSessionNotes, insertText: insertComposerText, insertImages: addImages, queueReview: queueReviewText };
+      /** Direct-send one annotation. */
+      const sendNote = async (note) => {
+        const result = await queueReviewText(composeNoteLine(note), notesSessionId, normalizeImages(note.images));
+        if (!result || result.ok !== true) {
+          showToast((result && result.reason) || translate('note.review.unsupported'), 'error');
+          return;
+        }
+        notesActions.remove(note.id);
+        deselectNotes(notesSessionId, [note.id]);
+        showToast(translate('note.sentNow'), 'ok');
+      };
+
+      /** Add one annotation to the outbox without entering review. */
+      const queueNote = (note) => {
+        poolActions.addTextToTray({
+          body: composeNoteLine(note),
+          images: normalizeImages(note.images),
+          targetSessionId: notesSessionId,
+          type: 'annotation',
+        });
+        notesActions.remove(note.id);
+        deselectNotes(notesSessionId, [note.id]);
+        showToast(translate('note.queuedOutbox'), 'ok');
+      };
+
+      /** Direct-send one prompt item. */
+      const sendItem = async (item) => {
+        const result = await queueReviewText(item.body, notesSessionId, normalizeImages(item.images));
+        if (!result || result.ok !== true) {
+          showToast((result && result.reason) || translate('status.noComposer'), 'error');
+          return;
+        }
+        showToast(translate('row.sentNow'), 'ok');
+      };
+
+      bridgeRef.current = { insert: insertItem, release, digest: () => { openMerge(); return { ok: true }; }, capture: captureDraft, composeNotes: composeSessionNotes, insertText: insertComposerText, insertImages: addImages, queueReview: queueReviewText };
       useEffect(() => {
         return bridge.listen((command) => {
           const api = bridgeRef.current;
@@ -8390,6 +8775,8 @@ window.__ModuleLoader__.load({
                   sessionId: notesSessionId,
                   onCompose: composeSessionNotes,
                   onInsertNote: insertNoteText,
+                  onSendNote: sendNote,
+                  onQueueNote: queueNote,
                   hideActions: true,
                   filter: query,
                   categories: state.categories,
@@ -8442,7 +8829,18 @@ window.__ModuleLoader__.load({
               onPark: parkReviewTodos,
             })
           : null,
-        !settingsOpen
+        !settingsOpen && mergeOpen
+          ? h(MergeReviewCard, {
+              entries: tray,
+              selected: mergeSelected,
+              busy,
+              sessionId: notesSessionId,
+              onToggle: toggleMerge,
+              onClose: closeMerge,
+              onConfirm: confirmMerge,
+            })
+          : null,
+        !settingsOpen && !mergeOpen
           ? renderTrayCard({
               entries: tray,
               queuePending: queue.length,
@@ -8455,7 +8853,7 @@ window.__ModuleLoader__.load({
               onPasteImages: pasteTrayImages,
               onClear: () => setConfirmClear(true),
               onRelease: release,
-              onDigest: digest,
+              onDigest: openMerge,
               onRemove: setPendingRemove,
               onOpenImage: openImage,
               onError: (text) => flash({ kind: 'error', text }),
@@ -8636,6 +9034,15 @@ window.__ModuleLoader__.load({
       '.pp-ws-count{flex:none;font-size:10px;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
       '.pp-ws-body{min-width:0}' +
       '.pp-page-foot{display:flex;flex-direction:column;gap:8px;margin:8px 10px 10px;padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08);max-height:min(640px,66vh);overflow:hidden}' +
+      '.pp-merge-foot{padding:0;gap:0;max-height:min(560px,72vh)}' +
+      '.pp-merge-head{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid var(--pp-line);background:var(--pp-queue-head-bg)}' +
+      '.pp-merge-list{display:flex;flex-direction:column;gap:3px;max-height:180px;overflow:auto;padding:6px 12px}' +
+      '.pp-merge-row{display:flex;align-items:flex-start;gap:7px;padding:4px 0;cursor:pointer}' +
+      '.pp-merge-row input{margin:3px 0 0;accent-color:var(--pp-accent);cursor:pointer}' +
+      '.pp-merge-row-text{min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;color:var(--pp-ink);font-size:12px;line-height:1.45;white-space:pre-wrap}' +
+      '.pp-merge-hint{padding:2px 12px 6px}' +
+      '.pp-merge-preview{margin:0 12px 8px;padding:7px 9px;max-height:160px;overflow:auto;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-surface);color:var(--pp-ink);font-size:11.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}' +
+      '.pp-merge-actions{display:flex;justify-content:flex-end;gap:8px;padding:8px 12px;border-top:1px solid var(--pp-line);background:var(--pp-queue-head-bg)}' +
       '.pp-review-foot{padding:0;gap:0;height:min(480px,56vh);max-height:min(480px,56vh)}' +
       '.pp-review-foot>.pp-review{flex:1;min-height:0;overflow-y:auto;padding:10px 12px}' +
       '.pp-panel .pp-review-foot{height:min(calc(var(--pp-h, 100vh) * 0.64), 420px);max-height:min(calc(var(--pp-h, 100vh) * 0.64), 420px)}' +
@@ -8675,6 +9082,14 @@ window.__ModuleLoader__.load({
       '.pp-icon:disabled{opacity:.35;cursor:default}' +
       '.pp-icon[data-danger="true"]:hover{color:var(--pp-danger)}' +
       '.pp-icon[data-active="true"]{color:var(--pp-accent)}' +
+      '.pp-more-wrap{position:relative;display:inline-flex;flex:none}' +
+      '.pp-more-menu{position:fixed;z-index:2147483002;width:176px;box-sizing:border-box;padding:4px;border:1px solid var(--pp-line-2);border-radius:9px;background:var(--pp-surface-2);box-shadow:0 12px 32px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:1px}' +
+      '.pp-more-item{display:flex;align-items:center;gap:8px;width:100%;height:28px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}' +
+      '.pp-more-item:hover:not([disabled]){background:var(--pp-hover)}' +
+      '.pp-more-item[disabled]{opacity:.45;cursor:not-allowed}' +
+      '.pp-more-item[data-danger="true"]{color:var(--pp-danger)}' +
+      '.pp-more-icon{display:inline-flex;align-items:center;flex:none;color:var(--pp-ink-2)}' +
+      '.pp-more-item[data-danger="true"] .pp-more-icon{color:var(--pp-danger)}' +
       '.pp-edit{padding:8px;border-radius:8px;background:var(--pp-surface);border:1px solid var(--pp-line);display:flex;flex-direction:column;gap:6px}' +
       '.pp-input,.pp-textarea{width:100%;box-sizing:border-box;border:1px solid var(--pp-line);border-radius:6px;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font:inherit;font-size:12px;padding:5px 7px;outline:none;resize:vertical}' +
       '.pp-input:focus,.pp-textarea:focus{border-color:var(--pp-accent)}' +
@@ -8725,6 +9140,7 @@ window.__ModuleLoader__.load({
       '.pp-chip:hover .pp-chip-actions,.pp-chip:focus-within .pp-chip-actions{opacity:1}' +
       '@media (hover:none){.pp-chip-actions{opacity:1}}' +
       '.pp-chip-n{flex:none;padding-top:1px;font-size:11px;line-height:1.55;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
+      '.pp-chip-source{flex:none;align-self:flex-start;margin-top:2px;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--pp-ink-2) 10%,transparent);color:var(--pp-ink-2);font-size:9.5px;line-height:15px}' +
       '.pp-chip-t{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:12px;line-height:1.55;color:var(--pp-ink);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}' +
       '.pp-chip .pp-icon{width:22px;height:22px}' +
       '.pp-actions .pp-icon svg,.pp-chip-actions .pp-icon svg{width:13px;height:13px;stroke-width:1.2}' +

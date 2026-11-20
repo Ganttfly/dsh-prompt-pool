@@ -59,8 +59,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   waits for the composer to be accepted before the next starts. On hosts that expose the conversation
   queue, items go straight into the queue without touching the composer; otherwise the composer path
   is used. While a release runs, both views show progress and a Stop control; the queue is locked
-  until it finishes. With more than one entry the queue can also **Merge & send**, numbering the entries
-  into one prompt before handing it to the session queue.
+  until it finishes. With more than one entry the queue can also **Merge & send**: preview the
+  checked entries and their order first, then hand one numbered prompt to the session queue.
 - **One-click handoff** — a strip above the composer sits beside the host's own queued messages and
   shows both counts; **Push** hands the pool's send queue to the host queue in order, without the
   release progress overlay and without touching the composer. Pushed entries leave the send queue, and
@@ -76,7 +76,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   losing the point in a separate scratchpad; click the badge to edit. The **Current session** tab always
   exists: each row leads with a checkbox (all checked by default); **Locate** scrolls to the passage,
   **Insert** writes one note into the composer, and **Save as prompt** opens a confirmation step for the
-  title, body, images, type and target group before filing the prompt. The header's **Review** opens a
+  title, body, images, type and target group before filing the prompt. The row's overflow menu can
+  **Send now** or **Add to outbox** for a single annotation. The header's **Review** opens a
   review card in the bottom dock (like the send queue): adjust the checked notes, then choose
   **Preview prompt** to inspect the generated prompt and send it, add it to the outbox, save it as a
   prompt, or go back to adjust. The prompt is grouped
@@ -96,7 +97,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   filtered from the list header. Templates, habits and notes are groups, not types. The global shared pool
   offers a **Capture inspiration** shortcut that creates a global note with the inspiration type preselected.
 - **Composer panel** — search, the current workspace's prompt list, type filtering, per-row insert / queue /
-  edit / duplicate / delete, and the shared send-queue card with collapse, clear and send. Its two scopes
+  edit / duplicate / delete, a row overflow action for direct send, and the shared send-queue card with
+  collapse, clear and send. Its two scopes
   are **Annotations** (current session) and **Prompts** (current workspace); the panel never shows the
   global shared pool. Drag its top edge to change the height, or its left edge to change the width; pin it
   to keep it open over the conversation.

@@ -21,6 +21,10 @@ All notable changes to this project are documented here. The format follows
   the session they were queued for. Legacy entries without a target remain visible everywhere.
 - A reviewed batch can be added to the outbox instead of being sent immediately, and the outbox can
   combine multiple entries into one numbered prompt with **Merge & send**.
+- Single annotations and prompts expose **Send now** and (for annotations) **Add to outbox** in a row
+  overflow menu. Outbox entries are labelled by source: prompt, annotation or review.
+- **Merge & send** now opens a read-only merge preview with per-entry selection, order, source labels
+  and a combined-text preview before anything is submitted.
 - Action icons are slightly tighter (24px buttons, no inter-button gap) while keeping the 24px hit area.
 - Settings were rebased on the scope model: the page has **Annotations / Prompts / Global shared pool**
   and opens on Annotations. The old default-tab, workspace-visibility, current-workspace-first and

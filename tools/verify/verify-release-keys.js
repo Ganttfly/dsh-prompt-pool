@@ -134,6 +134,17 @@ const failures = [];
     (node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('tray.digest') >= 0,
   );
   if (!digest) failures.push('the merge-and-send action was not found');
+  else {
+    digest.props.onClick();
+    tree = render();
+    const mergeCard = nodes(tree, []).find((node) => typeof node.type === 'function' && node.type.name === 'MergeReviewCard');
+    if (!mergeCard) failures.push('the merge preview did not open');
+    else if (typeof mergeCard.props.onClose !== 'function') failures.push('the merge preview has no close action');
+    else {
+      mergeCard.props.onClose();
+      tree = render();
+    }
+  }
   const release = nodes(tree, []).find(
     (node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('tray.release') >= 0,
   );

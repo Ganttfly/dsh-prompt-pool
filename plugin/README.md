@@ -28,6 +28,8 @@ The pool keeps the draft, the next action and the exact wording next to the conv
 - Global shared pool keeps the built-in, custom and display-mode group tabs; workspace prompts use type filters
 - Settings for annotation retention, post-use retention, the built-in prompt reset, and global shared-pool group order/display; the page opens on Annotations and has no workspace-tab controls
 - A release shows progress and can be stopped; the unsent queue stays
+- Single annotations/prompts can be sent immediately or added to the outbox from a row overflow menu;
+  merging outbox entries opens a preview with entry selection and source labels
 - A dock strip above the composer sits beside the host's own queued messages and pushes the whole send
   queue into it in one click
 - Confirmations for destructive actions, with undo on deletes and clears
