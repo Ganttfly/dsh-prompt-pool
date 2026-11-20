@@ -272,6 +272,7 @@ window.__ModuleLoader__.load({
       'note.summary.immediateHint': '勾选后，同意、意见、思路、待办会带上【立即实施…】标记；提问、反对、补充信息只回应。',
       'note.summary.ok': '生成草稿',
       'note.summary.working': '正在生成…',
+      'note.summary.done': '已生成草稿',
       'note.summary.failed': '无法写入输入框，请稍后再试。',
       'note.review.savePrompt': '存成提示词',
       'note.review.outbox': '加入待发送',
@@ -558,6 +559,7 @@ window.__ModuleLoader__.load({
       'note.summary.immediateHint': 'When checked, agreements, opinions, ideas and to-dos carry an [Execute now…] marker; questions, disagreements and additional info only get a response.',
       'note.summary.ok': 'Generate draft',
       'note.summary.working': 'Generating…',
+      'note.summary.done': 'Draft generated',
       'note.summary.failed': 'Could not write to the composer. Try again later.',
       'note.review.savePrompt': 'Save as prompt',
       'note.review.outbox': 'Add to outbox',
@@ -3000,20 +3002,133 @@ window.__ModuleLoader__.load({
       const [allowImmediate, setAllowImmediate] = useState(false);
       const [summaryBusy, setSummaryBusy] = useState(false);
       const [summaryError, setSummaryError] = useState('');
+      const [captureOpen, setCaptureOpen] = useState(false);
+      const [captureGroups, setCaptureGroups] = useState([]);
+      const [captureBusy, setCaptureBusy] = useState(false);
+      const [notice, setNotice] = useState(null);
+      const [popPos, setPopPos] = useState({ left: 16, bottom: 80 });
+      const barRef = useRef(null);
+      const popRef = useRef(null);
+      const noticeTimer = useRef(0);
       const label = translate('button.label');
 
-      const openCapture = () => {
-        if (release.active) return;
-        ui.set({ open: true });
-        try {
-          bridge.request({ type: 'open-capture' });
-        } catch (_error) {
-          /* the panel will report an unavailable composer */
+      useEffect(() => () => {
+        if (noticeTimer.current) clearTimeout(noticeTimer.current);
+      }, []);
+
+      useEffect(() => {
+        if (!captureOpen && !summaryOpen) return undefined;
+        const onDown = (event) => {
+          if (barRef.current && barRef.current.contains(event.target)) return;
+          if (popRef.current && popRef.current.contains(event.target)) return;
+          setCaptureOpen(false);
+          setSummaryOpen(false);
+        };
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return;
+          setCaptureOpen(false);
+          setSummaryOpen(false);
+        };
+        document.addEventListener('pointerdown', onDown, true);
+        window.addEventListener('keydown', onKey, true);
+        window.addEventListener('resize', onDown);
+        window.addEventListener('scroll', onDown, true);
+        return () => {
+          document.removeEventListener('pointerdown', onDown, true);
+          window.removeEventListener('keydown', onKey, true);
+          window.removeEventListener('resize', onDown);
+          window.removeEventListener('scroll', onDown, true);
+        };
+      }, [captureOpen, summaryOpen]);
+
+      const placePopover = () => {
+        const rect = barRef.current && barRef.current.getBoundingClientRect
+          ? barRef.current.getBoundingClientRect()
+          : null;
+        if (!rect || typeof window === 'undefined') {
+          setPopPos({ left: 16, bottom: 80 });
+          return;
         }
+        const width = Math.min(300, window.innerWidth - 16);
+        setPopPos({
+          left: Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width)),
+          bottom: Math.max(8, window.innerHeight - rect.top + 8),
+        });
+      };
+
+      const showNotice = (kind, text) => {
+        placePopover();
+        setNotice({ kind, text });
+        if (noticeTimer.current) clearTimeout(noticeTimer.current);
+        noticeTimer.current = typeof setTimeout === 'function'
+          ? setTimeout(() => setNotice(null), kind === 'error' ? 5000 : 2400)
+          : 0;
+      };
+
+      const openCaptureMenu = async () => {
+        if (release.active || captureBusy) return;
+        if (captureOpen) {
+          setCaptureOpen(false);
+          return;
+        }
+        setNotice(null);
+        setSummaryOpen(false);
+        setCaptureBusy(true);
+        let result;
+        try {
+          result = await bridge.request({ type: 'capture-options' });
+        } catch (error) {
+          result = { ok: false, reason: String((error && error.message) || error) };
+        }
+        setCaptureBusy(false);
+        if (!result || result.ok !== true || !Array.isArray(result.groups)) {
+          showNotice('error', translate('status.noComposer'));
+          return;
+        }
+        const last = normalizeSettings(pool.settings).lastCaptureGroup;
+        const groups = result.groups.slice().sort((left, right) => {
+          if (left.value === last) return -1;
+          if (right.value === last) return 1;
+          return 0;
+        });
+        placePopover();
+        setCaptureGroups(groups);
+        setCaptureOpen(true);
+      };
+
+      const saveDraft = async (group) => {
+        setCaptureOpen(false);
+        let result;
+        try {
+          result = await bridge.request({ type: 'capture', group });
+        } catch (error) {
+          result = { ok: false, reason: String((error && error.message) || error) };
+        }
+        if (!result || result.ok !== true) {
+          showNotice('error', translate(result && result.reason === 'empty' ? 'status.nothing' : 'status.noComposer'));
+          return;
+        }
+        const skipped = Number(result.skipped) || 0;
+        const groupLabel = typeof result.label === 'string' ? result.label : '';
+        showNotice(
+          skipped > 0 ? 'info' : 'ok',
+          skipped > 0
+            ? (groupLabel
+                ? translate('status.savedPartialTo', { group: groupLabel, n: skipped })
+                : translate('status.savedPartial', { n: skipped }))
+            : (groupLabel ? translate('status.savedTo', { group: groupLabel }) : translate('status.saved')),
+        );
       };
 
       const openSummary = () => {
         if (release.active || notes.length === 0) return;
+        if (summaryOpen) {
+          setSummaryOpen(false);
+          return;
+        }
+        setCaptureOpen(false);
+        setNotice(null);
+        placePopover();
         setKeepNotes(normalizeSettings(pool.settings).noteKeepAfterStore !== false);
         setAllowImmediate(false);
         setSummaryError('');
@@ -3042,6 +3157,7 @@ window.__ModuleLoader__.load({
         }
         if (!keepNotes) notesActions.removeMany(notes.map((note) => note.id));
         setSummaryOpen(false);
+        showNotice('ok', translate('note.summary.done'));
       };
 
       return h(
@@ -3050,7 +3166,7 @@ window.__ModuleLoader__.load({
         h('style', { key: 'css' }, CSS),
         h(
           'div',
-          { key: 'bar', className: 'pp-trigger-bar pp-root', 'data-pp-trigger': 'true' },
+          { key: 'bar', className: 'pp-trigger-bar pp-root', 'data-pp-trigger': 'true', ref: barRef },
           h(
             'button',
             {
@@ -3078,9 +3194,9 @@ window.__ModuleLoader__.load({
               className: 'pp-trigger-action',
               title: translate('panel.captureHint'),
               'aria-label': translate('panel.capture'),
-              disabled: release.active,
+              disabled: release.active || captureBusy,
               onMouseDown: (event) => event.preventDefault(),
-              onClick: openCapture,
+              onClick: () => { void openCaptureMenu(); },
             },
             icon('capture'),
             h('span', null, translate('panel.capture')),
@@ -3101,72 +3217,102 @@ window.__ModuleLoader__.load({
             notes.length > 0 ? h('span', { className: 'pp-trigger-count' }, String(notes.length)) : null,
           ),
         ),
+        captureOpen
+          ? h(
+              'div',
+              {
+                key: 'capture-menu',
+                ref: popRef,
+                className: 'pp-trigger-menu pp-root',
+                role: 'menu',
+                'aria-label': translate('capture.title'),
+                style: { left: popPos.left + 'px', bottom: popPos.bottom + 'px' },
+              },
+              h('div', { className: 'pp-trigger-menu-title' }, translate('capture.title')),
+              captureGroups.map((group) => h(
+                'button',
+                {
+                  key: group.value,
+                  type: 'button',
+                  role: 'menuitem',
+                  className: 'pp-trigger-menu-item',
+                  onClick: () => { void saveDraft(group.value); },
+                },
+                group.label,
+              )),
+            )
+          : null,
         summaryOpen
           ? h(
               'div',
               {
                 key: 'summary',
-                className: 'pp-summary-overlay',
-                onClick: () => {
-                  if (!summaryBusy) setSummaryOpen(false);
-                },
+                ref: popRef,
+                className: 'pp-summary-pop pp-root',
+                role: 'dialog',
+                'aria-label': translate('note.summary.title'),
+                style: { left: popPos.left + 'px', bottom: popPos.bottom + 'px' },
               },
               h(
                 'div',
-                {
-                  className: 'pp-summary-pop pp-root',
-                  role: 'dialog',
-                  'aria-modal': 'true',
-                  'aria-label': translate('note.summary.title'),
-                  onClick: (event) => event.stopPropagation(),
-                },
-                h(
-                  'div',
-                  { className: 'pp-summary-head' },
-                  h('span', { className: 'pp-summary-mark' }, icon('annotation')),
-                  h('strong', null, translate('note.summary.title')),
-                  h('span', { className: 'pp-summary-count' }, translate('note.summary.count', { n: notes.length })),
-                ),
-                h('div', { className: 'pp-summary-desc' }, translate('note.summary.desc')),
-                h(
-                  'label',
-                  { className: 'pp-summary-check' },
-                  h('input', {
-                    type: 'checkbox',
-                    checked: keepNotes,
-                    onChange: () => setKeepNotes((current) => !current),
-                  }),
-                  h('span', null, translate('note.summary.keep')),
-                ),
-                h(
-                  'label',
-                  { className: 'pp-summary-check' },
-                  h('input', {
-                    type: 'checkbox',
-                    checked: allowImmediate,
-                    onChange: () => setAllowImmediate((current) => !current),
-                  }),
-                  h('span', null, translate('note.summary.immediate')),
-                ),
-                h('div', { className: 'pp-summary-note' }, translate('note.summary.immediateHint')),
-                summaryError ? h('div', { className: 'pp-summary-error', role: 'alert' }, summaryError) : null,
-                h(
-                  'div',
-                  { className: 'pp-summary-actions' },
-                  h('button', {
-                    type: 'button',
-                    className: 'pp-mini',
-                    disabled: summaryBusy,
-                    onClick: () => setSummaryOpen(false),
-                  }, translate('row.cancel')),
-                  h('button', {
-                    type: 'button',
-                    className: 'pp-primary',
-                    disabled: summaryBusy,
-                    onClick: () => { void runSummary(); },
-                  }, translate(summaryBusy ? 'note.summary.working' : 'note.summary.ok')),
-                ),
+                { className: 'pp-summary-head' },
+                h('span', { className: 'pp-summary-mark' }, icon('annotation')),
+                h('strong', null, translate('note.summary.title')),
+                h('span', { className: 'pp-summary-count' }, translate('note.summary.count', { n: notes.length })),
               ),
+              h('div', { className: 'pp-summary-desc' }, translate('note.summary.desc')),
+              h(
+                'label',
+                { className: 'pp-summary-check' },
+                h('input', {
+                  type: 'checkbox',
+                  checked: keepNotes,
+                  onChange: () => setKeepNotes((current) => !current),
+                }),
+                h('span', null, translate('note.summary.keep')),
+              ),
+              h(
+                'label',
+                { className: 'pp-summary-check' },
+                h('input', {
+                  type: 'checkbox',
+                  checked: allowImmediate,
+                  onChange: () => setAllowImmediate((current) => !current),
+                }),
+                h('span', null, translate('note.summary.immediate')),
+              ),
+              h('div', { className: 'pp-summary-note' }, translate('note.summary.immediateHint')),
+              summaryError ? h('div', { className: 'pp-summary-error', role: 'alert' }, summaryError) : null,
+              h(
+                'div',
+                { className: 'pp-summary-actions' },
+                h('button', {
+                  type: 'button',
+                  className: 'pp-mini',
+                  disabled: summaryBusy,
+                  onClick: () => setSummaryOpen(false),
+                }, translate('row.cancel')),
+                h('button', {
+                  type: 'button',
+                  className: 'pp-primary',
+                  disabled: summaryBusy,
+                  onClick: () => { void runSummary(); },
+                }, translate(summaryBusy ? 'note.summary.working' : 'note.summary.ok')),
+              ),
+            )
+          : null,
+        notice
+          ? h(
+              'div',
+              {
+                key: 'notice',
+                className: 'pp-trigger-notice pp-root',
+                'data-kind': notice.kind,
+                role: 'status',
+                'aria-live': 'polite',
+                style: { left: popPos.left + 'px', bottom: popPos.bottom + 'px' },
+              },
+              notice.text,
             )
           : null,
       );
@@ -8376,9 +8522,11 @@ window.__ModuleLoader__.load({
           if (command.type === 'capture-check') {
             return { ok: true, ready: draftRef.current.trim() !== '' };
           }
-          if (command.type === 'open-capture') {
-            setCaptureOpen(true);
-            return { ok: true };
+          if (command.type === 'capture-options') {
+            return {
+              ok: true,
+              groups: captureChoices(state.categories, workspaces.items, currentWorkspaceId, state.settings),
+            };
           }
           if (command.type === 'capture') {
             // The capture is async (it copies attachments), so the answer is a promise;
@@ -8711,8 +8859,14 @@ window.__ModuleLoader__.load({
       '.pp-trigger-action:hover:not([disabled]){background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-trigger-action[disabled]{opacity:.45;cursor:not-allowed}' +
       '.pp-trigger-count{min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:color-mix(in srgb,var(--pp-accent) 14%,transparent);color:var(--pp-accent);font-size:10px;font-weight:600;line-height:15px;text-align:center;font-variant-numeric:tabular-nums}' +
-      '.pp-summary-overlay{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:flex-end;padding:16px;background:rgba(0,0,0,.16)}' +
-      '.pp-summary-pop{box-sizing:border-box;width:min(320px,calc(100vw - 32px));padding:12px;border:1px solid var(--pp-line-2);border-radius:11px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px;line-height:1.5}' +
+      '.pp-summary-pop{position:fixed;z-index:2147483000;box-sizing:border-box;width:min(300px,calc(100vw - 16px));padding:12px;border:1px solid var(--pp-line-2);border-radius:11px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px;line-height:1.5}' +
+      '.pp-trigger-menu{position:fixed;z-index:2147483000;box-sizing:border-box;width:min(240px,calc(100vw - 16px));max-height:280px;overflow:auto;padding:6px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px}' +
+      '.pp-trigger-menu-title{padding:3px 7px 6px;color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-trigger-menu-item{display:block;width:100%;padding:6px 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.pp-trigger-menu-item:hover{background:var(--pp-hover)}' +
+      '.pp-trigger-notice{position:fixed;z-index:2147483000;max-width:min(300px,calc(100vw - 16px));padding:6px 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface-2);color:var(--pp-ink-2);box-shadow:0 8px 24px rgba(0,0,0,.16);font-size:11px;line-height:1.4;pointer-events:none}' +
+      '.pp-trigger-notice[data-kind="ok"]{color:var(--pp-ok)}' +
+      '.pp-trigger-notice[data-kind="error"]{color:var(--pp-danger)}' +
       '.pp-summary-head{display:flex;align-items:center;gap:6px;margin-bottom:7px}' +
       '.pp-summary-head strong{font-size:13px;font-weight:600}' +
       '.pp-summary-mark{display:inline-flex;color:var(--pp-accent)}' +
