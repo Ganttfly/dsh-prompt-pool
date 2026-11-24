@@ -109,9 +109,12 @@ const capture = (draft, attachmentIds, occurrences, pick = 'group.note', workspa
     if (node.children) node.children.forEach(walk);
   };
   walk(tree);
-  const button = nodes.find((node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('panel.capture') >= 0);
-  if (!button) throw new Error('the capture button was not found');
-  button.props.onClick();
+  const moreHost = nodes.find((node) => typeof node.type === 'function' && node.type.name === 'MenuHost'
+    && Array.isArray(node.props && node.props.items)
+    && node.props.items.some((item) => item.id === 'capture'));
+  const captureItem = moreHost && moreHost.props.items.find((item) => item.id === 'capture');
+  if (!captureItem) throw new Error('the capture menu item was not found');
+  captureItem.onSelect();
   const pool = global.window.__dshPromptPoolStoreV1;
   // The button opens the group chooser; pick the requested destination.
   resetHooks();

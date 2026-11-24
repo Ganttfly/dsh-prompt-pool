@@ -194,8 +194,9 @@ const panelRows = panelNodes.filter((node) => hasClass(node, 'pp-page-item')).le
 const panelGrip = panelNodes.some((node) => hasClass(node, 'pp-panel-grip'));
 const panelQueueToggle = panelNodes.some((node) => node.type === 'button' && hasClass(node, 'pp-queue-toggle'));
 const panelCapture = panelNodes.some(
-  (node) => node.type === 'button' && node.props && node.props.title === 'panel.captureHint'
-    && Array.isArray(node.children) && node.children.indexOf('panel.capture') >= 0,
+  (node) => typeof node.type === 'function' && node.type.name === 'MenuHost'
+    && Array.isArray(node.props && node.props.items)
+    && node.props.items.some((item) => item.id === 'capture'),
 );
 console.log(`[check] panel header search=${panelSearch} close=${panelClose} grip=${panelGrip} queueToggle=${panelQueueToggle} captureHint=${panelCapture} page-item rows=${panelRows}`);
 if (!panelSearch || !panelClose || !panelGrip || !panelQueueToggle || !panelCapture || panelRows === 0) process.exitCode = 1;
@@ -236,7 +237,7 @@ const settingsNodes = [];
 walkTree(settingsTree, (node) => settingsNodes.push(node));
 const settingsTabs = settingsNodes.filter((node) => node.type === 'button' && String(node.props && node.props.className || '') === 'pp-tab');
 const settingsTabBar = settingsNodes.some((node) => String(node.props && node.props.className || '').indexOf('pp-set-tabs') >= 0);
-const settingsTabsPlain = settingsTabs.length === 3 && settingsTabBar && settingsTabs.every((node) => node.props && node.props['data-group'] === undefined);
+const settingsTabsPlain = settingsTabs.length === 2 && settingsTabBar && settingsTabs.every((node) => node.props && node.props['data-group'] === undefined);
 console.log(`[check] settings tabs are plain underlines (${settingsTabs.length},bar=${settingsTabBar})=${settingsTabsPlain}`);
 if (!settingsTabsPlain) process.exitCode = 1;
 const aboutName = settingsNodes.some((node) => node.props && String(node.props.className || '').indexOf('pp-about-name') >= 0);

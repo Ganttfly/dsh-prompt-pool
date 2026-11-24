@@ -240,11 +240,13 @@ else {
       else console.log('[ok] the annotation header no longer exposes summary review');
 
       // Promote one note through the explicit save step.
-      const storeLink = findAll(notesView() || [], (node) => typeof node.type === 'function'
-        && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'store')[0];
+      const storeMenu = findAll(notesView() || [], (node) => typeof node.type === 'function'
+        && node.type.name === 'MenuHost' && Array.isArray(node.props && node.props.items)
+        && node.props.items.some((item) => item.id === 'store'))[0];
+      const storeLink = storeMenu && storeMenu.props.items.find((item) => item.id === 'store');
       if (!storeLink) fail('the row store control is missing');
       else {
-        storeLink.props.onClick();
+        storeLink.onSelect();
         const draft = window.__dshPromptPoolNoteSaveV1 ? window.__dshPromptPoolNoteSaveV1.get() : null;
         if (!draft || draft.open !== true || !Array.isArray(draft.choices) || draft.choices.length === 0) fail('the save step did not open');
         else {
@@ -275,11 +277,13 @@ else {
       if (composeStore) fail('the old header store-as-prompt control is still present');
       else console.log('[ok] the annotation header has no bulk store or review actions');
 
-      const deleteLink = findAll(notesView() || [], (node) => typeof node.type === 'function'
-        && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'trash')[0];
+      const deleteMenu = findAll(notesView() || [], (node) => typeof node.type === 'function'
+        && node.type.name === 'MenuHost' && Array.isArray(node.props && node.props.items)
+        && node.props.items.some((item) => item.id === 'delete'))[0];
+      const deleteLink = deleteMenu && deleteMenu.props.items.find((item) => item.id === 'delete');
       if (!deleteLink) fail('the row delete control is missing');
       else {
-        deleteLink.props.onClick();
+        deleteLink.onSelect();
         const asking = window.__dshPromptPoolNoteConfirmV1 ? window.__dshPromptPoolNoteConfirmV1.get() : null;
         if (!asking || asking.open !== true) fail('deleting did not ask first');
         else if (typeof asking.onConfirm !== 'function') fail('the delete confirmation has no action');
@@ -410,24 +414,14 @@ else {
   const ids = kinds.map((kind) => kind.id).join(',');
   if (ids !== 'agree,disagree,question,comment,idea,supplement,todo') fail(`the annotation kinds are ordered ${ids}`);
   else console.log('[ok] the kind buttons put 提问 between 反对 and 意见');
-  const tints = {
-    agree: ['34,197,94', '22,163,74'],
-    disagree: ['220,38,38', '185,28,28'],
-    question: ['249,115,22', '234,88,12'],
-    comment: ['139,92,246', '124,58,237'],
-    idea: ['59,130,246', '37,99,235'],
-    supplement: ['20,184,166', '13,148,136'],
-    todo: ['250,204,21', '202,138,4'],
-  };
   for (const kind of kinds) {
-    const [tint, ink] = tints[kind.id];
-    if (kind.tint !== tint) fail(`the ${kind.id} annotation color is ${kind.tint}, expected ${tint}`);
-    if (kind.ink !== ink) fail(`the ${kind.id} annotation ink is ${kind.ink}, expected ${ink}`);
+    if (kind.tint !== '217,164,65') fail(`the ${kind.id} annotation color is ${kind.tint}, expected the amber wash`);
+    if (kind.ink !== '158,110,26') fail(`the ${kind.id} annotation ink is ${kind.ink}, expected the amber ink`);
   }
-  if (new Set(kinds.map((kind) => kind.tint)).size !== kinds.length) fail('two annotation kinds still share one color');
-  else console.log('[ok] every annotation kind has its own color');
-  if (new Set(kinds.map((kind) => kind.ink)).size !== kinds.length) fail('two annotation kinds still share one ink');
-  else console.log('[ok] every annotation kind has its own ink shade');
+  if (new Set(kinds.map((kind) => kind.tint)).size !== 1) fail('annotation kinds no longer share one color');
+  else console.log('[ok] every annotation kind shares the amber wash');
+  if (new Set(kinds.map((kind) => kind.ink)).size !== 1) fail('annotation kinds no longer share one ink shade');
+  else console.log('[ok] every annotation kind shares the amber ink');
   if (!source.includes("'note.kind.idea': '思路'")) fail('the Chinese idea label is not 思路');
   else if (!source.includes("'note.kind.idea': 'Idea'")) fail('the English idea label changed');
   else if (!source.includes("'note.kind.supplement': '补充信息'")) fail('the Chinese supplement label changed');
@@ -474,9 +468,9 @@ else {
 }
 const underlineRule = /::highlight\(prompt-pool-note-comment\)\{([^}]*)\}/.exec(source);
 if (!underlineRule) fail('the comment highlight rule is missing');
-else if (underlineRule[1].indexOf('text-decoration-thickness:2px') < 0 || underlineRule[1].indexOf('rgba(124,58,237,1)') < 0) {
-  fail('the comment underline is not the deeper 2px violet');
-} else console.log('[ok] the badge wash and the highlighted underline are deepened');
+else if (underlineRule[1].indexOf('text-decoration-thickness:2px') < 0 || underlineRule[1].indexOf('rgba(217,164,65,1)') < 0) {
+  fail('the comment underline is not the 2px amber rule');
+} else console.log('[ok] the badge wash and the highlighted underline share the amber');
 const iconRule = /\.pp-note-inline-icon\{([^}]*)\}/.exec(source);
 if (!iconRule || iconRule[1].indexOf('font-size:.95em') < 0) fail('the badge icon does not scale with the badge');
 else console.log('[ok] the badge icon scales with the font');

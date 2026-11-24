@@ -143,7 +143,7 @@ for (const showAllTab of [true, false]) {
   const settingsNodes = nodes(settingsTree, []);
   const settingsTabs = settingsNodes.filter((node) => node.type === 'button'
     && String(node.props && node.props.className || '') === 'pp-tab');
-  if (settingsTabs.length !== 3) fail(`showAllTab=${showAllTab}: settings has ${settingsTabs.length} tabs, expected 3`);
+  if (settingsTabs.length !== 2) fail(`showAllTab=${showAllTab}: settings has ${settingsTabs.length} tabs, expected 2`);
   const activeSettingsTab = settingsTabs.find((node) => node.props && node.props['data-active'] === 'true');
   if (!activeSettingsTab || !Array.isArray(activeSettingsTab.children)
     || activeSettingsTab.children.indexOf('settings.tab.notes') < 0) {

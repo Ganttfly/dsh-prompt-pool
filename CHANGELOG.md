@@ -4,6 +4,52 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses
 [semantic versioning](https://semver.org/).
 
+## [2.1.0] — 2026-11-24
+
+### Changed
+
+- The pool is now organized around **two modes and one send queue**: **Annotations** (the current
+  session) and **Prompts** (the library). The old **Current session / Current workspace / Global shared
+  pool** row is gone; scope is a context line inside each mode, and the prompt mode switches between
+  **Current workspace** and **Global shared pool** with a quiet segmented control. The composer panel shows
+  the same two modes and the workspace list only.
+- The annotation context line names the session and its count (`Current session · 5 annotations`) and
+  carries **Review annotations** on the right. Prompt mode adds the scope switch and the type filter on
+  the same row, so the mode switch is never mixed with filters or groups.
+- **Settings is a destination**, not a third tab row: it opens from the header menu, hides the browsing
+  header, and offers two sections (**Annotations / Prompts**) with one back control. The global group
+  order, seed reset, “All” switch and retention switches now live in the Prompts section; the separate
+  Global settings tab was removed.
+- **Rows show one verb, one queue action and an overflow menu.** Prompt rows are **Insert · + · ⋯**
+  (edit / duplicate / delete); annotation rows keep **Locate** on the left and are **Insert · ⋯**
+  (save as prompt / delete). The old five-icon strip is gone, every destructive action still asks first,
+  and delete keeps its undo path.
+- **The send queue is a shared 36px strip** with an expand control and a primary **Send** button. It
+  renders nothing when the queue is empty, expands upward without covering the list, and is absent from
+  annotation mode (annotations are summarized from their own card).
+- **Annotations use one amber identity** instead of seven type colors: the same amber wash, left quote
+  bar and text underline for every kind, with the type conveyed by glyph and label. Type marks in the
+  annotation list and review card share that wash; the prompt row keeps its own type tints. Blue is
+  reserved for primary actions, the active mode and the prompt scope, so a screen has at most two
+  coloured focal points.
+- The page and panel headers were rebuilt: mode switch on the left, search / primary action / overflow
+  and help on the right. **Save current input** moved into the overflow menu and appears as a normal
+  action only when it applies; the type filter moved next to the prompt scope. The panel dropped its
+  duplicated title/slogan row and accent gradient.
+- The reading column is capped at **760px** and centered (rows, list, queue) while the scrollbar stays at
+  the edge. Rows use a 44px minimum height, a 13px/600 title, 12px body and 16px/1.5px line icons;
+  settings cards lost their drop shadows.
+- Empty states and verbs now describe the model directly: annotations explain right-click **Annotate**,
+  prompts explain insert and queue, and the send queue is consistently called **Send tray** (待发送)
+  instead of Outbox in the UI.
+
+### Added
+
+- A **How it works** entry (question-mark button in the header) with a two-column card explaining
+  annotations, prompts and the shared tray. It is a reference, not an automatic tour.
+- The annotation context line exposes **Review annotations** only when the session has annotations, and
+  both mode tabs carry live counts.
+
 ## [Unreleased]
 
 ### Added

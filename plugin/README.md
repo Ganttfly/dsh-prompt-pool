@@ -10,27 +10,27 @@ The pool keeps the draft, the next action and the exact wording next to the conv
 
 ![Annotating a passage inline and reviewing the notes in the pool](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/annotations-overview.png)
 
-![The prompt pool panel open above the composer](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/panel.png)
+![Prompt pool panel in Prompts mode: current workspace items and the send queue](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/panel.png)
 
-- Composer trigger beside the send controls (accent + count while something is queued)
+- Segmented composer trigger beside the send controls: the brand segment opens the panel, and separate
+  **Annotations** / **Prompts** menus lead to the review card and the full page
 - Starter prompts follow the host language; Settings can reset them in the current interface language, keeping edits as ordinary items
-- Composer panel scoped to **Annotations** (current session) and **Prompts** (current workspace), with search,
-  type filtering, row actions and a session-scoped send queue
+- Panel scoped to **Annotations** (current session) and **Prompts** (current workspace), with search, type
+  filtering, **Insert / + / ⋯** row actions and a shared send queue that only appears in Prompts mode
 - Right-click on selected conversation text to copy it or save it into a group (the last destination leads the menu)
 - Annotate while you read: choose a kind from the right-click submenu, keep notes on the exact passage with image
-  attachments, collect them in the current-session tab, and queue each note with its kind and quote preserved
-  (new notes default to Agree)
-- Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback) with **Current
-  session / Current workspace / Global shared pool** scopes
+  attachments, and collect them in the current-session page (new notes default to Agree); **Review annotations**
+  turns the checked notes into one numbered instruction in the amber review card, not the prompt queue
+- Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback) with
+  **Annotations** and **Prompts** (**Current workspace** / **Global shared pool**); the page opens on Annotations
 - Single prompt type per item (decision / question / opinion / idea / supplement / to-do / inspiration), seeded
   from the annotation kind and editable in the save step
 - A save step for title, body, images, type and destination, with a reminder that the conversation context is not kept
 - Global shared pool keeps the built-in, custom and display-mode group tabs; workspace prompts use type filters
-- Settings for annotation retention, post-use retention, the built-in prompt reset, and global shared-pool group order/display; the page opens on Annotations and has no workspace-tab controls
+- Settings is a separate destination with **Annotations** (retention) and **Prompts** (group order/display,
+  built-in reset, post-insert/queue retention, plugin info) sections
 - A release shows progress and can be stopped; the unsent queue stays
-- Annotations queue from their row action with kind and quote metadata preserved; prompts queue with the
-  existing ⊕ control, and Outbox is the only send path
-- Merging outbox entries opens a preview with entry selection and source labels
+- Merging opens a preview of every queued prompt, in order, and sends them as one message
 - Confirmations for destructive actions, with undo on deletes and clears
 
 Requires DSH >= 0.2.0-rc.1 (verified on 0.2.2-rc.1). This is a **bundle**: install the package, then

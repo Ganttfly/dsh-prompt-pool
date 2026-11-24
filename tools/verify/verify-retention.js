@@ -106,10 +106,10 @@ const nodes = (node, out) => {
   return out;
 };
 
-const findInsert = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function'
-  && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'insert');
+const findInsert = (tree) => nodes(tree, []).find((node) => node.type === 'button'
+  && String(node.props && node.props.className || '').indexOf('pp-row-insert') >= 0);
 const findQueue = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function'
-  && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'queue');
+  && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'plus');
 const findUndo = (tree) => nodes(tree, []).find(
   (node) => node.type === 'button' && String(node.props && node.props.className).indexOf('pp-link') >= 0
     && Array.isArray(node.children) && node.children.indexOf('status.undo') >= 0,
@@ -147,7 +147,7 @@ const main = async () => {
   // 1. Switch off: inserting takes the item out of the pool, and undo restores it.
   {
     const run = load({ keepAfterInsert: false, keepAfterQueue: false }, 'conversation.input.overlay', panelProps);
-    await findInsert(run.tree()).props.onClick();
+    await findInsert(run.tree()).props.onClick({ stopPropagation: () => {} });
     const afterInsert = run.tree();
     if (run.pool.get().items.length !== 1) failures.push('off/insert: ' + run.pool.get().items.length + ' item(s) left, expected 1');
     const undo = findUndo(afterInsert);
@@ -161,7 +161,7 @@ const main = async () => {
   // 2. Default: inserting keeps the item and shows no undo.
   {
     const run = load({}, 'conversation.input.overlay', panelProps);
-    await findInsert(run.tree()).props.onClick();
+    await findInsert(run.tree()).props.onClick({ stopPropagation: () => {} });
     if (run.pool.get().items.length !== 2) failures.push('on/insert: ' + run.pool.get().items.length + ' item(s) left, expected 2');
     if (findUndo(run.tree())) failures.push('on/insert: an undo toast appeared although nothing was removed');
   }

@@ -184,13 +184,14 @@ const check = (ok, label) => {
   const notesClosed = renderNotes(tree);
   check(Boolean(notesClosed) && reviewChecks(notesClosed).length === 0, 'review controls stay hidden until the card opens');
   const idleTrash = nodes(notesClosed).find((node) => typeof node.type === 'function'
-    && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'trash');
+    && node.type.name === 'MenuHost' && Array.isArray(node.props && node.props.items)
+    && node.props.items.some((item) => item.id === 'delete'));
   check(Boolean(idleTrash), 'the idle annotation row has a delete action');
   if (idleTrash) {
-    const trashButton = idleTrash.type(idleTrash.props);
+    const deleteItem = idleTrash.props.items.find((item) => item.id === 'delete');
     const surfaceRect = { left: 100, top: 50, width: 900, height: 700 };
     const surface = { getBoundingClientRect: () => surfaceRect };
-    trashButton.props.onClick({
+    deleteItem.onSelect({
       stopPropagation: () => {},
       currentTarget: {
         closest: (selector) => (selector === '.pp-page, .pp-panel' ? surface : null),

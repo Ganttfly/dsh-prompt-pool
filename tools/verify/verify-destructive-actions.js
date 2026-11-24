@@ -108,9 +108,12 @@ const findTrayClose = (tree) => nodes(tree, []).find(
   (node) => typeof node.type === 'function' && node.type.name === 'IconButton' && node.props && node.props.name === 'close',
 );
 const findTrash = (tree) => nodes(tree, []).find(
-  (node) => typeof node.type === 'function' && node.type.name === 'RowActionIcon'
-    && node.props && node.props.name === 'trash',
+  (node) => typeof node.type === 'function' && node.type.name === 'MenuHost'
+    && Array.isArray(node.props && node.props.items)
+    && node.props.items.some((item) => item.id === 'delete'),
 );
+/** Row overflow menus expose their entries as item objects, not child buttons. */
+const activateMenuItem = (host, id) => host.props.items.find((item) => item.id === id).onSelect();
 const findUndo = (tree) => nodes(tree, []).find(
   (node) => node.type === 'button'
     && String(node.props && node.props.className).indexOf('pp-link') >= 0
@@ -124,10 +127,9 @@ const findClearButton = (tree) => nodes(tree, []).find(
 // The row's duplicate action, not the one on a queued entry.
 const findCopy = (tree) => nodes(tree, []).find(
   (node) => typeof node.type === 'function'
-    && node.type.name === 'RowActionIcon'
-    && node.props
-    && node.props.name === 'copy'
-    && node.props.label === 'row.duplicate',
+    && node.type.name === 'MenuHost'
+    && Array.isArray(node.props && node.props.items)
+    && node.props.items.some((item) => item.id === 'copy' && item.label === 'row.duplicate'),
 );
 const findSearch = (tree) => nodes(tree, []).find(
   (node) => node.type === 'input' && node.props && String(node.props.className || '').indexOf('pp-search') >= 0,
@@ -277,7 +279,7 @@ for (const [slotName, props, label] of [
 
   let trash = findTrash(tree);
   if (!trash) { failures.push(`${label}: the delete button was not found`); continue; }
-  trash.props.onClick();
+  activateMenuItem(trash, 'delete');
   if (itemCount() !== startItems) failures.push(`${label}: clicking delete removed the item without asking`);
 
   tree = render();
@@ -296,7 +298,7 @@ for (const [slotName, props, label] of [
 
   trash = findTrash(tree);
   if (!trash) { failures.push(`${label}: the delete button vanished after cancel`); continue; }
-  trash.props.onClick();
+  activateMenuItem(trash, 'delete');
   tree = render();
   const reopenedDelete = findDeleteConfirm(tree);
   if (!reopenedDelete) { failures.push(`${label}: the delete confirmation did not reopen`); continue; }
@@ -320,7 +322,7 @@ for (const [slotName, props, label] of [
   if (!copy) failures.push(`${label}: the duplicate action is missing`);
   else {
     const beforeCopy = itemCount();
-    copy.props.onClick();
+    activateMenuItem(copy, 'copy');
     tree = render();
     if (itemCount() !== beforeCopy + 1) failures.push(`${label}: duplicate changed the pool by ${itemCount() - beforeCopy}`);
   }

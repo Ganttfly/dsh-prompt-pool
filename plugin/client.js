@@ -32,7 +32,7 @@ window.__ModuleLoader__.load({
     const NATIVE_TAB_ID = 'dsh-prompt-pool';
     const NATIVE_TAB_KIND = 'prompt-pool';
     /** Shown in the settings about card; keep in step with plugin/package.json. */
-    const PLUGIN_VERSION = '2.0.0';
+    const PLUGIN_VERSION = '2.1.0';
     const PLUGIN_AUTHOR = 'GanttShen';
     /** Replace once the public repository exists; the row hides while it is empty. */
     const PLUGIN_REPO = 'https://github.com/Ganttfly/dsh-prompt-pool';
@@ -75,16 +75,15 @@ window.__ModuleLoader__.load({
     const ZH = {
       'button.label': '提示池',
       'panel.title': '提示池',
-      'panel.slogan': '整理好，再发送',
       'panel.close': '关闭',
-      'panel.capture': '保存草稿',
-      'panel.captureHint': '把输入框里的内容复制一份存进池子（图片附件一起存）；输入框里的字会保留',
+      'panel.capture': '保存当前输入',
       'panel.resize': '拖动调整高度，双击还原',
       'panel.resizeWidth': '拖动调整宽度，双击还原',
       'panel.pin': '钉住面板',
       'panel.unpin': '取消钉住',
       'panel.empty': '池子是空的。写一句，然后点「存草稿」。',
       'panel.emptyTab': '这一栏还没有内容。',
+      'page.emptyTab': '这里还没有提示词。',
       'tab.all': '全部',
       'tab.oftenuse': '常用',
       'ws.none': '没有可用的工作区',
@@ -111,14 +110,29 @@ window.__ModuleLoader__.load({
       'mention.sessionClosed': '会话未打开，无法读取技能目录',
       'mention.failed': '读取失败',
       'mention.timeout': '读取超时：宿主没有响应（可能没有活跃会话）',
-      'row.insert': '生成草稿',
-      'row.select': '加入待发送队列',
-      'row.duplicate': '复制一份，追加到池子末尾',
+      'row.insert': '插入',
+      'row.select': '加入待发送',
+      'row.more': '更多操作',
+      'row.duplicate': '复制',
       'page.title': '提示池',
       'tab.description': '暂存、编辑、编排你的提示词，按住顺序一次性释放',
       'page.search': '搜索标题或内容…',
-      'page.empty': '还没有内容。点右上角「＋ 提示词」开始。',
+      'page.empty': '把反复使用的指令存在这里，下次一键插入或排队发送。',
       'page.noMatch': '没有匹配的条目。',
+      'page.more': '更多',
+      'page.contextNotes': '当前会话',
+      'page.contextCount': '{n} 条批注',
+      'page.contextPrompts': '当前工作区',
+      'page.contextPromptCount': '{n} 条提示词',
+      'page.reviewNotes': '整理批注',
+      'help.open': '使用说明',
+      'help.title': '提示池怎么用',
+      'help.intro': '批注留在对话里，提示词留在库里，要发的都在待发送队列里。',
+      'help.notesTitle': '批注',
+      'help.notesBody': '在回复里选中一句话，右键选择「批注」。批注只属于当前会话；点「整理批注」可以把它们合并成一条指令。',
+      'help.promptsTitle': '提示词',
+      'help.promptsBody': '把反复使用的指令存进库里。点「插入」进输入框，点「＋」加入待发送队列；它是共享队列，发送后按顺序进入输入框。',
+      'help.close': '知道了',
       'status.noComposer': '没有可用的输入框：请先打开一个对话页签',
       'status.noWorkspace': '当前会话还没有工作区，无法新建工作区提示词。',
       'status.releaseSent': '已交给输入框，按顺序排队中',
@@ -142,8 +156,8 @@ window.__ModuleLoader__.load({
       'settings.mode.tabs': '展开',
       'settings.mode.nested': '折叠',
       'settings.mode.hidden': '隐藏',
-      'settings.tab.global': '全局共享池',
       'settings.tab.prompts': '提示词',
+      'settings.back': '返回提示池',
       'settings.keep': '用过之后，条目留在池子里吗',
       'settings.keepInsert': '插入输入框后，仍旧保留在池子中',
       'settings.keepInsertHint': '关闭后，插入成功的条目会从池子移出；提示条上的「撤销」可以恢复。',
@@ -246,7 +260,6 @@ window.__ModuleLoader__.load({
       'note.title': '批注',
       'scope.notes': '批注',
       'scope.prompts': '提示词',
-      'scope.session': '当前会话',
       'scope.workspace': '当前工作区',
       'scope.global': '全局共享池',
       'note.placeholder': '写点什么：回答、疑问或修改意见',
@@ -318,26 +331,27 @@ window.__ModuleLoader__.load({
       'note.review.failed': '发送失败：{reason}',
       'note.review.unsupported': '当前宿主没有队列直投接口',
       'note.empty': '没有匹配的批注',
-      'note.emptyIntro': '还没有批注。在会话区选中一句话，右键「+ 批注」即可添加。',
+      'note.emptyIntro': '还没有批注。在回复里选中一句话，右键选择「批注」。',
       'note.save': '保存',
       'note.cancel': '取消',
       'note.delete': '删除',
       'note.compose': '汇总批注',
       'note.composeHint': '把选中的批注汇总后插入输入框',
       'note.composeStoreHint': '把选中的批注存成一条提示词',
-      'note.insert': '插入草稿',
+      'note.insert': '插入',
+      'note.more': '更多操作',
       'note.locate': '定位',
       'note.locateFailed': '这条批注暂时找不到原文（回复可能被折叠或改写了）。',
       'note.deleteConfirm': '删除这条批注？',
       'note.deleteHint': '删除后这条批注会从当前会话移除。',
       'note.default': '默认',
       'note.reset': '重置位置',
-      'note.store': '存成提示词',
+      'note.store': '存为提示词',
       'note.stored': '已存入 {group}',
       'note.composeStore': '存成提示词',
       'note.save.contextWarning': '转为提示词后不会保留会话上下文，请确认内容可以独立理解。',
       'note.composeStored': '已存成提示词到 {group}',
-      'note.inserted': '已生成草稿',
+      'note.inserted': '已插入输入框',
       'note.insertFailed': '输入框暂不可用，稍后再试',
       'note.quoteMissing': '这条批注暂时找不到原文位置（回复可能被折叠或改写了）。',
       'note.kind.comment': '意见',
@@ -385,16 +399,15 @@ window.__ModuleLoader__.load({
     const EN = {
       'button.label': 'Prompt pool',
       'panel.title': 'Prompt pool',
-      'panel.slogan': 'Organize, then send',
       'panel.close': 'Close',
-      'panel.capture': 'Save draft',
-      'panel.captureHint': 'Copy the composer draft into the pool; the composer keeps its text',
+      'panel.capture': 'Save current input',
       'panel.resize': 'Drag to resize, double-click to reset',
       'panel.resizeWidth': 'Drag to resize the width, double-click to reset',
       'panel.pin': 'Pin the panel',
       'panel.unpin': 'Unpin the panel',
       'panel.empty': 'The pool is empty. Write something, then press Save draft.',
       'panel.emptyTab': 'Nothing in this tab yet.',
+      'page.emptyTab': 'No prompts here yet.',
       'tab.all': 'All',
       'tab.oftenuse': 'Frequent',
       'ws.none': 'No workspaces available',
@@ -421,14 +434,29 @@ window.__ModuleLoader__.load({
       'mention.sessionClosed': 'The session is not open, so the catalog is unavailable',
       'mention.failed': 'Failed to load',
       'mention.timeout': 'Timed out: the host did not answer (no live session?)',
-      'row.insert': 'Generate draft',
+      'row.insert': 'Insert',
       'row.select': 'Add to the send queue',
-      'row.duplicate': 'Duplicate and append to the pool',
+      'row.more': 'More actions',
+      'row.duplicate': 'Duplicate',
       'page.title': 'Prompt pool',
       'tab.description': 'Stage, edit and arrange prompts, then release them in order',
       'page.search': 'Search title or text…',
-      'page.empty': 'Nothing yet. Use “+ Prompt” in the top right.',
+      'page.empty': 'Keep the instructions you reuse here, then insert or queue them in one click.',
       'page.noMatch': 'No matching item.',
+      'page.more': 'More',
+      'page.contextNotes': 'Current session',
+      'page.contextCount': '{n} annotation(s)',
+      'page.contextPrompts': 'Current workspace',
+      'page.contextPromptCount': '{n} prompt(s)',
+      'page.reviewNotes': 'Review annotations',
+      'help.open': 'How it works',
+      'help.title': 'How the prompt pool works',
+      'help.intro': 'Annotations stay in the conversation, prompts stay in the library, and everything to send waits in the send queue.',
+      'help.notesTitle': 'Annotations',
+      'help.notesBody': 'Select a sentence in a reply and choose “Annotate” from the context menu. Annotations belong to the current session; “Review annotations” merges them into one instruction.',
+      'help.promptsTitle': 'Prompts',
+      'help.promptsBody': 'Save instructions you reuse. “Insert” puts one in the composer; “+” adds it to the send queue. The queue is shared and sends into the composer in order.',
+      'help.close': 'Got it',
       'status.noComposer': 'No composer available: open a conversation tab first',
       'status.noWorkspace': 'This session has no workspace yet, so a workspace prompt cannot be created.',
       'status.releaseSent': 'Handed to the composer; queuing in order',
@@ -452,8 +480,8 @@ window.__ModuleLoader__.load({
       'settings.mode.tabs': 'Expanded',
       'settings.mode.nested': 'Folded',
       'settings.mode.hidden': 'Hidden',
-      'settings.tab.global': 'Global shared pool',
       'settings.tab.prompts': 'Prompts',
+      'settings.back': 'Back to prompt pool',
       'settings.keep': 'What happens to an item once it is used',
       'settings.keepInsert': 'Keep it in the pool after inserting it into the composer',
       'settings.keepInsertHint': 'Turned off, an inserted item leaves the pool; the toast offers an undo.',
@@ -556,7 +584,6 @@ window.__ModuleLoader__.load({
       'note.title': 'Annotations',
       'scope.notes': 'Annotations',
       'scope.prompts': 'Prompts',
-      'scope.session': 'Current session',
       'scope.workspace': 'Current workspace',
       'scope.global': 'Global shared pool',
       'note.placeholder': 'Write an answer, a question or a correction',
@@ -628,14 +655,15 @@ window.__ModuleLoader__.load({
       'note.review.failed': 'Could not send: {reason}',
       'note.review.unsupported': 'This host exposes no direct queue admission',
       'note.empty': 'No matching annotations',
-      'note.emptyIntro': 'No annotations yet. Select a passage in the conversation area and right-click “+ Annotate” to add one.',
+      'note.emptyIntro': 'No annotations yet. Select a passage in the reply, then right-click and choose “Annotate”.',
       'note.save': 'Save',
       'note.cancel': 'Cancel',
       'note.delete': 'Delete',
       'note.compose': 'Summarize',
       'note.composeHint': 'Summarize the selected annotations into one draft',
       'note.composeStoreHint': 'Save the selected annotations as one prompt',
-      'note.insert': 'Insert draft',
+      'note.insert': 'Insert',
+      'note.more': 'More actions',
       'note.locate': 'Locate',
       'note.locateFailed': 'This note cannot find its passage right now (the reply may be folded or rewritten).',
       'note.deleteConfirm': 'Delete this annotation?',
@@ -647,7 +675,7 @@ window.__ModuleLoader__.load({
       'note.composeStore': 'Save as prompt',
       'note.save.contextWarning': 'Saving as a prompt does not keep the conversation context; make sure the text stands on its own.',
       'note.composeStored': 'Saved as a prompt in {group}',
-      'note.inserted': 'Draft generated',
+      'note.inserted': 'Inserted into the composer',
       'note.insertFailed': 'The composer is not available; try again',
       'note.quoteMissing': 'This note cannot find its text right now (the reply may be folded or rewritten).',
       'note.kind.comment': 'Note',
@@ -1522,13 +1550,22 @@ window.__ModuleLoader__.load({
         },
         h(
           'div',
-          { ref: cardRef, className: 'pp-modal-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': props.label },
-          h('div', { className: 'pp-modal-text' }, props.text),
+          {
+            ref: cardRef,
+            className: 'pp-modal-card' + (props.cardClassName ? ' ' + props.cardClassName : ''),
+            role: 'dialog',
+            'aria-modal': 'true',
+            'aria-label': props.label,
+          },
+          props.text ? h('div', { className: 'pp-modal-text' }, props.text) : null,
+          props.children || null,
           h(
             'div',
             { className: 'pp-modal-actions' },
-            h('button', { type: 'button', className: 'pp-mini', autoFocus: true, onClick: props.onCancel }, props.cancelText),
-            h('button', { type: 'button', className: 'pp-primary', onClick: props.onConfirm }, props.confirmText),
+            h('button', { type: 'button', className: props.confirmText ? 'pp-mini' : 'pp-primary', autoFocus: true, onClick: props.onCancel }, props.cancelText),
+            props.confirmText
+              ? h('button', { type: 'button', className: 'pp-primary', onClick: props.onConfirm }, props.confirmText)
+              : null,
           ),
         ),
       );
@@ -1605,6 +1642,37 @@ window.__ModuleLoader__.load({
         onCancel: props.onCancel,
         onConfirm: props.onConfirm,
       });
+    }
+
+    /** Two-column orientation card, opened from the header's question mark. */
+    function HelpDialog(props) {
+      const column = (iconName, title, body) => h(
+        'section',
+        { className: 'pp-help-col' },
+        h('div', { className: 'pp-help-head' }, h('span', { className: 'pp-help-icon' }, icon(iconName)), title),
+        h('p', { className: 'pp-help-body' }, body),
+      );
+      return h(
+        ConfirmModal,
+        {
+          label: translate('help.title'),
+          cancelText: translate('help.close'),
+          cardClassName: 'pp-help-card',
+          onCancel: props.onClose,
+        },
+        h(
+          'div',
+          { className: 'pp-help' },
+          h('div', { className: 'pp-help-title' }, translate('help.title')),
+          h('div', { className: 'pp-help-intro' }, translate('help.intro')),
+          h(
+            'div',
+            { className: 'pp-help-grid' },
+            column('annotation', translate('help.notesTitle'), translate('help.notesBody')),
+            column('prompt', translate('help.promptsTitle'), translate('help.promptsBody')),
+          ),
+        ),
+      );
     }
 
     /** Confirmation before the built-in set is replaced with a fresh language batch. */
@@ -2716,11 +2784,26 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-row-actions' },
-          h(RowActionIcon, { name: 'insert', label: translate('row.insert'), onClick: () => onInsert(item) }),
-          h(RowActionIcon, { name: 'queue', label: translate('row.select'), onClick: () => onQueue(item) }),
-          h(RowActionIcon, { name: 'edit', label: translate('row.edit'), onClick: () => onStartEdit(item) }),
-          h(RowActionIcon, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
-          h(RowActionIcon, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => onDelete(item) }),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-row-insert',
+              title: translate('row.insert'),
+              onClick: (event) => { event.stopPropagation(); onInsert(item); },
+            },
+            h('span', { className: 'pp-btn-icon', 'aria-hidden': true }, icon('insert')),
+            translate('row.insert'),
+          ),
+          h(RowActionIcon, { name: 'plus', label: translate('row.select'), onClick: () => onQueue(item) }),
+          h(MenuHost, {
+            label: translate('row.more'),
+            items: [
+              { id: 'edit', label: translate('row.edit'), icon: 'edit', onSelect: () => onStartEdit(item) },
+              { id: 'copy', label: translate('row.duplicate'), icon: 'copy', onSelect: () => poolActions.duplicateItem(item.id) },
+              { id: 'delete', label: translate('row.delete'), icon: 'trash', danger: true, onSelect: () => onDelete(item) },
+            ],
+          }),
         ),
       );
     }
@@ -2840,21 +2923,36 @@ window.__ModuleLoader__.load({
         onDigest, mode, onModeChange, onRemove, onOpenImage, onError,
       } = props;
 
+      if (!entries || entries.length === 0) return null;
+
       if (collapsed) {
         return h(
-          'button',
-          {
-            type: 'button',
-            className: 'pp-queue-strip',
-            title: translate('tray.expandTitle'),
-            'aria-label': translate('tray.expandTitle'),
-            'aria-expanded': 'false',
-            onClick: () => poolActions.setSetting('queueCollapsed', false),
-          },
-          h('span', { className: 'pp-queue-strip-action' }, icon('chevronUp')),
-          h('span', { className: 'pp-queue-strip-title' }, translate('tray.title')),
-          h('span', { className: 'pp-hint' }, translate('tray.selected', { n: entries.length })),
-          h('span', { className: 'pp-grow' }),
+          'div',
+          { className: 'pp-queue-strip' },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-queue-open',
+              title: translate('tray.expandTitle'),
+              'aria-label': translate('tray.expandTitle'),
+              'aria-expanded': 'false',
+              onClick: () => poolActions.setSetting('queueCollapsed', false),
+            },
+            h('span', { className: 'pp-queue-strip-action' }, icon('chevronUp')),
+            h('span', { className: 'pp-queue-strip-title' }, translate('tray.title')),
+            h('span', { className: 'pp-hint' }, translate('tray.selected', { n: entries.length })),
+          ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-primary pp-queue-send',
+              disabled: busy === true,
+              onClick: onRelease,
+            },
+            translate('tray.release'),
+          ),
         );
       }
 
@@ -3155,6 +3253,24 @@ window.__ModuleLoader__.load({
           );
         case 'plus':
           return h('svg', base, h('path', { d: 'M6 2.2v7.6M2.2 6h7.6' }));
+        case 'more':
+          return h(
+            'svg',
+            { ...base, fill: 'currentColor', stroke: 'none' },
+            h('circle', { cx: 2.4, cy: 6, r: 0.95 }),
+            h('circle', { cx: 6, cy: 6, r: 0.95 }),
+            h('circle', { cx: 9.6, cy: 6, r: 0.95 }),
+          );
+        case 'back':
+          return h('svg', base, h('path', { d: 'M10 6H2.4' }), h('path', { d: 'M5.2 3 2.2 6l3 3' }));
+        case 'help':
+          return h(
+            'svg',
+            base,
+            h('circle', { cx: 6, cy: 6, r: 4.6 }),
+            h('path', { d: 'M4.8 4.6a1.3 1.3 0 1 1 1.8 1.2c-.4.2-.6.5-.6 1' }),
+            h('path', { d: 'M6 8.5h.01' }),
+          );
         case 'pool':
           return h(
             'svg',
@@ -3683,6 +3799,104 @@ window.__ModuleLoader__.load({
       );
     }
 
+    /**
+     * A small overflow menu anchored to its trigger. It renders in the tree but
+     * uses fixed positioning so list scrolling does not clip it.
+     */
+    function MenuHost(props) {
+      const [open, setOpen] = useState(false);
+      const [pos, setPos] = useState(null);
+      const hostRef = useRef(null);
+      const buttonRef = useRef(null);
+      const menuRef = useRef(null);
+      const items = Array.isArray(props.items) ? props.items : [];
+      const close = () => { setOpen(false); setPos(null); };
+      useEffect(() => {
+        if (!open || typeof document === 'undefined') return undefined;
+        const place = () => {
+          const node = buttonRef.current;
+          if (!node || !node.getBoundingClientRect) return;
+          const rect = node.getBoundingClientRect();
+          const width = 176;
+          const height = Math.max(36, items.length * 32 + 8);
+          let left = rect.right - width;
+          if (left < 8) left = 8;
+          if (typeof window !== 'undefined' && left + width > window.innerWidth - 8) left = Math.max(8, window.innerWidth - width - 8);
+          let top = rect.bottom + 4;
+          if (typeof window !== 'undefined' && top + height > window.innerHeight - 8) {
+            top = Math.max(8, rect.top - height - 4);
+          }
+          setPos({ left, top, width });
+        };
+        place();
+        const onDown = (event) => {
+          const target = event.target;
+          if (menuRef.current && menuRef.current.contains(target)) return;
+          if (hostRef.current && hostRef.current.contains(target)) return;
+          close();
+        };
+        const onKey = (event) => {
+          if (event.key === 'Escape') close();
+        };
+        document.addEventListener('pointerdown', onDown, true);
+        document.addEventListener('keydown', onKey, true);
+        window.addEventListener('resize', close);
+        window.addEventListener('scroll', close, true);
+        return () => {
+          document.removeEventListener('pointerdown', onDown, true);
+          document.removeEventListener('keydown', onKey, true);
+          window.removeEventListener('resize', close);
+          window.removeEventListener('scroll', close, true);
+        };
+      }, [open, items.length]);
+      return h(
+        'span',
+        { className: 'pp-menu-host' + (props.className ? ' ' + props.className : ''), ref: hostRef },
+        h(
+          'button',
+          {
+            ref: buttonRef,
+            type: 'button',
+            className: props.buttonClassName || 'pp-row-action pp-row-more',
+            title: props.label,
+            'aria-label': props.label,
+            'aria-haspopup': 'menu',
+            'aria-expanded': open ? 'true' : 'false',
+            onMouseDown: (event) => event.preventDefault(),
+            onClick: (event) => {
+              event.stopPropagation();
+              if (open) close();
+              else setOpen(true);
+            },
+          },
+          icon(props.iconName || 'more'),
+        ),
+        open && pos
+          ? h(
+              'div',
+              { className: 'pp-menu', role: 'menu', ref: menuRef, style: { left: pos.left + 'px', top: pos.top + 'px', width: pos.width + 'px' } },
+              items.map((item) => h(
+                'button',
+                {
+                  key: item.id,
+                  type: 'button',
+                  role: 'menuitem',
+                  className: 'pp-menu-item',
+                  'data-danger': item.danger === true ? 'true' : 'false',
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    close();
+                    item.onSelect();
+                  },
+                },
+                item.icon ? h('span', { className: 'pp-menu-icon', 'aria-hidden': true }, icon(item.icon)) : null,
+                h('span', null, item.label),
+              )),
+            )
+          : null,
+      );
+    }
+
     /** Small thumbnail row for an item, a queue chip, or the image editor. */
     function ImageStrip(props) {
       const list = Array.isArray(props.images) ? props.images : [];
@@ -4077,17 +4291,13 @@ window.__ModuleLoader__.load({
     }
 
     function ScopeBar(props) {
-      const entries = props.mode === 'panel'
-        ? [
-            { id: 'notes', label: 'scope.notes' },
-            { id: 'workspace', label: 'scope.prompts' },
-          ]
-        : [
-            { id: 'notes', label: 'scope.session' },
-            { id: 'workspace', label: 'scope.workspace' },
-            { id: 'global', label: 'scope.global' },
-          ];
-      const [barRef, indicator] = useTabIndicator(props.value, props.value === 'notes' ? 'notes' : 'accent');
+      const entries = [
+        { id: 'notes', label: 'scope.notes' },
+        { id: 'prompts', label: 'scope.prompts' },
+      ];
+      const active = props.value === 'notes' ? 'notes' : 'prompts';
+      const counts = props.counts || {};
+      const [barRef, indicator] = useTabIndicator(active, active === 'notes' ? 'notes' : 'accent');
       return h(
         'div',
         {
@@ -4112,17 +4322,44 @@ window.__ModuleLoader__.load({
             type: 'button',
             className: 'pp-tab',
             role: 'tab',
-            'aria-selected': props.value === entry.id ? 'true' : 'false',
-            tabIndex: props.value === entry.id ? 0 : -1,
+            'aria-selected': active === entry.id ? 'true' : 'false',
+            tabIndex: active === entry.id ? 0 : -1,
             'data-scope': entry.id,
             'data-group': entry.id === 'notes' ? 'notes' : undefined,
-            'data-active': props.value === entry.id ? 'true' : 'false',
+            'data-active': active === entry.id ? 'true' : 'false',
             onClick: () => props.onChange(entry.id),
           },
           h('span', {
             className: 'pp-tab-icon',
             'aria-hidden': true,
-          }, icon(entry.id === 'notes' ? 'annotation' : entry.id === 'workspace' ? 'prompt' : 'layers')),
+          }, icon(entry.id === 'notes' ? 'annotation' : 'prompt')),
+          translate(entry.label),
+          counts[entry.id] > 0
+            ? h('span', { className: 'pp-tab-count' }, String(counts[entry.id]))
+            : null,
+        )),
+      );
+    }
+
+    /** Workspace / global switch inside the prompt mode. */
+    function PromptScopeBar(props) {
+      const entries = [
+        { id: 'workspace', label: 'scope.workspace' },
+        { id: 'global', label: 'scope.global' },
+      ];
+      return h(
+        'div',
+        { className: 'pp-seg', role: 'group', 'aria-label': translate('scope.prompts') },
+        entries.map((entry) => h(
+          'button',
+          {
+            key: entry.id,
+            type: 'button',
+            className: 'pp-seg-item',
+            'data-active': props.value === entry.id ? 'true' : 'false',
+            'aria-pressed': props.value === entry.id ? 'true' : 'false',
+            onClick: () => props.onChange(entry.id),
+          },
           translate(entry.label),
         )),
       );
@@ -4310,15 +4547,25 @@ window.__ModuleLoader__.load({
       const releaseInfo = useReleaseState();
       const noteBar = useNoteStatus();
       const queueCollapsed = state.settings && state.settings.queueCollapsed === true;
-      const workspaces = useWorkspaceDir();
+      const publishedWorkspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
       const pageSessionId = (props && ((props.scope && props.scope.sessionId) || props.sessionId)) || '';
-      const workspaceList = workspaces && Array.isArray(workspaces.items) ? workspaces.items : [];
+      // This page can be the only plugin surface mounted, so it reads the host
+      // roster itself instead of waiting for the panel to publish it.
+      const pageWsSnapshot = typeof props.useWorkspaces === 'function' ? props.useWorkspaces(selectAllInput) : undefined;
+      const workspaceList = pageWsSnapshot
+        ? workspaceEntriesOf(pageWsSnapshot)
+        : (publishedWorkspaces && Array.isArray(publishedWorkspaces.items) ? publishedWorkspaces.items : []);
       const pageWorkspace = pageSessionId
         ? workspaceList.find((entry) => Array.isArray(entry.sessionIds) && entry.sessionIds.indexOf(pageSessionId) >= 0)
         : null;
       const pageWorkspaceId = pageWorkspace ? pageWorkspace.workspaceId : '';
-      const currentWorkspaceId = pageWorkspaceId || (workspaces && workspaces.currentId) || '';
+      const currentWorkspaceId = pageWorkspaceId || (publishedWorkspaces && publishedWorkspaces.currentId) || '';
+      const pageWsSignature = pageWsSnapshot ? JSON.stringify(workspaceList) + '|' + currentWorkspaceId : '';
+      useEffect(() => {
+        if (!pageWsSnapshot || !pageWsSignature) return;
+        workspaceDir.set({ items: workspaceList, currentId: currentWorkspaceId });
+      }, [pageWsSignature]);
       // No panel mounted, so no published session: borrow one from this workspace.
       const workspaceSession = (() => {
         const current = workspaceList.find((entry) => entry.workspaceId === currentWorkspaceId);
@@ -4358,7 +4605,11 @@ window.__ModuleLoader__.load({
       const [scope, setScope] = useState(() => (
         props && (props.initialScope === 'global' || props.initialScope === 'workspace') ? props.initialScope : 'notes'
       ));
+      const [promptScope, setPromptScope] = useState(() => (
+        props && props.initialScope === 'global' ? 'global' : 'workspace'
+      ));
       const [settingsOpen, setSettingsOpen] = useState(false);
+      const [helpOpen, setHelpOpen] = useState(false);
       const [reviewOpen, setReviewOpen] = useState(false);
       const [reviewProcessing, setReviewProcessing] = useState(false);
       const [reviewVersion, setReviewVersion] = useState(0);
@@ -4397,6 +4648,15 @@ window.__ModuleLoader__.load({
         setConfirmClear(false);
         setPendingRemove(null);
         if (next === 'global' && !globalTabs.some((entry) => entry.id === tab)) setTab(activeGlobalTab);
+      };
+      const activeMode = scope === 'notes' ? 'notes' : 'prompts';
+      const switchMode = (next) => {
+        if (next === 'notes') changeScope('notes');
+        else changeScope(promptScope);
+      };
+      const changePromptScope = (next) => {
+        setPromptScope(next);
+        changeScope(next);
       };
       // A failed write outranks a transient toast: the change is not saved.
       const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
@@ -4799,7 +5059,7 @@ window.__ModuleLoader__.load({
         editing,
         setEditing,
         categories: state.categories,
-        workspaces: workspaces.items,
+        workspaces: workspaceList,
         sessionId: activeSessionId,
         editRows: 5,
         editStyle: { margin: '6px 0' },
@@ -4824,25 +5084,77 @@ window.__ModuleLoader__.load({
 
       return h(
         'div',
-        { className: 'pp-page' },
+        { className: 'pp-page', 'data-settings': settingsOpen ? 'true' : undefined },
         h('style', null, CSS),
         h(
           'div',
           { className: 'pp-page-head' },
-          h('input', {
-            key: 'search',
-            className: 'pp-search',
-            value: query,
-            placeholder: translate('page.search'),
-            'aria-label': translate('page.search'),
-            onChange: (event) => setQuery(event.target.value),
+          h(ScopeBar, {
+            value: activeMode,
+            counts: { notes: notesList.length, prompts: state.items.length },
+            onChange: switchMode,
           }),
-          scope === 'notes'
-            ? null
-            : h(
+          h(
+            'div',
+            { className: 'pp-head-tools' },
+            h('input', {
+              className: 'pp-search',
+              value: query,
+              placeholder: translate('page.search'),
+              'aria-label': translate('page.search'),
+              onChange: (event) => setQuery(event.target.value),
+            }),
+            scope === 'notes'
+              ? null
+              : h('button', { type: 'button', className: 'pp-primary pp-new-prompt', onClick: create },
+                  h('span', { className: 'pp-btn-icon' }, icon('plus')),
+                  translate('page.new')),
+            h('button', {
+              type: 'button',
+              className: 'pp-icon pp-menu-trigger',
+              title: translate('help.open'),
+              'aria-label': translate('help.open'),
+              onClick: () => setHelpOpen(true),
+            }, icon('help')),
+            h(MenuHost, {
+              className: 'pp-head-more',
+              buttonClassName: 'pp-icon pp-menu-trigger',
+              label: translate('page.more'),
+              items: [
+                { id: 'capture', label: translate('panel.capture'), icon: 'capture', onSelect: openCapture },
+                {
+                  id: 'settings',
+                  label: translate('settings.open'),
+                  icon: 'gear',
+                  onSelect: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); },
+                },
+              ],
+            }),
+          ),
+        ),
+        scope === 'notes'
+          ? h(
+              'div',
+              { className: 'pp-note-context' },
+              h(
+                'span',
+                { className: 'pp-note-context-text' },
+                translate('page.contextNotes'),
+                h('span', { className: 'pp-context-sep', 'aria-hidden': true }, ' · '),
+                translate('page.contextCount', { n: notesList.length }),
+              ),
+              notesList.length > 0
+                ? h('button', { type: 'button', className: 'pp-link', onClick: openReview }, translate('page.reviewNotes'))
+                : null,
+            )
+          : h(
+              'div',
+              { className: 'pp-prompt-bar' },
+              h(PromptScopeBar, { value: scope, onChange: changePromptScope }),
+              h('span', { className: 'pp-grow' }),
+              h(
                 'select',
                 {
-                  key: 'type-filter',
                   className: 'pp-input pp-type-filter',
                   value: typeFilter,
                   'aria-label': translate('row.type'),
@@ -4852,19 +5164,7 @@ window.__ModuleLoader__.load({
                 h('option', { value: 'none' }, translate('row.typeNone')),
                 PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
               ),
-          scope === 'notes'
-            ? null
-            : [
-                h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: create },
-                  h('span', { className: 'pp-btn-icon' }, icon('plus')),
-                  translate('page.new')),
-                h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture },
-                  h('span', { className: 'pp-btn-icon' }, icon('capture')),
-                  translate('panel.capture')),
-              ],
-          h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
-        ),
-        h(ScopeBar, { mode: 'page', value: scope, onChange: changeScope }),
+            ),
         scope === 'global'
           ? h(
               TabScroller,
@@ -4936,11 +5236,12 @@ window.__ModuleLoader__.load({
               onCancel: () => setCaptureOpen(false),
             })
           : null,
+        helpOpen ? h(HelpDialog, { onClose: () => setHelpOpen(false) }) : null,
         h(
           'div',
           { className: 'pp-page-body', ref: pageListRef },
           settingsOpen
-            ? h(PromptPoolSettings, { currentWorkspaceId })
+            ? h(PromptPoolSettings, { currentWorkspaceId, onBack: () => setSettingsOpen(false) })
             : scope === 'notes'
               ? h(NotesView, {
                   notes: notesList,
@@ -5131,8 +5432,24 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'pp-settings' },
         h('style', null, CSS),
-        h('div', { className: 'pp-set-title' }, translate('settings.title')),
-        h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc')),
+        h(
+          'div',
+          { className: 'pp-set-head' },
+          props.onBack
+            ? h(
+                'button',
+                { type: 'button', className: 'pp-set-back', onClick: props.onBack },
+                h('span', { className: 'pp-btn-icon', 'aria-hidden': true }, icon('back')),
+                translate('settings.back'),
+              )
+            : null,
+          h(
+            'div',
+            { className: 'pp-set-heading' },
+            h('div', { className: 'pp-set-title' }, translate('settings.title')),
+            h('div', { className: 'pp-hint' }, translate('settings.desc')),
+          ),
+        ),
         h(
           'div',
           {
@@ -5178,20 +5495,6 @@ window.__ModuleLoader__.load({
             },
             h('span', { className: 'pp-tab-icon', 'aria-hidden': true }, icon('prompt')),
             translate('settings.tab.prompts'),
-          ),
-          h(
-            'button',
-            {
-              type: 'button',
-              className: 'pp-tab',
-              role: 'tab',
-              'aria-selected': section === 'global' ? 'true' : 'false',
-              tabIndex: section === 'global' ? 0 : -1,
-              'data-active': section === 'global' ? 'true' : 'false',
-              onClick: () => setSection('global'),
-            },
-            h('span', { className: 'pp-tab-icon', 'aria-hidden': true }, icon('layers')),
-            translate('settings.tab.global'),
           ),
         ),
         h(
@@ -5252,7 +5555,7 @@ window.__ModuleLoader__.load({
         ),
         h(
           'div',
-          { className: 'pp-set-group pp-set-card', style: { display: section === 'global' ? '' : 'none' } },
+          { className: 'pp-set-group pp-set-card', style: { display: section === 'prompts' ? '' : 'none' } },
           h('div', { className: 'pp-set-label' }, translate('settings.table')),
           h(
             'div',
@@ -5700,15 +6003,18 @@ window.__ModuleLoader__.load({
     /** Bumped when badge placement changes, so old chips are rebuilt in place. */
     const NOTE_CHIP_VERSION = '4';
 
-    /** Annotation kinds: the glyph, tint and label drive the badge and highlight. */
+    /**
+     * Annotation kinds: the glyph and label tell them apart. Every kind shares
+     * the one amber wash so annotations read as a single layer in the reply.
+     */
     const NOTE_KINDS = [
-      { id: 'agree', icon: '✓', tint: '34,197,94', ink: '22,163,74', prefix: 'Agree-', label: 'note.kind.agree' },
-      { id: 'disagree', icon: '✕', tint: '220,38,38', ink: '185,28,28', prefix: 'Disagree-', label: 'note.kind.disagree' },
-      { id: 'question', icon: '?', tint: '249,115,22', ink: '234,88,12', prefix: 'Question-', label: 'note.kind.question' },
-      { id: 'comment', icon: '✎', tint: '139,92,246', ink: '124,58,237', prefix: 'Comment-', label: 'note.kind.comment' },
-      { id: 'idea', icon: '💡', tint: '59,130,246', ink: '37,99,235', prefix: 'Idea-', label: 'note.kind.idea' },
-      { id: 'supplement', icon: 'ℹ', tint: '20,184,166', ink: '13,148,136', prefix: 'Supplement-', label: 'note.kind.supplement' },
-      { id: 'todo', icon: '□', tint: '250,204,21', ink: '202,138,4', prefix: 'Todo-', label: 'note.kind.todo' },
+      { id: 'agree', icon: '✓', tint: '217,164,65', ink: '158,110,26', prefix: 'Agree-', label: 'note.kind.agree' },
+      { id: 'disagree', icon: '✕', tint: '217,164,65', ink: '158,110,26', prefix: 'Disagree-', label: 'note.kind.disagree' },
+      { id: 'question', icon: '?', tint: '217,164,65', ink: '158,110,26', prefix: 'Question-', label: 'note.kind.question' },
+      { id: 'comment', icon: '✎', tint: '217,164,65', ink: '158,110,26', prefix: 'Comment-', label: 'note.kind.comment' },
+      { id: 'idea', icon: '💡', tint: '217,164,65', ink: '158,110,26', prefix: 'Idea-', label: 'note.kind.idea' },
+      { id: 'supplement', icon: 'ℹ', tint: '217,164,65', ink: '158,110,26', prefix: 'Supplement-', label: 'note.kind.supplement' },
+      { id: 'todo', icon: '□', tint: '217,164,65', ink: '158,110,26', prefix: 'Todo-', label: 'note.kind.todo' },
     ];
     const NOTE_KIND_IDS = NOTE_KINDS.map((kind) => kind.id);
     const NOTE_KIND_DEFAULT = 'agree';
@@ -7443,7 +7749,7 @@ window.__ModuleLoader__.load({
                 key: 'bubble',
                 ref: bubbleRef,
                 className: 'pp-note-bubble',
-                style: { ...bubbleStyle, '--pp-bubble-tint': noteKind(kind).tint, '--pp-bubble-ink': noteKind(kind).ink },
+                style: { ...bubbleStyle, '--pp-bubble-tint': '217,164,65', '--pp-bubble-ink': '158,110,26' },
                 'data-kind': kind,
                 onPointerDown: (event) => event.stopPropagation(),
               },
@@ -7827,8 +8133,6 @@ window.__ModuleLoader__.load({
                   { className: 'pp-notes-quote', title: note.quote },
                   h(TypeMark, {
                     icon: meta.icon,
-                    tint: meta.tint,
-                    ink: meta.ink,
                     title: translate(meta.label),
                   }),
                   h('span', { className: 'pp-notes-quote-text' }, noteQuoteText(note.quote)),
@@ -7887,23 +8191,25 @@ window.__ModuleLoader__.load({
                 : h(
                     'div',
                     { className: 'pp-row-actions' },
-                    h(RowActionIcon, {
-                      name: 'insert',
-                  label: translate('note.insert'),
-                  onClick: () => insertNote(note),
-                }),
-                h(RowActionIcon, {
-                  name: 'store',
-                  label: translate('note.store'),
-                  onClick: () => openPrompt({ kind: 'note', note }),
-                }),
-                h(RowActionIcon, {
-                  name: 'trash',
-                  label: translate('note.delete'),
-                  danger: true,
-                  onClick: (event) => openNoteConfirm(() => notesActions.remove(note.id), event),
-                }),
-              ),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'pp-row-insert',
+                        title: translate('note.insert'),
+                        onClick: (event) => { event.stopPropagation(); insertNote(note); },
+                      },
+                      h('span', { className: 'pp-btn-icon', 'aria-hidden': true }, icon('insert')),
+                      translate('note.insert'),
+                    ),
+                    h(MenuHost, {
+                      label: translate('note.more'),
+                      items: [
+                        { id: 'store', label: translate('note.store'), icon: 'store', onSelect: () => openPrompt({ kind: 'note', note }) },
+                        { id: 'delete', label: translate('note.delete'), icon: 'trash', danger: true, onSelect: (event) => openNoteConfirm(() => notesActions.remove(note.id), event) },
+                      ],
+                    }),
+                  ),
             );
           }),
         ),
@@ -8627,6 +8933,7 @@ window.__ModuleLoader__.load({
         props && (props.initialScope === 'global' || props.initialScope === 'workspace') ? props.initialScope : 'notes'
       ));
       const [settingsOpen, setSettingsOpen] = useState(false);
+      const [helpOpen, setHelpOpen] = useState(false);
       const [reviewOpen, setReviewOpen] = useState(false);
       const [reviewProcessing, setReviewProcessing] = useState(false);
       const [reviewVersion, setReviewVersion] = useState(0);
@@ -9440,6 +9747,8 @@ window.__ModuleLoader__.load({
         setConfirmClear(false);
         setPendingRemove(null);
       };
+      const activeMode = scope === 'notes' ? 'notes' : 'prompts';
+      const switchMode = (next) => changeScope(next === 'notes' ? 'notes' : 'workspace');
 
       // --pp-room carries the measured cap into the stylesheet; a dragged height
       // is capped by the same value, so no path can push the header above the
@@ -9459,6 +9768,7 @@ window.__ModuleLoader__.load({
         'div',
         {
           className: 'pp-panel',
+          'data-settings': settingsOpen ? 'true' : undefined,
           role: 'dialog',
           'aria-label': translate('panel.title'),
           ref: panelRef,
@@ -9492,29 +9802,19 @@ window.__ModuleLoader__.load({
           },
           h('span', { className: 'pp-grip-bar-x' }),
         ),
-        // Same header and tab strip as the sidebar page, so both views read alike.
+        // The two modes live in the panel header; one context row follows them.
         h(
           'div',
           { className: 'pp-page-head pp-panel-head' },
           h(
             'div',
             { className: 'pp-panel-headline' },
-            h(
-              'span',
-              { className: 'pp-page-title pp-panel-title' },
-              h(PromptPoolIcon, { key: 'icon', size: 16 }),
-              translate('panel.title'),
-            ),
-            h('span', { className: 'pp-panel-slogan' }, translate('panel.slogan')),
-            h('span', { className: 'pp-grow' }),
-            h(SettingsButton, {
-              active: settingsOpen,
-              onClick: () => {
-                setReviewOpen(false);
-                setReviewProcessing(false);
-                setSettingsOpen(!settingsOpen);
-              },
+            h(ScopeBar, {
+              value: activeMode,
+              counts: { notes: notesList.length, prompts: state.items.filter((item) => groupOf(item) === workspaceGroup).length },
+              onChange: switchMode,
             }),
+            h('span', { className: 'pp-grow' }),
             h(IconButton, {
               name: panelPinned ? 'pinActive' : 'pin',
               label: panelPinned ? translate('panel.unpin') : translate('panel.pin'),
@@ -9531,45 +9831,84 @@ window.__ModuleLoader__.load({
             'div',
             { className: 'pp-panel-tools' },
             h('input', {
-              key: 'search',
               className: 'pp-search',
               value: query,
               placeholder: translate('page.search'),
               'aria-label': translate('page.search'),
               onChange: (event) => setQuery(event.target.value),
             }),
+            h('span', { className: 'pp-grow' }),
             scope === 'notes'
-              ? h('span', { className: 'pp-type-placeholder', 'aria-hidden': 'true' })
-              : h(
-                  'select',
-                  {
-                    key: 'type-filter',
-                    className: 'pp-input pp-type-filter',
-                    value: typeFilter,
-                    'aria-label': translate('row.type'),
-                    onChange: (event) => setTypeFilter(event.target.value),
+              ? null
+              : h('button', { type: 'button', className: 'pp-primary pp-new-prompt', onClick: newItem },
+                  h('span', { className: 'pp-btn-icon' }, icon('plus')),
+                  translate('page.new')),
+            h('button', {
+              type: 'button',
+              className: 'pp-icon pp-menu-trigger',
+              title: translate('help.open'),
+              'aria-label': translate('help.open'),
+              onClick: () => setHelpOpen(true),
+            }, icon('help')),
+            h(MenuHost, {
+              className: 'pp-head-more',
+              buttonClassName: 'pp-icon pp-menu-trigger',
+              label: translate('page.more'),
+              items: [
+                { id: 'capture', label: translate('panel.capture'), icon: 'capture', onSelect: openCapture },
+                {
+                  id: 'settings',
+                  label: translate('settings.open'),
+                  icon: 'gear',
+                  onSelect: () => {
+                    setReviewOpen(false);
+                    setReviewProcessing(false);
+                    setSettingsOpen(!settingsOpen);
                   },
-                  h('option', { value: 'all' }, translate('row.allTypes')),
-                  h('option', { value: 'none' }, translate('row.typeNone')),
-                  PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
-                ),
-            h(
-              'div',
-              { className: 'pp-panel-actions' },
-              scope === 'notes'
-                ? null
-                : [
-                    h('button', { key: 'new', type: 'button', className: 'pp-mini', onClick: newItem },
-                      h('span', { className: 'pp-btn-icon' }, icon('plus')),
-                      translate('page.new')),
-                    h('button', { key: 'capture', type: 'button', className: 'pp-mini', title: translate('panel.captureHint'), onClick: openCapture },
-                      h('span', { className: 'pp-btn-icon' }, icon('capture')),
-                      translate('panel.capture')),
-                  ],
-            ),
+                },
+              ],
+            }),
           ),
         ),
-        h(ScopeBar, { mode: 'panel', value: scope, onChange: changeScope }),
+        scope === 'notes'
+          ? h(
+              'div',
+              { className: 'pp-note-context' },
+              h(
+                'span',
+                { className: 'pp-note-context-text' },
+                translate('page.contextNotes'),
+                h('span', { className: 'pp-context-sep', 'aria-hidden': true }, ' · '),
+                translate('page.contextCount', { n: notesList.length }),
+              ),
+              notesList.length > 0
+                ? h('button', { type: 'button', className: 'pp-link', onClick: openReview }, translate('page.reviewNotes'))
+                : null,
+            )
+          : h(
+              'div',
+              { className: 'pp-prompt-bar' },
+              h(
+                'span',
+                { className: 'pp-note-context-text' },
+                translate('page.contextPrompts'),
+                h('span', { className: 'pp-context-sep', 'aria-hidden': true }, ' · '),
+                translate('page.contextPromptCount', { n: items.length }),
+              ),
+              h('span', { className: 'pp-grow' }),
+              h(
+                'select',
+                {
+                  className: 'pp-input pp-type-filter',
+                  value: typeFilter,
+                  'aria-label': translate('row.type'),
+                  onChange: (event) => setTypeFilter(event.target.value),
+                },
+                h('option', { value: 'all' }, translate('row.allTypes')),
+                h('option', { value: 'none' }, translate('row.typeNone')),
+                PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
+              ),
+            ),
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
         confirmClear && tray.length > 0
           ? h(TrayClearConfirm, {
@@ -9619,11 +9958,12 @@ window.__ModuleLoader__.load({
               onCancel: () => setCaptureOpen(false),
             })
           : null,
+        helpOpen ? h(HelpDialog, { onClose: () => setHelpOpen(false) }) : null,
         h(
           'div',
           { className: 'pp-list', ref: listRef },
           settingsOpen
-            ? h(PromptPoolSettings, { currentWorkspaceId })
+            ? h(PromptPoolSettings, { currentWorkspaceId, onBack: () => setSettingsOpen(false) })
             : scope === 'notes'
               ? h(NotesView, {
                   notes: notesList,
@@ -9765,7 +10105,7 @@ window.__ModuleLoader__.load({
 
     // -------------------------------------------------------------------- css
     const CSS =
-      '.pp-panel,.pp-page,.pp-settings,.pp-root{--pp-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));--pp-accent-soft:color-mix(in srgb,var(--pp-accent) 13%,transparent);--pp-accent-line:color-mix(in srgb,var(--pp-accent) 55%,transparent);--pp-ink:var(--dsw-alias-label-primary);--pp-ink-2:var(--dsw-alias-label-secondary);--pp-line:var(--dsw-alias-border-l1);--pp-line-2:var(--dsw-alias-border-l2);--pp-surface:var(--dsw-alias-bg-layer-1);--pp-surface-2:var(--dsw-alias-bg-overlay);--pp-queue-bg:color-mix(in srgb,var(--pp-accent) 5%,var(--dsw-alias-bg-base,var(--pp-surface)));--pp-queue-head-bg:color-mix(in srgb,var(--pp-accent) 14%,var(--dsw-alias-bg-base,var(--pp-surface)));--pp-hover:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2));--pp-danger:var(--dsw-alias-state-error-primary);--pp-danger-soft:color-mix(in srgb,var(--dsw-alias-state-error-primary) 12%,transparent);--pp-ok:var(--dsw-alias-state-success-primary);--pp-on-accent:#ffffff;--pp-annotation:#8a6200;--pp-annotation-soft:color-mix(in srgb,#e8b028 18%,transparent);--pp-annotation-line:color-mix(in srgb,#e8b028 90%,transparent);--pp-annotation-head-bg:color-mix(in srgb,#e8b028 14%,var(--pp-surface));--pp-annotation-bg:color-mix(in srgb,#e8b028 5%,var(--dsw-alias-bg-base,var(--pp-surface)))}' +
+      '.pp-panel,.pp-page,.pp-settings,.pp-root{--pp-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));--pp-accent-soft:color-mix(in srgb,var(--pp-accent) 13%,transparent);--pp-accent-line:color-mix(in srgb,var(--pp-accent) 55%,transparent);--pp-ink:var(--dsw-alias-label-primary);--pp-ink-2:var(--dsw-alias-label-secondary);--pp-line:var(--dsw-alias-border-l1);--pp-line-2:var(--dsw-alias-border-l2);--pp-surface:var(--dsw-alias-bg-layer-1);--pp-surface-2:var(--dsw-alias-bg-overlay);--pp-queue-bg:color-mix(in srgb,var(--pp-accent) 5%,var(--dsw-alias-bg-base,var(--pp-surface)));--pp-queue-head-bg:color-mix(in srgb,var(--pp-accent) 14%,var(--dsw-alias-bg-base,var(--pp-surface)));--pp-hover:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2));--pp-danger:var(--dsw-alias-state-error-primary);--pp-danger-soft:color-mix(in srgb,var(--dsw-alias-state-error-primary) 12%,transparent);--pp-ok:var(--dsw-alias-state-success-primary);--pp-on-accent:#ffffff;--pp-annotation:#8a6200;--pp-note:#d9a441;--pp-note-ink:color-mix(in srgb,var(--pp-note) 55%,var(--pp-ink));--pp-note-wash:color-mix(in srgb,var(--pp-note) 6%,transparent);--pp-note-line:color-mix(in srgb,var(--pp-note) 58%,transparent);--pp-annotation-soft:color-mix(in srgb,var(--pp-note) 16%,transparent);--pp-annotation-line:var(--pp-note-line);--pp-annotation-head-bg:color-mix(in srgb,var(--pp-note) 10%,var(--pp-surface));--pp-annotation-bg:color-mix(in srgb,var(--pp-note) 5%,var(--dsw-alias-bg-base,var(--pp-surface)))}' +
       '.pp-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;min-width:28px;padding:0 6px;border:0;border-radius:8px;background:transparent;color:var(--pp-ink-2);cursor:pointer;font:inherit;font-size:12px;line-height:1}' +
       '.pp-btn:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-btn[data-open="true"]{background:var(--pp-hover);color:var(--pp-ink)}' +
@@ -9863,12 +10203,12 @@ window.__ModuleLoader__.load({
       // Two scope themes survive the switch: annotations underline in amber,
       // prompts (workspace and the global shared pool) in prompt blue. The amber
       // label still mixes in the primary ink so it stays legible on both themes.
-      '.pp-scope-bar .pp-tab[data-scope="notes"][data-active="true"]{border-bottom-color:var(--pp-annotation-line);background:transparent;color:color-mix(in srgb,var(--pp-annotation) 72%,var(--pp-ink));font-weight:600}' +
-      '.pp-scope-bar .pp-tab[data-scope="workspace"][data-active="true"],.pp-scope-bar .pp-tab[data-scope="global"][data-active="true"]{border-bottom-color:var(--pp-accent);background:transparent;color:var(--pp-accent);font-weight:600}' +
+      '.pp-scope-bar .pp-tab[data-scope="notes"][data-active="true"]{border-bottom-color:var(--pp-note-line);background:transparent;color:var(--pp-note-ink);font-weight:600}' +
+      '.pp-scope-bar .pp-tab[data-scope="workspace"][data-active="true"],.pp-scope-bar .pp-tab[data-scope="global"][data-active="true"],.pp-scope-bar .pp-tab[data-scope="prompts"][data-active="true"]{border-bottom-color:var(--pp-accent);background:transparent;color:var(--pp-accent);font-weight:600}' +
       // The sliding rule is the tab's underline; the border above is only the
       // pre-measurement fallback and steps aside once the rule has a position.
       '.pp-tab-indicator{position:absolute;z-index:1;height:3px;border-radius:999px;background:var(--pp-accent);pointer-events:none;transition:left .2s cubic-bezier(.2,.7,.2,1),width .2s cubic-bezier(.2,.7,.2,1)}' +
-      '.pp-tab-indicator[data-tone="notes"]{background:var(--pp-annotation-line)}' +
+      '.pp-tab-indicator[data-tone="notes"]{background:var(--pp-note-line)}' +
       '.pp-tab-indicator[data-tone="ink"]{background:color-mix(in srgb,var(--pp-ink) 40%,transparent)}' +
       '.pp-scope-bar[data-indicator="true"] .pp-tab[data-active="true"]{border-bottom-color:transparent}' +
       // The group tabs stay on one line: the viewport scrolls sideways, the row
@@ -9903,6 +10243,76 @@ window.__ModuleLoader__.load({
       '.pp-set-tabs .pp-tab[data-active="true"]{background:transparent;border-bottom-color:color-mix(in srgb,var(--pp-ink) 40%,transparent);color:var(--pp-ink);font-weight:600}' +
       '.pp-set-tabs[data-indicator="true"] .pp-tab[data-active="true"]{border-bottom-color:transparent}' +
       '.pp-select{height:26px;min-width:170px;max-width:100%;padding:0 8px;border:1px solid var(--pp-line);border-radius:7px;background:var(--pp-surface);color:var(--pp-ink);font:inherit;font-size:12px}' +
+      // Settings replaces the whole pool surface: the header, context row and group
+      // tabs belong to browsing, not to the settings destination, so they step aside
+      // and the settings head provides the single way back.
+      '.pp-page[data-settings="true"] .pp-page-head,.pp-page[data-settings="true"] .pp-note-context,.pp-page[data-settings="true"] .pp-prompt-bar,.pp-page[data-settings="true"] .pp-tabscroll{display:none}' +
+      '.pp-panel[data-settings="true"] .pp-panel-tools,.pp-panel[data-settings="true"] .pp-note-context,.pp-panel[data-settings="true"] .pp-prompt-bar,.pp-panel[data-settings="true"] .pp-panel-headline .pp-scope-bar{display:none}' +
+      '.pp-page[data-settings="true"] .pp-page-body{padding-top:12px}' +
+      '.pp-panel[data-settings="true"] .pp-list{padding-top:12px}' +
+      // Help is a two-column reference card, not a tour: it states the same model
+      // as the header in one screen and closes back to wherever it was opened.
+      '.pp-help-card{max-width:540px;gap:12px}' +
+      '.pp-help{display:flex;flex-direction:column;gap:10px}' +
+      '.pp-help-title{font-size:15px;font-weight:600;line-height:1.35}' +
+      '.pp-help-intro{font-size:12px;line-height:1.65;color:var(--pp-ink-2)}' +
+      '.pp-help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}' +
+      '.pp-help-col{display:flex;flex-direction:column;gap:6px;padding:10px 11px;border:1px solid var(--pp-line);border-radius:10px;background:color-mix(in srgb,var(--pp-surface) 65%,transparent)}' +
+      '.pp-help-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
+      '.pp-help-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:none;border-radius:6px;background:color-mix(in srgb,var(--pp-accent) 9%,transparent);color:var(--pp-accent)}' +
+      '.pp-help-icon svg{width:13px;height:13px;stroke-width:1.6}' +
+      '.pp-help-body{font-size:11.5px;line-height:1.6;color:var(--pp-ink-2)}' +
+      '.pp-help-card .pp-modal-actions{margin-top:2px}' +
+      // The page header carries the two-mode switch on the left and the contextual
+      // tools on the right. Both rows stay on one line; the group tabs live below
+      // the prompt bar and scroll on their own.
+      '.pp-head-tools{display:flex;align-items:center;gap:6px;flex:1;min-width:0;justify-content:flex-end}' +
+      '.pp-head-tools .pp-search{flex:0 1 220px;min-width:80px;width:auto}' +
+      '.pp-page-head .pp-scope-bar,.pp-panel-headline .pp-scope-bar{padding:0;gap:14px;min-width:0}' +
+      '.pp-page-head .pp-scope-bar .pp-tab,.pp-panel-headline .pp-scope-bar .pp-tab{height:30px}' +
+      '.pp-new-prompt{height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
+      '.pp-menu-trigger{width:26px;height:26px;border-radius:7px}' +
+      '.pp-head-more{display:inline-flex;flex:none}' +
+      '.pp-note-context,.pp-prompt-bar{display:flex;align-items:center;gap:8px;min-height:34px;padding:4px 12px 6px;border-bottom:1px solid var(--pp-line);font-size:11.5px;color:var(--pp-ink-2)}' +
+      '.pp-note-context-text{display:inline-flex;align-items:center;min-width:0;white-space:nowrap}' +
+      '.pp-context-sep{opacity:.55}' +
+      '.pp-note-context .pp-link{margin-left:auto;flex:none}' +
+      '.pp-prompt-bar .pp-type-filter{flex:none;margin-left:auto}' +
+      // A pale blue recess with a raised surface chip: the same geometry as the
+      // group tabs, without competing with the mode switch above it.
+      '.pp-seg{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:8px;background:color-mix(in srgb,var(--pp-accent) 7%,transparent);box-shadow:inset 0 1px 2px color-mix(in srgb,var(--pp-accent) 8%,transparent)}' +
+      '.pp-seg-item{height:24px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:color-mix(in srgb,var(--pp-ink-2) 66%,var(--pp-accent));font:inherit;font-size:11.5px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer}' +
+      '.pp-seg-item:hover:not([data-active="true"]){background:color-mix(in srgb,var(--pp-accent) 10%,transparent);color:var(--pp-accent)}' +
+      '.pp-seg-item:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
+      '.pp-seg-item[data-active="true"]{background:var(--dsw-alias-bg-base,var(--pp-surface));color:var(--pp-ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px color-mix(in srgb,var(--pp-accent) 16%,transparent)}' +
+      // Row actions: one visible verb, one queue verb, and everything else in a
+      // fixed-position menu so it can escape the list's scroll clip.
+      '.pp-row-insert{display:inline-flex;align-items:center;gap:4px;height:24px;flex:none;padding:0 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-accent);font:inherit;font-size:11.5px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer}' +
+      '.pp-row-insert:hover{background:color-mix(in srgb,var(--pp-accent) 9%,transparent)}' +
+      '.pp-row-insert:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
+      '.pp-row-insert svg{width:13px;height:13px;stroke-width:1.5}' +
+      '.pp-menu-host{position:relative;display:inline-flex;flex:none}' +
+      '.pp-menu{position:fixed;z-index:80;box-sizing:border-box;padding:4px;border:1px solid var(--pp-line);border-radius:10px;background:var(--pp-surface-2);box-shadow:0 12px 32px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);color:var(--pp-ink)}' +
+      '.pp-menu-item{display:flex;align-items:center;gap:8px;width:100%;height:30px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer;white-space:nowrap}' +
+      '.pp-menu-item:hover,.pp-menu-item:focus-visible{background:var(--pp-hover);outline:none}' +
+      '.pp-menu-item[data-danger="true"]{color:var(--pp-danger)}' +
+      '.pp-menu-item[data-danger="true"]:hover,.pp-menu-item[data-danger="true"]:focus-visible{background:var(--pp-danger-soft)}' +
+      '.pp-menu-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:none;color:currentColor}' +
+      '.pp-menu-icon svg{width:15px;height:15px;stroke-width:1.5}' +
+      // Settings is a destination, not a dialog tab strip: it gets an explicit
+      // way back to the pool and two sections only.
+      '.pp-set-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}' +
+      '.pp-set-back{display:inline-flex;align-items:center;gap:4px;height:26px;flex:none;margin-top:-2px;padding:0 8px;border:1px solid var(--pp-line);border-radius:7px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11.5px;cursor:pointer}' +
+      '.pp-set-back:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
+      '.pp-set-back:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
+      '.pp-set-back svg{width:14px;height:14px;stroke-width:1.5}' +
+      '.pp-set-heading{flex:1;min-width:0}' +
+      // The reading column is capped at 760px and centered; the scrollbar stays
+      // at the panel edge, so wide hosts do not push rows against a wall.
+      '.pp-page .pp-page-foot{width:min(760px,calc(100% - 20px));margin-left:auto;margin-right:auto;box-shadow:none}' +
+      '.pp-page-item{min-height:44px;box-sizing:border-box;padding:5px 8px;border-radius:8px}' +
+      '.pp-title{font-size:13px;font-weight:600;line-height:1.35}' +
+      '.pp-icon svg,.pp-row-action svg{width:16px;height:16px;stroke-width:1.5}' +
       '.pp-set-intro{white-space:pre-line}' +
       '.pp-set-radios{display:flex;flex-direction:column;gap:4px;padding:2px 0 4px}' +
       '.pp-set-radio-row{display:flex;align-items:center;gap:10px}' +
@@ -9939,13 +10349,13 @@ window.__ModuleLoader__.load({
       '.pp-set-btn[data-active="true"]{border-color:var(--pp-accent);color:var(--pp-accent)}' +
       '.pp-set-btn-icon{display:inline-flex;align-items:center}' +
       '.pp-btn-icon{display:inline-flex;align-items:center;flex:none}' +
-      '.pp-list{overflow-y:auto;padding:6px 8px 20px;flex:1;min-height:0}' +
+      '.pp-list{overflow-y:auto;padding:6px max(8px,calc((100% - 760px) / 2)) 20px;flex:1;min-height:0}' +
       '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
-      '.pp-page-head{display:flex;align-items:center;gap:8px;padding:12px 12px 8px;border-bottom:1px solid var(--pp-line);flex-wrap:wrap}' +
+      '.pp-page-head{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 12px 6px;border-bottom:1px solid var(--pp-line);flex-wrap:nowrap}' +
       '.pp-panel-head{flex-direction:column;align-items:stretch;gap:0;padding:0}' +
-      '.pp-panel-headline{display:flex;align-items:center;gap:8px;min-width:0;padding:10px 12px 8px;border-bottom:1px solid color-mix(in srgb,var(--pp-accent) 12%,var(--pp-line));background:linear-gradient(180deg,color-mix(in srgb,var(--pp-accent) 6%,var(--dsw-alias-bg-base,var(--pp-surface-2))),color-mix(in srgb,var(--pp-accent) 2%,var(--dsw-alias-bg-base,var(--pp-surface-2))))}' +
+      '.pp-panel-headline{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 12px 6px;border-bottom:1px solid var(--pp-line);background:transparent}' +
       '.pp-panel-slogan{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px}' +
-      '.pp-panel-tools{display:grid;grid-template-columns:minmax(56px,1fr) 104px 208px;align-items:center;gap:8px;padding:8px 12px}' +
+      '.pp-panel-tools{display:flex;align-items:center;gap:6px;padding:6px 12px}' +
       '.pp-panel-actions{display:flex;align-items:center;gap:8px;width:208px;flex:none}' +
       '.pp-panel-actions .pp-mini{width:100px;min-width:100px;padding:0 5px;justify-content:center;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-type-placeholder{box-sizing:border-box;width:104px;height:26px;flex:none;visibility:hidden}' +
@@ -9957,7 +10367,7 @@ window.__ModuleLoader__.load({
       '.pp-type-filter{height:26px;flex:none;width:104px;max-width:104px;padding:0 6px;border-radius:8px;font-size:11px;cursor:pointer}' +
       '.pp-search:focus{border-color:var(--pp-accent)}' +
       '.pp-settings{max-width:640px;padding:16px 20px;color:var(--pp-ink);font-size:13px;line-height:1.6}' +
-      '.pp-set-title{font-size:15px;font-weight:600;margin-bottom:4px}' +
+      '.pp-set-title{font-size:15px;font-weight:600;line-height:1.35;margin-bottom:2px}' +
       '.pp-set-group{margin-top:14px}' +
       '.pp-set-row{display:flex;align-items:flex-start;gap:8px;cursor:pointer}' +
       '.pp-set-row input{margin:3px 0 0;accent-color:var(--pp-accent);cursor:pointer}' +
@@ -9984,12 +10394,12 @@ window.__ModuleLoader__.load({
         '.pp-set-label{font-size:12px;color:var(--pp-ink-2);margin:2px 0 4px}' +
         '.pp-set-note{margin-right:auto;padding:0;line-height:1.4}' +
         '.pp-set-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px}' +
-      '.pp-set-card{padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
+      '.pp-set-card{padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface);box-shadow:none}' +
       '.pp-set-card .pp-set-label{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-set-card .pp-set-row{padding:3px 0}' +
       '.pp-set-card .pp-set-hint{padding-left:0;margin:2px 0 8px}' +
       '.pp-set-item + .pp-set-item{margin-top:8px}' +
-      '.pp-page-body{flex:1;min-height:0;overflow-y:auto;padding:6px 8px 20px}' +
+      '.pp-page-body{flex:1;min-height:0;overflow-y:auto;padding:6px max(8px,calc((100% - 760px) / 2)) 20px}' +
       '.pp-ws{display:flex;flex-direction:column;gap:8px;min-width:0}' +
       '.pp-ws-rail{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}' +
       '.pp-ws-tab{display:inline-flex;align-items:center;gap:5px;max-width:100%;min-width:0;padding:3px 9px;border:1px solid var(--pp-line);border-radius:999px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;line-height:18px;cursor:pointer}' +
@@ -10033,12 +10443,19 @@ window.__ModuleLoader__.load({
       '.pp-queue-toggle:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
       '.pp-queue-toggle-icon{display:inline-flex;align-items:center}' +
       '.pp-queue-toggle svg{width:13px;height:13px;stroke-width:1.2}' +
-      '.pp-queue-strip{display:flex;align-items:center;gap:8px;height:34px;flex:none;margin:0 10px 10px;padding:0 12px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-queue-head-bg);font:inherit;font-size:12px;color:var(--pp-ink-2);cursor:pointer;text-align:left}' +
-      '.pp-queue-strip:hover{background:color-mix(in srgb,var(--pp-accent) 18%,var(--dsw-alias-bg-base,var(--pp-surface)))}' +
-      '.pp-queue-strip:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
+      '.pp-queue-strip{display:flex;align-items:center;gap:6px;height:36px;flex:none;margin:0 10px 10px;padding:0 6px 0 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-queue-head-bg);font:inherit;font-size:12px;color:var(--pp-ink-2)}' +
+      '.pp-queue-open{display:flex;align-items:center;gap:7px;flex:1;min-width:0;height:100%;padding:0;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;font-size:12px;text-align:left;cursor:pointer}' +
+      '.pp-queue-open:hover .pp-queue-strip-title{color:var(--pp-accent)}' +
+      '.pp-queue-open:hover .pp-queue-strip-action{color:var(--pp-accent)}' +
+      '.pp-queue-open:focus-visible{outline:2px solid var(--pp-accent);outline-offset:-2px}' +
       '.pp-queue-strip-title{font-weight:600;color:var(--pp-ink)}' +
-      '.pp-queue-strip-action{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--pp-accent)}' +
+      '.pp-queue-strip-action{display:inline-flex;align-items:center;gap:3px;flex:none;font-size:11px;color:var(--pp-ink-2)}' +
+      '.pp-queue-strip .pp-hint{font-size:11px;color:var(--pp-ink-2);margin-left:2px}' +
+      '.pp-queue-send{flex:none;height:24px;padding:0 10px;border-radius:6px;font-size:11px}' +
       '.pp-queue-strip svg{width:13px;height:13px;stroke-width:1.2}' +
+      // The tray and the reading column share the same 760px measure, independent of
+      // which dock wrapper the tray is rendered in.
+      '.pp-queue-strip{width:min(760px,calc(100% - 20px));margin:0 auto 10px;box-sizing:border-box}' +
       '.pp-page-item{padding:10px 12px;border-radius:10px;border:1px solid transparent}' +
       '.pp-page-item:hover{background:var(--pp-surface);border-color:var(--pp-line)}' +
       '.pp-page-item .pp-actions{opacity:.35}' +
@@ -10186,13 +10603,15 @@ window.__ModuleLoader__.load({
      * Highlight API paints ranges that the markdown DOM never contains.
      */
     const NOTES_CSS =
-      '::highlight(prompt-pool-note-comment){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(124,58,237,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-question){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(234,88,12,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-agree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(22,163,74,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-disagree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(185,28,28,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-idea){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(37,99,235,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-todo){text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:rgba(202,138,4,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '.pp-note-layer{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);position:fixed;inset:0;z-index:2147482000;pointer-events:none}' +
+      // One amber underline for every annotation kind: the type is carried by the
+      // icon and label in the dock, not by seven competing highlight colors.
+      '::highlight(prompt-pool-note-comment){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-question){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-agree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-disagree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-idea){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-todo){text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '.pp-note-layer{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);--pp-inline-tint:217,164,65;--pp-inline-ink:158,110,26;position:fixed;inset:0;z-index:2147482000;pointer-events:none}' +
       '.pp-note-bubble{position:fixed;z-index:1;display:flex;flex-direction:column;gap:8px;width:310px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;padding:11px;border:1px solid var(--pp-note-line);border-radius:12px;background:var(--pp-note-surface);box-shadow:0 18px 48px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left;pointer-events:auto}' +
       '.pp-note-bubble-quote{box-sizing:border-box;padding:6px 8px;border-radius:8px;background:rgba(var(--pp-bubble-tint),.10);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.pp-note-bubble-quote-icon{margin-right:4px;color:rgb(var(--pp-bubble-ink,var(--pp-bubble-tint)))}' +
       '.pp-note-bubble-hint{color:var(--pp-note-danger);font-size:11px}' +
@@ -10210,7 +10629,7 @@ window.__ModuleLoader__.load({
       '.pp-note-btn-primary:hover{background:var(--pp-note-accent);filter:brightness(1.05)}' +
       '.pp-note-btn-danger{color:var(--pp-note-danger);border-color:color-mix(in srgb,var(--pp-note-danger) 40%,transparent)}' +
       '.pp-note-btn-danger:hover{background:color-mix(in srgb,var(--pp-note-danger) 10%,transparent)}' +
-      '.pp-notes{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);display:flex;flex-direction:column;box-sizing:border-box;width:100%;border:1px solid var(--pp-note-line);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-state-warn-primary,#e0a800) 5%,var(--dsw-alias-bg-base,#fff));color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +
+      '.pp-notes{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);--pp-inline-tint:217,164,65;--pp-inline-ink:158,110,26;display:flex;flex-direction:column;box-sizing:border-box;width:100%;border:1px solid var(--pp-note-line);border-radius:10px;background:color-mix(in srgb,var(--pp-note) 4%,var(--dsw-alias-bg-base,#fff));color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +
       '.pp-notes-embedded{border:0;border-radius:0;background:transparent}' +
       '.pp-notes-embedded .pp-notes-head{padding:8px 2px 4px}' +
       '.pp-notes-embedded .pp-notes-list{max-height:none;overflow:visible;padding:0}' +
@@ -10224,18 +10643,19 @@ window.__ModuleLoader__.load({
       '.pp-notes-grow{flex:1;min-width:8px}' +
       '.pp-notes-ask{color:var(--pp-note-ink-2);font-size:11px}' +
       '.pp-notes-list{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;padding:0 8px 8px}' +
-      '.pp-notes-row{display:flex;align-items:flex-start;gap:8px;padding:6px 7px;border:1px solid transparent;border-radius:8px;background:transparent}' +
-      '.pp-notes-row:hover{background:rgba(232,176,40,.22)}' +
-      '.pp-note-check{flex:none;width:14px;height:14px;margin:4px 0 0;accent-color:#d97706;cursor:pointer}' +
+      '.pp-notes-row{display:flex;align-items:flex-start;gap:8px;min-height:44px;box-sizing:border-box;padding:5px 6px;border:1px solid transparent;border-radius:8px;background:transparent}' +
+      '.pp-notes-row:hover{background:color-mix(in srgb,var(--pp-note) 9%,transparent)}' +
+      '.pp-note-check{flex:none;width:14px;height:14px;margin:4px 0 0;accent-color:var(--pp-note);cursor:pointer}' +
       '.pp-notes-row .pp-notes-review-check{accent-color:var(--pp-note-accent)}' +
-      '.pp-notes-n{flex:none;min-width:16px;height:16px;margin-top:1px;border-radius:999px;background:rgba(232,176,40,.22);color:var(--pp-note-ink-2);font-size:10px;line-height:16px;text-align:center}' +
+      '.pp-notes-n{flex:none;min-width:16px;height:16px;margin-top:1px;border-radius:999px;background:color-mix(in srgb,var(--pp-note) 18%,transparent);color:var(--pp-note-ink);font-size:10px;line-height:16px;text-align:center;font-variant-numeric:tabular-nums}' +
       '.pp-notes-main{flex:1;min-width:0}' +
       '.pp-notes-quote{display:flex;align-items:center;gap:6px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap;overflow:hidden}' +
+      '.pp-notes-quote .pp-type-mark{background:color-mix(in srgb,var(--pp-note) 18%,transparent);color:var(--pp-note-ink);border:0}' +
       '.pp-notes-quote-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-notes-empty{padding:14px 12px;color:var(--pp-note-ink-2);font-size:12px;line-height:1.6}' +
       '.pp-notes-empty .pp-empty-mark{justify-content:flex-start;margin-bottom:4px;opacity:.5}' +
       '.pp-notes-empty .pp-empty-mark svg{width:16px;height:16px}' +
-      '.pp-page-foot.pp-review-foot{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);padding:0;gap:0;border-color:var(--pp-line-2);background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
+      '.pp-page-foot.pp-review-foot{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-inline-tint:217,164,65;--pp-inline-ink:158,110,26;padding:0;gap:0;border-color:var(--pp-line-2);background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
       '.pp-page-foot.pp-merge-foot{--pp-note-accent:var(--pp-accent)}' +
       '.pp-page-foot.pp-merge-foot .pp-notes{--pp-note-accent:var(--pp-accent)}' +
       '.pp-review-foot>.pp-review{padding:0;gap:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}' +
@@ -10361,13 +10781,8 @@ window.__ModuleLoader__.load({
       '.pp-note-save-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:2px}' +
       '.pp-notes-row[data-promoted="true"]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary,#2f9e63) 35%,var(--pp-note-line))}' +
       '.pp-notes-kind{flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-right:4px;border-radius:4px;background:rgba(var(--pp-inline-tint),.26);color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)));font-size:10px;line-height:1}' +
-      '.pp-note-inline[data-kind="comment"],.pp-notes-kind[data-kind="comment"],.pp-note-kind[data-kind="comment"]{--pp-inline-tint:139,92,246;--pp-inline-ink:124,58,237}' +
-      '.pp-note-inline[data-kind="question"],.pp-notes-kind[data-kind="question"],.pp-note-kind[data-kind="question"]{--pp-inline-tint:249,115,22;--pp-inline-ink:234,88,12}' +
-      '.pp-note-inline[data-kind="agree"],.pp-notes-kind[data-kind="agree"],.pp-note-kind[data-kind="agree"]{--pp-inline-tint:34,197,94;--pp-inline-ink:22,163,74}' +
-      '.pp-note-inline[data-kind="disagree"],.pp-notes-kind[data-kind="disagree"],.pp-note-kind[data-kind="disagree"]{--pp-inline-tint:220,38,38;--pp-inline-ink:185,28,28}' +
-      '.pp-note-inline[data-kind="idea"],.pp-notes-kind[data-kind="idea"],.pp-note-kind[data-kind="idea"]{--pp-inline-tint:59,130,246;--pp-inline-ink:37,99,235}' +
-      '.pp-note-inline[data-kind="supplement"],.pp-notes-kind[data-kind="supplement"],.pp-note-kind[data-kind="supplement"]{--pp-inline-tint:20,184,166;--pp-inline-ink:13,148,136}' +
-      '.pp-note-inline[data-kind="todo"],.pp-notes-kind[data-kind="todo"],.pp-note-kind[data-kind="todo"]{--pp-inline-tint:250,204,21;--pp-inline-ink:202,138,4}' +
+      // Type chips share one neutral capsule; the selected one takes the amber
+      // wash, so kind is read from the icon and label instead of hue.
       '.pp-note-inline{box-sizing:border-box;display:inline-flex;align-items:center;gap:.25em;height:auto;max-width:100%;margin:0 .12em 0 .32em;padding:.02em .36em;border:1px dashed rgba(var(--pp-inline-ink,var(--pp-inline-tint)),.9);border-radius:5px;background:rgba(var(--pp-inline-tint),.28);color:inherit;font:inherit;font-family:var(--dsw-font-family,inherit);font-size:var(--dsh-content-font-size,14px);font-style:normal;font-weight:400;line-height:1.32;vertical-align:middle;white-space:normal;user-select:none;-webkit-user-select:none;cursor:pointer}' +
       '.pp-note-inline-icon{flex:none;font-size:.95em;line-height:1;color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)))}' +
       '.pp-note-inline-text{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:inherit}' +
