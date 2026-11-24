@@ -19,12 +19,11 @@ All notable changes to this project are documented here. The format follows
   that the conversation context is not carried over.
 - Outbox entries now carry their target session, so queued prompt items are shown and released only in
   the session they were queued for. Legacy entries without a target remain visible everywhere.
-- Annotations queue individually from the row, with kind, quote and body kept as structured source
-  metadata. The selection checkboxes and the header Summary Review action were removed; annotations
-  and prompts no longer expose a direct-send action, so Outbox is the only send path.
-- Outbox entries are labelled by source: prompt, annotation or review.
-- **Merge & send** now opens a read-only merge preview with per-entry selection, order, source labels
-  and a combined-text preview before anything is submitted.
+- **Merge & send** is now a secondary button in the Outbox header that opens the merged preview
+  directly for every queued entry; there is no second subset-selection step. Edit the combined
+  numbered text before anything is submitted; source labels and images stay visible per entry. The
+  preview now also shows thumbnails of every queued image and labels them as attachments sent with
+  the merged message, not inserted into the editable prompt text.
 - Action icons are slightly tighter (24px buttons, no inter-button gap) while keeping the 24px hit area.
 - Settings were rebased on the scope model: the page has **Annotations / Prompts / Global shared pool**
   and opens on Annotations. The old default-tab, workspace-visibility, current-workspace-first and
@@ -35,10 +34,59 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
-- Scope tabs now carry restrained active colors: amber for annotations, blue for the current
-  workspace and muted teal for the global shared pool. The global pool's group tabs use the same teal
-  accent; Settings tabs remain neutral, and the content rows, icons and type chips keep their existing
-  colors.
+- The composer quick bar is more compact: 30px tall and 197px wide (was 38×270), with an icon-only
+  brand cap whose tooltip keeps its name, smaller icons / badges / chevrons, and tighter padding. The
+  brand name now prefixes the quick-action menu titles (**提示池 · 批注** / **提示池 · 提示词**), so the
+  wordmark appears whenever a menu opens instead of occupying the composer at rest.
+- The Outbox now stages prompts only: Clear is a trash icon and the header keeps the one-by-one /
+  merge switch for prompts. Annotations no longer queue into the Outbox. Summary preparation now lives
+  in the annotation tab: expanding the Prompt preview card (or clicking Summarize) adds checkboxes, immediate
+  execution and to-do routing to the rows; locate stays, while insert / save / delete hide. Disagreeing
+  annotations also carry an immediate-execution checkbox (**按照用户要求立即执行**), and the generated
+  prompt marks them accordingly. The bottom
+  card is a prompt-only composer: it previews the generated prompt, lets you edit or regenerate it,
+  and sends it to the session queue or saves it as a prompt. If the host has no direct session queue,
+  Send falls back to inserting the summarized prompt into the composer. The prompt Outbox is hidden while the annotation scope is active, and switching
+  scopes closes the merge and clear prompts. The Prompt preview card now sits at the bottom of the
+  annotation scope like the Outbox: it collapses to a strip and expands into the sheet, stays mounted
+  while collapsed so a draft survives a fold, and the sheet header's chevron collapses it. Its top
+  edge is a drag grip that resizes the card (ArrowUp / ArrowDown on the focused grip also work, and
+  double-click resets to the default height); the height is saved with the pool settings. The card
+  now shares the Outbox palette: queue background and header bands, neutral line borders, transparent
+  rows, and the same 28px action buttons. The summary batch id is internal only: it is gone from the
+  card header, the generated prompt heading and the queued toast, and no summary timestamp is shown;
+  the local batch log keeps it for image retention and audit. Queueing the same prompt twice within one
+  gesture (a host-delivered duplicate click or a fast double click) now adds only the first occurrence;
+  a deliberate later click still adds another, and a successful queue action shows a short confirmation.
+  Short summary quotes now carry an optional
+  complete-sentence/question context line in the generated prompt. It is captured from the selection's
+  own block rather than a fixed character window, is omitted when incomplete or redundant, is never
+  shown in the annotation list, and the summary prompt contract tells the agent to use the preceding
+  reply and ask when still ambiguous. Summarize moved from the page header to
+  the right side of the Prompt preview card's status bar. The card title is now Prompt preview and the
+  status-bar action is Summarize. Opening the card only shows it; summary mode (row checkboxes,
+  immediate execution and to-do routing) starts only after Summarize is pressed. After that, the same
+  spot shows Save as prompt and Send, the bottom action bar is removed, and a small Refresh link in
+  the preview updates the prompt. The Prompt preview and send queue cards now share the same shell, header
+  rhythm, grip and 28px action sizing. The preview card uses the annotation tab's amber accent (tinted
+  border and background) so the two cards stay visually distinct; the Outbox merge sheet remains blue.
+  The summary banner above the annotation list was removed; Select all
+  and Clear now sit in the Prompt preview card's status bar alongside Save and Send. The idle Prompt
+  preview card no longer shows the selected / immediate count chips; they appear only after Summarize,
+  so a retained selection does not look like the result of a previous run. All delete confirmations now
+  use the same centered modal: the annotation delete no longer uses the small anchored popover, but
+  centers over the annotation page/panel with an explanatory message and the same Cancel/Delete actions
+  as prompt deletion. The Outbox card gets the same
+  drag-to-resize top grip, with its own saved height, while the collapsed strip is unchanged. The
+  generated prompt heading is now 【汇总批注】 / [Summarized annotations]; the old 批注审阅 / [Annotation
+  review] wording is gone. The legacy Outbox source label is 汇总 / Summary, and the hidden compose action
+  is 汇总批注 / Summarize. The separate code-review starter prompt keeps its own wording.
+- The scope colors are now two themes instead of three: the annotations tab, summary card and summary
+  controls use the annotation amber; the workspace prompt tab, the global shared pool and the Outbox
+  use the prompt blue. The global pool no longer has a separate teal theme. The global pool's group
+  tabs remain one neutral segmented control — a recessed grey track with the selected tab raised back
+  to the page surface — and the Settings tabs are neutral underlines; both stay hue-free in every
+  state, while the content rows, icons and type chips keep their existing colors.
 - The global **Capture inspiration** shortcut was removed. Inspiration remains available as a prompt
   type when creating or editing an item.
 - The composer dock strip, its **Push** action and the two queue counts were removed, along with the
@@ -59,7 +107,7 @@ All notable changes to this project are documented here. The format follows
 - The panel header now has a dedicated title/slogan row and a second row for search, type filtering
   and the primary actions; Settings, pin and close stay in the title row.
 - Settings is now an icon-only control. The annotation header no longer renders the old bulk store
-  or summary-review actions; each annotation queues from its row instead.
+  or annotation-summary actions; each annotation queues from its row instead.
 - The panel title row now has a light accent-tinted background with a subtle separator, while the
   search and action row stays on the normal surface.
 - The panel toolbar uses stable search / type-slot / action columns, so switching between 批注 and
@@ -74,6 +122,25 @@ All notable changes to this project are documented here. The format follows
   chips, empty states and settings tabs. Prompt-library reordering and annotation numbering
   were removed; Outbox reordering remains. The panel's minimum width is now 440px so the five right-side
   actions leave readable text.
+- All three tab rows now share one label geometry and one interaction model: 26px-high labels
+  (28px in the scope and settings rows), a 14px icon slot, a 5px icon gap and the same focus ring.
+  The scope switcher is now a row of underlines with a rounded 3px rule that slides to the selected
+  tab — amber for annotations, prompt blue for the workspace and global pool. The settings row uses
+  the same sliding rule in a neutral ink tone. The global pool's segmented chip keeps its 7px radius.
+  The selected segmented chip is lifted with a faint white wash and a blue-tinted hairline so it
+  stays above the track on dark themes; the annotations tab mixes the amber into the primary ink so
+  it stays legible on dark themes; the segmented track is a pale prompt-blue recess rather than a
+  neutral grey block, and its labels lean from the secondary ink towards the accent, so the
+  secondary row keeps its quiet hierarchy without reading as grey. The settings underlines gained a
+  quiet hover.
+- The global pool's group tabs stay on one row: the strip scrolls sideways with a fade on the side
+  that still hides tabs, a vertical wheel moves it, and the selected chip is kept in view. The
+  group close chip now uses the shell's hover bubble when the host exposes one, with its native
+  title as the fallback.
+- Tab rows are keyboard reachable: arrow keys move between tabs (Home / End jump to the ends) with a
+  single roving tab stop, the group close chip is now a sibling button laid over the tab's right
+  padding instead of an element nested inside another button, and the close chip keeps its native
+  Enter / Space behavior.
 
 ## [1.5.0] — 2026-11-16
 

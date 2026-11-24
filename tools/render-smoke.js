@@ -122,6 +122,10 @@ store.set(
     tray: [{ key: 'k1', itemId: 'i1', body: '正文一', images: [] }],
   }),
 );
+store.set('dsh.prompt-pool.notes.v1', JSON.stringify({
+  version: 1,
+  items: [{ id: 'n1', sessionId: '', quote: '选中的文字', body: '一条批注' }],
+}));
 
 const panelProps = {
   sessionId: 's1',
@@ -165,6 +169,24 @@ const overlayTree = overlayEntry.component(panelProps);
 const panelNodes = [];
 walkTree(overlayTree, (node) => panelNodes.push(node));
 const hasClass = (node, name) => node.props && String(node.props.className || '').split(' ').indexOf(name) >= 0;
+const pinGlyph = (control) => {
+  if (!control || typeof control.type !== 'function') return null;
+  let glyph = null;
+  walkTree(control.type(control.props), (node) => { if (node.type === 'svg') glyph = node; });
+  return glyph;
+};
+const pinControl = panelNodes.find((node) => node.props && node.props.label === 'panel.pin');
+const unpinnedGlyph = pinGlyph(pinControl);
+const unpinnedShape = Boolean(pinControl && pinControl.props.name === 'pin' && unpinnedGlyph && unpinnedGlyph.props.fill === 'none');
+if (pinControl && typeof pinControl.props.onClick === 'function') pinControl.props.onClick();
+const pinnedNodes = [];
+walkTree(overlayEntry.component(panelProps), (node) => pinnedNodes.push(node));
+const pinnedControl = pinnedNodes.find((node) => node.props && node.props.label === 'panel.unpin');
+const pinnedGlyph = pinGlyph(pinnedControl);
+const pinnedShape = Boolean(pinnedControl && pinnedControl.props.name === 'pinActive' && pinnedControl.props.active === true && pinnedGlyph && pinnedGlyph.props.fill === 'currentColor');
+console.log(`[check] pin glyph changes shape when pinned=${pinnedShape} unpinned=${unpinnedShape}`);
+if (!unpinnedShape || !pinnedShape) process.exitCode = 1;
+if (pinnedControl && typeof pinnedControl.props.onClick === 'function') pinnedControl.props.onClick();
 
 const panelSearch = panelNodes.some((node) => node.type === 'input' && hasClass(node, 'pp-search'));
 const panelClose = panelNodes.some((node) => node.type === 'button' && node.props && node.props.title === 'panel.close');
@@ -183,20 +205,40 @@ const triggerEntry = registrations.find((entry) => entry.slot === 'conversation.
 const triggerNodes = [];
 walkTree(triggerEntry.component({}), (node) => triggerNodes.push(node));
 const trigger = triggerNodes.find((node) => node.type === 'button' && hasClass(node, 'pp-trigger'));
-const triggerLabel = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-trigger-label') && node.children[0] === 'button.label');
+const triggerBrand = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-trigger-brand'));
+const triggerLabel = Boolean(trigger && triggerBrand
+  && (trigger.props['aria-label'] === 'button.label' || trigger.props.title === 'button.label'));
 const triggerBadge = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-badge'));
+const triggerCount = triggerNodes.find((node) => node.type === 'span' && hasClass(node, 'pp-trigger-count'));
+const hasAnnotationCount = triggerCount && triggerCount.children[0] === '1';
 const triggerActions = triggerNodes.filter((node) => node.type === 'button' && hasClass(node, 'pp-trigger-action'));
 const hasAnnotations = triggerActions.some((node) => JSON.stringify(node).indexOf('scope.notes') >= 0);
 const hasPrompts = triggerActions.some((node) => JSON.stringify(node).indexOf('scope.prompts') >= 0);
 const queued = trigger && trigger.props['data-queued'] === 'true';
-console.log(`[check] trigger label=${triggerLabel} queued=${queued} badge=${triggerBadge} actions=${triggerActions.length} annotations=${hasAnnotations} prompts=${hasPrompts}`);
-if (!trigger || !triggerLabel || queued || triggerBadge || triggerActions.length !== 2 || !hasAnnotations || !hasPrompts) process.exitCode = 1;
+console.log(`[check] trigger label=${triggerLabel} queued=${queued} badge=${triggerBadge} noteCount=${hasAnnotationCount} actions=${triggerActions.length} annotations=${hasAnnotations} prompts=${hasPrompts}`);
+if (!trigger || !triggerLabel || queued || triggerBadge || !hasAnnotationCount || triggerActions.length !== 2 || !hasAnnotations || !hasPrompts) process.exitCode = 1;
+
+// The global pool's group tabs are one neutral segmented control and the
+// settings tabs are neutral underlines; only the scope bar tints its active tab.
+const tabCSS = source.slice(source.indexOf("'.pp-tab{"), source.indexOf("'.pp-select{"));
+const segmentedTabs = tabCSS.includes('.pp-global-bar{display:inline-flex')
+  && tabCSS.includes('.pp-global-bar .pp-tab[data-active="true"]{background:var(--dsw-alias-bg-base,var(--pp-surface))')
+  && !/\.pp-global-bar[^{]*\{[^}]*(--pp-global|#0f766e)/.test(tabCSS);
+const underlinedTabs = tabCSS.includes('.pp-set-tabs .pp-tab[data-active="true"]{background:transparent;border-bottom-color:color-mix(in srgb,var(--pp-ink) 40%,transparent)')
+  && !/\.pp-tab\[data-group=/.test(tabCSS);
+console.log(`[check] tabs: segmented global=${segmentedTabs} underlined settings=${underlinedTabs}`);
+if (!segmentedTabs || !underlinedTabs) process.exitCode = 1;
 
 // The settings page names the plugin and its author.
 const settingsEntry = registrations.find((entry) => entry.slot === 'settings.section');
 const settingsTree = settingsEntry.component({});
 const settingsNodes = [];
 walkTree(settingsTree, (node) => settingsNodes.push(node));
+const settingsTabs = settingsNodes.filter((node) => node.type === 'button' && String(node.props && node.props.className || '') === 'pp-tab');
+const settingsTabBar = settingsNodes.some((node) => String(node.props && node.props.className || '').indexOf('pp-set-tabs') >= 0);
+const settingsTabsPlain = settingsTabs.length === 3 && settingsTabBar && settingsTabs.every((node) => node.props && node.props['data-group'] === undefined);
+console.log(`[check] settings tabs are plain underlines (${settingsTabs.length},bar=${settingsTabBar})=${settingsTabsPlain}`);
+if (!settingsTabsPlain) process.exitCode = 1;
 const aboutName = settingsNodes.some((node) => node.props && String(node.props.className || '').indexOf('pp-about-name') >= 0);
 const settingsText = [];
 const collectText = (node) => {

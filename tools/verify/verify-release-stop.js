@@ -100,6 +100,7 @@ const inputActions = {
 };
 const panelProps = {
   sessionId: 's1',
+  initialScope: 'workspace',
   useInput: () => composer,
   inputActions,
   useWorkspaces: () => ({ items: [], currentId: '' }),

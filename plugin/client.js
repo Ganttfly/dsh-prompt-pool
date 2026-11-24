@@ -9,6 +9,19 @@ window.__ModuleLoader__.load({
 
     const useSyncExternalStore = React.useSyncExternalStore;
 
+    /**
+     * The shell's hover bubble when this host exposes it. Older hosts and the
+     * stubbed test renderer fall back to the button's native title instead of
+     * failing the plugin's first render.
+     */
+    let HostTooltip = null;
+    try {
+      const primitives = require('@deepseek-ai/dsh-client-ui-primitives');
+      HostTooltip = primitives && typeof primitives.Tooltip === 'function' ? primitives.Tooltip : null;
+    } catch (error) {
+      HostTooltip = null;
+    }
+
     const NS = 'prompt-pool';
     const STORAGE_KEY = 'dsh.prompt-pool.v1';
     /** One pre-migration copy of the stored payload, written before the first rewrite. */
@@ -113,7 +126,7 @@ window.__ModuleLoader__.load({
       'settings.nav': '提示池',
       'settings.open': '提示池设置',
       'settings.tab.notes': '批注',
-      'settings.notesIntro': '批注和当前会话绑定。\n在正文中添加的批注同时也会出现在提示池的【批注】页面，可以存为提示词、直接插入输入框，或汇总审阅后发送到会话队列。',
+      'settings.notesIntro': '批注和当前会话绑定。\n在正文中添加的批注同时也会出现在提示池的【批注】页面，可以存为提示词、直接插入输入框，或点「汇总批注」生成预览提示词后发送到会话队列。',
       'settings.notesKeepStore': '存为提示词后，仍旧保留',
       'settings.notesKeepStoreHint': '关闭后，存成提示词成功的批注会从列表移除。保存步骤不会把会话、原文节点和上下文带进提示词。',
       'settings.table': '全局共享池的分组',
@@ -185,22 +198,29 @@ window.__ModuleLoader__.load({
 
       'row.noCategory': '未分组',
       'tray.title': '待发送队列',
+      'tray.titleHint': '这里只放提示词；批注在「预览提示词」卡里直接发送或存成提示词。',
       'tray.source.prompt': '提示词',
-      'tray.source.review': '审阅',
+      'tray.source.review': '汇总',
       'tray.source.annotation': '批注',
-      'tray.selected': '已选 {n} 条',
+      'tray.selected': '共 {n} 条',
       'tray.release': '发送',
-      'tray.digest': '合并发送…',
-      'merge.title': '合并发送',
-      'merge.count': '{n} 条 → 1 条',
-      'merge.hint': '按当前顺序合并为一条消息，共 {images} 张图片。',
+      'tray.digest': '合并发送',
+      'tray.mode': '发送方式',
+      'tray.mode.single': '逐条',
+      'tray.mode.merge': '合并',
+      'merge.title': '合并预览',
+      'merge.chosen': '共 {n} 条',
+      'merge.subtitle': '按待发送队列的顺序合并为一条消息。',
+      'merge.previewHint': '按当前顺序合并为一条消息；发送前可以直接修改。',
+      'merge.attachments': '图片附件（{n}）：作为附件随合并消息发送，不写入提示词正文。',
+      'merge.empty': '没有可合并的条目',
+      'merge.sending': '正在合并…',
       'merge.preview': '合并预览',
       'merge.confirm': '合并发送',
-      'tray.clear': '清空',
       'tray.clearTitle': '清空待发送队列',
       'tray.clearConfirm': '队列里的 {n} 条会被一起移出。',
       'tray.clearAction': '清空',
-      'tray.empty': '还没选中任何条目，点左侧「＋」加入',
+      'tray.empty': '队列里还没有提示词；在提示词行点「＋」加入。',
       'tray.remove': '移出',
       'tray.removeTitle': '移出这一条',
       'tray.removeConfirm': '移出后不可撤销；这条如果在队列里改过，改动不会保留。',
@@ -208,6 +228,7 @@ window.__ModuleLoader__.load({
       'tray.duplicate': '复制一份，追加到末尾',
 
       'tray.collapseTitle': '收起待发送队列',
+      'tray.resize': '拖动调整高度，双击复位',
       'tray.expandTitle': '展开待发送队列',
       'status.saved': '已存入池子',
       'status.savedPartial': '已存入池子，但这 {n} 个附件没有一起保存',
@@ -232,43 +253,56 @@ window.__ModuleLoader__.load({
       'note.limitHint': '最多 100 个全角或 200 个半角字符',
 
       'note.noneSelected': '先勾选至少一条批注',
-      'note.review.title': '汇总审阅',
-      'note.review.heading': '【批注审阅 {id}】',
-      'note.review.intro': '请按类型逐条回应，编号必须保留。默认只回应，不要修改文件或执行任务。只执行带【立即实施…】标记的条目：先完成回应，再按标记中的条件执行并报告结果；条件不满足或无法执行时说明原因。只输出对批注本身的回应，不要解释这些规则，也不要评论标记本身。',
+      'note.review.title': '预览提示词',
+      'note.review.heading': '【汇总批注】',
+      'note.review.intro': '请按类型逐条回应，编号必须保留。默认只回应，不要修改文件或执行任务。只执行带【立即实施…】标记的条目：先完成回应，再按标记中的条件执行并报告结果；条件不满足或无法执行时说明原因。若某条引用只是选项或不完整片段，结合上一条回复理解；仍无法确定时先说明并询问，不要猜。只输出对批注本身的回应，不要解释这些规则，也不要评论标记本身。',
+      'note.review.contextQuestion': '问题：{text}',
+      'note.review.context': '上下文：{text}',
       'note.review.attachments': '附件：{n} 张图片。',
       'note.review.group.question': '逐条回答。',
       'note.review.group.comment': '逐条说明接受、不接受或需要补充，并给出理由。',
       'note.review.group.agree': '确认收到结论即可，不必展开。',
-      'note.review.group.disagree': '确认收到否定结论即可，不必展开。',
+      'note.review.group.disagree': '确认收到否定结论；带【立即实施…】标记的按标记执行。',
       'note.review.group.idea': '补充需要的信息，评估可行性、收益和风险，给出建议方案。',
       'note.review.group.supplement': '这条批注补充了新信息。请结合它重新检查相关结论，指出哪些结论需要修正、哪些保持不变，并给出更新后的判断；不要修改文件或执行任务。',
       'note.review.group.todo': '执行并逐项报告结果；如果受阻或需要确认，先说明并等待。',
       'note.review.immediate.comment': '采纳时立即实施',
       'note.review.immediate.agree': '按此方案立即实施',
       'note.review.immediate.idea': '可行时立即实施',
+      'note.review.immediate.disagree': '按照用户要求立即执行',
       'note.review.immediateMark.comment': '【立即实施（采纳后）】',
       'note.review.immediateMark.agree': '【立即实施（按此方案）】',
       'note.review.immediateMark.idea': '【立即实施（可行时）】',
+      'note.review.immediateMark.disagree': '【立即实施（按用户要求）】',
       'note.review.immediateMark.todo': '【立即实施】',
       'note.review.immediateCount': '本轮立即实施 {n} 条',
       'note.review.todo.execute': '立即实施',
       'note.review.todo.prompt': '存为提示词',
       'note.review.parkOnly': '没有需要发送给 Agent 的批注；待办可以存入提示池。',
       'note.review.parked': '已将 {n} 条待办存入提示池',
-      'note.review.queuedParked': '已发送审阅 {id}，并将 {n} 条待办存入提示池',
+      'note.review.queuedParked': '已发送汇总，并将 {n} 条待办存入提示池',
       'note.review.selected': '已选 {n} 条',
-      'note.review.previewAction': '预览提示词',
-      'note.review.back': '返回批注',
-      'note.review.previewHint': '确认无误后发送；需要调整请返回批注。',
-      'note.review.send': '发送到会话队列',
-      'note.queueOutbox': '加入待发送',
-      'note.queuedOutbox': '已加入待发送',
+      'note.review.open': '汇总批注',
+      'note.review.collapse': '收起',
+      'note.review.resize': '拖动调整高度，双击复位',
+      'note.review.previewHint': '按当前勾选和立即实施选项生成；可直接修改。',
+      'note.review.processTitle': '按当前勾选重新生成提示词',
+      'note.review.refresh': '刷新',
+      'note.review.startTitle': '勾选批注并生成提示词',
+      'note.review.idleHint': '点击「汇总批注」，勾选需要处理的批注、可自动生成汇总后的提示词。',
+      'note.review.stale': '批注已变更，点「刷新」更新提示词。',
+      'note.review.nothingSelected': '还没有勾选批注；在上方列表勾选后再生成提示词。',
+      'note.review.selectAll': '全选',
+      'note.review.clearAll': '清空选择',
+      'note.review.select': '选择此批注',
+      'note.review.parkAction': '存入提示池',
+      'note.review.send': '发送',
       'note.summary.title': '汇总批注',
       'note.summary.count': '{n} 条批注',
       'note.summary.desc': '把当前会话的全部批注合并成一条带编号和回应要求的提示词，放入输入框；不会自动发送。',
       'note.summary.keep': '完成后保留批注',
       'note.summary.immediate': '允许立即执行',
-      'note.summary.immediateHint': '勾选后，同意、意见、思路、待办会带上【立即实施…】标记；提问、反对、补充信息只回应。',
+      'note.summary.immediateHint': '勾选后，同意、意见、思路、反对、待办会带上【立即实施…】标记；提问、补充信息只回应。',
       'note.summary.ok': '生成草稿',
       'note.summary.working': '正在生成…',
       'note.summary.done': '已生成草稿',
@@ -278,26 +312,24 @@ window.__ModuleLoader__.load({
       'prompt.menu.new': '新建提示词',
       'prompt.menu.view': '查看提示词',
       'note.review.savePrompt': '存成提示词',
-      'note.review.outbox': '加入待发送',
-      'note.review.outboxDone': '已加入待发送',
       'note.review.sending': '正在发送…',
-      'note.review.queued': '已送入会话队列：{id}',
+      'note.review.queued': '已送入会话队列',
+      'note.review.inserted': '已插入输入框；确认后请手动发送。',
       'note.review.failed': '发送失败：{reason}',
       'note.review.unsupported': '当前宿主没有队列直投接口',
-      'note.review.empty': '没有可汇总的批注',
-      'note.review.emptyHint': '先在批注列表里勾选要送审的条目。',
       'note.empty': '没有匹配的批注',
       'note.emptyIntro': '还没有批注。在会话区选中一句话，右键「+ 批注」即可添加。',
       'note.save': '保存',
       'note.cancel': '取消',
       'note.delete': '删除',
-      'note.compose': '汇总审阅',
-      'note.composeHint': '预览选中的批注并发送到会话队列',
+      'note.compose': '汇总批注',
+      'note.composeHint': '把选中的批注汇总后插入输入框',
       'note.composeStoreHint': '把选中的批注存成一条提示词',
       'note.insert': '插入草稿',
       'note.locate': '定位',
       'note.locateFailed': '这条批注暂时找不到原文（回复可能被折叠或改写了）。',
       'note.deleteConfirm': '删除这条批注？',
+      'note.deleteHint': '删除后这条批注会从当前会话移除。',
       'note.default': '默认',
       'note.reset': '重置位置',
       'note.store': '存成提示词',
@@ -330,6 +362,7 @@ window.__ModuleLoader__.load({
       'status.emptyBody': '内容不能是空的',
       'status.inserted': '已插入到输入框',
       'status.insertedAndRemoved': '已插入到输入框，并从池子移出',
+      'status.queued': '已加入待发送队列',
       'status.queuedAndRemoved': '已加入待发送队列，并从池子移出',
       'status.insertFailed': '输入框刚被改动，请重试',
       'status.released': '已释放 {n} 条',
@@ -475,22 +508,29 @@ window.__ModuleLoader__.load({
 
       'row.noCategory': 'Ungrouped',
       'tray.title': 'Send queue',
+      'tray.titleHint': 'Prompts only; annotations are sent or saved from the Prompt preview card.',
       'tray.source.prompt': 'Prompt',
-      'tray.source.review': 'Review',
+      'tray.source.review': 'Summary',
       'tray.source.annotation': 'Annotation',
-      'tray.selected': '{n} selected',
+      'tray.selected': '{n} prompt(s)',
       'tray.release': 'Send',
-      'tray.digest': 'Merge & send…',
-      'merge.title': 'Merge & send',
-      'merge.count': '{n} → 1',
-      'merge.hint': 'Merged into one message in the current order, with {images} image(s).',
+      'tray.digest': 'Merge & send',
+      'tray.mode': 'Send mode',
+      'tray.mode.single': 'One by one',
+      'tray.mode.merge': 'Merge',
+      'merge.title': 'Merge preview',
+      'merge.chosen': '{n} item(s)',
+      'merge.subtitle': 'Combines the outbox entries into one message in their current order.',
+      'merge.previewHint': 'Merged into one message in the current order. Edit it before sending.',
+      'merge.attachments': '{n} image(s) attached to the merged message; not inserted into the prompt text.',
+      'merge.empty': 'No entries to merge',
+      'merge.sending': 'Merging…',
       'merge.preview': 'Merged preview',
       'merge.confirm': 'Merge & send',
-      'tray.clear': 'Clear',
       'tray.clearTitle': 'Clear the send queue',
       'tray.clearConfirm': 'All {n} queued items are removed at once.',
       'tray.clearAction': 'Clear',
-      'tray.empty': 'Nothing selected yet — use the ＋ control on a row',
+      'tray.empty': 'No prompts queued yet — use the ＋ control on a prompt row.',
       'tray.remove': 'Remove',
       'tray.removeTitle': 'Remove this queued item',
       'tray.removeConfirm': 'This cannot be undone. Edits made to this queued copy are lost.',
@@ -498,6 +538,7 @@ window.__ModuleLoader__.load({
       'tray.duplicate': 'Duplicate and append to the end',
 
       'tray.collapseTitle': 'Collapse the send queue',
+      'tray.resize': 'Drag to resize; double-click to reset',
       'tray.expandTitle': 'Expand the send queue',
       'status.saved': 'Saved to the pool',
       'status.savedPartial': 'Saved to the pool; {n} attachment(s) were not captured',
@@ -522,43 +563,56 @@ window.__ModuleLoader__.load({
       'note.limitHint': 'Up to 100 full-width or 200 half-width characters',
 
       'note.noneSelected': 'Select at least one annotation first',
-      'note.review.title': 'Review annotations',
-      'note.review.heading': '[Annotation review {id}]',
-      'note.review.intro': 'Respond to each annotation by kind and keep its ID. By default, respond only: do not modify files or run tasks. Execute only items marked [Execute now…]: finish the response first, then execute under the condition in the marker and report the result; if the condition is not met or execution is blocked, explain why. Answer the annotation itself only: do not explain these rules or comment on the marker.',
+      'note.review.title': 'Prompt preview',
+      'note.review.heading': '[Summarized annotations]',
+      'note.review.intro': 'Respond to each annotation by kind and keep its ID. By default, respond only: do not modify files or run tasks. Execute only items marked [Execute now…]: finish the response first, then execute under the condition in the marker and report the result; if the condition is not met or execution is blocked, explain why. If a quote is only an option or an incomplete fragment, use the preceding reply to understand it; if it is still ambiguous, say so and ask instead of guessing. Answer the annotation itself only: do not explain these rules or comment on the marker.',
+      'note.review.contextQuestion': 'Question: {text}',
+      'note.review.context': 'Context: {text}',
       'note.review.attachments': 'Attachments: {n} image(s).',
       'note.review.group.question': 'Answer each one.',
       'note.review.group.comment': 'Say whether you accept, reject or need more input, with reasons.',
       'note.review.group.agree': 'Confirm the conclusion; no need to elaborate.',
-      'note.review.group.disagree': 'Confirm the rejection; no need to elaborate.',
+      'note.review.group.disagree': 'Confirm the rejection; items marked Execute now follow their marker.',
       'note.review.group.idea': 'Gather what is needed, assess feasibility, upside and risk, and propose next steps.',
       'note.review.group.supplement': 'This annotation adds new information. Use it to revisit the related conclusions, say which need correcting and which stay the same, and give the updated judgement; do not modify files or run tasks.',
       'note.review.group.todo': 'Execute and report the result; if blocked or in need of confirmation, explain and wait.',
       'note.review.immediate.comment': 'Implement if adopted',
       'note.review.immediate.agree': 'Implement the approved proposal',
       'note.review.immediate.idea': 'Implement if feasible',
+      'note.review.immediate.disagree': 'Execute now as requested',
       'note.review.immediateMark.comment': '[Execute now (once adopted)]',
       'note.review.immediateMark.agree': '[Execute now (approved proposal)]',
       'note.review.immediateMark.idea': '[Execute now (if feasible)]',
+      'note.review.immediateMark.disagree': '[Execute now (as requested)]',
       'note.review.immediateMark.todo': '[Execute now]',
       'note.review.immediateCount': '{n} to execute this round',
       'note.review.todo.execute': 'Execute now',
       'note.review.todo.prompt': 'Save as prompt',
       'note.review.parkOnly': 'Nothing to send to the agent; to-dos can be saved to the prompt pool.',
       'note.review.parked': 'Saved {n} to-do(s) to the prompt pool',
-      'note.review.queuedParked': 'Review {id} sent; {n} to-do(s) saved to the prompt pool',
+      'note.review.queuedParked': 'Summary sent; {n} to-do(s) saved to the prompt pool',
       'note.review.selected': '{n} selected',
-      'note.review.previewAction': 'Preview prompt',
-      'note.review.back': 'Back to annotations',
-      'note.review.previewHint': 'Send when ready, or go back to adjust.',
-      'note.review.send': 'Send to session queue',
-      'note.queueOutbox': 'Add to outbox',
-      'note.queuedOutbox': 'Added to the outbox',
+      'note.review.open': 'Summarize',
+      'note.review.collapse': 'Collapse',
+      'note.review.resize': 'Drag to resize; double-click to reset',
+      'note.review.previewHint': 'Generated from the checked annotations and immediate choices; edit freely.',
+      'note.review.processTitle': 'Regenerate the prompt from the current selection',
+      'note.review.refresh': 'Refresh',
+      'note.review.startTitle': 'Select annotations and generate the prompt',
+      'note.review.idleHint': 'Click Summarize, check the annotations you need to process, and the combined prompt is generated automatically.',
+      'note.review.stale': 'Annotations changed; press Refresh to update the prompt.',
+      'note.review.nothingSelected': 'No annotations checked; check some rows above to generate a prompt.',
+      'note.review.selectAll': 'Select all',
+      'note.review.clearAll': 'Clear',
+      'note.review.select': 'Select this annotation',
+      'note.review.parkAction': 'Save to prompt pool',
+      'note.review.send': 'Send',
       'note.summary.title': 'Summarize annotations',
       'note.summary.count': '{n} annotation(s)',
       'note.summary.desc': 'Combine every annotation in this session into one numbered prompt with response requirements and put it in the composer; nothing is sent automatically.',
       'note.summary.keep': 'Keep annotations after generating',
       'note.summary.immediate': 'Allow immediate execution',
-      'note.summary.immediateHint': 'When checked, agreements, opinions, ideas and to-dos carry an [Execute now…] marker; questions, disagreements and additional info only get a response.',
+      'note.summary.immediateHint': 'When checked, agreements, opinions, ideas, disagreements and to-dos carry an [Execute now…] marker; questions and additional info only get a response.',
       'note.summary.ok': 'Generate draft',
       'note.summary.working': 'Generating…',
       'note.summary.done': 'Draft generated',
@@ -568,26 +622,24 @@ window.__ModuleLoader__.load({
       'prompt.menu.new': 'New prompt',
       'prompt.menu.view': 'View prompts',
       'note.review.savePrompt': 'Save as prompt',
-      'note.review.outbox': 'Add to outbox',
-      'note.review.outboxDone': 'Added to the outbox',
       'note.review.sending': 'Sending…',
-      'note.review.queued': 'Sent to the session queue: {id}',
+      'note.review.queued': 'Sent to the session queue',
+      'note.review.inserted': 'Inserted into the composer; send it when ready.',
       'note.review.failed': 'Could not send: {reason}',
       'note.review.unsupported': 'This host exposes no direct queue admission',
-      'note.review.empty': 'No annotations to review',
-      'note.review.emptyHint': 'Check the annotations you want to send first.',
       'note.empty': 'No matching annotations',
       'note.emptyIntro': 'No annotations yet. Select a passage in the conversation area and right-click “+ Annotate” to add one.',
       'note.save': 'Save',
       'note.cancel': 'Cancel',
       'note.delete': 'Delete',
-      'note.compose': 'Review',
-      'note.composeHint': 'Review the selected annotations and send them to the session queue',
+      'note.compose': 'Summarize',
+      'note.composeHint': 'Summarize the selected annotations into one draft',
       'note.composeStoreHint': 'Save the selected annotations as one prompt',
       'note.insert': 'Insert draft',
       'note.locate': 'Locate',
       'note.locateFailed': 'This note cannot find its passage right now (the reply may be folded or rewritten).',
       'note.deleteConfirm': 'Delete this annotation?',
+      'note.deleteHint': 'This annotation will be removed from the current session.',
       'note.default': 'Default',
       'note.reset': 'Reset position',
       'note.store': 'Save as prompt',
@@ -620,6 +672,7 @@ window.__ModuleLoader__.load({
       'status.emptyBody': 'The content cannot be empty',
       'status.inserted': 'Inserted into the composer',
       'status.insertedAndRemoved': 'Inserted, and removed from the pool',
+      'status.queued': 'Added to the send queue',
       'status.queuedAndRemoved': 'Queued, and removed from the pool',
       'status.insertFailed': 'The composer changed underneath; try again',
       'status.released': 'Released {n}',
@@ -1462,6 +1515,7 @@ window.__ModuleLoader__.load({
         'div',
         {
           className: 'pp-modal',
+          style: props.style,
           onMouseDown: (event) => {
             if (event.target === event.currentTarget) props.onCancel();
           },
@@ -1478,6 +1532,31 @@ window.__ModuleLoader__.load({
           ),
         ),
       );
+    }
+
+    /** The annotation delete confirmation, on the same shared modal as prompt deletion. */
+    function NoteDeleteConfirm(props) {
+      const rect = props.rect;
+      const style = rect
+        ? {
+            position: 'fixed',
+            left: Math.round(rect.left) + 'px',
+            top: Math.round(rect.top) + 'px',
+            width: Math.round(rect.width) + 'px',
+            height: Math.round(rect.height) + 'px',
+            right: 'auto',
+            bottom: 'auto',
+          }
+        : undefined;
+      return h(ConfirmModal, {
+        label: translate('note.deleteConfirm'),
+        text: translate('note.deleteHint'),
+        cancelText: translate('note.cancel'),
+        confirmText: translate('note.delete'),
+        onCancel: closeNoteConfirm,
+        onConfirm: runNoteConfirm,
+        style,
+      });
     }
 
     /** Confirmation for deleting one of the user's own tabs, as a modal. */
@@ -1989,6 +2068,16 @@ window.__ModuleLoader__.load({
           const value = Number(settings.panelWidth);
           return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
         })(),
+        // 0 keeps the review card's default height; else a dragged px height.
+        reviewHeight: (() => {
+          const value = Number(settings.reviewHeight);
+          return Number.isFinite(value) && value > 0 ? Math.min(Math.round(value), 900) : 0;
+        })(),
+        // 0 keeps the Outbox card's default height; else a dragged px height.
+        trayHeight: (() => {
+          const value = Number(settings.trayHeight);
+          return Number.isFinite(value) && value > 0 ? Math.min(Math.round(value), 900) : 0;
+        })(),
         // A pinned panel ignores outside clicks and stays over the conversation.
         panelPinned: settings.panelPinned === true,
         orderExplicit: settings.orderExplicit === true,
@@ -2184,6 +2273,21 @@ window.__ModuleLoader__.load({
     /** An extra image also counts as an edit, because a reset would lose it. */
     function seedIsEdited(item, record) {
       return seedContentLocale(item, record) === null || (Array.isArray(item.images) && item.images.length > 0);
+    }
+
+    /**
+     * A host can deliver the same click twice (for example, a synthesized click
+     * after the pointer gesture). Queueing the same prompt twice within one
+     * gesture adds only the first occurrence; a deliberate second click later is
+     * still allowed.
+     */
+    const queueClickGuard = { id: '', at: 0 };
+    function queueClickAllowed(itemId) {
+      const now = Date.now();
+      if (queueClickGuard.id === itemId && now - queueClickGuard.at < 450) return false;
+      queueClickGuard.id = itemId;
+      queueClickGuard.at = now;
+      return true;
     }
 
     function mutate(fn) {
@@ -2634,59 +2738,95 @@ window.__ModuleLoader__.load({
       return 'prompt';
     }
 
-    /** A read-only confirmation step before several outbox entries become one message. */
+    /** Merge every queued entry into one editable message. */
     function MergeReviewCard(props) {
       const entries = Array.isArray(props.entries) ? props.entries : [];
-      const chosen = entries.filter((entry) => props.selected[entry.key] !== false);
-      const text = chosen.map((entry, index) => `${index + 1}. ${entry.body}`).join('\n\n');
-      const imageCount = chosen.reduce((count, entry) => count + (Array.isArray(entry.images) ? entry.images.length : 0), 0);
+      const height = Number(props.height) || 0;
+      const [draft, setDraft] = useState(null);
+      const images = normalizeImages(
+        entries.reduce((list, entry) => list.concat(entry.images || []), []),
+        Number.MAX_SAFE_INTEGER,
+      );
+      const generated = entries.map((entry, index) => `${index + 1}. ${entry.body}`).join('\n\n');
+      const text = draft == null ? generated : draft;
       return h(
         'div',
-        { className: 'pp-page-foot pp-merge-foot' },
+        {
+          className: 'pp-page-foot pp-review-foot pp-merge-foot',
+          style: height ? { height: Math.round(height) + 'px', maxHeight: 'calc(100vh - 160px)' } : undefined,
+        },
         h(
           'div',
-          { className: 'pp-merge-head' },
-          h('span', { className: 'pp-foot-title' }, translate('merge.title')),
-          h('span', { className: 'pp-hint' }, translate('merge.count', { n: chosen.length })),
-          h('span', { className: 'pp-grow' }),
-          h('button', {
-            type: 'button',
-            className: 'pp-x',
-            title: translate('row.cancel'),
-            'aria-label': translate('row.cancel'),
-            onClick: props.onClose,
-          }, '✕'),
-        ),
-        h(
-          'div',
-          { className: 'pp-merge-list' },
-          entries.map((entry) => h(
-            'label',
-            { key: entry.key, className: 'pp-merge-row' },
-            h('input', {
-              type: 'checkbox',
-              checked: props.selected[entry.key] !== false,
-              onChange: () => props.onToggle(entry.key),
-            }),
-            h('span', { className: 'pp-chip-source', 'data-type': entry.type || 'prompt' },
-              h('span', { className: 'pp-chip-source-icon', 'aria-hidden': true }, icon(traySourceIcon(entry.type))),
-              traySourceLabel(entry.type),
+          { className: 'pp-notes pp-notes-embedded pp-review' },
+          h('style', { key: 'css' }, NOTES_CSS),
+          h(
+            'div',
+            { className: 'pp-review-top' },
+            h(
+              'div',
+              { className: 'pp-review-head' },
+              h('span', { className: 'pp-review-mark' }, h(NoteActionIcon, { kind: 'edit' })),
+              h(
+                'div',
+                { className: 'pp-review-title' },
+                h(
+                  'div',
+                  { className: 'pp-review-headline' },
+                  h('strong', null, translate('merge.title')),
+                  h('span', { className: 'pp-review-chip' }, translate('merge.chosen', { n: entries.length })),
+                ),
+                h('span', { className: 'pp-review-batch' }, translate('merge.subtitle')),
+              ),
+              h('span', { className: 'pp-notes-grow' }),
+              h('button', {
+                type: 'button',
+                className: 'pp-review-close',
+                title: translate('note.cancel'),
+                onClick: props.onClose,
+              }, icon('close')),
             ),
-            h('span', { className: 'pp-merge-row-text' }, entry.body),
-          )),
-        ),
-        h('div', { className: 'pp-hint pp-merge-hint' }, translate('merge.hint', { images: imageCount })),
-        h('div', { className: 'pp-merge-preview', 'aria-label': translate('merge.preview') }, text),
-        h(
-          'div',
-          { className: 'pp-merge-actions' },
-          h('button', { type: 'button', className: 'pp-mini', onClick: props.onClose }, translate('row.cancel')),
-          h('button', {
-            type: 'button',
-            className: 'pp-primary',
-            disabled: props.busy || chosen.length === 0,
-            onClick: props.onConfirm,
-          }, translate('merge.confirm')),
+          ),
+          h(
+            'div',
+            { className: 'pp-review-pane', 'data-active': 'true' },
+            entries.length === 0
+              ? h('div', { className: 'pp-notes-empty' }, translate('merge.empty'))
+              : h(
+                  'div',
+                  { className: 'pp-review-preview-wrap' },
+                  h('div', { className: 'pp-review-preview-hint' }, translate('merge.previewHint')),
+                  images.length > 0
+                    ? h(
+                        'div',
+                        { className: 'pp-merge-attachments' },
+                        h('div', { className: 'pp-merge-attachments-label' }, translate('merge.attachments', { n: images.length })),
+                        h(ImageStrip, { images, compact: true, max: 8, onOpen: props.onOpenImage }),
+                      )
+                    : null,
+                  h('textarea', {
+                    className: 'pp-review-text',
+                    'aria-label': translate('merge.preview'),
+                    value: text,
+                    spellCheck: false,
+                    onChange: (event) => setDraft(event.target.value),
+                  }),
+                ),
+          ),
+          h(
+            'div',
+            { className: 'pp-review-actions' },
+            h('button', {
+              type: 'button',
+              className: 'pp-note-btn pp-review-cancel',
+              onClick: props.onClose,
+            }, translate('note.cancel')),
+            h('button', {
+              type: 'button',
+              className: 'pp-note-btn pp-note-btn-primary',
+              disabled: props.busy || entries.length === 0 || text.trim() === '',
+              onClick: () => props.onConfirm(text),
+            }, props.busy ? translate('merge.sending') : translate('merge.confirm')),
+          ),
         ),
       );
     }
@@ -2695,8 +2835,9 @@ window.__ModuleLoader__.load({
     function renderTrayCard(props) {
       const {
         entries, collapsed, busy, sessionId, trayRef,
+        height, cardRef, onResizeStart, onResizeBy, onResizeReset,
         editing, setEditing, onSaveEdit, onPasteImages, onClear, onRelease,
-        onDigest, onRemove, onOpenImage, onError,
+        onDigest, mode, onModeChange, onRemove, onOpenImage, onError,
       } = props;
 
       if (collapsed) {
@@ -2717,9 +2858,42 @@ window.__ModuleLoader__.load({
         );
       }
 
+      const canMerge = entries.length > 1 && typeof onDigest === 'function';
+      const mergeMode = canMerge && mode === 'merge';
       return h(
         'div',
-        { className: 'pp-page-foot' },
+        {
+          className: 'pp-page-foot pp-tray-foot',
+          'data-resized': height > 0 ? 'true' : 'false',
+          ref: cardRef,
+          style: height ? { height: Math.round(height) + 'px', maxHeight: 'calc(100vh - 160px)' } : undefined,
+        },
+        h(
+          'div',
+          {
+            className: 'pp-tray-grip',
+            role: 'separator',
+            tabIndex: 0,
+            'aria-orientation': 'horizontal',
+            'aria-label': translate('tray.resize'),
+            'aria-valuemin': TRAY_MIN_HEIGHT,
+            'aria-valuemax': TRAY_MAX_HEIGHT,
+            'aria-valuenow': height || 0,
+            title: translate('tray.resize'),
+            onPointerDown: onResizeStart,
+            onDoubleClick: onResizeReset,
+            onKeyDown: (event) => {
+              if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                onResizeBy(20);
+              } else if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                onResizeBy(-20);
+              }
+            },
+          },
+          h('span', { className: 'pp-grip-bar' }),
+        ),
         h(
           'div',
           { className: 'pp-foot-head' },
@@ -2735,15 +2909,43 @@ window.__ModuleLoader__.load({
             },
             h('span', { className: 'pp-queue-toggle-icon' }, icon('chevronDown')),
           ),
-          h('span', { className: 'pp-foot-title' }, translate('tray.title')),
+          h('span', { className: 'pp-foot-title', title: translate('tray.titleHint') }, translate('tray.title')),
           h('span', { className: 'pp-hint' }, translate('tray.selected', { n: entries.length })),
           h('span', { className: 'pp-grow' }),
-          entries.length > 0 ? h('button', { type: 'button', className: 'pp-link', onClick: onClear }, translate('tray.clear')) : null,
-          entries.length > 1 && onDigest
-            ? h('button', { type: 'button', className: 'pp-link', disabled: busy, onClick: onDigest }, translate('tray.digest'))
+          entries.length > 0
+            ? h('button', {
+                type: 'button',
+                className: 'pp-icon-btn',
+                title: translate('tray.clearTitle'),
+                'aria-label': translate('tray.clearTitle'),
+                onClick: onClear,
+              }, icon('trash'))
+            : null,
+          canMerge
+            ? h(
+                'div',
+                { className: 'pp-mode', role: 'group', 'aria-label': translate('tray.mode') },
+                h('button', {
+                  type: 'button',
+                  'data-active': mergeMode ? 'false' : 'true',
+                  'aria-pressed': mergeMode ? 'false' : 'true',
+                  onClick: () => { if (onModeChange) onModeChange('single'); },
+                }, translate('tray.mode.single')),
+                h('button', {
+                  type: 'button',
+                  'data-active': mergeMode ? 'true' : 'false',
+                  'aria-pressed': mergeMode ? 'true' : 'false',
+                  onClick: () => { if (onModeChange) onModeChange('merge'); },
+                }, translate('tray.mode.merge')),
+              )
             : null,
           entries.length > 0
-            ? h('button', { type: 'button', className: 'pp-primary', disabled: busy, onClick: onRelease }, translate('tray.release'))
+            ? h('button', {
+                type: 'button',
+                className: 'pp-primary',
+                disabled: busy,
+                onClick: mergeMode ? onDigest : onRelease,
+              }, mergeMode ? translate('tray.digest') : translate('tray.release'))
             : null,
         ),
         h(
@@ -2968,6 +3170,13 @@ window.__ModuleLoader__.load({
             h('path', { d: 'M4.5 1.6v3.4L2.6 7h6.8L7.5 5V1.6' }),
             h('path', { d: 'M6 7v3.6' }),
           );
+        case 'pinActive':
+          return h(
+            'svg',
+            { ...base, fill: 'currentColor' },
+            h('path', { d: 'M3.4 1.6h5.2v3l1.5 1.8h-8.2l1.5-1.8z' }),
+            h('path', { d: 'M6 6.4v4', fill: 'none' }),
+          );
         default:
           return null;
       }
@@ -3155,7 +3364,7 @@ window.__ModuleLoader__.load({
         const immediateIds = allowImmediate
           ? notes.filter((note) => REVIEW_IMMEDIATE_MARKERS[note.kind]).map((note) => note.id)
           : [];
-        const text = buildReviewPrompt(notes, newBatchId(), images, immediateIds);
+        const text = buildReviewPrompt(notes, images, immediateIds);
         let result;
         try {
           result = await bridge.request({ type: 'insert-text', text, images });
@@ -3202,7 +3411,7 @@ window.__ModuleLoader__.load({
                 ui.set({ open: !ui.get().open });
               },
             },
-            h('span', { className: 'pp-trigger-brand', 'aria-hidden': true }, h(PromptPoolIcon, { size: 12 })),
+            h('span', { className: 'pp-trigger-brand', 'aria-hidden': true }, h(PromptPoolIcon, { size: 10 })),
             h('span', { className: 'pp-trigger-label' }, label),
           ),
           h(
@@ -3221,7 +3430,10 @@ window.__ModuleLoader__.load({
             },
             icon('annotation'),
             h('span', null, translate('scope.notes')),
-            h('span', { className: 'pp-trigger-chevron', 'aria-hidden': true }, icon('chevronDown')),
+            notes.length > 0
+              ? h('span', { className: 'pp-trigger-count', 'aria-hidden': true, title: translate('note.summary.count', { n: notes.length }) }, String(notes.length))
+              : null,
+            h('span', { className: 'pp-trigger-chevron', 'aria-hidden': true }, icon('chevronDown'))
           ),
           h(
             'button',
@@ -3249,9 +3461,9 @@ window.__ModuleLoader__.load({
                 key: 'domain-menu',
                 className: 'pp-trigger-menu pp-root',
                 role: 'menu',
-                'aria-label': translate(domainMenu === 'annotations' ? 'scope.notes' : 'scope.prompts'),
+                'aria-label': label + ' · ' + translate(domainMenu === 'annotations' ? 'scope.notes' : 'scope.prompts'),
               },
-              h('div', { className: 'pp-trigger-menu-title' }, translate(domainMenu === 'annotations' ? 'scope.notes' : 'scope.prompts')),
+              h('div', { className: 'pp-trigger-menu-title' }, label + ' · ' + translate(domainMenu === 'annotations' ? 'scope.notes' : 'scope.prompts')),
               domainMenu === 'annotations'
                 ? [
                     h('button', {
@@ -3464,7 +3676,7 @@ window.__ModuleLoader__.load({
           onMouseDown: (event) => event.preventDefault(),
           onClick: (event) => {
             event.stopPropagation();
-            onClick();
+            onClick(event);
           },
         },
         icon(name),
@@ -3684,6 +3896,186 @@ window.__ModuleLoader__.load({
     }
 
     /** Fixed tabs plus the user's category tabs, grouped, with inline add / rename / delete. */
+    // Horizontal tablist keyboard model: one tab stop per row, arrows move the
+    // focus and activate, Home/End jump to the edges. Inputs inside a tablist
+    // (rename/new-group fields) keep their own caret movement.
+    function focusTabByKey(event) {
+      const key = event.key;
+      if (key !== 'ArrowRight' && key !== 'ArrowLeft' && key !== 'Home' && key !== 'End') return;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const origin = event.target;
+      if (!origin || String(origin.tagName || '').toUpperCase() === 'INPUT') return;
+      const tabs = event.currentTarget.querySelectorAll('[role="tab"]');
+      if (!tabs.length) return;
+      const start = origin.closest ? origin.closest('[role="tab"]') : null;
+      // A close chip is a sibling button, not a tab: let it keep its own keys.
+      if (!start) return;
+      const current = Array.prototype.indexOf.call(tabs, start);
+      let next;
+      if (key === 'Home') next = 0;
+      else if (key === 'End') next = tabs.length - 1;
+      else next = (current < 0 ? 0 : current + (key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      event.preventDefault();
+      tabs[next].focus();
+      tabs[next].click();
+    }
+
+    /**
+     * A rounded rule that slides under the active tab of an underline bar. The
+     * rule is positioned in the bar's padding box, so it follows the tab's real
+     * label width (icons included) and survives a horizontally scrolled row.
+     */
+    function useTabIndicator(activeKey, tone) {
+      const barRef = useRef(null);
+      const [indicator, setIndicator] = useState(null);
+      useEffect(() => {
+        const bar = barRef.current;
+        if (!bar) return undefined;
+        let live = true;
+        let frame = 0;
+        const measure = () => {
+          if (!live) return;
+          frame = 0;
+          const active = bar.querySelector('[role="tab"][aria-selected="true"]');
+          if (!active || !active.offsetWidth) {
+            setIndicator(null);
+            return;
+          }
+          const next = {
+            left: active.offsetLeft,
+            top: active.offsetTop + active.offsetHeight - 3,
+            width: active.offsetWidth,
+            tone,
+          };
+          setIndicator((previous) => (
+            previous
+              && previous.left === next.left
+              && previous.top === next.top
+              && previous.width === next.width
+              && previous.tone === next.tone
+              ? previous
+              : next
+          ));
+        };
+        const schedule = () => {
+          if (!live || frame) return;
+          frame = window.requestAnimationFrame(measure);
+        };
+        measure();
+        const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
+        const mutation = typeof MutationObserver === 'function' ? new MutationObserver(schedule) : null;
+        if (observer) {
+          observer.observe(bar);
+          const active = bar.querySelector('[role="tab"][aria-selected="true"]');
+          if (active) observer.observe(active);
+        }
+        if (mutation) {
+          mutation.observe(bar, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+            attributes: true,
+            attributeFilter: ['aria-selected', 'data-active', 'class', 'style'],
+          });
+        }
+        window.addEventListener('resize', schedule);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule, () => {});
+        return () => {
+          live = false;
+          if (frame) window.cancelAnimationFrame(frame);
+          if (observer) observer.disconnect();
+          if (mutation) mutation.disconnect();
+          window.removeEventListener('resize', schedule);
+        };
+      }, [activeKey, tone]);
+      return [barRef, indicator];
+    }
+
+    /**
+     * One-row, edge-faded viewport for the group tabs. The wheel moves the row
+     * sideways, the active tab is kept in view, and a fade appears only on a
+     * side that still has hidden tabs.
+     */
+    function TabScroller(props) {
+      const scrollRef = useRef(null);
+      const firstReveal = useRef(true);
+      const [fade, setFade] = useState('none');
+
+      useEffect(() => {
+        const node = scrollRef.current;
+        if (!node) return undefined;
+        const update = () => {
+          const max = node.scrollWidth - node.clientWidth;
+          if (max <= 1) {
+            setFade('none');
+            return;
+          }
+          const start = node.scrollLeft <= 1;
+          const end = node.scrollLeft >= max - 1;
+          setFade(start ? (end ? 'none' : 'end') : end ? 'start' : 'both');
+        };
+        const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(update) : null;
+        if (observer) {
+          observer.observe(node);
+          if (node.firstElementChild) observer.observe(node.firstElementChild);
+        }
+        const onScroll = () => update();
+        const onWheel = (event) => {
+          if (event.ctrlKey || event.metaKey || event.shiftKey) return;
+          if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+          const max = node.scrollWidth - node.clientWidth;
+          if (max <= 1 || event.deltaY === 0) return;
+          const step = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
+          const before = node.scrollLeft;
+          node.scrollLeft = Math.max(0, Math.min(max, before + step));
+          if (node.scrollLeft !== before) {
+            event.preventDefault();
+            update();
+          }
+        };
+        node.addEventListener('scroll', onScroll, { passive: true });
+        node.addEventListener('wheel', onWheel, { passive: false });
+        window.addEventListener('resize', update);
+        update();
+        return () => {
+          if (observer) observer.disconnect();
+          node.removeEventListener('scroll', onScroll);
+          node.removeEventListener('wheel', onWheel);
+          window.removeEventListener('resize', update);
+        };
+      }, [props.revision]);
+
+      useEffect(() => {
+        const node = scrollRef.current;
+        if (!node) return undefined;
+        const smooth = !firstReveal.current;
+        firstReveal.current = false;
+        const frame = window.requestAnimationFrame(() => {
+          const active = node.querySelector('[role="tab"][aria-selected="true"]');
+          if (!active) return;
+          const view = node.getBoundingClientRect();
+          const tab = active.getBoundingClientRect();
+          const edge = 16;
+          let delta = 0;
+          if (tab.left < view.left + edge) delta = tab.left - view.left - edge;
+          else if (tab.right > view.right - edge) delta = tab.right - view.right + edge;
+          if (!delta) return;
+          const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          node.scrollTo({
+            left: Math.max(0, node.scrollLeft + delta),
+            behavior: smooth && !reduce ? 'smooth' : 'auto',
+          });
+        });
+        return () => window.cancelAnimationFrame(frame);
+      }, [props.active, props.revision]);
+
+      return h(
+        'div',
+        { ref: scrollRef, className: 'pp-tabscroll', 'data-fade': fade },
+        props.children,
+      );
+    }
+
     function ScopeBar(props) {
       const entries = props.mode === 'panel'
         ? [
@@ -3695,9 +4087,24 @@ window.__ModuleLoader__.load({
             { id: 'workspace', label: 'scope.workspace' },
             { id: 'global', label: 'scope.global' },
           ];
+      const [barRef, indicator] = useTabIndicator(props.value, props.value === 'notes' ? 'notes' : 'accent');
       return h(
         'div',
-        { className: 'pp-bar pp-scope-bar', role: 'tablist' },
+        {
+          className: 'pp-bar pp-scope-bar',
+          ref: barRef,
+          role: 'tablist',
+          'data-indicator': indicator ? 'true' : 'false',
+          onKeyDown: focusTabByKey,
+        },
+        indicator
+          ? h('span', {
+              className: 'pp-tab-indicator',
+              'data-tone': indicator.tone,
+              'aria-hidden': true,
+              style: { left: indicator.left, top: indicator.top, width: indicator.width },
+            })
+          : null,
         entries.map((entry) => h(
           'button',
           {
@@ -3706,6 +4113,7 @@ window.__ModuleLoader__.load({
             className: 'pp-tab',
             role: 'tab',
             'aria-selected': props.value === entry.id ? 'true' : 'false',
+            tabIndex: props.value === entry.id ? 0 : -1,
             'data-scope': entry.id,
             'data-group': entry.id === 'notes' ? 'notes' : undefined,
             'data-active': props.value === entry.id ? 'true' : 'false',
@@ -3724,6 +4132,9 @@ window.__ModuleLoader__.load({
       const [adding, setAdding] = useState(null);
       const [renaming, setRenaming] = useState(null);
       const tabs = props.tabs || [];
+      // When the stored tab no longer exists, keep the row keyboard reachable
+      // by landing the single tab stop on the first tab.
+      const fallbackStop = tabs.some((item) => item.id === props.active) ? null : (tabs[0] && tabs[0].id);
 
       const commitAdd = () => {
         const name = (adding || '').trim();
@@ -3761,44 +4172,63 @@ window.__ModuleLoader__.load({
         }
         const active = props.active === tab.id;
         const count = props.counts && typeof props.counts[tab.id] === 'number' ? props.counts[tab.id] : 0;
+        const closable = Boolean(tab.category && active);
+        const tabStop = active || tab.id === fallbackStop;
+        const closeLabel = translate('tab.delete');
+        const closeButton = closable
+          ? h(
+              'button',
+              {
+                type: 'button',
+                className: 'pp-tab-x',
+                // The shell bubble carries the hint on hosts that expose it;
+                // the title keeps the fallback for every other host.
+                title: HostTooltip ? undefined : closeLabel,
+                'aria-label': closeLabel,
+                onClick: (event) => {
+                  event.stopPropagation();
+                  props.onDelete(tab.id);
+                },
+              },
+              '×',
+            )
+          : null;
+        const closeControl = closeButton && HostTooltip
+          ? h(
+              HostTooltip,
+              { label: closeLabel, side: 'bottom', portal: true, delayMs: 280 },
+              closeButton,
+            )
+          : closeButton;
         return h(
-          'button',
+          'span',
           {
             key: tab.id,
-            type: 'button',
-            className: 'pp-tab',
+            className: 'pp-tabcell',
             'data-active': active ? 'true' : 'false',
-            'data-group': tab.group,
-            title: tab.category ? translate('tab.renameHint') : undefined,
-            onClick: () => props.onSelect(tab.id),
-            onDoubleClick: tab.category ? () => setRenaming({ id: tab.id, name: tab.label, original: tab.label }) : undefined,
+            'data-closable': closable ? 'true' : 'false',
           },
-          tab.label,
-          count > 0 && tab.id !== 'all'
-            ? h('span', { className: 'pp-tab-count' }, String(count))
-            : null,
-          tab.category && active
-            ? h(
-                'span',
-                {
-                  className: 'pp-tab-x',
-                  role: 'button',
-                  tabIndex: 0,
-                  title: translate('tab.delete'),
-                  onClick: (event) => {
-                    event.stopPropagation();
-                    props.onDelete(tab.id);
-                  },
-                  onKeyDown: (event) => {
-                    if (event.key !== 'Enter' && event.key !== ' ') return;
-                    event.preventDefault();
-                    event.stopPropagation();
-                    props.onDelete(tab.id);
-                  },
-                },
-                '×',
-              )
-            : null,
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-tab',
+              role: 'tab',
+              'aria-selected': active ? 'true' : 'false',
+              tabIndex: tabStop ? 0 : -1,
+              'data-active': active ? 'true' : 'false',
+              'data-group': tab.group,
+              'data-tab-id': tab.id,
+              title: tab.category ? translate('tab.renameHint') : undefined,
+              onClick: () => props.onSelect(tab.id),
+              onDoubleClick: tab.category ? () => setRenaming({ id: tab.id, name: tab.label, original: tab.label }) : undefined,
+            },
+            tab.label,
+            count > 0 && tab.id !== 'all'
+              ? h('span', { className: 'pp-tab-count' }, String(count))
+              : null,
+          ),
+          closeControl,
         );
       };
 
@@ -3874,6 +4304,8 @@ window.__ModuleLoader__.load({
     function PromptPoolPage(props) {
       useLocaleTick();
       const state = usePoolState();
+      const reviewResize = useDockResize(normalizeSettings(state.settings).reviewHeight, 'reviewHeight', REVIEW_MIN_HEIGHT, REVIEW_MAX_HEIGHT);
+      const trayResize = useDockResize(normalizeSettings(state.settings).trayHeight, 'trayHeight', TRAY_MIN_HEIGHT, TRAY_MAX_HEIGHT);
       const storage = useStorageState();
       const releaseInfo = useReleaseState();
       const noteBar = useNoteStatus();
@@ -3899,7 +4331,9 @@ window.__ModuleLoader__.load({
         .filter((note) => note.sessionId === activeSessionId)
         .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt));
       const noteSelectionState = useNoteSelection();
+      const reviewState = useNoteReview();
       const selectedNotes = notesForSelection(notesList, activeSessionId, noteSelectionState);
+      const reviewSelection = reviewSplit(selectedNotes, reviewState);
       const baseTabs = buildTabs(state.categories, workspaceList, state.settings, currentWorkspaceId);
       // The annotation tab is always present, so the feature stays discoverable.
       const tabs = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
@@ -3926,9 +4360,12 @@ window.__ModuleLoader__.load({
       ));
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [reviewOpen, setReviewOpen] = useState(false);
+      const [reviewProcessing, setReviewProcessing] = useState(false);
+      const [reviewVersion, setReviewVersion] = useState(0);
       const [mergeOpen, setMergeOpen] = useState(false);
-      const [mergeSelected, setMergeSelected] = useState({});
+      const [mergeHeight, setMergeHeight] = useState(0);
       const [mergeBusy, setMergeBusy] = useState(false);
+      const [trayMode, setTrayMode] = useState('single');
       const [pendingCategory, setPendingCategory] = useState(null);
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
@@ -3955,6 +4392,10 @@ window.__ModuleLoader__.load({
         setScope(next);
         setSettingsOpen(false);
         setReviewOpen(false);
+        setReviewProcessing(false);
+        setMergeOpen(false);
+        setConfirmClear(false);
+        setPendingRemove(null);
         if (next === 'global' && !globalTabs.some((entry) => entry.id === tab)) setTab(activeGlobalTab);
       };
       // A failed write outranks a transient toast: the change is not saved.
@@ -3964,23 +4405,23 @@ window.__ModuleLoader__.load({
       const trayCount = sessionTray.length;
       const openMerge = () => {
         if (sessionTray.length < 2) return;
+        const node = trayResize.cardRef.current;
+        const measured = node && node.getBoundingClientRect ? Math.round(node.getBoundingClientRect().height) : 0;
+        setMergeHeight(measured);
         setReviewOpen(false);
-        setMergeSelected(Object.fromEntries(sessionTray.map((entry) => [entry.key, true])));
+        setReviewProcessing(false);
         setMergeOpen(true);
       };
       const closeMerge = () => {
         setMergeOpen(false);
-        setMergeSelected({});
       };
-      const toggleMerge = (key) => {
-        setMergeSelected((current) => ({ ...current, [key]: current[key] === false }));
-      };
-      const confirmMerge = async () => {
+      const confirmMerge = async (mergedText) => {
         if (mergeBusy) return;
-        const entries = sessionTray.filter((entry) => mergeSelected[entry.key] !== false);
+        const entries = sessionTray.slice();
         if (entries.length === 0) return;
         setMergeBusy(true);
-        const text = entries.map((entry, index) => `${index + 1}. ${entry.body}`).join('\n\n');
+        const fallback = entries.map((entry, index) => `${index + 1}. ${entry.body}`).join('\n\n');
+        const text = typeof mergedText === 'string' && mergedText.trim() ? mergedText : fallback;
         const images = normalizeImages(entries.reduce((list, entry) => list.concat(entry.images || []), []), Number.MAX_SAFE_INTEGER);
         let result;
         try {
@@ -3997,6 +4438,7 @@ window.__ModuleLoader__.load({
         closeMerge();
         flash({ kind: 'ok', text: translate('status.released', { n: 1 }) });
       };
+
       const lastTrayCount = useRef(trayCount);
       useEffect(() => {
         if (trayCount > lastTrayCount.current) {
@@ -4117,25 +4559,6 @@ window.__ModuleLoader__.load({
         );
       };
 
-      /** Put one annotation into the shared outbox without routing it through review. */
-      const queueNote = (note) => {
-        poolActions.addTextToTray({
-          body: composeNoteLine(note),
-          images: normalizeImages(note.images),
-          targetSessionId: activeSessionId,
-          type: 'annotation',
-          source: {
-            noteId: note.id,
-            kind: note.kind,
-            quote: note.quote,
-            body: note.body,
-            order: note.order,
-          },
-        });
-        notesActions.remove(note.id);
-        deselectNotes(activeSessionId, [note.id]);
-        flash({ kind: 'ok', text: translate('note.queuedOutbox') });
-      };
 
       /** The page has no composer, so the mounted panel inserts the reply. */
       const composeSessionNotes = (notes) => {
@@ -4167,12 +4590,15 @@ window.__ModuleLoader__.load({
       };
 
       const openReview = () => {
-        if (selectedNotes.length === 0) {
-          flash({ kind: 'error', text: translate('note.noneSelected') });
-          return;
-        }
         closeMerge();
         setReviewOpen(true);
+        setReviewProcessing(false);
+      };
+
+      const startReview = () => {
+        closeMerge();
+        setReviewOpen(true);
+        setReviewProcessing(true);
       };
 
       /** Move the unchecked to-dos into the current workspace's prompt pool. */
@@ -4199,6 +4625,7 @@ window.__ModuleLoader__.load({
         const movedIds = notes.map((note) => note.id);
         notesActions.removeMany(movedIds);
         deselectNotes(activeSessionId, movedIds);
+        resetNoteReview(activeSessionId, movedIds);
         return movedIds.length;
       };
 
@@ -4206,11 +4633,13 @@ window.__ModuleLoader__.load({
         const moved = moveReviewTodos(review);
         if (moved === 0) return { ok: false, reason: translate('status.storageFailed') };
         setReviewOpen(false);
+        setReviewProcessing(false);
+        setReviewVersion((value) => value + 1);
         flash({ kind: 'ok', text: translate('note.review.parked', { n: moved }) });
         return { ok: true };
       };
 
-      /** Queue one reviewed batch through the mounted panel. */
+      /** Queue one reviewed batch through the mounted panel, or insert it into the composer. */
       const queueReview = async (review) => {
         let result;
         try {
@@ -4218,38 +4647,39 @@ window.__ModuleLoader__.load({
         } catch (error) {
           result = { ok: false, reason: String((error && error.message) || error) };
         }
+        let inserted = false;
         if (!result || result.ok !== true) {
-          const reason = result && result.reason === 'unavailable'
-            ? translate('note.review.unsupported')
-            : result && result.reason;
-          return { ok: false, reason: reason || translate('note.review.unsupported') };
+          if (result && result.reason === 'unavailable') {
+            try {
+              result = await bridge.request({ type: 'insert-text', text: review.text, images: review.images });
+            } catch (error) {
+              result = { ok: false, reason: String((error && error.message) || error) };
+            }
+            inserted = Boolean(result && result.ok === true);
+          }
+          if (!inserted) {
+            const reason = result && result.reason === 'unavailable'
+              ? translate('note.review.unsupported')
+              : result && result.reason;
+            return { ok: false, reason: reason || translate('note.review.unsupported') };
+          }
         }
         commitReviewBatch({ ...review, sessionId: activeSessionId });
         const moved = moveReviewTodos(review);
         setReviewOpen(false);
+        setReviewProcessing(false);
+        setReviewVersion((value) => value + 1);
         flash({
           kind: 'ok',
-          text: moved > 0
-            ? translate('note.review.queuedParked', { id: review.batchId, n: moved })
-            : translate('note.review.queued', { id: review.batchId }),
+          text: inserted
+            ? translate('note.review.inserted')
+            : moved > 0
+              ? translate('note.review.queuedParked', { n: moved })
+              : translate('note.review.queued'),
         });
         return { ok: true };
       };
 
-      /** Park the reviewed batch in the shared outbox instead of sending it now. */
-      const outboxReview = async (review) => {
-        poolActions.addTextToTray({
-          body: review.text,
-          images: review.images,
-          targetSessionId: activeSessionId,
-          type: 'review',
-        });
-        commitReviewBatch({ ...review, sessionId: activeSessionId });
-        moveReviewTodos(review);
-        setReviewOpen(false);
-        flash({ kind: 'ok', text: translate('note.review.outboxDone') });
-        return { ok: true };
-      };
 
       /** Save the reviewed text as a normal prompt, without sending or queueing it. */
       const saveReviewPrompt = (review) => {
@@ -4262,6 +4692,8 @@ window.__ModuleLoader__.load({
           ? [...choices.filter((entry) => entry.value === preferred), ...choices.filter((entry) => entry.value !== preferred)]
           : choices;
         setReviewOpen(false);
+        setReviewProcessing(false);
+        setReviewVersion((value) => value + 1);
         openNoteSave({
           noteIds: review.noteIds,
           markStored: false,
@@ -4271,6 +4703,10 @@ window.__ModuleLoader__.load({
           type: promptTypeForNotes(chosen),
           choices: ordered,
           defaultGroup: preferred,
+          onSaved: () => {
+            moveReviewTodos({ parkedIds: review.parkedIds });
+            resetNoteReview(activeSessionId, review.noteIds);
+          },
         });
         return { ok: true };
       };
@@ -4324,10 +4760,12 @@ window.__ModuleLoader__.load({
 
       /** Queue one occurrence, dropping it from the pool when retention is off. */
       const queueItem = (item) => {
+        if (!queueClickAllowed(item.id)) return;
         const before = pool.get().tray.length;
         poolActions.addToTray(item.id, activeSessionId);
         if (pool.get().tray.length === before) return;
         if (!normalizeSettings(state.settings).keepAfterQueue) removeItem(item, translate('status.queuedAndRemoved'));
+        else flash({ kind: 'ok', text: translate('status.queued') });
       };
 
       /** The active scope decides the new item's classification. */
@@ -4429,19 +4867,24 @@ window.__ModuleLoader__.load({
         h(ScopeBar, { mode: 'page', value: scope, onChange: changeScope }),
         scope === 'global'
           ? h(
-              'div',
-              { className: 'pp-bar pp-global-bar', style: { padding: '0 12px 8px' } },
-              h(TabBar, {
-                tabs: globalTabs,
-                counts: tabCounts,
-                active: activeGlobalTab,
-                ...tabHandlers((next) => {
-                  setSettingsOpen(false);
-                  setReviewOpen(false);
-                  setTab(next);
-                }, activeGlobalTab, fallbackTabFor(globalTabs)),
-                onDelete: (id) => setPendingCategory(id),
-              }),
+              TabScroller,
+              { active: activeGlobalTab, revision: globalTabs.length },
+              h(
+                'div',
+                { className: 'pp-bar pp-global-bar', role: 'tablist', onKeyDown: focusTabByKey },
+                h(TabBar, {
+                  tabs: globalTabs,
+                  counts: tabCounts,
+                  active: activeGlobalTab,
+                  ...tabHandlers((next) => {
+                    setSettingsOpen(false);
+                    setReviewOpen(false);
+                    setReviewProcessing(false);
+                    setTab(next);
+                  }, activeGlobalTab, fallbackTabFor(globalTabs)),
+                  onDelete: (id) => setPendingCategory(id),
+                }),
+              ),
             )
           : null,
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
@@ -4502,9 +4945,9 @@ window.__ModuleLoader__.load({
               ? h(NotesView, {
                   notes: notesList,
                   sessionId: activeSessionId,
+                  reviewMode: reviewOpen && reviewProcessing,
                   onCompose: composeSessionNotes,
                   onInsertNote: insertNote,
-                  onQueueNote: queueNote,
                   hideActions: true,
                   filter: query,
                   categories: state.categories,
@@ -4554,23 +4997,53 @@ window.__ModuleLoader__.load({
                   : null,
               )
             : null,
-          !settingsOpen && mergeOpen
-            ? h(MergeReviewCard, {
-                entries: sessionTray,
-                selected: mergeSelected,
-                busy: mergeBusy,
+          !settingsOpen && scope === 'notes'
+            ? renderReviewDock({
                 sessionId: activeSessionId,
-                onToggle: toggleMerge,
-                onClose: closeMerge,
-                onConfirm: confirmMerge,
+                selectedNotes,
+                sentNotes: reviewSelection.sent,
+                parkedNotes: reviewSelection.parked,
+                immediateIds: reviewSelection.immediateIds,
+                count: selectedNotes.length,
+                open: reviewOpen,
+                version: reviewVersion,
+                height: reviewResize.height,
+                cardRef: reviewResize.cardRef,
+                onResizeStart: reviewResize.startResize,
+                onResizeBy: reviewResize.resizeBy,
+                onResizeReset: reviewResize.reset,
+                onExpand: openReview,
+                onStart: startReview,
+                processing: reviewOpen && reviewProcessing,
+                onSelectAll: () => selectAllNotes(activeSessionId),
+                onClearSelection: () => clearNoteSelection(activeSessionId, notesList.map((note) => note.id)),
+                onCollapse: () => { setReviewOpen(false); setReviewProcessing(false); },
+                onSend: queueReview,
+                onSavePrompt: saveReviewPrompt,
+                onPark: parkReviewTodos,
               })
             : null,
-          !settingsOpen && !mergeOpen
+          !settingsOpen && scope !== 'notes' && mergeOpen
+            ? h(MergeReviewCard, {
+                entries: sessionTray,
+                height: mergeHeight,
+                busy: mergeBusy,
+                onClose: closeMerge,
+                onConfirm: confirmMerge,
+                onOpenImage: openImage,
+              })
+            : null,
+          !settingsOpen && scope !== 'notes' && !mergeOpen
             ? renderTrayCard({
                 entries: sessionTray,
                 collapsed: queueCollapsed,
                 sessionId: activeSessionId,
                 trayRef,
+                height: trayResize.height,
+                cardRef: trayResize.cardRef,
+                onResizeStart: trayResize.startResize,
+                onResizeBy: trayResize.resizeBy,
+                onResizeReset: trayResize.reset,
                 editing: trayEditing,
                 setEditing: setTrayEditing,
                 onSaveEdit: saveTrayEdit,
@@ -4578,6 +5051,8 @@ window.__ModuleLoader__.load({
                 onClear: () => setConfirmClear(true),
                 onRelease: () => sendToComposer({ type: 'release' }, translate('status.releaseSent')),
                 onDigest: openMerge,
+                mode: trayMode,
+                onModeChange: setTrayMode,
                 onRemove: setPendingRemove,
                 onOpenImage: openImage,
                 onError: (text) => flash({ kind: 'error', text }),
@@ -4612,6 +5087,7 @@ window.__ModuleLoader__.load({
       const state = usePoolState();
       const settings = normalizeSettings(state.settings);
       const [section, setSection] = useState('notes');
+      const [tabBarRef, tabIndicator] = useTabIndicator(section, 'ink');
       const [seedKeepEdited, setSeedKeepEdited] = useState(true);
       const [seedConfirm, setSeedConfirm] = useState(false);
       const [seedStatus, setSeedStatus] = useState('');
@@ -4659,13 +5135,30 @@ window.__ModuleLoader__.load({
         h('div', { className: 'pp-hint', style: { marginBottom: '10px' } }, translate('settings.desc')),
         h(
           'div',
-          { className: 'pp-bar', style: { padding: '0 0 10px' } },
+          {
+            className: 'pp-bar pp-set-tabs',
+            ref: tabBarRef,
+            style: { padding: '0 0 10px' },
+            role: 'tablist',
+            'data-indicator': tabIndicator ? 'true' : 'false',
+            onKeyDown: focusTabByKey,
+          },
+          tabIndicator
+            ? h('span', {
+                className: 'pp-tab-indicator',
+                'data-tone': tabIndicator.tone,
+                'aria-hidden': true,
+                style: { left: tabIndicator.left, top: tabIndicator.top, width: tabIndicator.width },
+              })
+            : null,
           h(
             'button',
             {
               type: 'button',
               className: 'pp-tab',
-              'data-group': 'notes',
+              role: 'tab',
+              'aria-selected': section === 'notes' ? 'true' : 'false',
+              tabIndex: section === 'notes' ? 0 : -1,
               'data-active': section === 'notes' ? 'true' : 'false',
               onClick: () => setSection('notes'),
             },
@@ -4677,6 +5170,9 @@ window.__ModuleLoader__.load({
             {
               type: 'button',
               className: 'pp-tab',
+              role: 'tab',
+              'aria-selected': section === 'prompts' ? 'true' : 'false',
+              tabIndex: section === 'prompts' ? 0 : -1,
               'data-active': section === 'prompts' ? 'true' : 'false',
               onClick: () => setSection('prompts'),
             },
@@ -4688,6 +5184,9 @@ window.__ModuleLoader__.load({
             {
               type: 'button',
               className: 'pp-tab',
+              role: 'tab',
+              'aria-selected': section === 'global' ? 'true' : 'false',
+              tabIndex: section === 'global' ? 0 : -1,
               'data-active': section === 'global' ? 'true' : 'false',
               onClick: () => setSection('global'),
             },
@@ -5334,6 +5833,8 @@ window.__ModuleLoader__.load({
         prefix: typeof raw.prefix === 'string' ? raw.prefix : '',
         suffix: typeof raw.suffix === 'string' ? raw.suffix : '',
         offset: Number.isFinite(Number(raw.offset)) ? Number(raw.offset) : 0,
+        context: typeof raw.context === 'string' ? raw.context : '',
+        contextKind: raw.contextKind === 'question' ? 'question' : raw.contextKind === 'sentence' ? 'sentence' : '',
         order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : 0,
         kind: NOTE_KIND_IDS.indexOf(raw.kind) >= 0 ? raw.kind : NOTE_KIND_DEFAULT,
         // Where the user dragged this note's card, relative to its passage.
@@ -5556,6 +6057,14 @@ window.__ModuleLoader__.load({
       return window.__dshPromptPoolNoteSelectionV1;
     })();
 
+    /** Per-note review choices; selection itself lives in noteSelection. */
+    const noteReview = (() => {
+      const empty = { sessionId: '', immediate: {}, todoMode: {} };
+      if (typeof window === 'undefined') return createStore(empty);
+      if (!window.__dshPromptPoolNoteReviewV1) window.__dshPromptPoolNoteReviewV1 = createStore(empty);
+      return window.__dshPromptPoolNoteReviewV1;
+    })();
+
     /**
      * The "pick a group" popup for storing a prompt. It lives in the frame
      * overlay (not in the pool list) so it can float over the panel instead of
@@ -5593,18 +6102,19 @@ window.__ModuleLoader__.load({
       type: normalizePromptType(draft.type),
       choices: Array.isArray(draft.choices) ? draft.choices : [],
       defaultGroup: typeof draft.defaultGroup === 'string' ? draft.defaultGroup : '',
+      onSaved: typeof draft.onSaved === 'function' ? draft.onSaved : null,
       token: Date.now(),
     });
     const useNoteSave = () => useSyncExternalStore(noteSave.subscribe, noteSave.get, noteSave.get);
 
-    /** The "delete this annotation?" popup; the confirmation floats, never inline. */
+    /** The "delete this annotation?" confirmation; rendered as the shared modal over its surface. */
     const noteConfirm = (() => {
-      const empty = { open: false, anchor: null, onConfirm: null, token: 0 };
+      const empty = { open: false, surfaceRect: null, onConfirm: null, token: 0 };
       if (typeof window === 'undefined') return createStore(empty);
       if (!window.__dshPromptPoolNoteConfirmV1) window.__dshPromptPoolNoteConfirmV1 = createStore(empty);
       return window.__dshPromptPoolNoteConfirmV1;
     })();
-    const closeNoteConfirm = () => noteConfirm.set({ open: false, anchor: null, onConfirm: null, token: 0 });
+    const closeNoteConfirm = () => noteConfirm.set({ open: false, surfaceRect: null, onConfirm: null, token: 0 });
 
     /** A short status line in the annotations tab's bottom strip (locate misses). */
     const noteStatus = (() => {
@@ -5623,17 +6133,22 @@ window.__ModuleLoader__.load({
       }
     }
     function openNoteConfirm(run, event) {
-      const rect = event && event.currentTarget && event.currentTarget.getBoundingClientRect
-        ? event.currentTarget.getBoundingClientRect()
-        : null;
+      const target = event && event.currentTarget ? event.currentTarget : null;
+      const surface = target && typeof target.closest === 'function' ? target.closest('.pp-page, .pp-panel') : null;
+      const rect = surface && typeof surface.getBoundingClientRect === 'function' ? surface.getBoundingClientRect() : null;
       noteConfirm.set({
         open: true,
-        anchor: rect
-          ? { left: Math.round(rect.left), right: Math.round(rect.right), top: Math.round(rect.top), bottom: Math.round(rect.bottom) }
-          : { left: 120, right: 160, top: 90, bottom: 120 },
+        surfaceRect: rect
+          ? { left: Math.round(rect.left), top: Math.round(rect.top), width: Math.max(0, Math.round(rect.width)), height: Math.max(0, Math.round(rect.height)) }
+          : null,
         onConfirm: typeof run === 'function' ? run : null,
         token: Date.now(),
       });
+    }
+    function runNoteConfirm() {
+      const run = noteConfirm.get().onConfirm;
+      closeNoteConfirm();
+      if (typeof run === 'function') run();
     }
 
     const useNotesState = () => useSyncExternalStore(notes.subscribe, notes.get, notes.get);
@@ -5644,6 +6159,7 @@ window.__ModuleLoader__.load({
     const useNoteConfirm = () => useSyncExternalStore(noteConfirm.subscribe, noteConfirm.get, noteConfirm.get);
     const useNoteStatus = () => useSyncExternalStore(noteStatus.subscribe, noteStatus.get, noteStatus.get);
     const useNoteSelection = () => useSyncExternalStore(noteSelection.subscribe, noteSelection.get, noteSelection.get);
+    const useNoteReview = () => useSyncExternalStore(noteReview.subscribe, noteReview.get, noteReview.get);
 
     /** One line of quote text for a row, a pin tooltip or the composed reply. */
     function noteQuoteText(quote, limit) {
@@ -5684,12 +6200,14 @@ window.__ModuleLoader__.load({
       comment: 'note.review.immediate.comment',
       agree: 'note.review.immediate.agree',
       idea: 'note.review.immediate.idea',
+      disagree: 'note.review.immediate.disagree',
     };
     /** The conclusion written into the prompt for each authorized kind. */
     const REVIEW_IMMEDIATE_MARKERS = {
       comment: 'note.review.immediateMark.comment',
       agree: 'note.review.immediateMark.agree',
       idea: 'note.review.immediateMark.idea',
+      disagree: 'note.review.immediateMark.disagree',
       todo: 'note.review.immediateMark.todo',
     };
     let batchSequence = 0;
@@ -5713,10 +6231,10 @@ window.__ModuleLoader__.load({
     }
 
     /** The review prompt: a type-specific response contract plus the notes. */
-    function buildReviewPrompt(list, batchId, images, immediateIds) {
+    function buildReviewPrompt(list, images, immediateIds) {
       const immediate = new Set(Array.isArray(immediateIds) ? immediateIds : []);
       const lines = [
-        translate('note.review.heading', { id: batchId }),
+        translate('note.review.heading'),
         translate('note.review.intro'),
         '',
       ];
@@ -5737,10 +6255,33 @@ window.__ModuleLoader__.load({
             ? ' ' + translate(markerKey)
             : '';
           lines.push(`${kind.prefix}${index + 1}.${mark} 「${quote}」${body ? '：' + body : ''}`);
+          if (note.context && note.context.trim()) {
+            lines.push('  ' + translate(
+              note.contextKind === 'question' ? 'note.review.contextQuestion' : 'note.review.context',
+              { text: note.context },
+            ));
+          }
         });
         lines.push('');
       }
       return lines.join('\n').trim();
+    }
+
+    /** Split the checked notes into one sent batch and the parked to-dos. */
+    function reviewSplit(notes, state) {
+      const sent = [];
+      const parked = [];
+      const immediateIds = [];
+      for (const note of Array.isArray(notes) ? notes : []) {
+        const immediate = noteReviewImmediate(state, note);
+        if (note.kind === 'todo' && !immediate) {
+          parked.push(note);
+        } else {
+          sent.push(note);
+          if (immediate) immediateIds.push(note.id);
+        }
+      }
+      return { sent, parked, immediateIds };
     }
 
     /** Record the batch and remove its processed notes. */
@@ -5762,6 +6303,7 @@ window.__ModuleLoader__.load({
       });
       notesActions.removeMany(review.noteIds);
       deselectNotes(review.sessionId, review.noteIds);
+      resetNoteReview(review.sessionId, review.noteIds);
       return record;
     }
 
@@ -5791,6 +6333,70 @@ window.__ModuleLoader__.load({
         ? current.excluded.filter((entry) => entry !== noteId)
         : [...current.excluded, noteId];
       noteSelection.set({ sessionId: session, excluded });
+    }
+
+    /** Select every note in one session. */
+    function selectAllNotes(sessionId) {
+      noteSelection.set({ sessionId: String(sessionId || ''), excluded: [] });
+    }
+
+    /** Uncheck every note in one session. */
+    function clearNoteSelection(sessionId, noteIds) {
+      const ids = Array.isArray(noteIds) ? noteIds.map(String) : [];
+      noteSelection.set({ sessionId: String(sessionId || ''), excluded: [...new Set(ids)] });
+    }
+
+    /** The review choices for one session; another session starts neutral. */
+    function reviewForSession(state, sessionId) {
+      const id = String(sessionId || '');
+      return state && state.sessionId === id ? state : { sessionId: id, immediate: {}, todoMode: {} };
+    }
+
+    /** Whether a note is marked for immediate execution in this review. */
+    function noteReviewImmediate(state, note) {
+      if (!note || !note.id) return false;
+      const current = reviewForSession(state, note.sessionId || '');
+      if (note.kind === 'todo') return current.todoMode[note.id] === 'execute';
+      return Boolean(current.immediate[note.id] && REVIEW_IMMEDIATE_LABELS[note.kind]);
+    }
+
+    /** Toggle the immediate marker for a non-to-do note. */
+    function setReviewImmediate(sessionId, note) {
+      if (!note || !note.id || note.kind === 'todo' || !REVIEW_IMMEDIATE_LABELS[note.kind]) return;
+      const id = String(sessionId || note.sessionId || '');
+      const current = reviewForSession(noteReview.get(), id);
+      noteReview.set({
+        ...current,
+        sessionId: id,
+        immediate: { ...current.immediate, [note.id]: !current.immediate[note.id] },
+      });
+    }
+
+    /** Choose the to-do route for this review: execute now or save as a prompt. */
+    function setReviewTodoMode(sessionId, note, mode) {
+      if (!note || !note.id || note.kind !== 'todo') return;
+      const id = String(sessionId || note.sessionId || '');
+      const current = reviewForSession(noteReview.get(), id);
+      noteReview.set({
+        ...current,
+        sessionId: id,
+        todoMode: { ...current.todoMode, [note.id]: mode === 'execute' ? 'execute' : 'prompt' },
+      });
+    }
+
+    /** Drop review choices for notes that left the list in one batch. */
+    function resetNoteReview(sessionId, noteIds) {
+      const ids = Array.isArray(noteIds) ? noteIds.map(String) : [];
+      if (ids.length === 0) return;
+      const id = String(sessionId || '');
+      const current = reviewForSession(noteReview.get(), id);
+      const immediate = { ...current.immediate };
+      const todoMode = { ...current.todoMode };
+      for (const noteId of ids) {
+        delete immediate[noteId];
+        delete todoMode[noteId];
+      }
+      noteReview.set({ ...current, sessionId: id, immediate, todoMode });
     }
 
     /** Uncheck a batch after it went into the session queue. */
@@ -5841,6 +6447,91 @@ window.__ModuleLoader__.load({
       }
     }
 
+    /** Context is a complete sentence, never a fixed character window. */
+    const NOTE_CONTEXT_MAX = 280;
+    const NOTE_SENTENCE_BREAK = /[。！？!?；;\n]/;
+
+    function normalizeContextText(value) {
+      return String(value || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function sentenceSpanAt(text, start, end) {
+      if (!text) return null;
+      const from = Math.max(0, Math.min(Number(start) || 0, text.length));
+      const to = Math.max(from, Math.min(Number(end) || from, text.length));
+      let a = from;
+      while (a > 0 && !NOTE_SENTENCE_BREAK.test(text[a - 1])) a -= 1;
+      let b = to;
+      while (b < text.length && !NOTE_SENTENCE_BREAK.test(text[b])) b += 1;
+      if (b < text.length) b += 1;
+      while (a < b && /\s/.test(text[a])) a += 1;
+      while (b > a && /\s/.test(text[b - 1])) b -= 1;
+      return b > a ? { start: a, end: b } : null;
+    }
+
+    function previousSentenceSpan(text, start) {
+      if (!text || start <= 0) return null;
+      let end = Math.max(0, Math.min(start, text.length));
+      while (end > 0 && /\s/.test(text[end - 1])) end -= 1;
+      if (end <= 0) return null;
+      let a = end - 1;
+      if (NOTE_SENTENCE_BREAK.test(text[a])) a -= 1;
+      while (a >= 0 && !NOTE_SENTENCE_BREAK.test(text[a])) a -= 1;
+      let s = a + 1;
+      while (s < end && /\s/.test(text[s])) s += 1;
+      while (end > s && /\s/.test(text[end - 1])) end -= 1;
+      return end > s ? { start: s, end } : null;
+    }
+
+    function contextCore(value) {
+      return String(value || '').replace(/[\s。！？!?；;、，,.]/g, '');
+    }
+
+    function isQuestionSentence(value) {
+      const sentence = String(value || '');
+      return /[？?]/.test(sentence)
+        || /还是|或者|哪一个|哪个|which|whether|\bor\b/i.test(sentence);
+    }
+
+    /**
+     * The optional context for a short quote: the complete sentence around it,
+     * or the complete preceding question when the quote is an option. Returns
+     * an empty context when the unit is missing, too long, or redundant.
+     */
+    function noteContextAt(text, offset, quote) {
+      const source = String(text || '');
+      const clean = String(quote || '').trim();
+      if (!source || !clean) return { text: '', kind: '' };
+      let from = Number(offset);
+      if (!Number.isFinite(from) || from < 0) from = source.indexOf(clean);
+      if (from < 0) return { text: '', kind: '' };
+      const current = sentenceSpanAt(source, from, from + clean.length);
+      if (!current) return { text: '', kind: '' };
+      const currentText = normalizeContextText(source.slice(current.start, current.end));
+      if (!currentText) return { text: '', kind: '' };
+      // A full sentence or a long quote already carries its own context.
+      if (clean.length > 48 || /[。！？!?；;]$/.test(clean)) return { text: '', kind: '' };
+      const previous = previousSentenceSpan(source, current.start);
+      const previousText = previous ? normalizeContextText(source.slice(previous.start, previous.end)) : '';
+      const currentIsQuestion = isQuestionSentence(currentText);
+      const previousIsQuestion = previousText ? isQuestionSentence(previousText) : false;
+      let context = '';
+      let kind = '';
+      if (currentIsQuestion) {
+        context = currentText;
+        kind = 'question';
+      } else if (previousIsQuestion) {
+        context = previousText;
+        kind = 'question';
+      } else if (currentText !== clean && contextCore(currentText) !== contextCore(clean)) {
+        context = currentText;
+        kind = 'sentence';
+      }
+      if (!context || context.length > NOTE_CONTEXT_MAX) return { text: '', kind: '' };
+      if (contextCore(context) === contextCore(clean)) return { text: '', kind: '' };
+      return { text: context, kind };
+    }
+
     /**
      * Capture the selected assistant text as a value anchor. Runs while the
      * gesture still owns the selection, so it reads the live DOM once and never
@@ -5886,6 +6577,7 @@ window.__ModuleLoader__.load({
         const text = source.textContent || '';
         const prefix = text.slice(Math.max(0, offset - 24), offset);
         const suffix = text.slice(offset + quote.length, offset + quote.length + 24);
+        const context = noteContextAt(text, offset, quote);
         let rowIndex = 0;
         const scroll = noteChatRoot(sessionId);
         if (scroll) {
@@ -5896,7 +6588,11 @@ window.__ModuleLoader__.load({
           const at = Array.prototype.indexOf.call(rows, keyed);
           rowIndex = at >= 0 ? at : rows.length;
         }
-        return { nodeKey, quote, prefix, suffix, offset, order: rowIndex * 1000000 + offset };
+        return {
+          nodeKey, quote, prefix, suffix, offset,
+          context: context.text, contextKind: context.kind,
+          order: rowIndex * 1000000 + offset,
+        };
       } catch (_error) {
         return null;
       }
@@ -6132,6 +6828,13 @@ window.__ModuleLoader__.load({
         showToast(translate('note.composeStored', {
           group: choice ? choice.label : translate('row.noCategory'),
         }), 'ok');
+        if (typeof draft.onSaved === 'function') {
+          try {
+            draft.onSaved(choice);
+          } catch (_error) {
+            /* A cleanup failure must not undo the saved prompt. */
+          }
+        }
         close();
       };
 
@@ -6588,6 +7291,8 @@ window.__ModuleLoader__.load({
             prefix: editing.anchor.prefix,
             suffix: editing.anchor.suffix,
             offset: editing.anchor.offset,
+            context: editing.anchor.context,
+            contextKind: editing.anchor.contextKind,
             order: editing.anchor.order,
             kind,
             body: value,
@@ -6687,7 +7392,6 @@ window.__ModuleLoader__.load({
         return { left: Math.round(x) + 'px', top: Math.round(y) + 'px' };
       };
       const promptStyle = prompt.open && prompt.anchor ? placePopup(prompt.anchor, 210, 280) : null;
-      const confirmStyle = confirm.open && confirm.anchor ? placePopup(confirm.anchor, 240, 110) : null;
 
       return h(
         'div',
@@ -6729,38 +7433,8 @@ window.__ModuleLoader__.load({
               h('button', { key: 'cancel', type: 'button', className: 'pp-note-prompt-row pp-note-prompt-cancel', onClick: () => closeNotePrompt() }, translate('note.cancel')),
             )
           : null,
-        confirm.open && confirmStyle
-          ? h(
-              'div',
-              {
-                key: 'confirm',
-                className: 'pp-note-prompt',
-                style: confirmStyle,
-                role: 'alertdialog',
-                'aria-label': translate('note.deleteConfirm'),
-                onPointerDown: (event) => event.stopPropagation(),
-              },
-              h('div', { key: 'msg', className: 'pp-note-prompt-message' }, translate('note.deleteConfirm')),
-              h(
-                'div',
-                { key: 'actions', className: 'pp-note-prompt-actions' },
-                h('button', { key: 'no', type: 'button', className: 'pp-note-btn', onClick: () => closeNoteConfirm() }, translate('note.cancel')),
-                h(
-                  'button',
-                  {
-                    key: 'yes',
-                    type: 'button',
-                    className: 'pp-note-btn pp-note-btn-danger',
-                    onClick: () => {
-                      const run = noteConfirm.get().onConfirm;
-                      closeNoteConfirm();
-                      if (typeof run === 'function') run();
-                    },
-                  },
-                  translate('note.delete'),
-                ),
-              ),
-            )
+        confirm.open
+          ? h(NoteDeleteConfirm, { key: 'confirm', rect: confirm.surfaceRect })
           : null,
         editing
           ? h(
@@ -6939,6 +7613,9 @@ window.__ModuleLoader__.load({
       const currentWorkspaceId = typeof props.currentWorkspaceId === 'string' ? props.currentWorkspaceId : '';
       const filter = typeof props.filter === 'string' ? props.filter.trim().toLowerCase() : '';
       const selection = useNoteSelection();
+      const reviewState = useNoteReview();
+      const reviewMode = props.reviewMode === true;
+      const immediateFor = (note) => noteReviewImmediate(reviewState, note);
       const { preview, openImage, closeImage } = useImagePreview();
       const picked = notesForSelection(list, sessionId, selection);
       const matches = (note) => !filter
@@ -7128,6 +7805,15 @@ window.__ModuleLoader__.load({
                 key: note.id,
                 'data-promoted': note.promotedGroup ? 'true' : undefined,
               },
+              reviewMode
+                ? h('input', {
+                    type: 'checkbox',
+                    className: 'pp-note-check pp-notes-review-check',
+                    checked: noteSelected(selection, sessionId, note.id),
+                    'aria-label': translate('note.review.select'),
+                    onChange: () => toggleNoteSelected(sessionId, note.id),
+                  })
+                : null,
               h(RowActionIcon, {
                 name: 'locate',
                 label: translate('note.locate'),
@@ -7154,22 +7840,58 @@ window.__ModuleLoader__.load({
                 note.images && note.images.length > 0
                   ? h(ImageStrip, { images: note.images, compact: true, max: 4, onOpen: openImage })
                   : null,
+                reviewMode && note.kind === 'todo'
+                  ? h(
+                      'div',
+                      { className: 'pp-review-todo-choice pp-notes-review-todo', role: 'radiogroup', 'aria-label': translate('note.kind.todo') },
+                      h(
+                        'label',
+                        { className: 'pp-review-todo-option', 'data-active': immediateFor(note) ? 'true' : 'false' },
+                        h('input', {
+                          type: 'radio',
+                          name: 'pp-note-review-todo-' + note.id,
+                          value: 'execute',
+                          checked: immediateFor(note),
+                          onChange: () => setReviewTodoMode(sessionId, note, 'execute'),
+                        }),
+                        h('span', null, translate('note.review.todo.execute')),
+                      ),
+                      h(
+                        'label',
+                        { className: 'pp-review-todo-option', 'data-active': !immediateFor(note) ? 'true' : 'false' },
+                        h('input', {
+                          type: 'radio',
+                          name: 'pp-note-review-todo-' + note.id,
+                          value: 'prompt',
+                          checked: !immediateFor(note),
+                          onChange: () => setReviewTodoMode(sessionId, note, 'prompt'),
+                        }),
+                        h('span', null, translate('note.review.todo.prompt')),
+                      ),
+                    )
+                  : reviewMode && REVIEW_IMMEDIATE_LABELS[note.kind]
+                    ? h(
+                        'label',
+                        { className: 'pp-review-exec pp-notes-review-exec', 'data-active': immediateFor(note) ? 'true' : 'false' },
+                        h('input', {
+                          type: 'checkbox',
+                          checked: immediateFor(note),
+                          onChange: () => setReviewImmediate(sessionId, note),
+                        }),
+                        h('span', null, translate(REVIEW_IMMEDIATE_LABELS[note.kind])),
+                      )
+                    : null,
               ),
-              h(
-                'div',
-                { className: 'pp-row-actions' },
-                h(RowActionIcon, {
-                  name: 'insert',
+              reviewMode
+                ? null
+                : h(
+                    'div',
+                    { className: 'pp-row-actions' },
+                    h(RowActionIcon, {
+                      name: 'insert',
                   label: translate('note.insert'),
                   onClick: () => insertNote(note),
                 }),
-                props.onQueueNote
-                  ? h(RowActionIcon, {
-                      name: 'queue',
-                      label: translate('note.queueOutbox'),
-                      onClick: () => props.onQueueNote(note),
-                    })
-                  : null,
                 h(RowActionIcon, {
                   name: 'store',
                   label: translate('note.store'),
@@ -7179,7 +7901,7 @@ window.__ModuleLoader__.load({
                   name: 'trash',
                   label: translate('note.delete'),
                   danger: true,
-                  onClick: () => openNoteConfirm(() => notesActions.remove(note.id)),
+                  onClick: (event) => openNoteConfirm(() => notesActions.remove(note.id), event),
                 }),
               ),
             );
@@ -7199,64 +7921,60 @@ window.__ModuleLoader__.load({
     let pendingNoteAnchor = null;
 
     /**
-     * The batch review sheet: check notes, optionally authorize individual
-     * items to execute, and hand one message to the session queue. To-dos left
-     * unchecked are parked in the current workspace prompt pool instead of
-     * being sent.
+     * The bottom review card: generate one prompt from the notes checked in the
+     * annotation tab, let the user edit it, then send or save it. The note list
+     * and its review controls live in the tab; this card is only the composer.
      */
-    function ReviewSheet(props) {
+    function ReviewPromptCard(props) {
       useLocaleTick();
-      const noteList = Array.isArray(props.notes) ? props.notes : [];
-      const sessionId = typeof props.sessionId === 'string' ? props.sessionId : '';
-      const selection = useNoteSelection();
-      const { preview, openImage, closeImage } = useImagePreview();
+      const sentNotes = Array.isArray(props.sentNotes) ? props.sentNotes : [];
+      const parkedNotes = Array.isArray(props.parkedNotes) ? props.parkedNotes : [];
+      const selectedNotes = Array.isArray(props.selectedNotes) ? props.selectedNotes : [];
+      const immediateIds = Array.isArray(props.immediateIds) ? props.immediateIds : [];
+      const processing = props.processing === true;
       const [batchId] = useState(() => newBatchId());
-      const [step, setStep] = useState('notes');
-      const [immediate, setImmediate] = useState({});
-      const [todoMode, setTodoMode] = useState({});
+      const [draft, setDraft] = useState(null);
+      const [stale, setStale] = useState(false);
       const [busy, setBusy] = useState(false);
       const [error, setError] = useState('');
-      const selected = notesForSelection(noteList, sessionId, selection);
-      const base = selected;
-      const isImmediate = (note) => (note.kind === 'todo'
-        ? todoMode[note.id] === 'execute'
-        : Boolean(immediate[note.id] && REVIEW_IMMEDIATE_LABELS[note.kind]));
-      const parkedTodos = base.filter((note) => note.kind === 'todo' && !isImmediate(note));
-      const sentNotes = base.filter((note) => !(note.kind === 'todo' && !isImmediate(note)));
-      const immediateIds = sentNotes.filter(isImmediate).map((note) => note.id);
-      const signature = sentNotes.map((note) => note.id + ':' + note.kind + ':' + (note.updatedAt || 0) + (isImmediate(note) ? '!' : '')).join('|');
-      const buildText = (list) => (list.length > 0
-        ? buildReviewPrompt(list, batchId, imagesForNotes(list), list.filter(isImmediate).map((note) => note.id))
-        : '');
-      const [text, setText] = useState(() => buildText(sentNotes));
-      const signatureRef = useRef(signature);
+      const images = imagesForNotes(sentNotes);
+      const generated = buildReviewPrompt(sentNotes, images, immediateIds);
+      const signature = sentNotes
+        .map((note) => note.id + ':' + note.kind + (immediateIds.indexOf(note.id) >= 0 ? '!' : ''))
+        .join('|');
+      const lastSignature = useRef(signature);
+      const lastGenerated = useRef(generated);
       useEffect(() => {
-        if (signatureRef.current === signature) return;
-        signatureRef.current = signature;
-        setText(buildText(sentNotes));
-      }, [signature]);
-      const grouped = NOTE_KINDS
-        .map((kind) => ({ kind, rows: base.filter((note) => note.kind === kind.id) }))
-        .filter((group) => group.rows.length > 0);
-
+        if (lastSignature.current === signature) return;
+        const previous = lastGenerated.current;
+        lastSignature.current = signature;
+        lastGenerated.current = generated;
+        if (draft == null || draft === previous) {
+          setDraft(null);
+          setStale(false);
+        } else {
+          setStale(true);
+        }
+      }, [signature, generated, draft]);
+      const text = draft == null ? generated : draft;
+      const canSend = sentNotes.length > 0 && text.trim() !== '';
+      const canPark = sentNotes.length === 0 && parkedNotes.length > 0;
       const payload = () => ({
-        sessionId,
         batchId,
+        sessionId: props.sessionId,
+        text,
+        images,
         noteIds: sentNotes.map((note) => note.id),
-        parkedIds: parkedTodos.map((note) => note.id),
+        parkedIds: parkedNotes.map((note) => note.id),
         immediateIds,
-        text: sentNotes.length > 0 ? text : '',
-        images: imagesForNotes(sentNotes),
-        createdAt: Date.now(),
       });
-
       const submit = async (action) => {
         if (busy || !action) return;
         setBusy(true);
         setError('');
         try {
           const result = await action(payload());
-          if (!result || !result.ok) {
+          if (!result || result.ok !== true) {
             setBusy(false);
             setError((result && result.reason) || translate('note.review.failed', { reason: '?' }));
           }
@@ -7265,19 +7983,12 @@ window.__ModuleLoader__.load({
           setError(String((errorValue && errorValue.message) || errorValue));
         }
       };
-
-      const toggleImmediate = (note) => {
-        setImmediate((current) => ({ ...current, [note.id]: !current[note.id] }));
+      const regenerate = () => {
+        setDraft(null);
+        setStale(false);
+        lastSignature.current = signature;
+        lastGenerated.current = generated;
       };
-      const chooseTodo = (note, choice) => {
-        setTodoMode((current) => ({ ...current, [note.id]: choice }));
-      };
-      const canSend = sentNotes.length > 0 && text.trim().length > 0;
-      const canPark = parkedTodos.length > 0;
-      const primaryLabel = translate(busy ? 'note.review.sending' : 'note.review.send');
-      const primaryDisabled = busy || (sentNotes.length > 0 ? !canSend : !canPark);
-      const primaryAction = sentNotes.length > 0 ? props.onQueue : props.onPark;
-
       return h(
         'div',
         { className: 'pp-notes pp-notes-embedded pp-review' },
@@ -7288,7 +7999,13 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'pp-review-head' },
-            h('span', { className: 'pp-review-mark' }, h(NoteActionIcon, { kind: 'edit' })),
+            h('button', {
+              type: 'button',
+              className: 'pp-review-close pp-review-toggle',
+              title: translate('note.review.collapse'),
+              'aria-label': translate('note.review.collapse'),
+              onClick: props.onClose,
+            }, icon('chevronDown')),
             h(
               'div',
               { className: 'pp-review-title' },
@@ -7296,209 +8013,263 @@ window.__ModuleLoader__.load({
                 'div',
                 { className: 'pp-review-headline' },
                 h('strong', null, translate('note.review.title')),
-                h('span', { className: 'pp-review-chip' }, translate('note.review.selected', { n: base.length })),
-                immediateIds.length > 0
-                  ? h('span', { className: 'pp-review-chip pp-review-chip-accent' }, translate('note.review.immediateCount', { n: immediateIds.length }))
+                processing
+                  ? [
+                      h('span', { key: 'selected', className: 'pp-review-chip' }, translate('note.review.selected', { n: selectedNotes.length })),
+                      immediateIds.length > 0
+                        ? h('span', { key: 'immediate', className: 'pp-review-chip pp-review-chip-accent' }, translate('note.review.immediateCount', { n: immediateIds.length }))
+                        : null,
+                    ]
                   : null,
               ),
-              h('span', { className: 'pp-review-batch' }, batchId),
             ),
             h('span', { className: 'pp-notes-grow' }),
-            h('button', { type: 'button', className: 'pp-review-close', title: translate('note.cancel'), onClick: props.onClose }, icon('close')),
-          ),
-          h(
-            'div',
-            { className: 'pp-review-steps', 'aria-label': translate('note.review.title') },
             h(
-              'div',
-              { className: 'pp-review-step', 'data-active': step === 'notes' ? 'true' : 'false', 'aria-current': step === 'notes' ? 'step' : undefined },
-              h('span', { className: 'pp-review-step-num' }, '1'),
-              h('span', null, translate('note.title')),
-            ),
-            h('span', { className: 'pp-review-step-sep', 'aria-hidden': true }, '›'),
-            h(
-              'div',
-              { className: 'pp-review-step', 'data-active': step === 'preview' ? 'true' : 'false', 'aria-current': step === 'preview' ? 'step' : undefined },
-              h('span', { className: 'pp-review-step-num' }, '2'),
-              h('span', null, translate('note.review.previewAction')),
+              'span',
+              { className: 'pp-review-head-actions' },
+              !processing
+                ? h('button', {
+                    type: 'button',
+                    className: 'pp-note-btn pp-note-btn-primary pp-review-process',
+                    title: translate('note.review.startTitle'),
+                    disabled: busy,
+                    onClick: props.onStart,
+                  }, translate('note.review.open'))
+                : [
+                    h(
+                      'span',
+                      { key: 'select', className: 'pp-review-select-actions' },
+                      h('button', {
+                        type: 'button',
+                        className: 'pp-note-link pp-review-select-link',
+                        onClick: props.onSelectAll,
+                      }, translate('note.review.selectAll')),
+                      h('button', {
+                        type: 'button',
+                        className: 'pp-note-link pp-review-select-link',
+                        onClick: props.onClearSelection,
+                      }, translate('note.review.clearAll')),
+                    ),
+                    sentNotes.length > 0
+                      ? h('button', {
+                          key: 'save',
+                          type: 'button',
+                          className: 'pp-note-btn pp-review-secondary',
+                          disabled: busy || typeof props.onSavePrompt !== 'function',
+                          onClick: () => submit(props.onSavePrompt),
+                        }, translate('note.review.savePrompt'))
+                      : null,
+                    canPark
+                      ? h('button', {
+                          key: 'park',
+                          type: 'button',
+                          className: 'pp-note-btn pp-note-btn-primary',
+                          disabled: busy,
+                          onClick: () => submit(props.onPark),
+                        }, translate('note.review.parkAction'))
+                      : h('button', {
+                          key: 'send',
+                          type: 'button',
+                          className: 'pp-note-btn pp-note-btn-primary',
+                          disabled: busy || !canSend,
+                          onClick: () => submit(props.onSend),
+                        }, busy ? translate('note.review.sending') : translate('note.review.send')),
+                  ],
             ),
           ),
         ),
         h(
           'div',
-          { className: 'pp-review-pane', hidden: step !== 'notes', 'data-active': step === 'notes' ? 'true' : 'false' },
-          grouped.length > 0
-          ? h(
-              'div',
-              { className: 'pp-review-list' },
-              grouped.map((group) => h(
+          { className: 'pp-review-pane', 'data-active': 'true' },
+          !processing
+            ? h(
                 'div',
-                { key: group.kind.id, className: 'pp-review-group' },
+                { className: 'pp-review-idle' },
+                h('div', { className: 'pp-review-idle-hint' }, translate('note.review.idleHint')),
+              )
+            : sentNotes.length > 0
+            ? h(
+                'div',
+                { className: 'pp-review-preview-wrap' },
                 h(
                   'div',
-                  { className: 'pp-review-group-title' },
-                  h('span', { className: 'pp-review-group-dot', style: { background: `rgb(${group.kind.ink})` } }),
-                  h('span', null, translate(group.kind.label)),
-                  h('span', { className: 'pp-review-group-count' }, String(group.rows.length)),
-                ),
-                group.rows.map((note) => h(
-                  'div',
-                  { key: note.id, className: 'pp-review-row' },
-                  h('input', {
-                    type: 'checkbox',
-                    className: 'pp-note-check',
-                    checked: true,
-                    onChange: () => toggleNoteSelected(sessionId, note.id),
-                  }),
-                  h('span', { className: 'pp-notes-kind', 'data-kind': note.kind, title: translate(noteKind(note.kind).label) }, noteKind(note.kind).icon),
+                  { className: 'pp-review-preview-hint' },
                   h(
-                    'div',
-                    { className: 'pp-review-main' },
-                    h('div', { className: 'pp-review-quote', title: note.quote }, noteQuoteText(note.quote)),
-                    note.body ? h('div', { className: 'pp-review-body' }, note.body) : null,
-                    note.images && note.images.length > 0
-                      ? h(ImageStrip, { images: note.images, compact: true, max: 4, onOpen: openImage })
-                      : null,
-                    note.kind === 'todo'
-                      ? h(
-                          'div',
-                          { className: 'pp-review-todo-choice', role: 'radiogroup', 'aria-label': translate('note.kind.todo') },
-                          h(
-                            'label',
-                            { className: 'pp-review-todo-option', 'data-active': isImmediate(note) ? 'true' : 'false' },
-                            h('input', {
-                              type: 'radio',
-                              name: 'pp-review-todo-' + note.id,
-                              value: 'execute',
-                              checked: isImmediate(note),
-                              onChange: () => chooseTodo(note, 'execute'),
-                            }),
-                            h('span', null, translate('note.review.todo.execute')),
-                          ),
-                          h(
-                            'label',
-                            { className: 'pp-review-todo-option', 'data-active': !isImmediate(note) ? 'true' : 'false' },
-                            h('input', {
-                              type: 'radio',
-                              name: 'pp-review-todo-' + note.id,
-                              value: 'prompt',
-                              checked: !isImmediate(note),
-                              onChange: () => chooseTodo(note, 'prompt'),
-                            }),
-                            h('span', null, translate('note.review.todo.prompt')),
-                          ),
-                        )
-                      : REVIEW_IMMEDIATE_LABELS[note.kind]
-                        ? h(
-                            'label',
-                            { className: 'pp-review-exec', 'data-active': isImmediate(note) ? 'true' : 'false' },
-                            h('input', {
-                              type: 'checkbox',
-                              name: 'pp-review-immediate-' + note.id,
-                              checked: isImmediate(note),
-                              onChange: () => toggleImmediate(note),
-                            }),
-                            h('span', null, translate(REVIEW_IMMEDIATE_LABELS[note.kind])),
-                          )
-                        : null,
+                    'span',
+                    { className: stale ? 'pp-review-stale' : 'pp-review-hint-text' },
+                    stale ? translate('note.review.stale') : translate('note.review.previewHint'),
                   ),
-                )),
-              )),
-            )
-          : h(
-              'div',
-              { className: 'pp-notes-empty' },
-              translate('note.review.empty'),
-              h('div', { className: 'pp-hint' }, translate('note.review.emptyHint')),
-            ),
-        ),
-        h(
-          'div',
-          { className: 'pp-review-pane', hidden: step !== 'preview', 'data-active': step === 'preview' ? 'true' : 'false' },
-          sentNotes.length > 0
-          ? h(
-              'div',
-              { className: 'pp-review-preview-wrap' },
-              h('div', { className: 'pp-review-preview-hint' }, translate('note.review.previewHint')),
-              h('textarea', {
-                className: 'pp-review-text',
-                value: text,
-                onChange: (event) => setText(event.target.value),
-                spellCheck: false,
-              }),
-            )
-          : h('div', { className: 'pp-review-empty-send' }, translate('note.review.parkOnly')),
+                  h('button', {
+                    type: 'button',
+                    className: 'pp-note-link pp-review-refresh',
+                    title: translate('note.review.processTitle'),
+                    onClick: regenerate,
+                  }, translate('note.review.refresh')),
+                ),
+                h('textarea', {
+                  className: 'pp-review-text',
+                  value: text,
+                  spellCheck: false,
+                  onChange: (event) => setDraft(event.target.value),
+                }),
+              )
+            : h(
+                'div',
+                { className: 'pp-review-empty-send' },
+                canPark ? translate('note.review.parkOnly') : translate('note.review.nothingSelected'),
+              ),
         ),
         error ? h('div', { className: 'pp-review-error' }, error) : null,
-        h(
-          'div',
-          { className: 'pp-review-actions' },
-          step === 'notes'
-            ? [
-                h('button', { key: 'cancel', type: 'button', className: 'pp-note-btn pp-review-cancel', onClick: props.onClose }, translate('note.cancel')),
-                h(
-                  'button',
-                  {
-                    key: 'preview',
-                    type: 'button',
-                    className: 'pp-note-btn pp-note-btn-primary',
-                    disabled: base.length === 0,
-                    onClick: () => setStep('preview'),
-                  },
-                  translate('note.review.previewAction'),
-                ),
-              ]
-            : [
-                h('button', { key: 'back', type: 'button', className: 'pp-note-btn pp-review-cancel', onClick: () => setStep('notes') }, translate('note.review.back')),
-                props.onSavePrompt && sentNotes.length > 0
-                  ? h(
-                      'button',
-                      {
-                        key: 'save-prompt',
-                        type: 'button',
-                        className: 'pp-note-btn',
-                        disabled: primaryDisabled,
-                        onClick: () => submit(props.onSavePrompt),
-                      },
-                      translate('note.review.savePrompt'),
-                    )
-                  : null,
-                props.onOutbox && sentNotes.length > 0
-                  ? h(
-                      'button',
-                      {
-                        key: 'outbox',
-                        type: 'button',
-                        className: 'pp-note-btn',
-                        disabled: primaryDisabled,
-                        onClick: () => submit(props.onOutbox),
-                      },
-                      translate('note.review.outbox'),
-                    )
-                  : null,
-                h(
-                  'button',
-                  {
-                    key: 'send',
-                    type: 'button',
-                    className: 'pp-note-btn pp-note-btn-primary',
-                    disabled: primaryDisabled,
-                    onClick: () => submit(primaryAction),
-                  },
-                  primaryLabel,
-                ),
-              ],
-        ),
-        h(ImageLightbox, { key: 'lightbox', preview, onClose: closeImage }),
       );
     }
 
-    /**
-     * The review card sits in the same bottom dock as the send queue, so the
-     * annotation list stays visible while a batch is prepared.
-     */
-    function renderReviewCard(props) {
-      return h('div', { className: 'pp-page-foot pp-review-foot' }, h(ReviewSheet, props));
+    /** Bottom dock cards are draggable by their top edge; 0 means the CSS default. */
+    const REVIEW_MIN_HEIGHT = 220;
+    const REVIEW_MAX_HEIGHT = 720;
+    const TRAY_MIN_HEIGHT = 160;
+    const TRAY_MAX_HEIGHT = 640;
+
+    function useDockResize(storedHeight, settingKey, minHeight, maxHeight) {
+      const [dragHeight, setDragHeight] = useState(0);
+      const height = dragHeight || storedHeight || 0;
+      const heightRef = useRef(height);
+      heightRef.current = height;
+      const cardRef = useRef(null);
+      const clamp = (next) => {
+        const node = cardRef.current;
+        const viewport = (typeof window !== 'undefined' && Number(window.innerHeight)) || 900;
+        const panel = node && node.closest ? node.closest('.pp-panel') : null;
+        const bottom = node && node.getBoundingClientRect ? node.getBoundingClientRect().bottom : viewport - 16;
+        const top = panel && panel.getBoundingClientRect ? panel.getBoundingClientRect().top : 72;
+        const ceiling = Math.max(minHeight, Math.min(maxHeight, bottom - top - 96, viewport - 160));
+        return Math.round(Math.min(ceiling, Math.max(minHeight, next)));
+      };
+      const startResize = (event) => {
+        if (event.button !== undefined && event.button !== 0) return;
+        event.preventDefault();
+        const startY = event.clientY;
+        const node = cardRef.current;
+        const startHeight = (node && node.getBoundingClientRect ? node.getBoundingClientRect().height : 0)
+          || heightRef.current
+          || 420;
+        const onMove = (moveEvent) => {
+          if (moveEvent.cancelable) moveEvent.preventDefault();
+          setDragHeight(clamp(startHeight + (startY - moveEvent.clientY)));
+        };
+        const onUp = () => {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+          poolActions.setSetting(settingKey, clamp(heightRef.current));
+          setDragHeight(0);
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      };
+      const resizeBy = (delta) => {
+        const node = cardRef.current;
+        const base = heightRef.current || (node && node.getBoundingClientRect ? node.getBoundingClientRect().height : 0) || 420;
+        poolActions.setSetting(settingKey, clamp(base + delta));
+        setDragHeight(0);
+      };
+      const reset = () => {
+        setDragHeight(0);
+        poolActions.setSetting(settingKey, 0);
+      };
+      return { height, cardRef, startResize, resizeBy, reset };
+    }
+
+    function renderReviewDock(props) {
+      const {
+        sessionId, open, count, version, height, cardRef,
+        selectedNotes, sentNotes, parkedNotes, immediateIds,
+        onResizeStart, onResizeBy, onResizeReset,
+        processing, onStart, onSelectAll, onClearSelection,
+        onExpand, onCollapse, onSend, onSavePrompt, onPark,
+      } = props;
+      return h(
+        'div',
+        { className: 'pp-review-dock', 'data-collapsed': open ? 'false' : 'true' },
+        open
+          ? null
+          : h(
+              'div',
+              { className: 'pp-queue-strip' },
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'pp-review-strip',
+                  title: translate('note.review.title'),
+                  'aria-label': translate('note.review.title'),
+                  'aria-expanded': 'false',
+                  onClick: onExpand,
+                },
+                h('span', { className: 'pp-queue-strip-action' }, icon('chevronUp')),
+                h('span', { className: 'pp-queue-strip-title' }, translate('note.review.title')),
+                h('span', { className: 'pp-hint' }, translate('note.review.selected', { n: count })),
+                h('span', { className: 'pp-grow' }),
+              ),
+              h('button', {
+                type: 'button',
+                className: 'pp-primary pp-review-strip-go',
+                onClick: onStart,
+              }, translate('note.review.open')),
+            ),
+        h(
+          'div',
+          { className: 'pp-review-dock-body', hidden: !open },
+          h(
+            'div',
+            {
+              className: 'pp-page-foot pp-review-foot',
+              ref: cardRef,
+              style: height ? { height: Math.round(height) + 'px', maxHeight: 'calc(100vh - 160px)' } : undefined,
+            },
+            h(
+              'div',
+              {
+                className: 'pp-review-grip',
+                role: 'separator',
+                tabIndex: 0,
+                'aria-orientation': 'horizontal',
+                'aria-label': translate('note.review.resize'),
+                'aria-valuemin': REVIEW_MIN_HEIGHT,
+                'aria-valuemax': REVIEW_MAX_HEIGHT,
+                'aria-valuenow': height || 0,
+                title: translate('note.review.resize'),
+                onPointerDown: onResizeStart,
+                onDoubleClick: onResizeReset,
+                onKeyDown: (event) => {
+                  if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    onResizeBy(20);
+                  } else if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    onResizeBy(-20);
+                  }
+                },
+              },
+              h('span', { className: 'pp-grip-bar' }),
+            ),
+            h(ReviewPromptCard, {
+              key: version,
+              sessionId,
+              processing,
+              onStart,
+              onSelectAll,
+              onClearSelection,
+              selectedNotes,
+              sentNotes,
+              parkedNotes,
+              immediateIds,
+              onClose: onCollapse,
+              onSend,
+              onSavePrompt,
+              onPark,
+            }),
+          ),
+        ),
+      );
     }
 
     // --------------------------------------------------- conversation selection
@@ -7781,6 +8552,8 @@ window.__ModuleLoader__.load({
     function PromptPoolPanel(props) {
       useLocaleTick();
       const state = usePoolState();
+      const reviewResize = useDockResize(normalizeSettings(state.settings).reviewHeight, 'reviewHeight', REVIEW_MIN_HEIGHT, REVIEW_MAX_HEIGHT);
+      const trayResize = useDockResize(normalizeSettings(state.settings).trayHeight, 'trayHeight', TRAY_MIN_HEIGHT, TRAY_MAX_HEIGHT);
       const storage = useStorageState();
       const releaseInfo = useReleaseState();
       const view = useUiState();
@@ -7793,7 +8566,9 @@ window.__ModuleLoader__.load({
         .filter((note) => note.sessionId === notesSessionId)
         .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt));
       const noteSelectionState = useNoteSelection();
+      const reviewState = useNoteReview();
       const selectedNotes = notesForSelection(notesList, notesSessionId, noteSelectionState);
+      const reviewSelection = reviewSplit(selectedNotes, reviewState);
 
       // This view can read the workspace roster; publish it for both views.
       const wsSnapshot = typeof props.useWorkspaces === 'function' ? props.useWorkspaces(selectAllInput) : undefined;
@@ -7853,9 +8628,12 @@ window.__ModuleLoader__.load({
       ));
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [reviewOpen, setReviewOpen] = useState(false);
+      const [reviewProcessing, setReviewProcessing] = useState(false);
+      const [reviewVersion, setReviewVersion] = useState(0);
       const [mergeOpen, setMergeOpen] = useState(false);
-      const [mergeSelected, setMergeSelected] = useState({});
+      const [mergeHeight, setMergeHeight] = useState(0);
       const [mergeBusy, setMergeBusy] = useState(false);
+      const [trayMode, setTrayMode] = useState('single');
       const [pendingCategory, setPendingCategory] = useState(null);
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
@@ -8206,10 +8984,12 @@ window.__ModuleLoader__.load({
 
       /** Queue one occurrence, dropping it from the pool when retention is off. */
       const queueItem = (item) => {
+        if (!queueClickAllowed(item.id)) return;
         const before = pool.get().tray.length;
         poolActions.addToTray(item.id, notesSessionId);
         if (pool.get().tray.length === before) return;
         if (!normalizeSettings(state.settings).keepAfterQueue) deleteItem(item, translate('status.queuedAndRemoved'));
+        else showToast(translate('status.queued'), 'ok');
       };
 
       const release = async () => {
@@ -8329,25 +9109,24 @@ window.__ModuleLoader__.load({
       const openMerge = () => {
         const entries = tray.slice();
         if (entries.length < 2) return;
+        const node = trayResize.cardRef.current;
+        const measured = node && node.getBoundingClientRect ? Math.round(node.getBoundingClientRect().height) : 0;
+        setMergeHeight(measured);
         setReviewOpen(false);
-        setMergeSelected(Object.fromEntries(entries.map((entry) => [entry.key, true])));
+        setReviewProcessing(false);
         setMergeOpen(true);
       };
 
       const closeMerge = () => {
         setMergeOpen(false);
-        setMergeSelected({});
       };
 
-      const toggleMerge = (key) => {
-        setMergeSelected((current) => ({ ...current, [key]: current[key] === false }));
-      };
-
-      const confirmMerge = async () => {
+      const confirmMerge = async (mergedText) => {
         if (busyRef.current) return;
-        const entries = tray.filter((entry) => mergeSelected[entry.key] !== false);
+        const entries = tray.slice();
         if (entries.length === 0) return;
-        const text = entries.map((entry, index) => `${index + 1}. ${entry.body}`).join('\n\n');
+        const fallback = entries.map((entry, index) => `${index + 1}. ${entry.body}`).join('\n\n');
+        const text = typeof mergedText === 'string' && mergedText.trim() ? mergedText : fallback;
         const images = normalizeImages(entries.reduce((list, entry) => list.concat(entry.images || []), []), Number.MAX_SAFE_INTEGER);
         busyRef.current = true;
         setBusy(true);
@@ -8389,6 +9168,8 @@ window.__ModuleLoader__.load({
       });
 
       const tray = state.tray.filter((entry) => !entry.targetSessionId || entry.targetSessionId === notesSessionId);
+      const annotationEntries = tray.filter((entry) => entry.type === 'annotation' && entry.source && entry.source.kind);
+      const annotationQueue = tray.length > 0 && annotationEntries.length === tray.length;
       const queueCollapsed = normalizeSettings(state.settings).queueCollapsed;
 
       // A capture appends to the end of the list; keep the new row in view.
@@ -8439,19 +9220,22 @@ window.__ModuleLoader__.load({
       };
 
       const openReview = () => {
-        if (selectedNotes.length === 0) {
-          showToast(translate('note.noneSelected'), 'error');
-          return;
-        }
         closeMerge();
         setReviewOpen(true);
+        setReviewProcessing(false);
+      };
+
+      const startReview = () => {
+        closeMerge();
+        setReviewOpen(true);
+        setReviewProcessing(true);
       };
 
       /** Queue the review prompt in the host session queue, without touching the composer. */
       const queueReviewText = async (text, sessionId, images) => {
         const targetSession = typeof sessionId === 'string' && sessionId ? sessionId : notesSessionId;
         const direct = resolveDirectQueue(targetSession);
-        if (!direct) return { ok: false, reason: translate('note.review.unsupported') };
+        if (!direct) return { ok: false, reason: 'unavailable' };
         try {
           await sendDirect(direct, targetSession, text, normalizeImages(images, Number.MAX_SAFE_INTEGER));
           return { ok: true };
@@ -8484,6 +9268,7 @@ window.__ModuleLoader__.load({
         const movedIds = notes.map((note) => note.id);
         notesActions.removeMany(movedIds);
         deselectNotes(notesSessionId, movedIds);
+        resetNoteReview(notesSessionId, movedIds);
         return movedIds.length;
       };
 
@@ -8491,38 +9276,47 @@ window.__ModuleLoader__.load({
         const moved = moveReviewTodos(review);
         if (moved === 0) return { ok: false, reason: translate('status.storageFailed') };
         setReviewOpen(false);
+        setReviewProcessing(false);
+        setReviewVersion((value) => value + 1);
         showToast(translate('note.review.parked', { n: moved }), 'ok');
         return { ok: true };
       };
 
       const queueReview = async (review) => {
         const result = await queueReviewText(review.text, notesSessionId, review.images);
-        if (!result.ok) return result;
+        let inserted = false;
+        if (!result || result.ok !== true) {
+          if (result && result.reason === 'unavailable') {
+            inserted = insertComposerText(review.text) === true;
+            if (inserted && review.images && review.images.length > 0) {
+              addImages(review.images).catch((error) => showToast(String((error && error.message) || error), 'error'));
+            }
+          }
+          if (!inserted) {
+            return {
+              ok: false,
+              reason: result && result.reason === 'unavailable'
+                ? translate('note.review.unsupported')
+                : (result && result.reason) || translate('note.review.unsupported'),
+            };
+          }
+        }
         commitReviewBatch({ ...review, sessionId: notesSessionId });
         const moved = moveReviewTodos(review);
         setReviewOpen(false);
+        setReviewProcessing(false);
+        setReviewVersion((value) => value + 1);
         showToast(
-          moved > 0
-            ? translate('note.review.queuedParked', { id: review.batchId, n: moved })
-            : translate('note.review.queued', { id: review.batchId }),
+          inserted
+            ? translate('note.review.inserted')
+            : moved > 0
+              ? translate('note.review.queuedParked', { n: moved })
+              : translate('note.review.queued'),
           'ok',
         );
         return { ok: true };
       };
 
-      const outboxReview = async (review) => {
-        poolActions.addTextToTray({
-          body: review.text,
-          images: review.images,
-          targetSessionId: notesSessionId,
-          type: 'review',
-        });
-        commitReviewBatch({ ...review, sessionId: notesSessionId });
-        moveReviewTodos(review);
-        setReviewOpen(false);
-        showToast(translate('note.review.outboxDone'), 'ok');
-        return { ok: true };
-      };
 
       /** Save the reviewed text as a normal prompt, without sending or queueing it. */
       const saveReviewPrompt = (review) => {
@@ -8535,6 +9329,8 @@ window.__ModuleLoader__.load({
           ? [...choices.filter((entry) => entry.value === preferred), ...choices.filter((entry) => entry.value !== preferred)]
           : choices;
         setReviewOpen(false);
+        setReviewProcessing(false);
+        setReviewVersion((value) => value + 1);
         openNoteSave({
           noteIds: review.noteIds,
           markStored: false,
@@ -8544,29 +9340,14 @@ window.__ModuleLoader__.load({
           type: promptTypeForNotes(chosen),
           choices: ordered,
           defaultGroup: preferred,
+          onSaved: () => {
+            moveReviewTodos({ parkedIds: review.parkedIds });
+            resetNoteReview(notesSessionId, review.noteIds);
+          },
         });
         return { ok: true };
       };
 
-      /** Add one annotation to the outbox without entering review. */
-      const queueNote = (note) => {
-        poolActions.addTextToTray({
-          body: composeNoteLine(note),
-          images: normalizeImages(note.images),
-          targetSessionId: notesSessionId,
-          type: 'annotation',
-          source: {
-            noteId: note.id,
-            kind: note.kind,
-            quote: note.quote,
-            body: note.body,
-            order: note.order,
-          },
-        });
-        notesActions.remove(note.id);
-        deselectNotes(notesSessionId, [note.id]);
-        showToast(translate('note.queuedOutbox'), 'ok');
-      };
 
       bridgeRef.current = { insert: insertItem, release, digest: () => { openMerge(); return { ok: true }; }, capture: captureDraft, composeNotes: composeSessionNotes, insertText: insertComposerText, insertImages: addImages, queueReview: queueReviewText };
       useEffect(() => {
@@ -8613,6 +9394,7 @@ window.__ModuleLoader__.load({
           if (command.type === 'open-view') {
             setSettingsOpen(false);
             setReviewOpen(false);
+            setReviewProcessing(false);
             if (command.scope === 'notes' || command.scope === 'workspace') setScope(command.scope);
             if (command.create === true) newItem();
             return { ok: true };
@@ -8653,6 +9435,10 @@ window.__ModuleLoader__.load({
         setScope(next);
         setSettingsOpen(false);
         setReviewOpen(false);
+        setReviewProcessing(false);
+        setMergeOpen(false);
+        setConfirmClear(false);
+        setPendingRemove(null);
       };
 
       // --pp-room carries the measured cap into the stylesheet; a dragged height
@@ -8721,9 +9507,16 @@ window.__ModuleLoader__.load({
             ),
             h('span', { className: 'pp-panel-slogan' }, translate('panel.slogan')),
             h('span', { className: 'pp-grow' }),
-            h(SettingsButton, { active: settingsOpen, onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); } }),
+            h(SettingsButton, {
+              active: settingsOpen,
+              onClick: () => {
+                setReviewOpen(false);
+                setReviewProcessing(false);
+                setSettingsOpen(!settingsOpen);
+              },
+            }),
             h(IconButton, {
-              name: 'pin',
+              name: panelPinned ? 'pinActive' : 'pin',
               label: panelPinned ? translate('panel.unpin') : translate('panel.pin'),
               active: panelPinned,
               onClick: () => poolActions.setSetting('panelPinned', !panelPinned),
@@ -8835,9 +9628,9 @@ window.__ModuleLoader__.load({
               ? h(NotesView, {
                   notes: notesList,
                   sessionId: notesSessionId,
+                  reviewMode: reviewOpen && reviewProcessing,
                   onCompose: composeSessionNotes,
                   onInsertNote: insertNoteText,
-                  onQueueNote: queueNote,
                   hideActions: true,
                   filter: query,
                   categories: state.categories,
@@ -8878,23 +9671,53 @@ window.__ModuleLoader__.load({
                 : null,
             )
           : null,
-        !settingsOpen && mergeOpen
-          ? h(MergeReviewCard, {
-              entries: tray,
-              selected: mergeSelected,
-              busy,
+        !settingsOpen && scope === 'notes'
+          ? renderReviewDock({
               sessionId: notesSessionId,
-              onToggle: toggleMerge,
-              onClose: closeMerge,
-              onConfirm: confirmMerge,
+              selectedNotes,
+              sentNotes: reviewSelection.sent,
+              parkedNotes: reviewSelection.parked,
+              immediateIds: reviewSelection.immediateIds,
+              count: selectedNotes.length,
+              open: reviewOpen,
+              version: reviewVersion,
+              height: reviewResize.height,
+              cardRef: reviewResize.cardRef,
+              onResizeStart: reviewResize.startResize,
+              onResizeBy: reviewResize.resizeBy,
+              onResizeReset: reviewResize.reset,
+              onExpand: openReview,
+              onStart: startReview,
+              processing: reviewOpen && reviewProcessing,
+              onSelectAll: () => selectAllNotes(notesSessionId),
+              onClearSelection: () => clearNoteSelection(notesSessionId, notesList.map((note) => note.id)),
+              onCollapse: () => { setReviewOpen(false); setReviewProcessing(false); },
+              onSend: queueReview,
+              onSavePrompt: saveReviewPrompt,
+              onPark: parkReviewTodos,
             })
           : null,
-        !settingsOpen && !mergeOpen
+        !settingsOpen && scope !== 'notes' && mergeOpen
+          ? h(MergeReviewCard, {
+              entries: tray,
+              height: mergeHeight,
+              busy,
+              onClose: closeMerge,
+              onConfirm: confirmMerge,
+              onOpenImage: openImage,
+            })
+          : null,
+        !settingsOpen && scope !== 'notes' && !mergeOpen
           ? renderTrayCard({
               entries: tray,
               collapsed: queueCollapsed,
               busy,
               sessionId: props.sessionId,
+              height: trayResize.height,
+              cardRef: trayResize.cardRef,
+              onResizeStart: trayResize.startResize,
+              onResizeBy: trayResize.resizeBy,
+              onResizeReset: trayResize.reset,
               editing: trayEditing,
               setEditing: setTrayEditing,
               onSaveEdit: saveTrayEdit,
@@ -8902,6 +9725,8 @@ window.__ModuleLoader__.load({
               onClear: () => setConfirmClear(true),
               onRelease: release,
               onDigest: openMerge,
+              mode: trayMode,
+              onModeChange: setTrayMode,
               onRemove: setPendingRemove,
               onOpenImage: openImage,
               onError: (text) => flash({ kind: 'error', text }),
@@ -8940,7 +9765,7 @@ window.__ModuleLoader__.load({
 
     // -------------------------------------------------------------------- css
     const CSS =
-      '.pp-panel,.pp-page,.pp-settings,.pp-root{--pp-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));--pp-accent-soft:color-mix(in srgb,var(--pp-accent) 13%,transparent);--pp-accent-line:color-mix(in srgb,var(--pp-accent) 55%,transparent);--pp-ink:var(--dsw-alias-label-primary);--pp-ink-2:var(--dsw-alias-label-secondary);--pp-line:var(--dsw-alias-border-l1);--pp-line-2:var(--dsw-alias-border-l2);--pp-surface:var(--dsw-alias-bg-layer-1);--pp-surface-2:var(--dsw-alias-bg-overlay);--pp-queue-bg:color-mix(in srgb,var(--pp-accent) 5%,var(--dsw-alias-bg-base,var(--pp-surface)));--pp-queue-head-bg:color-mix(in srgb,var(--pp-accent) 14%,var(--dsw-alias-bg-base,var(--pp-surface)));--pp-hover:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2));--pp-danger:var(--dsw-alias-state-error-primary);--pp-danger-soft:color-mix(in srgb,var(--dsw-alias-state-error-primary) 12%,transparent);--pp-ok:var(--dsw-alias-state-success-primary);--pp-on-accent:#ffffff;--pp-global:#0f766e;--pp-global-ink:color-mix(in srgb,#0f766e 72%,var(--pp-ink));--pp-global-soft:color-mix(in srgb,#0f766e 12%,transparent);--pp-global-line:color-mix(in srgb,#0f766e 52%,transparent)}' +
+      '.pp-panel,.pp-page,.pp-settings,.pp-root{--pp-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));--pp-accent-soft:color-mix(in srgb,var(--pp-accent) 13%,transparent);--pp-accent-line:color-mix(in srgb,var(--pp-accent) 55%,transparent);--pp-ink:var(--dsw-alias-label-primary);--pp-ink-2:var(--dsw-alias-label-secondary);--pp-line:var(--dsw-alias-border-l1);--pp-line-2:var(--dsw-alias-border-l2);--pp-surface:var(--dsw-alias-bg-layer-1);--pp-surface-2:var(--dsw-alias-bg-overlay);--pp-queue-bg:color-mix(in srgb,var(--pp-accent) 5%,var(--dsw-alias-bg-base,var(--pp-surface)));--pp-queue-head-bg:color-mix(in srgb,var(--pp-accent) 14%,var(--dsw-alias-bg-base,var(--pp-surface)));--pp-hover:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2));--pp-danger:var(--dsw-alias-state-error-primary);--pp-danger-soft:color-mix(in srgb,var(--dsw-alias-state-error-primary) 12%,transparent);--pp-ok:var(--dsw-alias-state-success-primary);--pp-on-accent:#ffffff;--pp-annotation:#8a6200;--pp-annotation-soft:color-mix(in srgb,#e8b028 18%,transparent);--pp-annotation-line:color-mix(in srgb,#e8b028 90%,transparent);--pp-annotation-head-bg:color-mix(in srgb,#e8b028 14%,var(--pp-surface));--pp-annotation-bg:color-mix(in srgb,#e8b028 5%,var(--dsw-alias-bg-base,var(--pp-surface)))}' +
       '.pp-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;min-width:28px;padding:0 6px;border:0;border-radius:8px;background:transparent;color:var(--pp-ink-2);cursor:pointer;font:inherit;font-size:12px;line-height:1}' +
       '.pp-btn:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-btn[data-open="true"]{background:var(--pp-hover);color:var(--pp-ink)}' +
@@ -8949,32 +9774,38 @@ window.__ModuleLoader__.load({
       '.pp-trigger[disabled]{opacity:.55;cursor:not-allowed}' +
       '.pp-trigger-label{white-space:nowrap}' +
       '.pp-trigger-shell{position:relative;display:inline-flex;flex:none}' +
-      '.pp-trigger-bar{display:inline-flex;align-items:center;height:30px;flex:none;border:1px solid color-mix(in srgb,var(--pp-accent) 18%,var(--pp-line));border-radius:10px;background:color-mix(in srgb,var(--pp-accent) 4%,var(--pp-surface));box-shadow:0 1px 2px rgba(0,0,0,.07),0 1px 1px rgba(0,0,0,.03);overflow:hidden}' +
-      '.pp-trigger-bar .pp-trigger{height:28px;border:0;border-radius:0;padding:0 10px;gap:6px;font-weight:600;color:var(--pp-accent);background:color-mix(in srgb,var(--pp-accent) 7%,transparent)}' +
-      '.pp-trigger-label{font-size:13px;font-weight:600}' +
-      '.pp-trigger-brand{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:none;border-radius:5px;background:var(--pp-accent);color:var(--pp-on-accent)}' +
+      '.pp-trigger-bar{display:inline-flex;align-items:center;height:28px;flex:none;border:1px solid color-mix(in srgb,var(--pp-accent) 20%,var(--pp-line));border-radius:9px;background:var(--pp-surface);box-shadow:0 1px 2px rgba(0,0,0,.05);overflow:hidden}' +
+      '.pp-trigger-bar .pp-trigger{height:26px;border:0;border-radius:0;padding:0 7px;gap:4px;font-weight:600;color:var(--pp-accent);background:color-mix(in srgb,var(--pp-accent) 7%,transparent)}' +
+      '.pp-trigger-label{display:none}' +
+      '.pp-trigger-brand{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:none;border-radius:4px;background:transparent;color:var(--pp-accent)}' +
+      '.pp-trigger-brand svg{width:9px;height:9px}' +
       '.pp-trigger-bar .pp-trigger:hover{background:color-mix(in srgb,var(--pp-accent) 12%,transparent)}' +
       '.pp-trigger-bar .pp-trigger[data-open="true"]{background:color-mix(in srgb,var(--pp-accent) 15%,transparent)}' +
-      '.pp-trigger-action{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 9px;border:0;border-left:1px solid color-mix(in srgb,var(--pp-accent) 14%,var(--pp-line));border-radius:0;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11.5px;line-height:1;cursor:pointer;white-space:nowrap}' +
-      '.pp-trigger-action > svg{flex:none;opacity:.82}' +
+      '.pp-trigger-action{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 6px;border:0;border-left:1px solid color-mix(in srgb,var(--pp-accent) 14%,var(--pp-line));border-radius:0;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;line-height:1;cursor:pointer;white-space:nowrap;transition:background .14s ease,color .14s ease}' +
+      '.pp-trigger-action > svg{width:11px;height:11px;flex:none;stroke-width:1.2;opacity:.86}' +
       '.pp-trigger-action:hover:not([disabled]){background:color-mix(in srgb,var(--pp-accent) 7%,transparent);color:var(--pp-ink)}' +
       '.pp-trigger-action[data-open="true"]{background:color-mix(in srgb,var(--pp-accent) 10%,transparent);color:var(--pp-accent)}' +
       '.pp-trigger-action[data-open="true"] > svg{opacity:1}' +
       '.pp-trigger-action[disabled]{opacity:.45;cursor:not-allowed}' +
       '.pp-trigger-action:focus-visible,.pp-trigger-bar .pp-trigger:focus-visible{outline:2px solid var(--pp-accent-line);outline-offset:-2px}' +
+      '.pp-trigger-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent);font-size:9.5px;font-weight:600;line-height:16px;font-variant-numeric:tabular-nums}' +
+      '.pp-trigger-chevron{transform:rotate(180deg);transition:transform .16s ease,color .16s ease,opacity .16s ease}' +
+      '.pp-trigger-action[data-open="true"] .pp-trigger-chevron{color:var(--pp-accent);opacity:1;transform:none}' +
 
       '.pp-summary-pop{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:min(300px,calc(100vw - 16px));padding:12px;border:1px solid var(--pp-line-2);border-radius:11px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px;line-height:1.5}' +
-      '.pp-trigger-menu{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:min(240px,calc(100vw - 16px));max-height:280px;overflow:auto;padding:6px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px}' +
-      '.pp-trigger-menu-title{padding:3px 7px 6px;color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-trigger-menu{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:min(224px,calc(100vw - 16px));max-height:320px;overflow:auto;padding:8px;border:1px solid var(--pp-line-2);border-radius:12px;background:var(--pp-surface);color:var(--pp-ink);box-shadow:0 16px 36px rgba(0,0,0,.17),0 2px 6px rgba(0,0,0,.06);font-size:12px}' +
+      '.pp-trigger-menu-title{padding:5px 9px 8px;margin:0 2px 4px;border-bottom:1px solid color-mix(in srgb,var(--pp-line) 82%,transparent);color:var(--pp-ink-2);font-size:11px;font-weight:600;line-height:1.4}' +
       '.pp-trigger-chevron{display:inline-flex;align-items:center;margin-left:-1px;opacity:.55}' +
-      '.pp-trigger-chevron svg{width:11px;height:11px}' +
-      '.pp-trigger-menu-item{display:flex;align-items:center;gap:7px;width:100%;padding:6px 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden}' +
-      '.pp-trigger-menu-item:hover:not([disabled]){background:var(--pp-hover)}' +
+      '.pp-trigger-chevron svg{width:10px;height:10px}' +
+      '.pp-trigger-menu-item{display:flex;align-items:center;gap:7px;width:100%;min-height:32px;box-sizing:border-box;padding:3px 7px;border:0;border-radius:8px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;transition:background .14s ease,color .14s ease}' +
+      '.pp-trigger-menu-item:hover:not([disabled]),.pp-trigger-menu-item:focus-visible:not([disabled]){background:var(--pp-accent-soft);color:var(--pp-accent)}' +
+      '.pp-trigger-menu-item:focus-visible{outline:2px solid var(--pp-accent-line);outline-offset:-2px}' +
+      '.pp-trigger-menu-item:hover .pp-trigger-menu-mark,.pp-trigger-menu-item:focus-visible .pp-trigger-menu-mark{background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent)}' +
       '.pp-trigger-menu-item[disabled]{opacity:.45;cursor:not-allowed}' +
-      '.pp-trigger-menu-mark{display:inline-flex;align-items:center;flex:none;color:var(--pp-ink-2)}' +
-      '.pp-trigger-menu-mark svg{width:14px;height:14px}' +
+      '.pp-trigger-menu-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;height:20px;border-radius:6px;background:color-mix(in srgb,var(--pp-accent) 7%,transparent);color:var(--pp-ink-2);transition:background .14s ease,color .14s ease}' +
+      '.pp-trigger-menu-mark svg{width:12px;height:12px;stroke-width:1.2}' +
       '.pp-trigger-menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
-      '.pp-trigger-menu-count{min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:color-mix(in srgb,var(--pp-accent) 13%,transparent);color:var(--pp-accent);font-size:10px;font-weight:600;line-height:15px;text-align:center}' +
+      '.pp-trigger-menu-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent);font-size:10px;font-weight:600;line-height:18px;font-variant-numeric:tabular-nums;text-align:center}' +
       '.pp-trigger-notice{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;max-width:min(300px,calc(100vw - 16px));padding:6px 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface-2);color:var(--pp-ink-2);box-shadow:0 8px 24px rgba(0,0,0,.16);font-size:11px;line-height:1.4;pointer-events:none}' +
       '.pp-trigger-notice[data-kind="ok"]{color:var(--pp-ok)}' +
       '.pp-trigger-notice[data-kind="error"]{color:var(--pp-danger)}' +
@@ -9013,37 +9844,84 @@ window.__ModuleLoader__.load({
       '.pp-x{width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1}' +
       '.pp-x:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-bar{display:flex;align-items:center;gap:6px;padding:0 12px 8px;flex-wrap:wrap}' +
-      '.pp-tab{height:24px;padding:0 9px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;cursor:pointer}' +
-      '.pp-tab-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-right:4px;vertical-align:-2px}' +
-      '.pp-tab:not([data-active="true"]){color:color-mix(in srgb,var(--pp-accent) 78%,var(--pp-ink-2))}' +
-      '.pp-tab[data-group="notes"]:not([data-active="true"]){color:#8a6200}' +
-      '.pp-tab:hover{background:var(--pp-hover)}' +
-      '.pp-tab[data-active="true"]{border-color:var(--pp-accent);background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
-      '.pp-tab[data-group="notes"][data-active="true"]{border-color:rgba(232,176,40,.9);background:rgba(232,176,40,.2);color:#9a6b00}' +
-      // Scope tabs carry the theme: session amber, workspace blue, global muted teal.
-      // Only the active tab is tinted; settings tabs stay neutral.
-      '.pp-scope-bar .pp-tab:not([data-active="true"]){color:var(--pp-ink-2)}' +
-      '.pp-scope-bar .pp-tab[data-scope="notes"][data-active="true"]{border-color:rgba(232,176,40,.9);background:rgba(232,176,40,.18);color:#8a6200}' +
-      '.pp-scope-bar .pp-tab[data-scope="workspace"][data-active="true"]{border-color:var(--pp-accent);background:var(--pp-accent-soft);color:var(--pp-accent)}' +
-      '.pp-scope-bar .pp-tab[data-scope="global"][data-active="true"]{border-color:var(--pp-global-line);background:var(--pp-global-soft);color:var(--pp-global-ink)}' +
-      '.pp-global-bar .pp-tab:not([data-active="true"]){color:color-mix(in srgb,var(--pp-global-ink) 72%,var(--pp-ink-2))}' +
-      '.pp-global-bar .pp-tab[data-active="true"]{border-color:var(--pp-global-line);background:var(--pp-global-soft);color:var(--pp-global-ink)}' +
-      '.pp-tab[data-group="notes"] .pp-tab-count{background:rgba(232,176,40,.22);color:#8a6200}' +
-      '.pp-tab-count{margin-left:5px;padding:0 5px;vertical-align:1px;border-radius:999px;background:color-mix(in srgb, currentColor 12%, transparent);color:inherit;font-size:10px;font-weight:600;line-height:16px;height:16px;display:inline-flex;align-items:center}' +
-      '.pp-tab:not([data-group="notes"]) .pp-tab-count{background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent)}' +
-      '.pp-global-bar .pp-tab:not([data-group="notes"]) .pp-tab-count{background:color-mix(in srgb,#0f766e 12%,transparent);color:var(--pp-global-ink)}' +
-      '.pp-tab-add{padding:0 7px;color:var(--pp-ink-2)}' +
+      // One geometry for every tab row: a 26px label, a 5px icon gap and the
+      // same focus ring, so the scope underlines, the segmented group control
+      // and the settings underlines read as one family.
+      '.pp-tab{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;padding:0 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer;transition:background .13s ease,color .13s ease,border-color .13s ease,box-shadow .13s ease}' +
+      '.pp-tab-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex:none}' +
+      '.pp-tab:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
+      '.pp-tab:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
+      '.pp-tab-count{margin-left:0;padding:0 5px;min-width:16px;justify-content:center;border-radius:999px;background:color-mix(in srgb,currentColor 10%,transparent);color:inherit;font-size:10px;font-weight:600;line-height:16px;height:16px;display:inline-flex;align-items:center;font-variant-numeric:tabular-nums}' +
+      '.pp-tab-add{width:26px;padding:0;font-size:15px;line-height:1;color:var(--pp-ink-2)}' +
+      '.pp-tab-add:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
+      // The scope switcher is the page's primary navigation, so it reads as a
+      // row of underlines: no fill and a wider column gap. A rounded rule slides
+      // between the tabs instead of each tab carrying its own border.
+      '.pp-scope-bar{position:relative;gap:6px 20px;padding:8px 12px 12px}' +
+      '.pp-scope-bar .pp-tab{height:28px;padding:0 1px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent}' +
+      '.pp-scope-bar .pp-tab:hover{background:transparent;color:var(--pp-ink)}' +
+      // Two scope themes survive the switch: annotations underline in amber,
+      // prompts (workspace and the global shared pool) in prompt blue. The amber
+      // label still mixes in the primary ink so it stays legible on both themes.
+      '.pp-scope-bar .pp-tab[data-scope="notes"][data-active="true"]{border-bottom-color:var(--pp-annotation-line);background:transparent;color:color-mix(in srgb,var(--pp-annotation) 72%,var(--pp-ink));font-weight:600}' +
+      '.pp-scope-bar .pp-tab[data-scope="workspace"][data-active="true"],.pp-scope-bar .pp-tab[data-scope="global"][data-active="true"]{border-bottom-color:var(--pp-accent);background:transparent;color:var(--pp-accent);font-weight:600}' +
+      // The sliding rule is the tab's underline; the border above is only the
+      // pre-measurement fallback and steps aside once the rule has a position.
+      '.pp-tab-indicator{position:absolute;z-index:1;height:3px;border-radius:999px;background:var(--pp-accent);pointer-events:none;transition:left .2s cubic-bezier(.2,.7,.2,1),width .2s cubic-bezier(.2,.7,.2,1)}' +
+      '.pp-tab-indicator[data-tone="notes"]{background:var(--pp-annotation-line)}' +
+      '.pp-tab-indicator[data-tone="ink"]{background:color-mix(in srgb,var(--pp-ink) 40%,transparent)}' +
+      '.pp-scope-bar[data-indicator="true"] .pp-tab[data-active="true"]{border-bottom-color:transparent}' +
+      // The group tabs stay on one line: the viewport scrolls sideways, the row
+      // keeps its natural width, and the masks fade only the side that hides tabs.
+      // The wheel handler (TabScroller) translates a vertical wheel when needed.
+      '.pp-tabscroll{position:relative;max-width:100%;overflow-x:auto;overflow-y:hidden;margin:0 0 4px;padding:2px 0 4px;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain}' +
+      '.pp-tabscroll::-webkit-scrollbar{display:none}' +
+      '.pp-tabscroll[data-fade="start"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px);mask-image:linear-gradient(to right,transparent,#000 32px)}' +
+      '.pp-tabscroll[data-fade="end"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}' +
+      '.pp-tabscroll[data-fade="both"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent)}' +
+      // The global pool's group tabs are one segmented control tinted with the
+      // prompt blue: a pale recess instead of a neutral grey block, labels that
+      // lean from the primary ink towards the accent, and the selected tab raised
+      // back to the page surface. Group separators are dropped inside it so the
+      // single row has no stray rules.
+      '.pp-global-bar{display:inline-flex;flex-wrap:nowrap;align-items:center;gap:2px;width:max-content;max-width:none;margin:0 12px;padding:3px;border-radius:10px;background:color-mix(in srgb,var(--pp-accent) 7%,transparent);box-shadow:inset 0 1px 2px color-mix(in srgb,var(--pp-accent) 10%,transparent)}' +
+      '.pp-global-bar .pp-tab{height:26px;padding:0 10px;border:0;border-radius:7px;color:color-mix(in srgb,var(--pp-ink-2) 62%,var(--pp-accent))}' +
+      '.pp-global-bar .pp-tab:hover:not([data-active="true"]){background:color-mix(in srgb,var(--pp-accent) 11%,transparent);color:var(--pp-accent)}' +
+      // The selected chip sits above the track on both host themes: on a light
+      // theme the page surface is already the brightest layer, on a dark theme a
+      // 12% white wash lifts it clear of the track.
+      '.pp-global-bar .pp-tab[data-active="true"]{background:var(--dsw-alias-bg-base,var(--pp-surface));background-image:linear-gradient(0deg,rgba(255,255,255,.12),rgba(255,255,255,.12));color:var(--pp-ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px color-mix(in srgb,var(--pp-accent) 16%,transparent)}' +
+      '.pp-global-bar .pp-tab-add{width:24px;padding:0;margin-left:2px;border-radius:7px}' +
+      // The track already groups the tabs; the block separators would dangle at
+      // the end of a wrapped row, so they are dropped inside it.
+      '.pp-global-bar .pp-tab-sep{display:none}' +
+      // Settings tabs use the same sliding rule in a neutral ink tone, so the
+      // page and its settings dialog share one underline behaviour.
+      '.pp-set-tabs{position:relative;gap:0}' +
+      '.pp-set-tabs .pp-tab{height:28px;padding:0 4px;margin-right:20px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent}' +
+      '.pp-set-tabs .pp-tab:hover{background:transparent;color:var(--pp-ink)}' +
+      '.pp-set-tabs .pp-tab[data-active="true"]{background:transparent;border-bottom-color:color-mix(in srgb,var(--pp-ink) 40%,transparent);color:var(--pp-ink);font-weight:600}' +
+      '.pp-set-tabs[data-indicator="true"] .pp-tab[data-active="true"]{border-bottom-color:transparent}' +
       '.pp-select{height:26px;min-width:170px;max-width:100%;padding:0 8px;border:1px solid var(--pp-line);border-radius:7px;background:var(--pp-surface);color:var(--pp-ink);font:inherit;font-size:12px}' +
       '.pp-set-intro{white-space:pre-line}' +
       '.pp-set-radios{display:flex;flex-direction:column;gap:4px;padding:2px 0 4px}' +
       '.pp-set-radio-row{display:flex;align-items:center;gap:10px}' +
       '.pp-set-radio{display:inline-flex;align-items:center;gap:6px;cursor:pointer}' +
       '.pp-tab-addwrap{display:inline-flex;align-items:center}' +
-      '.pp-tab-sep{flex:none;width:1px;height:16px;margin:0 7px;background:color-mix(in srgb, var(--pp-ink-2) 45%, transparent)}' +
-      '.pp-tab-x{margin-left:4px;padding:0 2px;border-radius:4px;font-size:11px;line-height:1;color:var(--pp-ink-2);cursor:pointer}' +
-      '.pp-tab-x:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
-      '.pp-tab-x:hover{color:var(--pp-danger)}' +
-      '.pp-tab-input{height:24px;width:110px;padding:0 7px;border:1px solid var(--pp-accent);border-radius:7px;background:var(--dsw-alias-bg-base);color:inherit;font:inherit;font-size:12px;outline:none}' +
+      '.pp-tab-sep{flex:none;width:1px;height:14px;margin:0 6px;background:color-mix(in srgb,var(--pp-ink-2) 40%,transparent)}' +
+      // A closable group tab is one button plus a sibling close button, laid
+      // over the tab's right padding: no interactive element is nested inside
+      // another, and the chip still reads as a single unit.
+      '.pp-tabcell{position:relative;display:inline-flex;align-items:center;flex:none}' +
+      '.pp-tabcell[data-closable="true"] .pp-tab{padding-right:24px}' +
+      '.pp-tab-x{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;padding:0;border:0;border-radius:5px;background:transparent;color:color-mix(in srgb,var(--pp-ink-2) 85%,transparent);font:inherit;font-size:12px;line-height:1;cursor:pointer;transition:background .13s ease,color .13s ease}' +
+      // Inside a tab cell the close button floats over the tab's right padding;
+      // the workspace rail still lays its close chip inline (no positioned parent).
+      '.pp-tabcell .pp-tab-x{position:absolute;right:4px;top:50%;transform:translateY(-50%)}' +
+      '.pp-tab-x:hover{background:var(--pp-danger-soft);color:var(--pp-danger)}' +
+      '.pp-tab-x:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
+      '.pp-tab-input{height:26px;width:110px;padding:0 8px;border:1px solid var(--pp-accent);border-radius:8px;background:var(--dsw-alias-bg-base);color:inherit;font:inherit;font-size:12px;outline:none}' +
+      '@media (prefers-reduced-motion: reduce){.pp-tab,.pp-tab-x,.pp-tab-indicator{transition:none}}' +
       '.pp-release-mask{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:color-mix(in srgb,var(--pp-ink) 28%,transparent)}' +
       '.pp-release-card{width:100%;max-width:300px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 18px;border:1px solid var(--pp-line);border-radius:12px;background:var(--pp-surface-2);box-shadow:0 18px 48px rgba(0,0,0,.24);text-align:center}' +
       '.pp-release-title{font-weight:600;font-size:13px}' +
@@ -9121,18 +9999,31 @@ window.__ModuleLoader__.load({
       '.pp-ws-count{flex:none;font-size:10px;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
       '.pp-ws-body{min-width:0}' +
       '.pp-page-foot{display:flex;flex-direction:column;gap:8px;margin:8px 10px 10px;padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08);max-height:min(640px,66vh);overflow:hidden}' +
-      '.pp-merge-foot{padding:0;gap:0;max-height:min(560px,72vh)}' +
-      '.pp-merge-head{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid var(--pp-line);background:var(--pp-queue-head-bg)}' +
-      '.pp-merge-list{display:flex;flex-direction:column;gap:3px;max-height:180px;overflow:auto;padding:6px 12px}' +
-      '.pp-merge-row{display:flex;align-items:flex-start;gap:7px;padding:4px 0;cursor:pointer}' +
-      '.pp-merge-row input{margin:3px 0 0;accent-color:var(--pp-accent);cursor:pointer}' +
-      '.pp-merge-row-text{min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;color:var(--pp-ink);font-size:12px;line-height:1.45;white-space:pre-wrap}' +
-      '.pp-merge-hint{padding:2px 12px 6px}' +
-      '.pp-merge-preview{margin:0 12px 8px;padding:7px 9px;max-height:160px;overflow:auto;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-surface);color:var(--pp-ink);font-size:11.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}' +
-      '.pp-merge-actions{display:flex;justify-content:flex-end;gap:8px;padding:8px 12px;border-top:1px solid var(--pp-line);background:var(--pp-queue-head-bg)}' +
-      '.pp-review-foot{padding:0;gap:0;height:min(480px,56vh);max-height:min(480px,56vh)}' +
+      '.pp-tray-foot{gap:0}' +
+      '.pp-tray-foot .pp-tray{margin-top:8px}' +
+      '.pp-page-foot.pp-tray-foot .pp-foot-head{margin:0 -12px 0}' +
+      '.pp-tray-foot[data-resized="true"] .pp-tray{flex:1 1 auto;max-height:none;min-height:0;overflow-y:auto}' +
+      '.pp-panel .pp-tray-foot[data-resized="true"] .pp-tray{flex:1 1 auto;max-height:none;min-height:0;overflow-y:auto}' +
+      '.pp-tray-grip{flex:none;display:flex;align-items:center;justify-content:center;height:11px;margin:-10px -12px 0;cursor:ns-resize;touch-action:none}' +
+      '.pp-tray-grip:hover .pp-grip-bar,.pp-tray-grip:active .pp-grip-bar{background:var(--pp-accent)}' +
+      '.pp-tray-grip:focus-visible{outline:2px solid var(--pp-accent-line);outline-offset:-2px}' +
+      '.pp-review-foot{padding:0;gap:0;height:min(360px,48vh);max-height:min(360px,48vh)}' +
+      '.pp-review-dock{display:flex;flex-direction:column;flex:none;min-width:0}' +
+      '.pp-review-dock-body[hidden]{display:none}' +
+      '.pp-review-strip{flex:1;min-width:0;height:100%;display:flex;align-items:center;gap:8px;padding:0;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:11px;text-align:left;cursor:pointer}' +
+      '.pp-review-strip:hover .pp-queue-strip-title{color:var(--pp-accent)}' +
+      '.pp-review-strip:focus-visible{outline:2px solid var(--pp-accent);outline-offset:-2px}' +
+      '.pp-review-strip-go{flex:none;height:24px;padding:0 10px;border-radius:6px;font-size:11px}' +
+      '.pp-notes-review-check{accent-color:var(--pp-note-accent)}' +
+      '.pp-notes-review-exec,.pp-notes-review-todo{margin-top:5px}' +
+      '.pp-review-stale{color:var(--pp-note-accent);font-weight:500}' +
+      '.pp-review-idle{display:flex;flex-direction:column;gap:4px;margin:8px 12px;padding:10px 11px;border:1px dashed var(--pp-line-2);border-radius:8px;background:color-mix(in srgb,var(--pp-note-ink) 2%,transparent)}' +
+      '.pp-review-idle-hint{font-size:11px;line-height:1.6;color:var(--pp-note-ink-2)}' +
+      '.pp-review-grip{flex:none;display:flex;align-items:center;justify-content:center;height:11px;cursor:ns-resize;touch-action:none}' +
+      '.pp-review-grip:hover .pp-grip-bar,.pp-review-grip:active .pp-grip-bar{background:var(--pp-accent)}' +
+      '.pp-review-grip:focus-visible{outline:2px solid var(--pp-accent-line);outline-offset:-2px}' +
       '.pp-review-foot>.pp-review{flex:1;min-height:0;overflow-y:auto;padding:10px 12px}' +
-      '.pp-panel .pp-review-foot{height:min(calc(var(--pp-h, 100vh) * 0.64), 420px);max-height:min(calc(var(--pp-h, 100vh) * 0.64), 420px)}' +
+      '.pp-panel .pp-review-foot{height:min(calc(var(--pp-h, 100vh) * 0.56), 360px);max-height:min(calc(var(--pp-h, 100vh) * 0.56), 360px)}' +
       // The card sizes itself to the queue: an empty tray is one hint row, a full
       // one stops at half the page so the pool above keeps the room it needs.
       '.pp-page-foot .pp-tray{max-height:min(520px,52vh);min-height:0;flex:0 1 auto;overflow-y:auto}' +
@@ -9222,6 +10113,13 @@ window.__ModuleLoader__.load({
       '.pp-foot-head{display:flex;align-items:center;gap:6px}' +
       '.pp-page-foot .pp-foot-head{margin:-10px -12px 0;padding:8px 12px;border-radius:9px 9px 0 0;background:var(--pp-queue-head-bg)}' +
       '.pp-foot-title{font-size:12px;font-weight:600;color:var(--pp-ink)}' +
+      '.pp-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:0;border-radius:7px;background:transparent;color:var(--pp-ink-2);font:inherit;cursor:pointer;flex:none}' +
+      '.pp-icon-btn:hover{background:color-mix(in srgb,var(--pp-danger) 10%,transparent);color:var(--pp-danger)}' +
+      '.pp-icon-btn svg{width:13px;height:13px;stroke-width:1.15}' +
+      '.pp-mode{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:8px;background:color-mix(in srgb,var(--pp-ink) 6%,transparent);flex:none}' +
+      '.pp-mode button{height:22px;padding:0 9px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;line-height:1;cursor:pointer;white-space:nowrap}' +
+      '.pp-mode button[data-active="true"]{background:var(--pp-surface-2);color:var(--pp-ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.07)}' +
+      '.pp-mode button:focus-visible{outline:2px solid var(--pp-accent-line);outline-offset:-2px}' +
       '.pp-tray{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}' +
       '.pp-foot .pp-tray{max-height:min(40vh,220px)}' +
       '.pp-chip{display:flex;align-items:flex-start;gap:6px;padding:5px 7px;border-radius:8px;border:1px solid var(--pp-line);background:transparent;min-width:0;transition:background-color .12s ease,border-color .12s ease}' +
@@ -9294,7 +10192,7 @@ window.__ModuleLoader__.load({
       '::highlight(prompt-pool-note-disagree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(185,28,28,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
       '::highlight(prompt-pool-note-idea){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(37,99,235,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
       '::highlight(prompt-pool-note-todo){text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:rgba(202,138,4,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '.pp-note-layer{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary,#2563eb));--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);position:fixed;inset:0;z-index:2147482000;pointer-events:none}' +
+      '.pp-note-layer{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);position:fixed;inset:0;z-index:2147482000;pointer-events:none}' +
       '.pp-note-bubble{position:fixed;z-index:1;display:flex;flex-direction:column;gap:8px;width:310px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;padding:11px;border:1px solid var(--pp-note-line);border-radius:12px;background:var(--pp-note-surface);box-shadow:0 18px 48px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left;pointer-events:auto}' +
       '.pp-note-bubble-quote{box-sizing:border-box;padding:6px 8px;border-radius:8px;background:rgba(var(--pp-bubble-tint),.10);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.pp-note-bubble-quote-icon{margin-right:4px;color:rgb(var(--pp-bubble-ink,var(--pp-bubble-tint)))}' +
       '.pp-note-bubble-hint{color:var(--pp-note-danger);font-size:11px}' +
@@ -9303,13 +10201,16 @@ window.__ModuleLoader__.load({
       '.pp-note-input:focus{border-color:rgba(var(--pp-bubble-ink,var(--pp-bubble-tint)),.9);box-shadow:0 0 0 2px rgba(var(--pp-bubble-ink,var(--pp-bubble-tint)),.14)}' +
       '.pp-note-bubble-foot{display:flex;align-items:center;gap:8px}.pp-note-bubble-ask{flex:1;color:var(--pp-note-ink-2);font-size:11px;line-height:1.4}.pp-note-bubble-actions{display:flex;gap:6px;margin-left:auto}.pp-note-bubble .pp-note-btn{height:24px;padding:0 9px;font-size:11px;border-radius:7px}.pp-note-btn-quiet-danger{border-color:transparent;background:transparent;color:var(--pp-note-danger)}.pp-note-btn-quiet-danger:hover{background:rgba(var(--pp-note-danger-rgb,239,68,68),.10)}' +
       '.pp-note-btn{height:24px;padding:0 10px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
+      '.pp-review-secondary{border-color:var(--pp-line-2);background:var(--pp-surface);color:var(--pp-ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)}' +
+      '.pp-review-secondary:hover{background:var(--pp-hover);border-color:color-mix(in srgb,var(--pp-accent) 35%,var(--pp-line-2))}' +
+      '.pp-review-secondary[disabled]{opacity:.55;cursor:default}' +
       '.pp-note-btn:hover{background:var(--pp-note-hover)}' +
       '.pp-note-btn:disabled{opacity:.45;cursor:default}' +
       '.pp-note-btn-primary{border-color:var(--pp-note-accent);background:var(--pp-note-accent);color:#fff}' +
       '.pp-note-btn-primary:hover{background:var(--pp-note-accent);filter:brightness(1.05)}' +
       '.pp-note-btn-danger{color:var(--pp-note-danger);border-color:color-mix(in srgb,var(--pp-note-danger) 40%,transparent)}' +
       '.pp-note-btn-danger:hover{background:color-mix(in srgb,var(--pp-note-danger) 10%,transparent)}' +
-      '.pp-notes{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary,#2563eb));--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);display:flex;flex-direction:column;box-sizing:border-box;width:100%;border:1px solid var(--pp-note-line);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-state-warn-primary,#e0a800) 5%,var(--dsw-alias-bg-base,#fff));color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +
+      '.pp-notes{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);display:flex;flex-direction:column;box-sizing:border-box;width:100%;border:1px solid var(--pp-note-line);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-state-warn-primary,#e0a800) 5%,var(--dsw-alias-bg-base,#fff));color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +
       '.pp-notes-embedded{border:0;border-radius:0;background:transparent}' +
       '.pp-notes-embedded .pp-notes-head{padding:8px 2px 4px}' +
       '.pp-notes-embedded .pp-notes-list{max-height:none;overflow:visible;padding:0}' +
@@ -9326,6 +10227,7 @@ window.__ModuleLoader__.load({
       '.pp-notes-row{display:flex;align-items:flex-start;gap:8px;padding:6px 7px;border:1px solid transparent;border-radius:8px;background:transparent}' +
       '.pp-notes-row:hover{background:rgba(232,176,40,.22)}' +
       '.pp-note-check{flex:none;width:14px;height:14px;margin:4px 0 0;accent-color:#d97706;cursor:pointer}' +
+      '.pp-notes-row .pp-notes-review-check{accent-color:var(--pp-note-accent)}' +
       '.pp-notes-n{flex:none;min-width:16px;height:16px;margin-top:1px;border-radius:999px;background:rgba(232,176,40,.22);color:var(--pp-note-ink-2);font-size:10px;line-height:16px;text-align:center}' +
       '.pp-notes-main{flex:1;min-width:0}' +
       '.pp-notes-quote{display:flex;align-items:center;gap:6px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap;overflow:hidden}' +
@@ -9333,19 +10235,24 @@ window.__ModuleLoader__.load({
       '.pp-notes-empty{padding:14px 12px;color:var(--pp-note-ink-2);font-size:12px;line-height:1.6}' +
       '.pp-notes-empty .pp-empty-mark{justify-content:flex-start;margin-bottom:4px;opacity:.5}' +
       '.pp-notes-empty .pp-empty-mark svg{width:16px;height:16px}' +
-      '.pp-page-foot.pp-review-foot{--pp-note-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary,#2563eb));--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);padding:0;gap:0;border-color:color-mix(in srgb,var(--pp-note-accent) 22%,var(--pp-note-line));background:linear-gradient(180deg,color-mix(in srgb,var(--pp-note-accent) 7%,var(--pp-note-surface)) 0,var(--pp-note-surface) 140px);box-shadow:0 10px 30px rgba(0,0,0,.08)}' +
+      '.pp-page-foot.pp-review-foot{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);padding:0;gap:0;border-color:var(--pp-line-2);background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
+      '.pp-page-foot.pp-merge-foot{--pp-note-accent:var(--pp-accent)}' +
+      '.pp-page-foot.pp-merge-foot .pp-notes{--pp-note-accent:var(--pp-accent)}' +
       '.pp-review-foot>.pp-review{padding:0;gap:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}' +
       '.pp-review{display:flex;flex-direction:column;min-height:0}' +
-      '.pp-review-top{position:sticky;top:0;z-index:4;background:color-mix(in srgb,var(--pp-note-surface) 92%,transparent);border-bottom:1px solid color-mix(in srgb,var(--pp-note-line) 80%,transparent);backdrop-filter:blur(10px)}' +
-      '.pp-review-head{display:flex;align-items:center;gap:8px;padding:9px 14px 5px;background:transparent}' +
-      '.pp-review-mark{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;flex:none;border-radius:8px;background:color-mix(in srgb,var(--pp-note-accent) 13%,transparent);color:var(--pp-note-accent)}' +
+      '.pp-review-top{position:sticky;top:0;z-index:4;background:var(--pp-queue-head-bg);border-bottom:1px solid var(--pp-line)}' +
+      '.pp-review-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;row-gap:4px;padding:8px 12px 4px;background:transparent}' +
       '.pp-review-title{display:flex;flex-direction:column;gap:0;min-width:0}' +
       '.pp-review-headline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}' +
-      '.pp-review-headline strong{font-size:13px;font-weight:650;line-height:1.25;white-space:nowrap}' +
+      '.pp-review-headline strong{font-size:13px;font-weight:600;line-height:1.25;white-space:nowrap}' +
       '.pp-review-batch{color:var(--pp-note-ink-2);font-size:9.5px;letter-spacing:.02em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
-      '.pp-review-close{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;padding:0;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}' +
+      '.pp-review-close{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}' +
+      '.pp-review-close svg{width:13px;height:13px}' +
+      '.pp-review-toggle{margin-left:-4px}' +
+      '.pp-review-process{flex:none;height:24px;padding:0 9px;border-radius:7px;font-size:11px;line-height:1}' +
       '.pp-review-close:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}' +
-      '.pp-review-steps{display:flex;align-items:center;gap:7px;padding:0 14px 7px}' +
+      '.pp-review-mark{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;flex:none;border-radius:8px;background:color-mix(in srgb,var(--pp-note-accent) 13%,transparent);color:var(--pp-note-accent)}' +
+      '.pp-review-steps{display:flex;align-items:center;gap:7px;padding:0 12px 6px}' +
       '.pp-review-step{display:inline-flex;align-items:center;gap:5px;color:var(--pp-note-ink-2);font-size:10.5px;line-height:1;opacity:.72}' +
       '.pp-review-step[data-active="true"]{color:var(--pp-note-accent);opacity:1;font-weight:600}' +
       '.pp-review-step-num{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border:1px solid color-mix(in srgb,var(--pp-note-line) 90%,transparent);border-radius:50%;font-size:9px;font-variant-numeric:tabular-nums}' +
@@ -9356,13 +10263,13 @@ window.__ModuleLoader__.load({
       '.pp-review-pane[hidden]{display:none}' +
       '.pp-review-chip{display:inline-flex;align-items:center;height:19px;padding:0 7px;border:1px solid color-mix(in srgb,var(--pp-note-line) 85%,transparent);border-radius:999px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent);color:var(--pp-note-ink-2);font-size:10px;line-height:1;font-variant-numeric:tabular-nums}' +
       '.pp-review-chip-accent{border-color:color-mix(in srgb,var(--pp-note-accent) 34%,transparent);background:color-mix(in srgb,var(--pp-note-accent) 10%,transparent);color:var(--pp-note-accent)}' +
-      '.pp-review-list{display:flex;flex-direction:column;gap:8px;padding:8px 14px 10px;max-height:none;overflow:visible}' +
+      '.pp-review-list{display:flex;flex-direction:column;gap:8px;padding:6px 12px 10px;max-height:none;overflow:visible}' +
       '.pp-review-group{display:flex;flex-direction:column;gap:4px}' +
       '.pp-review-group-title{display:flex;align-items:center;gap:6px;padding:1px 1px 2px;color:var(--pp-note-ink-2);font-size:10.5px;font-weight:600;letter-spacing:.02em}' +
       '.pp-review-group-dot{width:7px;height:7px;flex:none;border-radius:50%}' +
       '.pp-review-group-count{margin-left:auto;min-width:17px;height:17px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--pp-note-ink) 6%,transparent);color:var(--pp-note-ink-2);font-size:9.5px;line-height:17px;text-align:center;font-variant-numeric:tabular-nums}' +
-      '.pp-review-row{display:flex;align-items:flex-start;gap:7px;padding:7px 8px;border:1px solid var(--pp-note-line);border-radius:9px;background:var(--pp-note-surface);box-shadow:0 1px 2px rgba(0,0,0,.03);transition:border-color .15s,box-shadow .15s}' +
-      '.pp-review-row:hover{border-color:color-mix(in srgb,var(--pp-note-accent) 26%,var(--pp-note-line));box-shadow:0 3px 10px rgba(0,0,0,.06)}' +
+      '.pp-review-row{display:flex;align-items:flex-start;gap:7px;padding:6px 8px;border:1px solid var(--pp-line);border-radius:8px;background:transparent;transition:background-color .12s ease,border-color .12s ease}' +
+      '.pp-review-row:hover{background:color-mix(in srgb,var(--pp-accent) 6%,transparent);border-color:color-mix(in srgb,var(--pp-accent) 40%,var(--pp-line))}' +
       '.pp-review-row .pp-notes-kind{width:22px;height:22px;margin-right:0;border-radius:7px;background:color-mix(in srgb,rgb(var(--pp-inline-tint)) 18%,transparent);border:1px solid color-mix(in srgb,rgb(var(--pp-inline-ink)) 24%,transparent);font-size:12px}' +
       '.pp-review-row .pp-note-check{width:14px;height:14px;margin-top:4px;accent-color:var(--pp-note-accent)}' +
       '.pp-review-main{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}' +
@@ -9376,21 +10283,51 @@ window.__ModuleLoader__.load({
       '.pp-review-todo-option{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;border-radius:999px;color:var(--pp-note-ink-2);font-size:10.5px;line-height:1;cursor:pointer;transition:background .15s,color .15s}' +
       '.pp-review-todo-option[data-active="true"]{background:color-mix(in srgb,var(--pp-note-accent) 11%,transparent);color:var(--pp-note-accent)}' +
       '.pp-review-todo-option input{width:11px;height:11px;margin:0;accent-color:var(--pp-note-accent);cursor:pointer}' +
-      '.pp-review-preview-wrap{display:flex;flex:1;flex-direction:column;gap:5px;min-height:0;margin:10px 14px 9px;padding:7px 8px;border:1px solid var(--pp-note-line);border-radius:9px;background:color-mix(in srgb,var(--pp-note-ink) 2%,var(--pp-note-surface))}' +
-      '.pp-review-preview-hint{padding:0 1px;color:var(--pp-note-ink-2);font-size:10.5px;line-height:1.45}' +
-      '.pp-review-text{box-sizing:border-box;flex:1;width:100%;min-height:160px;padding:7px 8px;border:1px solid var(--pp-note-line);border-radius:7px;background:var(--pp-note-surface);color:var(--pp-note-ink);font:inherit;font-size:11.5px;line-height:1.5;resize:vertical;outline:none}' +
+      '.pp-review-preview-wrap{display:flex;flex:1;flex-direction:column;gap:5px;min-height:0;margin:8px 12px;padding:7px 8px;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-surface)}' +
+      '.pp-review-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:none;flex-wrap:wrap}' +
+      '.pp-review-select-actions{display:flex;align-items:center;gap:8px;flex:none}' +
+      '.pp-review-preview-hint{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0 1px;color:var(--pp-note-ink-2);font-size:10.5px;line-height:1.45}' +
+      '.pp-merge-attachments{display:flex;flex-direction:column;gap:4px;min-width:0;padding:0 1px}' +
+      '.pp-merge-attachments-label{color:var(--pp-note-ink-2);font-size:10.5px;line-height:1.5}' +
+      '.pp-review-hint-text{flex:1;min-width:0}' +
+      '.pp-review-refresh{flex:none;padding:0;font-size:10.5px;line-height:1.45}' +
+      '.pp-review-text{box-sizing:border-box;flex:1;width:100%;min-height:160px;padding:7px 8px;border:1px solid var(--pp-line);border-radius:7px;background:var(--pp-surface);color:var(--pp-ink);font:inherit;font-size:11.5px;line-height:1.5;resize:vertical;outline:none}' +
       '.pp-review-text:focus{border-color:var(--pp-note-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--pp-note-accent) 14%,transparent)}' +
-      '.pp-review-empty-send{margin:0 14px 9px;padding:7px 9px;border:1px dashed var(--pp-note-line);border-radius:8px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5}' +
-      '.pp-review-error{margin:0 14px 9px;padding:7px 9px;border-radius:7px;background:color-mix(in srgb,var(--pp-note-danger) 8%,transparent);color:var(--pp-note-danger);font-size:11px;line-height:1.5}' +
-      '.pp-review-actions{position:sticky;bottom:0;z-index:4;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;margin:auto 0 0;padding:8px 14px;border-top:1px solid color-mix(in srgb,var(--pp-note-line) 80%,transparent);background:color-mix(in srgb,var(--pp-note-surface) 92%,transparent);backdrop-filter:blur(10px)}' +
-      '.pp-review-actions .pp-note-btn{height:27px;padding:0 12px;border:1px solid var(--pp-note-line);border-radius:8px;background:var(--pp-note-surface);color:var(--pp-note-ink);font-weight:500}' +
+      // Dock-card consistency: the review card reuses the Outbox shell, header rhythm, grip and action sizes, with its own warm accent.
+      '.pp-review-dock{--pp-summary-accent:var(--pp-annotation);--pp-summary-head-bg:var(--pp-annotation-head-bg);--pp-summary-bg:var(--pp-annotation-bg)}' +
+      '.pp-review-dock .pp-page-foot.pp-review-foot{background:var(--pp-summary-bg);border-color:color-mix(in srgb,#e8b028 20%,var(--pp-line-2))}' +
+      '.pp-review-dock .pp-review-top{background:var(--pp-summary-head-bg);border-bottom:0}' +
+      '.pp-review-dock .pp-review-head{padding:8px 12px}' +
+      '.pp-review-dock .pp-review-headline strong{font-size:12.5px;font-weight:600;color:var(--pp-summary-accent)}' +
+      '.pp-review-dock .pp-review-chip-accent{border-color:color-mix(in srgb,var(--pp-summary-accent) 34%,transparent);background:color-mix(in srgb,var(--pp-summary-accent) 10%,transparent);color:var(--pp-summary-accent)}' +
+      '.pp-review-dock .pp-review-head-actions .pp-note-btn{height:28px;padding:0 12px;border-radius:8px;font-size:12px}' +
+      '.pp-review-dock .pp-review-process{height:28px;padding:0 12px;border-radius:8px;font-size:12px}' +
+      '.pp-review-dock .pp-note-btn-primary{background:var(--pp-summary-accent);border-color:var(--pp-summary-accent);color:#fff}' +
+      '.pp-review-dock .pp-review-secondary:hover{border-color:color-mix(in srgb,var(--pp-summary-accent) 35%,var(--pp-line-2))}' +
+      '.pp-review-dock .pp-review-select-link{color:var(--pp-summary-accent);text-decoration-color:color-mix(in srgb,var(--pp-summary-accent) 45%,transparent)}' +
+      '.pp-review-dock .pp-review-select-link:hover{color:var(--pp-ink);text-decoration-color:currentColor}' +
+      '.pp-review-dock .pp-review-refresh{color:var(--pp-summary-accent)}' +
+      '.pp-review-dock .pp-review-stale{color:var(--pp-summary-accent)}' +
+      '.pp-review-dock .pp-review-grip:hover .pp-grip-bar,.pp-review-dock .pp-review-grip:active .pp-grip-bar{background:var(--pp-summary-accent)}' +
+      '.pp-review-dock .pp-review-idle{border-color:color-mix(in srgb,var(--pp-summary-accent) 24%,var(--pp-line-2));background:color-mix(in srgb,var(--pp-summary-accent) 3%,transparent)}' +
+      '.pp-review-dock .pp-review-text:focus{border-color:var(--pp-summary-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--pp-summary-accent) 14%,transparent)}' +
+      '.pp-review-dock .pp-queue-strip{background:var(--pp-summary-head-bg);border-color:color-mix(in srgb,var(--pp-summary-accent) 20%,var(--pp-line-2))}' +
+      '.pp-review-dock .pp-queue-strip:hover{background:color-mix(in srgb,var(--pp-summary-accent) 16%,var(--pp-surface))}' +
+      '.pp-review-dock .pp-queue-strip-action{color:var(--pp-summary-accent)}' +
+      '.pp-review-dock .pp-review-strip:hover .pp-queue-strip-title{color:var(--pp-summary-accent)}' +
+      '.pp-review-dock .pp-review-strip-go{background:var(--pp-summary-accent);border-color:var(--pp-summary-accent)}' +
+      '.pp-review-dock .pp-queue-strip:focus-visible{outline-color:var(--pp-summary-accent)}' +
+      '.pp-review-empty-send{margin:0 12px 8px;padding:7px 9px;border:1px dashed var(--pp-line);border-radius:8px;background:color-mix(in srgb,var(--pp-ink) 3%,transparent);color:var(--pp-ink-2);font-size:11px;line-height:1.5}' +
+      '.pp-review-error{margin:0 12px 8px;padding:7px 9px;border-radius:7px;background:color-mix(in srgb,var(--pp-note-danger) 8%,transparent);color:var(--pp-note-danger);font-size:11px;line-height:1.5}' +
+      '.pp-review-actions{position:sticky;bottom:0;z-index:4;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;margin:auto 0 0;padding:8px 12px;border-top:1px solid var(--pp-line);background:var(--pp-queue-head-bg)}' +
+      '.pp-review-actions .pp-note-btn{height:28px;padding:0 12px;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-surface);color:var(--pp-ink);font-weight:500}' +
       '.pp-review-actions .pp-note-btn:hover:not([disabled]){border-color:color-mix(in srgb,var(--pp-note-accent) 30%,var(--pp-note-line));background:color-mix(in srgb,var(--pp-note-ink) 3%,var(--pp-note-surface))}' +
-      '.pp-review-actions .pp-note-btn-primary{border-color:transparent;background:var(--pp-note-accent);color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--pp-note-accent) 30%,transparent)}' +
+      '.pp-review-actions .pp-note-btn-primary{border-color:transparent;background:var(--pp-note-accent);color:#fff;box-shadow:none}' +
       '.pp-review-actions .pp-note-btn-primary:hover:not([disabled]){background:var(--pp-note-accent);filter:brightness(1.05)}' +
       '.pp-review-actions .pp-review-cancel{border-color:transparent;background:transparent;color:var(--pp-note-ink-2)}' +
       '.pp-review-actions .pp-review-cancel:hover:not([disabled]){border-color:transparent;background:var(--pp-note-hover);color:var(--pp-note-ink)}' +
       '.pp-review-actions .pp-note-btn[disabled]{opacity:.5;cursor:not-allowed}' +
-      '.pp-review .pp-notes-empty{margin:10px 14px}' +
+      '.pp-review .pp-notes-empty{margin:8px 12px}' +
       '.pp-note-bubble .pp-hint,.pp-notes .pp-hint{color:var(--pp-note-ink-2);font-size:11px;line-height:1.5}' +
       '.pp-note-bubble .pp-image-picker,.pp-notes .pp-image-picker{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:2px}' +
       '.pp-note-bubble .pp-image-add,.pp-notes .pp-image-add{height:26px;padding:0 9px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;cursor:pointer}' +
@@ -9403,6 +10340,7 @@ window.__ModuleLoader__.load({
       '.pp-note-bubble .pp-image-x,.pp-notes .pp-image-x{position:absolute;top:1px;right:1px;width:15px;height:15px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font:inherit;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}' +
       '.pp-note-bubble .pp-image-x:hover,.pp-notes .pp-image-x:hover{background:var(--pp-note-danger)}' +
       '.pp-note-bubble .pp-image-more,.pp-notes .pp-image-more{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 4px;border-radius:6px;border:1px dashed var(--pp-note-line);color:var(--pp-note-ink-2);font-size:11px}' +
+      '.pp-note-layer .pp-modal{pointer-events:auto;--pp-ink:var(--dsw-alias-label-primary,#111827);--pp-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-line-2:var(--dsw-alias-border-l2,#d1d5db);--pp-surface:var(--dsw-alias-bg-layer-1,#fff);--pp-surface-2:var(--dsw-alias-bg-overlay,#fff);--pp-hover:var(--dsw-alias-interactive-bg-hover,#f3f4f6);--pp-accent:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary,#2563eb));--pp-on-accent:#fff;--pp-danger:var(--dsw-alias-state-error-primary,#dc2626)}' +
       '.pp-note-layer .pp-lightbox,.pp-notes .pp-lightbox{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:28px;background:rgba(0,0,0,.72)}' +
       '.pp-note-layer .pp-lightbox-body,.pp-notes .pp-lightbox-body{display:flex;flex-direction:column;align-items:center;gap:8px;max-width:min(92vw,1200px);max-height:92vh}' +
       '.pp-note-layer .pp-lightbox-body img,.pp-notes .pp-lightbox-body img{max-width:100%;max-height:calc(92vh - 48px);object-fit:contain;border-radius:8px;background:var(--pp-note-surface,#fff);box-shadow:0 18px 48px rgba(0,0,0,.35)}' +
@@ -9461,6 +10399,8 @@ window.__ModuleLoader__.load({
       '.pp-notes-text{white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}' +
       '.pp-note-link{border:0;background:transparent;color:var(--pp-note-ink-2);font:inherit;font-size:11px;cursor:pointer;padding:2px 0;white-space:nowrap}' +
       '.pp-note-link:hover{color:var(--pp-note-ink);text-decoration:underline;text-underline-offset:2px}' +
+      '.pp-review-select-link{color:var(--pp-accent);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--pp-accent) 45%,transparent);text-underline-offset:3px;text-decoration-thickness:1px}' +
+      '.pp-review-select-link:hover{color:var(--pp-ink);text-decoration-color:currentColor;text-decoration-thickness:1.5px}' +
       '.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}.pp-note-icon:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}.pp-note-icon.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-ask{display:inline-flex;align-items:center;gap:4px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap}';
 
     // ------------------------------------------------------------------- plugin

@@ -12,7 +12,7 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 
 ## Screenshots
 
-![Annotate passages inline and review them in the pool's Annotations tab](docs/images/annotations-overview.png)
+![Annotate passages inline and summarize them in the pool's Annotations tab](docs/images/annotations-overview.png)
 
 **Annotate while you read.** Select a passage and add a note right where it belongs, without leaving the
 reply; the original wording stays attached, so the context is easy to follow and no key point slips away.
@@ -62,8 +62,12 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   waits for the composer to be accepted before the next starts. On hosts that expose the conversation
   queue, items go straight into the queue without touching the composer; otherwise the composer path
   is used. While a release runs, both views show progress and a Stop control; the queue is locked
-  until it finishes. With more than one entry the queue can also **Merge & send**: preview the
-  checked entries and their order first, then hand one numbered prompt to the session queue.
+  until it finishes. The Outbox holds prompts only and appears in the prompt scopes; the annotation
+  scope hides it. Its header switches between **one by one** and **merge**, and merge previews every
+  queued prompt and its image attachments before handing one numbered message to the session queue;
+  the images are shown as thumbnails outside the editable text and travel as attachments. There is no
+  second subset selection. Annotations are summarized
+  and sent from the annotation page instead.
 - **Annotate while you read** — select a passage in an assistant reply and right-click **Annotate**:
   pick a kind from its submenu (note / question / agree / disagree / idea / additional info / to-do), type up to 100
   full-width or 200 half-width characters (or leave it empty for a glyph-only badge), and the badge lands
@@ -73,10 +77,21 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   the reading font instead of staying small.
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
   losing the point in a separate scratchpad; click the badge to edit. The **Current session** tab always
-  exists: **Locate** scrolls to the passage, **Insert draft** writes one note into the composer,
-  **Save as prompt** opens a confirmation step for the title, body, images, type and target group, and
-  the row's **Add to outbox** action queues the annotation as one formatted message with its kind and
-  quote preserved. Single annotations have no direct-send control; Outbox is the only send path.
+  exists: **Locate** scrolls to the passage, **Insert draft** writes one note into the composer, and
+  **Save as prompt** opens a confirmation step for the title, body, images, type and target group.
+  The **Prompt preview** card sits at the bottom like the Outbox, collapses to a strip, and can be resized
+  by dragging its top edge (double-click to reset). Expanding the strip only opens the card; click
+  **Summarize** on its status bar to enter summary mode: rows gain checkboxes, immediate execution and
+  to-do routing; Locate stays, while
+  Insert draft / Save as prompt / Delete hide. The card is the prompt composer: preview and edit the
+  prompt, use the Refresh link, then Save as prompt or Send from the status bar. Select all / Clear
+  sit in the same status bar, so the list has no summary banner above it. Short quotes get an
+  optional complete-sentence/question line in the prompt only (never in the annotation list), and it
+  is omitted when incomplete or redundant. The card shares the Outbox shell, header rhythm, grip and
+  28px actions, but uses the annotation tab's amber so the two cards stay distinct; the workspace prompt
+  tab, the global shared pool and the Outbox share the prompt blue. Annotations never enter the
+  Outbox, and single annotations have no direct-send control. The Outbox card has the same
+  drag-to-resize top edge, with its own saved height.
   Saved notes keep a green marker; notes are stored per session, survive reloads, and are not shown in
   another session.
 - **Prompt types** — each prompt has at most one fixed type: decision / question / opinion / idea /
@@ -142,10 +157,11 @@ does not turn it on.
 4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 100
    full-width or 200 half-width characters, and the badge appears right after the passage. The pool's
    **Current session** tab collects the notes; **Locate** scrolls to a passage, **Insert draft**
-   writes one note into the composer, **Save as prompt** files one note into a group, and **Add to
-   outbox** queues it with its kind and quote preserved.
-5. Add rows to the queue with the ⊕ control (annotations use their row queue action), reorder them in
-   the queue card, then send them one by one or use **Merge & send** for a preview.
+   writes one note into the composer, and **Save as prompt** files one note into a group. The header's
+   **Summarize** on the Prompt preview card's status bar opens it; check and route the notes in the rows,
+   then use Save as prompt or Send in the status bar. Annotations do not enter the Outbox.
+5. Add prompts to the Outbox with the ⊕ control, reorder them in the queue card, then send them one by
+   one or switch to **Merge** for a preview.
 6. Sequential sends are written into the composer and submitted in turn; merged sends become one
    message after confirmation.
 

@@ -99,6 +99,7 @@ const inputActions = {
 };
 const panelProps = {
   sessionId: 's1',
+  initialScope: 'workspace',
   useInput: () => composer,
   inputActions,
   useWorkspaces: () => ({ items: [], currentId: '' }),
@@ -130,6 +131,24 @@ const failures = [];
 
 (async () => {
   let tree = render();
+  const trayGrip = nodes(tree, []).find((node) => String(node.props && node.props.className || '').indexOf('pp-tray-grip') >= 0);
+  if (!trayGrip) failures.push('the Outbox card has no height grip');
+  else {
+    trayGrip.props.onKeyDown({ key: 'ArrowUp', preventDefault: () => {} });
+    if (!(storeRef.get().settings.trayHeight > 0)) failures.push('the Outbox grip did not save a height');
+    trayGrip.props.onDoubleClick();
+    if (storeRef.get().settings.trayHeight !== 0) failures.push('double-click did not reset the Outbox height');
+  }
+  // The header carries a send-mode switch; merge mode turns the primary action
+  // into the digest action.
+  const modeButton = nodes(tree, []).find(
+    (node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('tray.mode.merge') >= 0,
+  );
+  if (!modeButton) failures.push('the send-mode switch was not found');
+  else {
+    modeButton.props.onClick();
+    tree = render();
+  }
   const digest = nodes(tree, []).find(
     (node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('tray.digest') >= 0,
   );
@@ -141,8 +160,53 @@ const failures = [];
     if (!mergeCard) failures.push('the merge preview did not open');
     else if (typeof mergeCard.props.onClose !== 'function') failures.push('the merge preview has no close action');
     else {
+      // Merge & send opens the editable preview of every queued entry directly.
+      const pageCells = cells;
+      cells = [];
+      resetHooks();
+      let confirmed = null;
+      const sheetProps = { ...mergeCard.props, onConfirm: (text) => { confirmed = text; } };
+      sheetProps.entries = mergeCard.props.entries.map((entry, index) => (index === 0
+        ? { ...entry, images: [{ id: 'merge-shot', type: 'image/png', name: 'shot.png', thumb: 'data:image/png;base64,AA==' }] }
+        : entry));
+      const previewNodes = nodes(mergeCard.type(sheetProps), []);
+      const partial = previewNodes.filter((node) => node.props
+        && String(node.props.className || '').indexOf('pp-merge-choice') >= 0);
+      if (partial.length !== 0) failures.push('the merge sheet still offers partial selection');
+      const imageStrip = previewNodes.find((node) => typeof node.type === 'function' && node.type.name === 'ImageStrip');
+      if (!imageStrip || imageStrip.props.images.length !== 1) failures.push('the merge preview does not show queued images');
+      const attachmentLabel = previewNodes.find((node) => Array.isArray(node.children)
+        && node.children.indexOf('merge.attachments') >= 0);
+      if (!attachmentLabel) failures.push('the merge preview does not explain the image attachments');
+      const textarea = previewNodes.find((node) => node.type === 'textarea');
+      if (!textarea) failures.push('the merge preview has no editable text');
+      else {
+        if (String(textarea.props.value).indexOf('first') < 0 || String(textarea.props.value).indexOf('second') < 0) {
+          failures.push('the merge preview does not carry every queued entry');
+        }
+        textarea.props.onChange({ target: { value: 'edited merge' } });
+        resetHooks();
+        const confirmButton = nodes(mergeCard.type(sheetProps), []).find(
+          (node) => node.type === 'button' && String(node.props.className || '').indexOf('pp-note-btn-primary') >= 0
+            && Array.isArray(node.children) && node.children.indexOf('merge.confirm') >= 0,
+        );
+        if (!confirmButton) failures.push('the merge preview has no confirm action');
+        else {
+          confirmButton.props.onClick();
+          if (confirmed !== 'edited merge') failures.push('the merge did not keep the edited text');
+        }
+      }
+      cells = pageCells;
+      resetHooks();
       mergeCard.props.onClose();
       tree = render();
+      const singleButton = nodes(tree, []).find(
+        (node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('tray.mode.single') >= 0,
+      );
+      if (singleButton) {
+        singleButton.props.onClick();
+        tree = render();
+      }
     }
   }
   const release = nodes(tree, []).find(
@@ -175,6 +239,6 @@ const failures = [];
   }
 
   for (const failure of failures) console.error('[fail]', failure);
-  console.log(failures.length === 0 ? '[ok] a release keeps concurrent queue edits' : `[fail] ${failures.length} check(s)`);
+  console.log(failures.length === 0 ? '[ok] a release keeps concurrent queue edits and the merge sheet keeps edited text' : `[fail] ${failures.length} check(s)`);
   if (failures.length > 0) process.exitCode = 1;
 })();

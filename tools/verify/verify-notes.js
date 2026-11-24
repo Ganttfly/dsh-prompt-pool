@@ -195,6 +195,10 @@ else {
   cells = [];
   childStores.clear();
   const tree = render();
+  const trayInNotes = findAll(tree, (node) => node.props
+    && String(node.props.className || '').split(' ').indexOf('pp-tray') >= 0);
+  if (trayInNotes.length > 0) fail('the prompt outbox is still rendered in the annotation scope');
+  else console.log('[ok] the annotation scope hides the prompt outbox');
   const tabBarNode = findComponent(tree, 'ScopeBar');
   if (!tabBarNode) fail('the pool tab strip was not rendered');
   else {
@@ -230,7 +234,7 @@ else {
         else console.log('[ok] annotation rows no longer use selection checkboxes');
       }
 
-      // The header summary-review action is gone; annotations queue per row.
+      // The header annotation-summary action is gone; annotations queue per row.
       const reviewButton = findAll(render() || [], (node) => node.type === 'button' && textOf(node).join('') === 'note.compose')[0];
       if (reviewButton) fail('the old summary review header action is still present');
       else console.log('[ok] the annotation header no longer exposes summary review');
@@ -289,21 +293,24 @@ else {
         }
       }
 
-      // Queue the last annotation directly from its row.
+      // Review replaces the per-row Outbox queue: annotations never leave the list here.
       const queueButton = findAll(notesView() || [], (node) => typeof node.type === 'function'
         && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'queue')[0];
-      if (!queueButton) fail('the row queue control is missing');
+      if (queueButton) fail('the per-row outbox queue control is still present');
       else {
-        queueButton.props.onClick();
-        const pool = window.__dshPromptPoolStoreV1.get();
-        const queued = pool.tray[pool.tray.length - 1];
-        if (!queued || queued.type !== 'annotation') fail('the annotation did not enter the outbox as an annotation');
-        else if (!queued.source || queued.source.noteId !== 'n1' || !queued.source.quote) {
-          fail(`the queued annotation lost its source metadata: ${JSON.stringify(queued.source)}`);
-        } else if (window.__dshPromptPoolNotesV1.get().items.length !== 0) {
-          fail('a queued annotation was not removed from the annotation list');
-        } else {
-          console.log('[ok] an annotation queues with structured source metadata');
+        const reviewButton = findAll(render() || [], (node) => node.type === 'button'
+          && Array.isArray(node.children) && node.children.indexOf('note.review.open') >= 0)[0];
+        if (!reviewButton) fail('the review action is missing');
+        else {
+          reviewButton.props.onClick();
+          resetHooks();
+          const dock = findAll(render() || [], (node) => node.props
+            && String(node.props.className || '') === 'pp-review-dock')[0];
+          const pool = window.__dshPromptPoolStoreV1.get();
+          if (!dock || dock.props['data-collapsed'] !== 'false') fail('the review card did not open');
+          else if (window.__dshPromptPoolNotesV1.get().items.length !== 1) fail('reviewing removed the annotations');
+          else if (pool.tray.length !== 0) fail('reviewing queued annotations into the outbox');
+          else console.log('[ok] the annotation page opens the review card without the outbox');
         }
       }
     }
@@ -367,6 +374,31 @@ else {
   same(helpers.noteHighlightActive(0, null), false, 'no notes and no draft paints nothing');
   same(helpers.noteHighlightActive(0, { anchor: {} }), true, 'an unsaved draft paints its passage');
   same(helpers.noteHighlightActive(2, null), true, 'saved notes paint without a draft');
+}
+
+// Context extraction only returns complete sentences/questions, never a window.
+const contextStart = source.indexOf('    /** Context is a complete sentence');
+const contextEnd = source.indexOf('    /**', source.indexOf('    function noteContextAt'));
+if (contextStart < 0 || contextEnd < 0) fail('the note context helpers were not found');
+else {
+  const helpers = new Function(`${source.slice(contextStart, contextEnd)}
+    return { noteContextAt };`)();
+  const same = (actual, expected, label) => {
+    if (actual !== expected) fail(`${label}: ${JSON.stringify(actual)} != ${JSON.stringify(expected)}`);
+    else console.log('[ok] ' + label);
+  };
+  const choice = '你想我按照 A 执行，还是按照 B 执行？\nA. 方案一\nB. 方案二';
+  const inQuestion = helpers.noteContextAt(choice, choice.indexOf('A 执行'), 'A');
+  same(inQuestion.kind, 'question', 'a short quote inside a question gets that question');
+  same(inQuestion.text, '你想我按照 A 执行，还是按照 B 执行？', 'the question is complete rather than a character window');
+  const inList = helpers.noteContextAt(choice, choice.indexOf('A. 方案一'), 'A');
+  same(inList.kind, 'question', 'an option in a list borrows the preceding question');
+  same(inList.text, '你想我按照 A 执行，还是按照 B 执行？', 'the list option context is the complete question');
+  const phrase = helpers.noteContextAt('这个方向可以作为下一步。', 2, '方向');
+  same(phrase.kind, 'sentence', 'a short phrase gets its complete sentence');
+  same(phrase.text, '这个方向可以作为下一步。', 'the sentence context is complete');
+  const whole = helpers.noteContextAt('这个方向可以作为下一步。', 0, '这个方向可以作为下一步。');
+  same(whole.text, '', 'a complete sentence does not repeat itself as context');
 }
 
 // The bubble's kind row is the NOTE_KINDS order: 意见 sits after 反对.

@@ -116,10 +116,10 @@ const findUndo = (tree) => nodes(tree, []).find(
     && String(node.props && node.props.className).indexOf('pp-link') >= 0
     && Array.isArray(node.children) && node.children.indexOf('status.undo') >= 0,
 );
-const findClearLink = (tree) => nodes(tree, []).find(
+const findClearButton = (tree) => nodes(tree, []).find(
   (node) => node.type === 'button'
-    && String(node.props && node.props.className).indexOf('pp-link') >= 0
-    && Array.isArray(node.children) && node.children.indexOf('tray.clear') >= 0,
+    && String(node.props && node.props.className).indexOf('pp-icon-btn') >= 0
+    && node.props && node.props.title === 'tray.clearTitle',
 );
 // The row's duplicate action, not the one on a queued entry.
 const findCopy = (tree) => nodes(tree, []).find(
@@ -232,7 +232,7 @@ for (const [slotName, props, label] of [
   if (failures.length === before) console.log(`[ok] ${label}: queued removal asks, cancel keeps, confirm removes`);
 
   const queued = trayLength();
-  const link = findClearLink(tree);
+  const link = findClearButton(tree);
   if (!link) { failures.push(`${label}: the clear link was not found`); continue; }
   link.props.onClick();
   if (trayLength() !== queued) failures.push(`${label}: clicking clear emptied the queue without asking`);
@@ -247,7 +247,7 @@ for (const [slotName, props, label] of [
   if (trayLength() !== queued) failures.push(`${label}: cancel still cleared the queue`);
   if (findConfirm(tree)) failures.push(`${label}: the confirmation survived cancel`);
 
-  const reopened = findClearLink(tree);
+  const reopened = findClearButton(tree);
   if (!reopened) { failures.push(`${label}: the clear link vanished after cancel`); continue; }
   reopened.props.onClick();
   tree = render();

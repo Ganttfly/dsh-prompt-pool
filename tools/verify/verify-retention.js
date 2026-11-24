@@ -183,8 +183,10 @@ const main = async () => {
   // 4. Default: queueing keeps the item.
   {
     const run = load({}, 'betterSidebar.tab', { initialScope: 'global' });
-    findQueue(run.tree()).props.onClick();
-    if (run.pool.get().tray.length !== 1) failures.push('on/queue: tray has ' + run.pool.get().tray.length + ' entry, expected 1');
+    const queue = findQueue(run.tree());
+    queue.props.onClick();
+    queue.props.onClick();
+    if (run.pool.get().tray.length !== 1) failures.push('on/queue: a double click added ' + run.pool.get().tray.length + ' entries, expected 1');
     if (run.pool.get().items.length !== 2) failures.push('on/queue: ' + run.pool.get().items.length + ' item(s) left, expected 2');
   }
 
