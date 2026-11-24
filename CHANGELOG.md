@@ -50,6 +50,12 @@ All notable changes to this project are documented here. The format follows
 - The annotation context line exposes **Review annotations** only when the session has annotations, and
   both mode tabs carry live counts.
 
+### Fixed
+
+- Overflow menus in the composer panel (the header `⋯` and each row `⋯`) stay on screen when the host
+  composer seat establishes a fixed-position containing block through `will-change: transform`; menu
+  coordinates are now offset by that ancestor instead of assuming the viewport origin.
+
 ## [Unreleased]
 
 ### Added

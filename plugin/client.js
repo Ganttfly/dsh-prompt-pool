@@ -3800,6 +3800,36 @@ window.__ModuleLoader__.load({
     }
 
     /**
+     * Fixed positioning is relative to the viewport unless an ancestor creates a
+     * containing block (transform, filter, will-change, contain...). The host's
+     * composer seat uses will-change: transform, so menu coordinates must be
+     * expressed relative to that ancestor instead of the viewport.
+     */
+    function fixedMenuOrigin(node) {
+      let el = node && node.parentElement;
+      while (el && el !== document.documentElement) {
+        const cs = window.getComputedStyle(el);
+        const willChange = cs.willChange || '';
+        if (
+          cs.transform !== 'none' ||
+          cs.perspective !== 'none' ||
+          cs.filter !== 'none' ||
+          (cs.backdropFilter && cs.backdropFilter !== 'none') ||
+          willChange.indexOf('transform') >= 0 ||
+          willChange.indexOf('filter') >= 0 ||
+          willChange.indexOf('perspective') >= 0 ||
+          /paint|layout|strict|content/.test(cs.contain || '')
+        ) {
+          const rect = el.getBoundingClientRect();
+          // A transformed ancestor's containing block is its padding box.
+          return { left: rect.left + el.clientLeft, top: rect.top + el.clientTop };
+        }
+        el = el.parentElement;
+      }
+      return { left: 0, top: 0 };
+    }
+
+    /**
      * A small overflow menu anchored to its trigger. It renders in the tree but
      * uses fixed positioning so list scrolling does not clip it.
      */
@@ -3819,6 +3849,7 @@ window.__ModuleLoader__.load({
           const rect = node.getBoundingClientRect();
           const width = 176;
           const height = Math.max(36, items.length * 32 + 8);
+          const origin = fixedMenuOrigin(node);
           let left = rect.right - width;
           if (left < 8) left = 8;
           if (typeof window !== 'undefined' && left + width > window.innerWidth - 8) left = Math.max(8, window.innerWidth - width - 8);
@@ -3826,7 +3857,7 @@ window.__ModuleLoader__.load({
           if (typeof window !== 'undefined' && top + height > window.innerHeight - 8) {
             top = Math.max(8, rect.top - height - 4);
           }
-          setPos({ left, top, width });
+          setPos({ left: left - origin.left, top: top - origin.top, width });
         };
         place();
         const onDown = (event) => {
