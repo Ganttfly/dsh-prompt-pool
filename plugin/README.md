@@ -15,14 +15,15 @@ The pool keeps the draft, the next action and the exact wording next to the conv
 - Segmented composer trigger beside the send controls: the brand segment opens the panel, and separate
   **Annotations** / **Prompts** menus lead to the review card and the full page
 - Starter prompts follow the host language; Settings can reset them in the current interface language, keeping edits as ordinary items
-- Panel scoped to **Annotations** (current session) and **Prompts** (current workspace), with search, type
-  filtering, **Insert / + / ⋯** row actions and a shared send queue that only appears in Prompts mode
+- Panel scoped to **Annotations** (current session) and **Prompts** (current workspace), with a brand row,
+  search, **Insert / + / ⋯** row actions and a shared send queue that only appears in Prompts mode
 - Right-click on selected conversation text to copy it or save it into a group (the last destination leads the menu)
 - Annotate while you read: choose a kind from the right-click submenu, keep notes on the exact passage with image
-  attachments, and collect them in the current-session page (new notes default to Agree); **Review annotations**
-  turns the checked notes into one numbered instruction in the amber review card, not the prompt queue
+  attachments, and collect them in the current-session page (new notes default to Agree); **Summarize** at the
+  bottom turns the selected notes into one numbered instruction in the amber review card, not the prompt queue
 - Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback) with
-  **Annotations** and **Prompts** (**Current workspace** / **Global shared pool**); the page opens on Annotations
+  **Annotations** and **Prompts** (**Current workspace** / **Global shared pool**); the page header carries help,
+  **Save current input** and **Settings**, and the page opens on Annotations
 - Single prompt type per item (decision / question / opinion / idea / supplement / to-do / inspiration), seeded
   from the annotation kind and editable in the save step
 - A save step for title, body, images, type and destination, with a reminder that the conversation context is not kept

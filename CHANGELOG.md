@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses
 [semantic versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- The page and panel headers now expose **How it works**, **Save current input** and **Settings**
+  directly instead of hiding them behind a `⋯` menu. The panel adds a brand row with the pool mark and
+  name, and pin / close moved into it. The annotation context line is gone: the page lists notes without a
+  count banner, and the bottom bar's **Summarize** is the only entry to the review card.
+
 ## [2.1.0] — 2026-11-24
 
 ### Changed

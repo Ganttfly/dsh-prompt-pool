@@ -119,15 +119,11 @@ window.__ModuleLoader__.load({
       'page.search': '搜索标题或内容…',
       'page.empty': '把反复使用的指令存在这里，下次一键插入或排队发送。',
       'page.noMatch': '没有匹配的条目。',
-      'page.more': '更多',
-      'page.contextNotes': '当前会话',
-      'page.contextCount': '{n} 条批注',
-      'page.reviewNotes': '整理批注',
       'help.open': '使用说明',
       'help.title': '提示池怎么用',
       'help.intro': '批注留在对话里，提示词留在库里，要发的都在待发送队列里。',
       'help.notesTitle': '批注',
-      'help.notesBody': '在回复里选中一句话，右键选择「批注」。批注只属于当前会话；点「整理批注」可以把它们合并成一条指令。',
+      'help.notesBody': '在回复里选中一句话，右键选择「批注」。批注只属于当前会话；点底部的「汇总批注」可以把它们合并成一条指令。',
       'help.promptsTitle': '提示词',
       'help.promptsBody': '把反复使用的指令存进库里。点「插入」进输入框，点「＋」加入待发送队列；它是共享队列，发送后按顺序进入输入框。',
       'help.close': '知道了',
@@ -441,15 +437,11 @@ window.__ModuleLoader__.load({
       'page.search': 'Search title or text…',
       'page.empty': 'Keep the instructions you reuse here, then insert or queue them in one click.',
       'page.noMatch': 'No matching item.',
-      'page.more': 'More',
-      'page.contextNotes': 'Current session',
-      'page.contextCount': '{n} annotation(s)',
-      'page.reviewNotes': 'Review annotations',
       'help.open': 'How it works',
       'help.title': 'How the prompt pool works',
       'help.intro': 'Annotations stay in the conversation, prompts stay in the library, and everything to send waits in the send queue.',
       'help.notesTitle': 'Annotations',
-      'help.notesBody': 'Select a sentence in a reply and choose “Annotate” from the context menu. Annotations belong to the current session; “Review annotations” merges them into one instruction.',
+      'help.notesBody': 'Select a sentence in a reply and choose “Annotate” from the context menu. Annotations belong to the current session; the “Summarize” control at the bottom merges them into one instruction.',
       'help.promptsTitle': 'Prompts',
       'help.promptsBody': 'Save instructions you reuse. “Insert” puts one in the composer; “+” adds it to the send queue. The queue is shared and sends into the composer in order.',
       'help.close': 'Got it',
@@ -5172,37 +5164,24 @@ window.__ModuleLoader__.load({
               'aria-label': translate('help.open'),
               onClick: () => setHelpOpen(true),
             }, icon('help')),
-            h(MenuHost, {
-              className: 'pp-head-more',
-              buttonClassName: 'pp-icon pp-menu-trigger',
-              label: translate('page.more'),
-              items: [
-                { id: 'capture', label: translate('panel.capture'), icon: 'capture', onSelect: openCapture },
-                {
-                  id: 'settings',
-                  label: translate('settings.open'),
-                  icon: 'gear',
-                  onSelect: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); },
-                },
-              ],
-            }),
+            h('button', {
+              type: 'button',
+              className: 'pp-icon pp-menu-trigger',
+              title: translate('panel.capture'),
+              'aria-label': translate('panel.capture'),
+              onClick: openCapture,
+            }, icon('capture')),
+            h('button', {
+              type: 'button',
+              className: 'pp-icon pp-menu-trigger',
+              title: translate('settings.open'),
+              'aria-label': translate('settings.open'),
+              onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); },
+            }, icon('gear')),
           ),
         ),
         scope === 'notes'
-          ? h(
-              'div',
-              { className: 'pp-note-context' },
-              h(
-                'span',
-                { className: 'pp-note-context-text' },
-                translate('page.contextNotes'),
-                h('span', { className: 'pp-context-sep', 'aria-hidden': true }, ' · '),
-                translate('page.contextCount', { n: notesList.length }),
-              ),
-              notesList.length > 0
-                ? h('button', { type: 'button', className: 'pp-link', onClick: openReview }, translate('page.reviewNotes'))
-                : null,
-            )
+          ? null
           : h(
               'div',
               { className: 'pp-prompt-bar' },
@@ -9860,18 +9839,16 @@ window.__ModuleLoader__.load({
           },
           h('span', { className: 'pp-grip-bar-x' }),
         ),
-        // The two modes live in the panel header; one context row follows them.
+        // A slim brand row identifies the panel; the window controls sit beside
+        // it so the mode switch below never competes with pin and close.
         h(
           'div',
           { className: 'pp-page-head pp-panel-head' },
           h(
             'div',
-            { className: 'pp-panel-headline' },
-            h(ScopeBar, {
-              value: activeMode,
-              counts: { notes: notesList.length, prompts: countPoolItems(state.items, editing).filter((item) => groupOf(item) === workspaceGroup).length },
-              onChange: switchMode,
-            }),
+            { className: 'pp-panel-brand' },
+            h('span', { className: 'pp-panel-brand-mark', 'aria-hidden': true }, h(PromptPoolIcon, { size: 15 })),
+            h('span', { className: 'pp-panel-brand-name' }, translate('panel.title')),
             h('span', { className: 'pp-grow' }),
             h(IconButton, {
               name: panelPinned ? 'pinActive' : 'pin',
@@ -9884,6 +9861,16 @@ window.__ModuleLoader__.load({
               { type: 'button', className: 'pp-x', title: translate('panel.close'), 'aria-label': translate('panel.close'), onClick: () => ui.set({ open: false }) },
               '✕',
             ),
+          ),
+          h(
+            'div',
+            { className: 'pp-panel-headline' },
+            h(ScopeBar, {
+              value: activeMode,
+              counts: { notes: notesList.length, prompts: countPoolItems(state.items, editing).filter((item) => groupOf(item) === workspaceGroup).length },
+              onChange: switchMode,
+            }),
+            h('span', { className: 'pp-grow' }),
           ),
           h(
             'div',
@@ -9908,42 +9895,26 @@ window.__ModuleLoader__.load({
               'aria-label': translate('help.open'),
               onClick: () => setHelpOpen(true),
             }, icon('help')),
-            h(MenuHost, {
-              className: 'pp-head-more',
-              buttonClassName: 'pp-icon pp-menu-trigger',
-              label: translate('page.more'),
-              items: [
-                { id: 'capture', label: translate('panel.capture'), icon: 'capture', onSelect: openCapture },
-                {
-                  id: 'settings',
-                  label: translate('settings.open'),
-                  icon: 'gear',
-                  onSelect: () => {
-                    setReviewOpen(false);
-                    setReviewProcessing(false);
-                    setSettingsOpen(!settingsOpen);
-                  },
-                },
-              ],
-            }),
+            h('button', {
+              type: 'button',
+              className: 'pp-icon pp-menu-trigger',
+              title: translate('panel.capture'),
+              'aria-label': translate('panel.capture'),
+              onClick: openCapture,
+            }, icon('capture')),
+            h('button', {
+              type: 'button',
+              className: 'pp-icon pp-menu-trigger',
+              title: translate('settings.open'),
+              'aria-label': translate('settings.open'),
+              onClick: () => {
+                setReviewOpen(false);
+                setReviewProcessing(false);
+                setSettingsOpen(!settingsOpen);
+              },
+            }, icon('gear')),
           ),
         ),
-        scope === 'notes'
-          ? h(
-              'div',
-              { className: 'pp-note-context' },
-              h(
-                'span',
-                { className: 'pp-note-context-text' },
-                translate('page.contextNotes'),
-                h('span', { className: 'pp-context-sep', 'aria-hidden': true }, ' · '),
-                translate('page.contextCount', { n: notesList.length }),
-              ),
-              notesList.length > 0
-                ? h('button', { type: 'button', className: 'pp-link', onClick: openReview }, translate('page.reviewNotes'))
-                : null,
-            )
-          : null,
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
         confirmClear && tray.length > 0
           ? h(TrayClearConfirm, {
@@ -10281,8 +10252,8 @@ window.__ModuleLoader__.load({
       // Settings replaces the whole pool surface: the header, context row and group
       // tabs belong to browsing, not to the settings destination, so they step aside
       // and the settings head provides the single way back.
-      '.pp-page[data-settings="true"] .pp-page-head,.pp-page[data-settings="true"] .pp-note-context,.pp-page[data-settings="true"] .pp-prompt-bar,.pp-page[data-settings="true"] .pp-tabscroll{display:none}' +
-      '.pp-panel[data-settings="true"] .pp-panel-tools,.pp-panel[data-settings="true"] .pp-note-context,.pp-panel[data-settings="true"] .pp-prompt-bar,.pp-panel[data-settings="true"] .pp-panel-headline .pp-scope-bar{display:none}' +
+      '.pp-page[data-settings="true"] .pp-page-head,.pp-page[data-settings="true"] .pp-prompt-bar,.pp-page[data-settings="true"] .pp-tabscroll{display:none}' +
+      '.pp-panel[data-settings="true"] .pp-panel-tools,.pp-panel[data-settings="true"] .pp-panel-headline,.pp-panel[data-settings="true"] .pp-prompt-bar{display:none}' +
       '.pp-page[data-settings="true"] .pp-page-body{padding-top:12px}' +
       '.pp-panel[data-settings="true"] .pp-list{padding-top:12px}' +
       // Help is a two-column reference card, not a tour: it states the same model
@@ -10307,11 +10278,7 @@ window.__ModuleLoader__.load({
       '.pp-page-head .pp-scope-bar .pp-tab,.pp-panel-headline .pp-scope-bar .pp-tab{height:30px}' +
       '.pp-new-prompt{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
       '.pp-menu-trigger{width:26px;height:26px;border-radius:7px}' +
-      '.pp-head-more{display:inline-flex;flex:none}' +
-      '.pp-note-context,.pp-prompt-bar{display:flex;align-items:center;gap:8px;min-height:34px;padding:4px 12px 6px;border-bottom:1px solid var(--pp-line);font-size:11.5px;color:var(--pp-ink-2)}' +
-      '.pp-note-context-text{display:inline-flex;align-items:center;min-width:0;white-space:nowrap}' +
-      '.pp-context-sep{opacity:.55}' +
-      '.pp-note-context .pp-link{margin-left:auto;flex:none}' +
+      '.pp-prompt-bar{display:flex;align-items:center;gap:8px;min-height:34px;padding:4px 12px 6px;border-bottom:1px solid var(--pp-line);font-size:11.5px;color:var(--pp-ink-2)}' +
       '.pp-prompt-bar .pp-type-filter{flex:none;margin-left:auto}' +
       // A pale blue recess with a raised surface chip: the same geometry as the
       // group tabs, without competing with the mode switch above it.
@@ -10388,7 +10355,10 @@ window.__ModuleLoader__.load({
       '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
       '.pp-page-head{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 12px 6px;border-bottom:1px solid var(--pp-line);flex-wrap:nowrap}' +
       '.pp-panel-head{flex-direction:column;align-items:stretch;gap:0;padding:0}' +
-      '.pp-panel-headline{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 12px 6px;border-bottom:1px solid var(--pp-line);background:transparent}' +
+      '.pp-panel-brand{display:flex;align-items:center;gap:7px;min-width:0;padding:1px 12px 5px}' +
+      '.pp-panel-brand-mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;border-radius:7px;background:color-mix(in srgb,var(--pp-accent) 9%,transparent);color:var(--pp-accent)}' +
+      '.pp-panel-brand-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;letter-spacing:.01em}' +
+      '.pp-panel-headline{display:flex;align-items:center;gap:8px;min-width:0;padding:0 12px 6px;border-bottom:1px solid var(--pp-line);background:transparent}' +
       '.pp-panel-slogan{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px}' +
       '.pp-panel-tools{display:flex;align-items:center;gap:6px;padding:6px 12px}' +
       '.pp-panel-actions{display:flex;align-items:center;gap:8px;width:208px;flex:none}' +

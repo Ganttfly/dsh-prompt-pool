@@ -193,13 +193,12 @@ const panelClose = panelNodes.some((node) => node.type === 'button' && node.prop
 const panelRows = panelNodes.filter((node) => hasClass(node, 'pp-page-item')).length;
 const panelGrip = panelNodes.some((node) => hasClass(node, 'pp-panel-grip'));
 const panelQueueToggle = panelNodes.some((node) => node.type === 'button' && hasClass(node, 'pp-queue-toggle'));
-const panelCapture = panelNodes.some(
-  (node) => typeof node.type === 'function' && node.type.name === 'MenuHost'
-    && Array.isArray(node.props && node.props.items)
-    && node.props.items.some((item) => item.id === 'capture'),
-);
-console.log(`[check] panel header search=${panelSearch} close=${panelClose} grip=${panelGrip} queueToggle=${panelQueueToggle} captureHint=${panelCapture} page-item rows=${panelRows}`);
-if (!panelSearch || !panelClose || !panelGrip || !panelQueueToggle || !panelCapture || panelRows === 0) process.exitCode = 1;
+const panelBrand = panelNodes.some((node) => hasClass(node, 'pp-panel-brand'))
+  && panelNodes.some((node) => hasClass(node, 'pp-panel-brand-name'));
+const panelCapture = panelNodes.some((node) => node.type === 'button' && node.props && node.props.title === 'panel.capture');
+const panelSettings = panelNodes.some((node) => node.type === 'button' && node.props && node.props.title === 'settings.open');
+console.log(`[check] panel header brand=${panelBrand} search=${panelSearch} close=${panelClose} grip=${panelGrip} queueToggle=${panelQueueToggle} capture=${panelCapture} settings=${panelSettings} page-item rows=${panelRows}`);
+if (!panelBrand || !panelSearch || !panelClose || !panelGrip || !panelQueueToggle || !panelCapture || !panelSettings || panelRows === 0) process.exitCode = 1;
 
 // The composer trigger names itself and no longer carries a queue badge.
 const triggerEntry = registrations.find((entry) => entry.slot === 'conversation.input.right');

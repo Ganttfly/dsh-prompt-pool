@@ -109,12 +109,10 @@ const capture = (draft, attachmentIds, occurrences, pick = 'group.note', workspa
     if (node.children) node.children.forEach(walk);
   };
   walk(tree);
-  const moreHost = nodes.find((node) => typeof node.type === 'function' && node.type.name === 'MenuHost'
-    && Array.isArray(node.props && node.props.items)
-    && node.props.items.some((item) => item.id === 'capture'));
-  const captureItem = moreHost && moreHost.props.items.find((item) => item.id === 'capture');
-  if (!captureItem) throw new Error('the capture menu item was not found');
-  captureItem.onSelect();
+  const captureButton = nodes.find((node) => node.type === 'button' && node.props
+    && node.props['aria-label'] === 'panel.capture');
+  if (!captureButton) throw new Error('the capture header button was not found');
+  captureButton.props.onClick();
   const pool = global.window.__dshPromptPoolStoreV1;
   // The button opens the group chooser; pick the requested destination.
   resetHooks();
