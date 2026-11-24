@@ -3744,20 +3744,31 @@ window.__ModuleLoader__.load({
     function PromptPoolIcon(props) {
       const size = typeof props.size === 'number' && props.size > 0 ? props.size : 18;
       const active = props.active === true;
+      // The command-spark mark has a tighter cut for the 9-12px trigger and menu.
+      const micro = size <= 12;
       return h(
         'svg',
         {
           width: size,
           height: size,
-          viewBox: '0 0 20 20',
+          viewBox: '0 0 24 24',
           fill: 'none',
           stroke: 'currentColor',
-          strokeWidth: active ? 1.5 : 1.3,
+          strokeWidth: micro ? 2.1 : active ? 1.9 : 1.7,
           strokeLinecap: 'round',
+          strokeLinejoin: 'round',
           'aria-hidden': true,
           style: { display: 'block' },
         },
-        h('path', { d: 'M3.4 5.4h13.2M3.4 10h10M3.4 14.6h6.4' }),
+        h('path', { d: micro ? 'M4.5 7.1L8.6 12L4.5 16.9' : 'M4.2 6.8L9.2 12L4.2 17.2' }),
+        h('path', { d: micro ? 'M11.4 16.9H18.2' : 'M11.4 17.2H18.6' }),
+        h('path', {
+          d: micro
+            ? 'M18.1 2.3L19.0 4.5L21.2 5.4L19.0 6.3L18.1 8.5L17.2 6.3L15.0 5.4L17.2 4.5Z'
+            : 'M18.2 1.8L19.2 4.2L21.6 5.2L19.2 6.2L18.2 8.6L17.2 6.2L14.8 5.2L17.2 4.2Z',
+          fill: 'currentColor',
+          stroke: 'none',
+        }),
       );
     }
 
