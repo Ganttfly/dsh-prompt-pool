@@ -414,13 +414,21 @@ else {
   const ids = kinds.map((kind) => kind.id).join(',');
   if (ids !== 'agree,disagree,question,comment,idea,supplement,todo') fail(`the annotation kinds are ordered ${ids}`);
   else console.log('[ok] the kind buttons put 提问 between 反对 and 意见');
+  const kindIcons = { agree: 'check', disagree: 'x', question: 'question', comment: 'pen', idea: 'bulb', supplement: 'info', todo: 'todo' };
   for (const kind of kinds) {
-    if (kind.tint !== '217,164,65') fail(`the ${kind.id} annotation color is ${kind.tint}, expected the amber wash`);
-    if (kind.ink !== '158,110,26') fail(`the ${kind.id} annotation ink is ${kind.ink}, expected the amber ink`);
+    if (kind.icon !== kindIcons[kind.id]) fail(`the ${kind.id} annotation icon is ${kind.icon}, expected ${kindIcons[kind.id]}`);
   }
-  if (new Set(kinds.map((kind) => kind.tint)).size !== 1) fail('annotation kinds no longer share one color');
+  if (new Set(kinds.map((kind) => kind.icon)).size !== kinds.length) fail('annotation kinds no longer have distinct icons');
+  else console.log('[ok] every annotation kind has its own icon');
+  const notesRule = /\.pp-notes\{([^}]*)\}/.exec(source);
+  const quoteMarkRule = /\.pp-notes-quote \.pp-type-mark\{([^}]*)\}/.exec(source);
+  const amberWash = notesRule && notesRule[1].indexOf('--pp-inline-tint:217,164,65') >= 0
+    && quoteMarkRule && quoteMarkRule[1].indexOf('background:color-mix(in srgb,var(--pp-note) 18%,transparent)') >= 0;
+  if (!amberWash) fail('annotation kinds no longer share one amber wash');
   else console.log('[ok] every annotation kind shares the amber wash');
-  if (new Set(kinds.map((kind) => kind.ink)).size !== 1) fail('annotation kinds no longer share one ink shade');
+  const amberInk = notesRule && notesRule[1].indexOf('--pp-inline-ink:158,110,26') >= 0
+    && quoteMarkRule && quoteMarkRule[1].indexOf('color:var(--pp-note-ink)') >= 0;
+  if (!amberInk) fail('annotation kinds no longer share one amber ink shade');
   else console.log('[ok] every annotation kind shares the amber ink');
   if (!source.includes("'note.kind.idea': '思路'")) fail('the Chinese idea label is not 思路');
   else if (!source.includes("'note.kind.idea': 'Idea'")) fail('the English idea label changed');
@@ -471,9 +479,14 @@ if (!underlineRule) fail('the comment highlight rule is missing');
 else if (underlineRule[1].indexOf('text-decoration-thickness:2px') < 0 || underlineRule[1].indexOf('rgba(217,164,65,1)') < 0) {
   fail('the comment underline is not the 2px amber rule');
 } else console.log('[ok] the badge wash and the highlighted underline share the amber');
-const iconRule = /\.pp-note-inline-icon\{([^}]*)\}/.exec(source);
-if (!iconRule || iconRule[1].indexOf('font-size:.95em') < 0) fail('the badge icon does not scale with the badge');
-else console.log('[ok] the badge icon scales with the font');
+const inlineIconRule = /\.pp-note-inline-icon svg\{([^}]*)\}/.exec(source);
+if (!inlineIconRule || inlineIconRule[1].indexOf('width:12px') < 0 || inlineIconRule[1].indexOf('height:12px') < 0 || inlineIconRule[1].indexOf('stroke-width:2.1') < 0) {
+  fail('the badge icon does not use the 12px icon step');
+} else console.log('[ok] the badge icon uses the 12px icon step');
+const typeMarkRule = /\.pp-type-mark svg\{([^}]*)\}/.exec(source);
+if (!typeMarkRule || typeMarkRule[1].indexOf('width:12px') < 0 || typeMarkRule[1].indexOf('height:12px') < 0) {
+  fail('the type mark does not use the 12px icon step');
+} else console.log('[ok] the type mark uses the 12px icon step');
 if (/maxLength:\s*NOTE_BODY_MAX/.test(source)) fail('the editor still uses a UTF-16 maxLength');
 else console.log('[ok] the editor no longer uses a UTF-16 maxLength');
 if (!/onChange:\s*\(event\)\s*=>\s*\{[\s\S]{0,200}mergeNoteBodyInput\(current, next\)/.test(source)) {

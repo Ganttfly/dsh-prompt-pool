@@ -1215,13 +1215,13 @@ window.__ModuleLoader__.load({
 
     /** One fixed semantic type per prompt; the user can leave it empty. */
     const PROMPT_TYPES = [
-      { id: 'decision', label: 'prompt.type.decision', icon: '✓', tint: '34,197,94', ink: '22,163,74' },
-      { id: 'question', label: 'prompt.type.question', icon: '?', tint: '249,115,22', ink: '234,88,12' },
-      { id: 'opinion', label: 'prompt.type.opinion', icon: '✎', tint: '139,92,246', ink: '124,58,237' },
-      { id: 'idea', label: 'prompt.type.idea', icon: '💡', tint: '59,130,246', ink: '37,99,235' },
-      { id: 'supplement', label: 'prompt.type.supplement', icon: 'ℹ', tint: '20,184,166', ink: '13,148,136' },
-      { id: 'todo', label: 'prompt.type.todo', icon: '□', tint: '250,204,21', ink: '202,138,4' },
-      { id: 'inspiration', label: 'prompt.type.inspiration', icon: '✦', tint: '219,39,119', ink: '190,24,93' },
+      { id: 'decision', label: 'prompt.type.decision', icon: 'check' },
+      { id: 'question', label: 'prompt.type.question', icon: 'question' },
+      { id: 'opinion', label: 'prompt.type.opinion', icon: 'pen' },
+      { id: 'idea', label: 'prompt.type.idea', icon: 'bulb' },
+      { id: 'supplement', label: 'prompt.type.supplement', icon: 'info' },
+      { id: 'todo', label: 'prompt.type.todo', icon: 'todo' },
+      { id: 'inspiration', label: 'prompt.type.inspiration', icon: 'sparkle' },
     ];
     const PROMPT_TYPE_IDS = PROMPT_TYPES.map((entry) => entry.id);
     const NOTE_PROMPT_TYPES = {
@@ -2764,11 +2764,8 @@ window.__ModuleLoader__.load({
           (() => {
             const meta = promptTypeMeta(item.type);
             return h(TypeMark, {
-              icon: meta ? meta.icon : '',
-              tint: meta ? meta.tint : '',
-              ink: meta ? meta.ink : '',
+              name: meta ? meta.icon : '',
               title: meta ? translate(meta.label) : translate('row.typeNone'),
-              empty: !meta,
             });
           })(),
         ),
@@ -2846,7 +2843,7 @@ window.__ModuleLoader__.load({
             h(
               'div',
               { className: 'pp-review-head' },
-              h('span', { className: 'pp-review-mark' }, h(NoteActionIcon, { kind: 'edit' })),
+              h('span', { className: 'pp-review-mark', 'aria-hidden': true }, icon('edit')),
               h(
                 'div',
                 { className: 'pp-review-title' },
@@ -3146,154 +3143,167 @@ window.__ModuleLoader__.load({
     }
 
     // ------------------------------------------------------------------ icons
+    // One geometry for every glyph: a 24px artboard, a 1.8px stroke and round
+    // joins. Context chooses the rendered size in CSS (12/14/16/20), never an
+    // individual shape; color is always currentColor.
     function icon(name) {
       const base = {
-        width: 14,
-        height: 14,
-        viewBox: '0 0 12 12',
+        width: 16,
+        height: 16,
+        viewBox: '0 0 24 24',
         fill: 'none',
         stroke: 'currentColor',
-        strokeWidth: 1.1,
+        strokeWidth: 1.8,
         strokeLinecap: 'round',
         strokeLinejoin: 'round',
         'aria-hidden': true,
       };
       switch (name) {
         case 'up':
-          return h('svg', base, h('path', { d: 'M6 9.5V2.5M3 5.5L6 2.5l3 3' }));
+          return h('svg', base, h('path', { d: 'M12 19V5M6.5 10.5 12 5l5.5 5.5' }));
         case 'down':
-          return h('svg', base, h('path', { d: 'M6 2.5v7M3 6.5l3 3 3-3' }));
+          return h('svg', base, h('path', { d: 'M12 5v14M6.5 13.5 12 19l5.5-5.5' }));
         case 'edit':
-          return h('svg', base, h('path', { d: 'M8.2 1.8l2 2L4.4 9.6 1.8 10.2l.6-2.6z' }));
+        case 'pen':
+          return h('svg', base,
+            h('path', { d: 'M4 20l4.4-.9L20 7.5a2.2 2.2 0 0 0-3.1-3.1L5.3 16 4 20z' }),
+            h('path', { d: 'M14.8 6.5l2.7 2.7' }));
         case 'trash':
-          return h('svg', base, h('path', { d: 'M2 3.2h8M4.6 3.2V2h2.8v1.2M3.2 3.2l.5 7h4.6l.5-7' }));
+          return h('svg', base,
+            h('path', { d: 'M4.5 7h15M9.5 7V4.8h5V7' }),
+            h('path', { d: 'M6.8 7l.9 12.2h8.6L17.2 7M10 10.5v5.5M14 10.5v5.5' }));
         case 'copy':
-          return h(
-            'svg',
-            base,
-            h('rect', { x: 4.3, y: 4.3, width: 5.5, height: 5.5, rx: 1.1 }),
-            h('path', { d: 'M4.3 7.6H2.6A1.2 1.2 0 0 1 1.4 6.4V2.6A1.2 1.2 0 0 1 2.6 1.4h3.8a1.2 1.2 0 0 1 1.2 1.2v1.7' }),
-          );
+          return h('svg', base,
+            h('rect', { x: 9, y: 9, width: 10.5, height: 10.5, rx: 2.2 }),
+            h('path', { d: 'M6.5 15H5.2A2.2 2.2 0 0 1 3 12.8V5.2A2.2 2.2 0 0 1 5.2 3h7.6A2.2 2.2 0 0 1 15 5.2v1.3' }));
         case 'insert':
           return h('svg', base,
-            h('path', { d: 'M1.6 7.2h8.8v3.2H1.6z' }),
-            h('path', { d: 'M6 1.6v4.8' }),
-            h('path', { d: 'M3.8 4.2 6 6.4l2.2-2.2' }),
-          );
+            h('path', { d: 'M12 4v11M7 10l5 5 5-5M5 20h14' }));
         case 'close':
-          return h('svg', base, h('path', { d: 'M3 3l6 6M9 3l-6 6' }));
+        case 'x':
+          return h('svg', base, h('path', { d: 'M6 6l12 12M18 6 6 18' }));
+        case 'check':
+          return h('svg', base, h('path', { d: 'M4.5 12.5l4.8 4.8L19.5 7' }));
         case 'chevronDown':
-          return h('svg', base, h('path', { d: 'M3 4.5L6 7.5l3-3' }));
+          return h('svg', base, h('path', { d: 'M6 9l6 6 6-6' }));
         case 'chevronUp':
-          return h('svg', base, h('path', { d: 'M3 7.5L6 4.5l3 3' }));
+          return h('svg', base, h('path', { d: 'M6 15l6-6 6 6' }));
         case 'image':
-          return h(
-            'svg',
-            base,
-            h('rect', { x: 1.6, y: 2.2, width: 8.8, height: 7.6, rx: 1.2 }),
-            h('circle', { cx: 4.2, cy: 4.8, r: 0.9 }),
-            h('path', { d: 'M2.2 8.4l2.6-2.4 2.2 1.9 1.7-1.5 1.7 1.7' }),
-          );
+          return h('svg', base,
+            h('rect', { x: 3, y: 4, width: 18, height: 16, rx: 3 }),
+            h('circle', { cx: 8.5, cy: 9, r: 1.5 }),
+            h('path', { d: 'M4.5 17l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5' }));
         case 'gear':
-          return h(
-            'svg',
-            {
-              width: 14,
-              height: 14,
-              viewBox: '0 0 24 24',
-              fill: 'none',
-              stroke: 'currentColor',
-              strokeWidth: 1.35,
-              strokeLinecap: 'round',
-              strokeLinejoin: 'round',
-              'aria-hidden': true,
-            },
-            h('path', {
-              d: 'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z',
-            }),
-            h('circle', { cx: 12, cy: 12, r: 3 }),
-          );
+          return h('svg', base,
+            h('path', { d: 'M4 7h8M16 7h4M4 17h4M12 17h8' }),
+            h('circle', { cx: 14, cy: 7, r: 2 }),
+            h('circle', { cx: 10, cy: 17, r: 2 }));
         case 'store':
           return h('svg', base,
-            h('path', { d: 'M2.5 1.5h5l2 2v7h-7z' }),
-            h('path', { d: 'M7.5 1.5v2h2' }),
-            h('path', { d: 'M6 5v3.5M4.2 6.7h3.6' }),
-          );
+            h('path', { d: 'M5 4h9l5 5v11H5z' }),
+            h('path', { d: 'M14 4v5h5M9 13h6M12 10v6' }));
         case 'capture':
-          return h('svg', base,
-            h('path', { d: 'M2 2.4h8v2H2z' }),
-            h('path', { d: 'M3 4.4v5.2h6V4.4' }),
-            h('path', { d: 'M5 6.7h2' }),
-          );
+          return h('svg', base, h('path', { d: 'M6.5 4h11v16.5L12 16.5l-5.5 4V4z' }));
         case 'review':
-          return h('svg', base, h('path', { d: 'M2 2.5h3.2M2 6h3.2M2 9.5h3.2' }), h('path', { d: 'M6.3 3.2l1.1 1.1 2-2.2M6.3 7.2l1.1 1.1 2-2.2M6.3 11l1.1 1.1 2-2.2' }));
+          return h('svg', base,
+            h('path', { d: 'M4 7h7M4 12h7M4 17h7' }),
+            h('path', { d: 'M15 6.5l1.5 1.5L20 4.5M15 16.5l1.5 1.5L20 14.5' }));
         case 'queue':
           return h('svg', base,
-            h('path', { d: 'M2 2.5h8M2 5.5h8M2 8.5h5.2' }),
-            h('path', { d: 'M9.5 7.4v3.2M7.9 9h3.2' }),
-          );
+            h('path', { d: 'M4 6h9M4 12h9M4 18h6' }),
+            h('path', { d: 'M17 13v7M13.5 16.5h7' }));
         case 'locate':
-          return h('svg', base, h('circle', { cx: 6, cy: 6, r: 2.5 }), h('path', { d: 'M6 1v1.6M6 9.4V11M1 6h1.6M9.4 6H11' }));
+          return h('svg', base,
+            h('path', { d: 'M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15' }),
+            h('circle', { cx: 12, cy: 12, r: 1.7, fill: 'currentColor', stroke: 'none' }));
         case 'annotation':
           return h('svg', base,
-            h('path', { d: 'M1.8 2.2h8.4v5.8H6.2L3.7 10.2V8H1.8z' }),
-            h('path', { d: 'M3.7 4.2h4.6M3.7 5.9h3.1' }),
-          );
+            h('rect', { x: 3.5, y: 4.5, width: 17, height: 11.5, rx: 2 }),
+            h('path', { d: 'M8.5 16l-4.5 3.5V16' }),
+            h('path', { d: 'M7.5 9h9M7.5 12h5.5' }));
         case 'prompt':
           return h('svg', base,
-            h('path', { d: 'M2 2.6 5.4 6 2 9.4' }),
-            h('path', { d: 'M6.7 9.4h3.3' }),
-          );
+            h('path', { d: 'M4 6l6 6-6 6M13 18h7' }));
         case 'layers':
           return h('svg', base,
-            h('path', { d: 'M6 1.8 10.2 4 6 6.2 1.8 4z' }),
-            h('path', { d: 'M1.8 6 6 8.2 10.2 6M1.8 8 6 10.2 10.2 8' }),
-          );
+            h('path', { d: 'M12 3l9 5-9 5-9-5 9-5z' }),
+            h('path', { d: 'M3 13l9 5 9-5' }));
         case 'plus':
-          return h('svg', base, h('path', { d: 'M6 2.2v7.6M2.2 6h7.6' }));
+          return h('svg', base, h('path', { d: 'M12 5v14M5 12h14' }));
         case 'more':
           return h(
             'svg',
             { ...base, fill: 'currentColor', stroke: 'none' },
-            h('circle', { cx: 2.4, cy: 6, r: 0.95 }),
-            h('circle', { cx: 6, cy: 6, r: 0.95 }),
-            h('circle', { cx: 9.6, cy: 6, r: 0.95 }),
+            h('circle', { cx: 5.5, cy: 12, r: 1.6 }),
+            h('circle', { cx: 12, cy: 12, r: 1.6 }),
+            h('circle', { cx: 18.5, cy: 12, r: 1.6 }),
           );
         case 'back':
-          return h('svg', base, h('path', { d: 'M10 6H2.4' }), h('path', { d: 'M5.2 3 2.2 6l3 3' }));
+          return h('svg', base, h('path', { d: 'M19 12H5M11 6l-6 6 6 6' }));
         case 'help':
-          return h(
-            'svg',
-            base,
-            h('circle', { cx: 6, cy: 6, r: 4.6 }),
-            h('path', { d: 'M4.8 4.6a1.3 1.3 0 1 1 1.8 1.2c-.4.2-.6.5-.6 1' }),
-            h('path', { d: 'M6 8.5h.01' }),
-          );
+          return h('svg', base,
+            h('circle', { cx: 12, cy: 12, r: 9 }),
+            h('path', { d: 'M9.3 9.2a2.7 2.7 0 0 1 5.3.8c0 1.8-2.6 2-2.6 4' }),
+            h('path', { d: 'M12 17.5h.01' }));
+        case 'question':
+          return h('svg', base,
+            h('path', { d: 'M8.6 8.4a3.6 3.6 0 0 1 7 .9c0 2.6-3.4 2.9-3.4 5.7' }),
+            h('path', { d: 'M12.2 18.2h.01' }));
+        case 'bulb':
+          return h('svg', base,
+            h('path', { d: 'M9 18h6M10 21h4' }),
+            h('path', { d: 'M9.2 15.4a6 6 0 1 1 5.6 0c-.9.6-1.3 1.4-1.3 2.6h-3c0-1.2-.4-2-1.3-2.6z' }));
+        case 'info':
+          return h('svg', base,
+            h('circle', { cx: 12, cy: 12, r: 8.5 }),
+            h('path', { d: 'M12 11v6M12 7.5h.01' }));
+        case 'todo':
+          return h('svg', base,
+            h('rect', { x: 4, y: 4, width: 16, height: 16, rx: 3 }),
+            h('path', { d: 'M8 12.2l3 3 5.5-6' }));
+        case 'sparkle':
+          return h('svg', base,
+            h('path', { d: 'M12 3.5l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7L12 3.5z' }));
         case 'pool':
-          return h(
-            'svg',
-            { width: 15, height: 15, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.15, strokeLinecap: 'round', 'aria-hidden': true },
-            h('path', { d: 'M2.6 6.2h10.8M2.6 9.6h10.8M2.6 13h6' }),
-            h('path', { d: 'M11.6 2.4v4.4M9.4 4.6h4.4' }),
-          );
+          return h('svg', base,
+            h('path', { d: 'M4 6h16M4 12h16M4 18h8' }),
+            h('path', { d: 'M17.5 15v6M14.5 18h6' }));
         case 'pin':
-          return h(
-            'svg',
-            base,
-            h('path', { d: 'M3.6 1.6h4.8' }),
-            h('path', { d: 'M4.5 1.6v3.4L2.6 7h6.8L7.5 5V1.6' }),
-            h('path', { d: 'M6 7v3.6' }),
-          );
+          return h('svg', base,
+            h('path', { d: 'M12 21c3.6-4.4 6-7.2 6-10.2a6 6 0 1 0-12 0C6 13.8 8.4 16.6 12 21z' }),
+            h('circle', { cx: 12, cy: 10.8, r: 2.2 }));
         case 'pinActive':
           return h(
             'svg',
-            { ...base, fill: 'currentColor' },
-            h('path', { d: 'M3.4 1.6h5.2v3l1.5 1.8h-8.2l1.5-1.8z' }),
-            h('path', { d: 'M6 6.4v4', fill: 'none' }),
+            base,
+            h('path', {
+              d: 'M12 21c3.6-4.4 6-7.2 6-10.2a6 6 0 1 0-12 0C6 13.8 8.4 16.6 12 21zM12 8.6a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4z',
+              fill: 'currentColor',
+              fillRule: 'evenodd',
+              stroke: 'none',
+            }),
           );
         default:
           return null;
       }
+    }
+
+    // The inline annotation chip lives outside React, so it needs the same
+    // geometry as an SVG string. Only static icon markup is ever passed here.
+    function iconMarkup(name) {
+      const attr = (key) => key === 'viewBox' ? key : key.replace(/[A-Z]/g, (ch) => '-' + ch.toLowerCase());
+      const walk = (node) => {
+        if (node === null || node === undefined) return '';
+        if (typeof node === 'string') return node;
+        const props = node.props || {};
+        const attrs = Object.keys(props)
+          .filter((key) => key !== 'children' && props[key] !== null && props[key] !== undefined && typeof props[key] !== 'function')
+          .map((key) => `${attr(key)}="${String(props[key])}"`)
+          .join(' ');
+        const children = props.children === null || props.children === undefined ? [] : [].concat(props.children);
+        return `<${node.type}${attrs ? ' ' + attrs : ''}>${children.map(walk).join('')}</${node.type}>`;
+      };
+      return walk(icon(name));
     }
 
     function IconButton({ name, label, onClick, disabled, danger, active }) {
@@ -3735,7 +3745,6 @@ window.__ModuleLoader__.load({
     // ------------------------------------------------------------ sidebar icon
     function PromptPoolIcon(props) {
       const size = typeof props.size === 'number' && props.size > 0 ? props.size : 18;
-      const active = props.active === true;
       // Two offset prompt cards: the 01 direction from the icon study. At 12px
       // the two cards alone read cleanly; the text lines would turn into noise.
       const micro = size <= 12;
@@ -3747,7 +3756,7 @@ window.__ModuleLoader__.load({
           viewBox: '0 0 24 24',
           fill: 'none',
           stroke: 'currentColor',
-          strokeWidth: micro ? 2 : active ? 1.95 : 1.75,
+          strokeWidth: micro ? 2 : 1.8,
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
           'aria-hidden': true,
@@ -3768,16 +3777,15 @@ window.__ModuleLoader__.load({
     }
 
     /** Round "add one occurrence" control; the same item may be added repeatedly. */
-    /** One shared 16px type badge for annotations and prompts. */
-    function TypeMark({ icon, tint, ink, title, empty }) {
+    /** One shared type badge for annotations and prompts. */
+    function TypeMark({ name, title }) {
       return h(
         'span',
         {
-          className: 'pp-type-mark' + (empty ? ' pp-type-mark-empty' : ''),
+          className: 'pp-type-mark',
           title: title || '',
-          style: tint && ink ? { background: `rgba(${tint},.26)`, color: `rgb(${ink})` } : undefined,
         },
-        icon || '·',
+        icon(name || 'prompt'),
       );
     }
 
@@ -6040,20 +6048,20 @@ window.__ModuleLoader__.load({
     /** Tallest a card can get, for the occlusion test against a floating panel. */
 
     /** Bumped when badge placement changes, so old chips are rebuilt in place. */
-    const NOTE_CHIP_VERSION = '4';
+    const NOTE_CHIP_VERSION = '5';
 
     /**
      * Annotation kinds: the glyph and label tell them apart. Every kind shares
      * the one amber wash so annotations read as a single layer in the reply.
      */
     const NOTE_KINDS = [
-      { id: 'agree', icon: '✓', tint: '217,164,65', ink: '158,110,26', prefix: 'Agree-', label: 'note.kind.agree' },
-      { id: 'disagree', icon: '✕', tint: '217,164,65', ink: '158,110,26', prefix: 'Disagree-', label: 'note.kind.disagree' },
-      { id: 'question', icon: '?', tint: '217,164,65', ink: '158,110,26', prefix: 'Question-', label: 'note.kind.question' },
-      { id: 'comment', icon: '✎', tint: '217,164,65', ink: '158,110,26', prefix: 'Comment-', label: 'note.kind.comment' },
-      { id: 'idea', icon: '💡', tint: '217,164,65', ink: '158,110,26', prefix: 'Idea-', label: 'note.kind.idea' },
-      { id: 'supplement', icon: 'ℹ', tint: '217,164,65', ink: '158,110,26', prefix: 'Supplement-', label: 'note.kind.supplement' },
-      { id: 'todo', icon: '□', tint: '217,164,65', ink: '158,110,26', prefix: 'Todo-', label: 'note.kind.todo' },
+      { id: 'agree', icon: 'check', prefix: 'Agree-', label: 'note.kind.agree' },
+      { id: 'disagree', icon: 'x', prefix: 'Disagree-', label: 'note.kind.disagree' },
+      { id: 'question', icon: 'question', prefix: 'Question-', label: 'note.kind.question' },
+      { id: 'comment', icon: 'pen', prefix: 'Comment-', label: 'note.kind.comment' },
+      { id: 'idea', icon: 'bulb', prefix: 'Idea-', label: 'note.kind.idea' },
+      { id: 'supplement', icon: 'info', prefix: 'Supplement-', label: 'note.kind.supplement' },
+      { id: 'todo', icon: 'todo', prefix: 'Todo-', label: 'note.kind.todo' },
     ];
     const NOTE_KIND_IDS = NOTE_KINDS.map((kind) => kind.id);
     const NOTE_KIND_DEFAULT = 'agree';
@@ -7345,7 +7353,7 @@ window.__ModuleLoader__.load({
           chip.setAttribute('title', shown ? `${translate(meta.label)}：${shown}` : translate(meta.label));
           const icon = document.createElement('span');
           icon.className = 'pp-note-inline-icon';
-          icon.textContent = meta.icon;
+          icon.innerHTML = iconMarkup(meta.icon);
           const text = document.createElement('span');
           text.className = 'pp-note-inline-text';
           // A kind-only note is just its glyph.
@@ -7795,7 +7803,7 @@ window.__ModuleLoader__.load({
               h(
                 'div',
                 { className: 'pp-note-bubble-quote' },
-                h('span', { className: 'pp-note-bubble-quote-icon' }, noteKind(kind).icon),
+                h('span', { className: 'pp-note-bubble-quote-icon', 'aria-hidden': true }, icon(noteKind(kind).icon)),
                 noteQuoteText(editingNote ? editingNote.quote : editing.anchor.quote, 80),
               ),
               missing
@@ -7818,7 +7826,7 @@ window.__ModuleLoader__.load({
                     'data-active': kind === entry.id ? 'true' : 'false',
                     onClick: () => setKind(entry.id),
                   },
-                  h('span', { className: 'pp-note-kind-icon' }, entry.icon),
+                  h('span', { className: 'pp-note-kind-icon', 'aria-hidden': true }, icon(entry.icon)),
                   translate(entry.label),
                 )),
               ),
@@ -7896,59 +7904,6 @@ window.__ModuleLoader__.load({
      * workspace); the caller keeps the compose path: the composer panel inserts
      * directly, the sidebar page asks the panel over the bridge.
      */
-    /** Tiny stroke icons for the annotation row actions. */
-    function NoteActionIcon(props) {
-      const kind = props.kind;
-      const common = {
-        width: 14,
-        height: 14,
-        viewBox: '0 0 20 20',
-        fill: 'none',
-        stroke: 'currentColor',
-        strokeWidth: 1.6,
-        strokeLinecap: 'round',
-        strokeLinejoin: 'round',
-        'aria-hidden': true,
-        style: { display: 'block' },
-      };
-      if (kind === 'edit') {
-        return h('svg', common, h('path', { d: 'M4 16l.6-3.6 9-9a1.7 1.7 0 0 1 2.4 2.4l-9 9L4 16z' }));
-      }
-      if (kind === 'insert') {
-        return h(
-          'svg',
-          common,
-          h('path', { d: 'M3.6 12.4h12.8v3.4H3.6z' }),
-          h('path', { d: 'M10 3v6.4' }),
-          h('path', { d: 'M7.4 6.9 10 9.4l2.6-2.5' }),
-        );
-      }
-      if (kind === 'store') {
-        return h(
-          'svg',
-          common,
-          h('path', { d: 'M10 3v7' }),
-          h('path', { d: 'M7 7.2 10 10l3-2.8' }),
-          h('path', { d: 'M3.6 13.6v2.6h12.8v-2.6' }),
-        );
-      }
-      if (kind === 'locate') {
-        return h(
-          'svg',
-          common,
-          h('circle', { cx: 10, cy: 10, r: 4.6 }),
-          h('path', { d: 'M10 2.2v2.6M10 15.2v2.6M2.2 10h2.6M15.2 10h2.6' }),
-        );
-      }
-      return h(
-        'svg',
-        common,
-        h('path', { d: 'M4 6h12' }),
-        h('path', { d: 'M8 6V4h4v2' }),
-        h('path', { d: 'M6 6l.7 10h6.6L14 6' }),
-      );
-    }
-
     function NotesView(props) {
       useLocaleTick();
       const list = Array.isArray(props.notes) ? props.notes : [];
@@ -8171,7 +8126,7 @@ window.__ModuleLoader__.load({
                   'div',
                   { className: 'pp-notes-quote', title: note.quote },
                   h(TypeMark, {
-                    icon: meta.icon,
+                    name: meta.icon,
                     title: translate(meta.label),
                   }),
                   h('span', { className: 'pp-notes-quote-text' }, noteQuoteText(note.quote)),
@@ -8881,8 +8836,8 @@ window.__ModuleLoader__.load({
                         },
                         h(
                           'span',
-                          { key: 'icon', className: 'pp-selkind-icon', style: { color: `rgb(${kind.ink})` }, 'aria-hidden': true },
-                          kind.icon,
+                          { key: 'icon', className: 'pp-selkind-icon', 'aria-hidden': true },
+                          icon(kind.icon),
                         ),
                         h('span', { key: 'name', className: 'pp-selname' }, translate(kind.label)),
                       )),
@@ -9847,7 +9802,7 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'pp-panel-brand' },
-            h('span', { className: 'pp-panel-brand-mark', 'aria-hidden': true }, h(PromptPoolIcon, { size: 15 })),
+            h('span', { className: 'pp-panel-brand-mark', 'aria-hidden': true }, h(PromptPoolIcon, { size: 16 })),
             h('span', { className: 'pp-panel-brand-name' }, translate('panel.title')),
             h('span', { className: 'pp-grow' }),
             h(IconButton, {
@@ -10128,7 +10083,7 @@ window.__ModuleLoader__.load({
       '.pp-trigger-bar .pp-trigger:hover{background:color-mix(in srgb,var(--pp-accent) 12%,transparent)}' +
       '.pp-trigger-bar .pp-trigger[data-open="true"]{background:color-mix(in srgb,var(--pp-accent) 15%,transparent)}' +
       '.pp-trigger-action{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 6px;border:0;border-left:1px solid color-mix(in srgb,var(--pp-accent) 14%,var(--pp-line));border-radius:0;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;line-height:1;cursor:pointer;white-space:nowrap;transition:background .14s ease,color .14s ease}' +
-      '.pp-trigger-action > svg{width:11px;height:11px;flex:none;stroke-width:1.2;opacity:.86}' +
+      '.pp-trigger-action > svg{width:12px;height:12px;flex:none;opacity:.8}' +
       '.pp-trigger-action:hover:not([disabled]){background:color-mix(in srgb,var(--pp-accent) 7%,transparent);color:var(--pp-ink)}' +
       '.pp-trigger-action[data-open="true"]{background:color-mix(in srgb,var(--pp-accent) 10%,transparent);color:var(--pp-accent)}' +
       '.pp-trigger-action[data-open="true"] > svg{opacity:1}' +
@@ -10142,14 +10097,14 @@ window.__ModuleLoader__.load({
       '.pp-trigger-menu{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:min(224px,calc(100vw - 16px));max-height:320px;overflow:auto;padding:8px;border:1px solid var(--pp-line-2);border-radius:12px;background:var(--pp-surface);color:var(--pp-ink);box-shadow:0 16px 36px rgba(0,0,0,.17),0 2px 6px rgba(0,0,0,.06);font-size:12px}' +
       '.pp-trigger-menu-title{padding:5px 9px 8px;margin:0 2px 4px;border-bottom:1px solid color-mix(in srgb,var(--pp-line) 82%,transparent);color:var(--pp-ink-2);font-size:11px;font-weight:600;line-height:1.4}' +
       '.pp-trigger-chevron{display:inline-flex;align-items:center;margin-left:-1px;opacity:.55}' +
-      '.pp-trigger-chevron svg{width:10px;height:10px}' +
+      '.pp-trigger-chevron svg{width:12px;height:12px}' +
       '.pp-trigger-menu-item{display:flex;align-items:center;gap:7px;width:100%;min-height:32px;box-sizing:border-box;padding:3px 7px;border:0;border-radius:8px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;transition:background .14s ease,color .14s ease}' +
       '.pp-trigger-menu-item:hover:not([disabled]),.pp-trigger-menu-item:focus-visible:not([disabled]){background:var(--pp-accent-soft);color:var(--pp-accent)}' +
       '.pp-trigger-menu-item:focus-visible{outline:2px solid var(--pp-accent-line);outline-offset:-2px}' +
       '.pp-trigger-menu-item:hover .pp-trigger-menu-mark,.pp-trigger-menu-item:focus-visible .pp-trigger-menu-mark{background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent)}' +
       '.pp-trigger-menu-item[disabled]{opacity:.45;cursor:not-allowed}' +
       '.pp-trigger-menu-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;height:20px;border-radius:6px;background:color-mix(in srgb,var(--pp-accent) 7%,transparent);color:var(--pp-ink-2);transition:background .14s ease,color .14s ease}' +
-      '.pp-trigger-menu-mark svg{width:12px;height:12px;stroke-width:1.2}' +
+      '.pp-trigger-menu-mark svg{width:14px;height:14px}' +
       '.pp-trigger-menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-trigger-menu-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent);font-size:10px;font-weight:600;line-height:18px;font-variant-numeric:tabular-nums;text-align:center}' +
       '.pp-trigger-notice{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;max-width:min(300px,calc(100vw - 16px));padding:6px 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface-2);color:var(--pp-ink-2);box-shadow:0 8px 24px rgba(0,0,0,.16);font-size:11px;line-height:1.4;pointer-events:none}' +
@@ -10194,7 +10149,7 @@ window.__ModuleLoader__.load({
       // same focus ring, so the scope underlines, the segmented group control
       // and the settings underlines read as one family.
       '.pp-tab{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;padding:0 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer;transition:background .13s ease,color .13s ease,border-color .13s ease,box-shadow .13s ease}' +
-      '.pp-tab-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex:none}' +
+      '.pp-tab-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex:none}.pp-tab-icon svg{width:14px;height:14px}' +
       '.pp-tab:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-tab:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
       '.pp-tab-count{margin-left:0;padding:0 5px;min-width:16px;justify-content:center;border-radius:999px;background:color-mix(in srgb,currentColor 10%,transparent);color:inherit;font-size:10px;font-weight:600;line-height:16px;height:16px;display:inline-flex;align-items:center;font-variant-numeric:tabular-nums}' +
@@ -10266,7 +10221,7 @@ window.__ModuleLoader__.load({
       '.pp-help-col{display:flex;flex-direction:column;gap:6px;padding:10px 11px;border:1px solid var(--pp-line);border-radius:10px;background:color-mix(in srgb,var(--pp-surface) 65%,transparent)}' +
       '.pp-help-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-help-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:none;border-radius:6px;background:color-mix(in srgb,var(--pp-accent) 9%,transparent);color:var(--pp-accent)}' +
-      '.pp-help-icon svg{width:13px;height:13px;stroke-width:1.6}' +
+      '.pp-help-icon svg{width:14px;height:14px}' +
       '.pp-help-body{font-size:11.5px;line-height:1.6;color:var(--pp-ink-2)}' +
       '.pp-help-card .pp-modal-actions{margin-top:2px}' +
       // The page header carries the two-mode switch on the left and the contextual
@@ -10292,7 +10247,7 @@ window.__ModuleLoader__.load({
       '.pp-row-insert{display:inline-flex;align-items:center;gap:4px;height:24px;flex:none;padding:0 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-accent);font:inherit;font-size:11.5px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer}' +
       '.pp-row-insert:hover{background:color-mix(in srgb,var(--pp-accent) 9%,transparent)}' +
       '.pp-row-insert:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
-      '.pp-row-insert svg{width:13px;height:13px;stroke-width:1.5}' +
+      '.pp-row-insert svg{width:14px;height:14px}' +
       '.pp-menu-host{position:relative;display:inline-flex;flex:none}' +
       '.pp-menu{position:fixed;z-index:80;box-sizing:border-box;padding:4px;border:1px solid var(--pp-line);border-radius:10px;background:var(--pp-surface-2);box-shadow:0 12px 32px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);color:var(--pp-ink)}' +
       '.pp-menu-item{display:flex;align-items:center;gap:8px;width:100%;height:30px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer;white-space:nowrap}' +
@@ -10300,21 +10255,21 @@ window.__ModuleLoader__.load({
       '.pp-menu-item[data-danger="true"]{color:var(--pp-danger)}' +
       '.pp-menu-item[data-danger="true"]:hover,.pp-menu-item[data-danger="true"]:focus-visible{background:var(--pp-danger-soft)}' +
       '.pp-menu-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:none;color:currentColor}' +
-      '.pp-menu-icon svg{width:15px;height:15px;stroke-width:1.5}' +
+      '.pp-menu-icon svg{width:14px;height:14px}' +
       // Settings is a destination, not a dialog tab strip: it gets an explicit
       // way back to the pool and two sections only.
       '.pp-set-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}' +
       '.pp-set-back{display:inline-flex;align-items:center;gap:4px;height:26px;flex:none;margin-top:-2px;padding:0 8px;border:1px solid var(--pp-line);border-radius:7px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11.5px;cursor:pointer}' +
       '.pp-set-back:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-set-back:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
-      '.pp-set-back svg{width:14px;height:14px;stroke-width:1.5}' +
+      '.pp-set-back svg{width:14px;height:14px}' +
       '.pp-set-heading{flex:1;min-width:0}' +
       // The reading column is capped at 760px and centered; the scrollbar stays
       // at the panel edge, so wide hosts do not push rows against a wall.
       '.pp-page .pp-page-foot{width:min(760px,calc(100% - 20px));margin-left:auto;margin-right:auto;box-shadow:none}' +
       '.pp-page-item{min-height:44px;box-sizing:border-box;padding:5px 8px;border-radius:8px}' +
       '.pp-title{font-size:13px;font-weight:600;line-height:1.35}' +
-      '.pp-icon svg,.pp-row-action svg{width:16px;height:16px;stroke-width:1.5}' +
+      '.pp-icon svg,.pp-row-action svg{width:16px;height:16px}' +
       '.pp-set-intro{white-space:pre-line}' +
       '.pp-set-radios{display:flex;flex-direction:column;gap:4px;padding:2px 0 4px}' +
       '.pp-set-radio-row{display:flex;align-items:center;gap:10px}' +
@@ -10350,7 +10305,7 @@ window.__ModuleLoader__.load({
       '.pp-set-btn{display:inline-flex;align-items:center;gap:5px;padding:0 9px}' +
       '.pp-set-btn[data-active="true"]{border-color:var(--pp-accent);color:var(--pp-accent)}' +
       '.pp-set-btn-icon{display:inline-flex;align-items:center}' +
-      '.pp-btn-icon{display:inline-flex;align-items:center;flex:none}' +
+      '.pp-btn-icon{display:inline-flex;align-items:center;flex:none}.pp-btn-icon svg{width:14px;height:14px}' +
       '.pp-list{overflow-y:auto;padding:6px max(8px,calc((100% - 760px) / 2)) 20px;flex:1;min-height:0}' +
       '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
       '.pp-page-head{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 12px 6px;border-bottom:1px solid var(--pp-line);flex-wrap:nowrap}' +
@@ -10447,7 +10402,7 @@ window.__ModuleLoader__.load({
       '.pp-queue-toggle:hover{background:color-mix(in srgb,var(--pp-accent) 10%,transparent);color:var(--pp-accent)}' +
       '.pp-queue-toggle:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
       '.pp-queue-toggle-icon{display:inline-flex;align-items:center}' +
-      '.pp-queue-toggle svg{width:13px;height:13px;stroke-width:1.2}' +
+      '.pp-queue-toggle svg{width:14px;height:14px}' +
       '.pp-queue-strip{display:flex;align-items:center;gap:6px;height:36px;flex:none;margin:0 10px 10px;padding:0 6px 0 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-queue-head-bg);font:inherit;font-size:12px;color:var(--pp-ink-2)}' +
       '.pp-queue-open{display:flex;align-items:center;gap:7px;flex:1;min-width:0;height:100%;padding:0;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;font-size:12px;text-align:left;cursor:pointer}' +
       '.pp-queue-open:hover .pp-queue-strip-title{color:var(--pp-accent)}' +
@@ -10457,7 +10412,7 @@ window.__ModuleLoader__.load({
       '.pp-queue-strip-action{display:inline-flex;align-items:center;gap:3px;flex:none;font-size:11px;color:var(--pp-ink-2)}' +
       '.pp-queue-strip .pp-hint{font-size:11px;color:var(--pp-ink-2);margin-left:2px}' +
       '.pp-queue-send{flex:none;height:24px;padding:0 10px;border-radius:6px;font-size:11px}' +
-      '.pp-queue-strip svg{width:13px;height:13px;stroke-width:1.2}' +
+      '.pp-queue-strip svg{width:14px;height:14px}' +
       // The tray and the reading column share the same 760px measure, independent of
       // which dock wrapper the tray is rendered in.
       '.pp-queue-strip{width:min(760px,calc(100% - 20px));margin:0 auto 10px;box-sizing:border-box}' +
@@ -10490,9 +10445,7 @@ window.__ModuleLoader__.load({
       '.pp-row-action[data-danger="true"]:hover:not([disabled]){color:var(--pp-danger)}' +
       '.pp-row-actions{display:flex;align-items:center;gap:2px;flex:none}' +
       '.pp-row-leading{display:inline-flex;align-items:center;flex:none;min-width:20px}' +
-      '.pp-type-mark{flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:4px;font-size:9.5px;line-height:1;font-weight:600}' +
-      '.pp-type-mark-empty{border:1px dashed var(--pp-line);background:transparent;color:var(--pp-ink-2);font-weight:400}' +
-      '.pp-type-empty{border-color:var(--pp-line);background:transparent;color:var(--pp-ink-2);font-weight:400}' +
+      '.pp-type-mark{flex:none;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:5px;background:color-mix(in srgb,var(--pp-ink) 5%,transparent);color:var(--pp-ink-2)}.pp-type-mark svg{width:12px;height:12px;stroke-width:2.1}' +
       '.pp-edit{padding:8px;border-radius:8px;background:var(--pp-surface);border:1px solid var(--pp-line);display:flex;flex-direction:column;gap:6px}' +
       '.pp-input,.pp-textarea{width:100%;box-sizing:border-box;border:1px solid var(--pp-line);border-radius:6px;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font:inherit;font-size:12px;padding:5px 7px;outline:none;resize:vertical}' +
       '.pp-input:focus,.pp-textarea:focus{border-color:var(--pp-accent)}' +
@@ -10511,7 +10464,7 @@ window.__ModuleLoader__.load({
       '.pp-images-compact .pp-image{width:32px;height:32px}' +
       '.pp-image img{width:100%;height:100%;object-fit:cover;display:block}' +
       '.pp-image-empty{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--pp-ink-2)}' +
-      '.pp-image-empty svg{width:16px;height:16px}' +
+      '.pp-image-empty svg{width:20px;height:20px}' +
       '.pp-image-x{position:absolute;top:1px;right:1px;width:15px;height:15px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font:inherit;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}' +
       '.pp-image-x:hover{background:var(--pp-danger)}' +
       '.pp-image-more{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 4px;border-radius:6px;border:1px dashed var(--pp-line-2);color:var(--pp-ink-2);font-size:11px}' +
@@ -10537,7 +10490,7 @@ window.__ModuleLoader__.load({
       '.pp-foot-title{font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:0;border-radius:7px;background:transparent;color:var(--pp-ink-2);font:inherit;cursor:pointer;flex:none}' +
       '.pp-icon-btn:hover{background:color-mix(in srgb,var(--pp-danger) 10%,transparent);color:var(--pp-danger)}' +
-      '.pp-icon-btn svg{width:13px;height:13px;stroke-width:1.15}' +
+      '.pp-icon-btn svg{width:16px;height:16px}' +
       '.pp-mode{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:8px;background:color-mix(in srgb,var(--pp-ink) 6%,transparent);flex:none}' +
       '.pp-mode button{height:22px;padding:0 9px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;line-height:1;cursor:pointer;white-space:nowrap}' +
       '.pp-mode button[data-active="true"]{background:var(--pp-surface-2);color:var(--pp-ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.07)}' +
@@ -10546,15 +10499,15 @@ window.__ModuleLoader__.load({
       '.pp-foot .pp-tray{max-height:min(40vh,220px)}' +
       '.pp-chip{display:flex;align-items:flex-start;gap:6px;padding:5px 7px;border-radius:8px;border:1px solid var(--pp-line);background:transparent;min-width:0;transition:background-color .12s ease,border-color .12s ease}' +
       '.pp-chip:hover,.pp-chip:focus-within{background:color-mix(in srgb,var(--pp-accent) 9%,transparent);border-color:color-mix(in srgb,var(--pp-accent) 40%,var(--pp-line))}' +
-      '.pp-chip-actions{display:flex;gap:2px;flex:none;align-self:flex-start;opacity:.3;transition:opacity .12s ease}' +
+      '.pp-chip-actions{display:flex;gap:2px;flex:none;align-self:flex-start;opacity:.45;transition:opacity .12s ease}' +
       '.pp-chip:hover .pp-chip-actions,.pp-chip:focus-within .pp-chip-actions{opacity:1}' +
       '@media (hover:none){.pp-chip-actions{opacity:1}}' +
       '.pp-chip-n{flex:none;padding-top:1px;font-size:11px;line-height:1.55;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
       '.pp-chip-source{flex:none;align-self:flex-start;display:inline-flex;align-items:center;gap:3px;margin-top:2px;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--pp-ink-2) 10%,transparent);color:var(--pp-ink-2);font-size:9.5px;line-height:15px}' +
-      '.pp-chip-source-icon{display:inline-flex;align-items:center}.pp-chip-source-icon svg{width:11px;height:11px}' +
+      '.pp-chip-source-icon{display:inline-flex;align-items:center}.pp-chip-source-icon svg{width:12px;height:12px}' +
       '.pp-chip-t{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:12px;line-height:1.55;color:var(--pp-ink);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}' +
       '.pp-chip .pp-icon{width:22px;height:22px}' +
-      '.pp-actions .pp-icon svg,.pp-chip-actions .pp-icon svg{width:13px;height:13px;stroke-width:1.2}' +
+      '.pp-actions .pp-icon svg,.pp-chip-actions .pp-icon svg{width:14px;height:14px}' +
       '.pp-hint{color:var(--pp-ink-2);font-size:11px}' +
       '.pp-status{padding:0 12px 8px;font-size:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}' +
       '.pp-status[data-kind="error"]{color:var(--pp-danger)}' +
@@ -10592,7 +10545,7 @@ window.__ModuleLoader__.load({
       '.pp-selrow:focus-visible{outline:2px solid var(--pp-accent);outline-offset:-2px}' +
       '.pp-selname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '.pp-selchev{flex:none;color:var(--pp-ink-2);font-size:11px}' +
-      '.pp-selkind-icon{flex:none;width:16px;text-align:center;font-size:12px;line-height:1}' +
+      '.pp-selkind-icon{flex:none;display:inline-flex;align-items:center;justify-content:center;width:16px;color:rgb(158,110,26)}.pp-selkind-icon svg{width:14px;height:14px}' +
       '.pp-selkey{flex:none;color:var(--pp-ink-2);font-size:11px}' +
       '.pp-selcount{flex:none;color:var(--pp-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +
       '.pp-sellast{flex:none;padding:0 5px;border-radius:5px;background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px;line-height:16px}' +
@@ -10618,7 +10571,7 @@ window.__ModuleLoader__.load({
       '::highlight(prompt-pool-note-todo){text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
       '.pp-note-layer{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);--pp-inline-tint:217,164,65;--pp-inline-ink:158,110,26;position:fixed;inset:0;z-index:2147482000;pointer-events:none}' +
       '.pp-note-bubble{position:fixed;z-index:1;display:flex;flex-direction:column;gap:8px;width:310px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;padding:11px;border:1px solid var(--pp-note-line);border-radius:12px;background:var(--pp-note-surface);box-shadow:0 18px 48px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left;pointer-events:auto}' +
-      '.pp-note-bubble-quote{box-sizing:border-box;padding:6px 8px;border-radius:8px;background:rgba(var(--pp-bubble-tint),.10);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.pp-note-bubble-quote-icon{margin-right:4px;color:rgb(var(--pp-bubble-ink,var(--pp-bubble-tint)))}' +
+      '.pp-note-bubble-quote{box-sizing:border-box;padding:6px 8px;border-radius:8px;background:rgba(var(--pp-bubble-tint),.10);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.pp-note-bubble-quote-icon{display:inline-flex;align-items:center;vertical-align:-2px;margin-right:4px;color:rgb(var(--pp-bubble-ink,var(--pp-bubble-tint)))}.pp-note-bubble-quote-icon svg{width:12px;height:12px;stroke-width:2.1}' +
       '.pp-note-bubble-hint{color:var(--pp-note-danger);font-size:11px}' +
       
       '.pp-note-input{width:100%;box-sizing:border-box;min-height:48px;max-height:120px;padding:6px 8px;border:1px solid var(--pp-note-line);border-radius:8px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent);color:inherit;font:inherit;font-size:12px;line-height:1.5;resize:none;outline:none}' +
@@ -10659,7 +10612,7 @@ window.__ModuleLoader__.load({
       '.pp-notes-quote-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-notes-empty{padding:14px 12px;color:var(--pp-note-ink-2);font-size:12px;line-height:1.6}' +
       '.pp-notes-empty .pp-empty-mark{justify-content:flex-start;margin-bottom:4px;opacity:.5}' +
-      '.pp-notes-empty .pp-empty-mark svg{width:16px;height:16px}' +
+      '.pp-notes-empty .pp-empty-mark svg{width:20px;height:20px}' +
       '.pp-page-foot.pp-review-foot{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-inline-tint:217,164,65;--pp-inline-ink:158,110,26;padding:0;gap:0;border-color:var(--pp-line-2);background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
       '.pp-page-foot.pp-merge-foot{--pp-note-accent:var(--pp-accent)}' +
       '.pp-page-foot.pp-merge-foot .pp-notes{--pp-note-accent:var(--pp-accent)}' +
@@ -10672,11 +10625,11 @@ window.__ModuleLoader__.load({
       '.pp-review-headline strong{font-size:13px;font-weight:600;line-height:1.25;white-space:nowrap}' +
       '.pp-review-batch{color:var(--pp-note-ink-2);font-size:9.5px;letter-spacing:.02em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-review-close{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}' +
-      '.pp-review-close svg{width:13px;height:13px}' +
+      '.pp-review-close svg{width:14px;height:14px}' +
       '.pp-review-toggle{margin-left:-4px}' +
       '.pp-review-process{flex:none;height:24px;padding:0 9px;border-radius:7px;font-size:11px;line-height:1}' +
       '.pp-review-close:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}' +
-      '.pp-review-mark{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;flex:none;border-radius:8px;background:color-mix(in srgb,var(--pp-note-accent) 13%,transparent);color:var(--pp-note-accent)}' +
+      '.pp-review-mark{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;flex:none;border-radius:8px;background:color-mix(in srgb,var(--pp-note-accent) 13%,transparent);color:var(--pp-note-accent)}.pp-review-mark svg{width:14px;height:14px}' +
       '.pp-review-steps{display:flex;align-items:center;gap:7px;padding:0 12px 6px}' +
       '.pp-review-step{display:inline-flex;align-items:center;gap:5px;color:var(--pp-note-ink-2);font-size:10.5px;line-height:1;opacity:.72}' +
       '.pp-review-step[data-active="true"]{color:var(--pp-note-accent);opacity:1;font-weight:600}' +
@@ -10695,7 +10648,6 @@ window.__ModuleLoader__.load({
       '.pp-review-group-count{margin-left:auto;min-width:17px;height:17px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--pp-note-ink) 6%,transparent);color:var(--pp-note-ink-2);font-size:9.5px;line-height:17px;text-align:center;font-variant-numeric:tabular-nums}' +
       '.pp-review-row{display:flex;align-items:flex-start;gap:7px;padding:6px 8px;border:1px solid var(--pp-line);border-radius:8px;background:transparent;transition:background-color .12s ease,border-color .12s ease}' +
       '.pp-review-row:hover{background:color-mix(in srgb,var(--pp-accent) 6%,transparent);border-color:color-mix(in srgb,var(--pp-accent) 40%,var(--pp-line))}' +
-      '.pp-review-row .pp-notes-kind{width:22px;height:22px;margin-right:0;border-radius:7px;background:color-mix(in srgb,rgb(var(--pp-inline-tint)) 18%,transparent);border:1px solid color-mix(in srgb,rgb(var(--pp-inline-ink)) 24%,transparent);font-size:12px}' +
       '.pp-review-row .pp-note-check{width:14px;height:14px;margin-top:4px;accent-color:var(--pp-note-accent)}' +
       '.pp-review-main{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}' +
       '.pp-review-quote{color:var(--pp-note-ink-2);font-size:11px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
@@ -10785,17 +10737,16 @@ window.__ModuleLoader__.load({
       '.pp-note-save-hint{color:var(--pp-note-ink-2);font-size:10.5px;line-height:1.45}' +
       '.pp-note-save-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:2px}' +
       '.pp-notes-row[data-promoted="true"]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary,#2f9e63) 35%,var(--pp-note-line))}' +
-      '.pp-notes-kind{flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-right:4px;border-radius:4px;background:rgba(var(--pp-inline-tint),.26);color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)));font-size:10px;line-height:1}' +
       // Type chips share one neutral capsule; the selected one takes the amber
       // wash, so kind is read from the icon and label instead of hue.
       '.pp-note-inline{box-sizing:border-box;display:inline-flex;align-items:center;gap:.25em;height:auto;max-width:100%;margin:0 .12em 0 .32em;padding:.02em .36em;border:1px dashed rgba(var(--pp-inline-ink,var(--pp-inline-tint)),.9);border-radius:5px;background:rgba(var(--pp-inline-tint),.28);color:inherit;font:inherit;font-family:var(--dsw-font-family,inherit);font-size:var(--dsh-content-font-size,14px);font-style:normal;font-weight:400;line-height:1.32;vertical-align:middle;white-space:normal;user-select:none;-webkit-user-select:none;cursor:pointer}' +
-      '.pp-note-inline-icon{flex:none;font-size:.95em;line-height:1;color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)))}' +
+      '.pp-note-inline-icon{flex:none;display:inline-flex;align-items:center;color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)))}.pp-note-inline-icon svg{width:12px;height:12px;stroke-width:2.1}' +
       '.pp-note-inline-text{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:inherit}' +
       '.pp-note-inline:hover{border-color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)));background:rgba(var(--pp-inline-tint),.4)}' +
       '.pp-note-kinds{display:flex;flex-wrap:wrap;gap:2px;margin:0}' +
       '.pp-note-kind{display:inline-flex;align-items:center;gap:3px;height:20px;padding:0 5px;border:1px solid var(--pp-note-line);border-radius:999px;background:transparent;color:var(--pp-note-ink-2);font:inherit;font-size:10.5px;cursor:pointer}' +
       '.pp-note-kind[data-active="true"]{border-color:rgba(var(--pp-inline-ink,var(--pp-inline-tint)),.9);color:var(--pp-note-ink);background:rgba(var(--pp-inline-tint),.24)}' +
-      '.pp-note-kind-icon{font-size:10px;line-height:1;color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)))}' +
+      '.pp-note-kind-icon{display:inline-flex;align-items:center;color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)))}.pp-note-kind-icon svg{width:12px;height:12px;stroke-width:2.1}' +
       '.pp-note-limit{color:var(--pp-note-ink-2);font-size:10px;font-variant-numeric:tabular-nums}' +
       '.pp-note-limit-count{font-variant-numeric:tabular-nums}' +
       '.pp-note-prompt{position:fixed;z-index:3;display:flex;flex-direction:column;gap:2px;width:210px;box-sizing:border-box;padding:5px;border:1px solid var(--pp-note-line);border-radius:10px;background:var(--pp-note-surface);box-shadow:0 14px 34px rgba(0,0,0,.2);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left;pointer-events:auto}' +
@@ -10963,7 +10914,7 @@ window.__ModuleLoader__.load({
             id: SIDEBAR_TAB_ID,
             title: () => translate('page.title'),
             description: () => translate('tab.description'),
-            icon: (size) => h(PromptPoolIcon, { size, active: false }),
+            icon: (size) => h(PromptPoolIcon, { size }),
             order: 80,
             single: true,
             component: (props) => h(PromptPoolPage, props),
