@@ -10136,7 +10136,7 @@ window.__ModuleLoader__.load({
       // The scope switcher is the page's primary navigation, so it reads as a
       // row of underlines: no fill and a wider column gap. A rounded rule slides
       // between the tabs instead of each tab carrying its own border.
-      '.pp-scope-bar{position:relative;gap:6px 16px;padding:8px 12px 12px}' +
+      '.pp-scope-bar{position:relative;gap:6px 20px;padding:8px 12px 12px}' +
       '.pp-scope-bar .pp-tab{height:28px;padding:0 1px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent}' +
       '.pp-scope-bar .pp-tab:hover{background:transparent;color:var(--pp-ink)}' +
       // Two destination themes: annotations underline in amber, prompts and the
@@ -10207,7 +10207,7 @@ window.__ModuleLoader__.load({
       // workspace caption or the shared pool's group tabs.
       '.pp-head-tools{display:flex;align-items:center;gap:6px;flex:1;min-width:0;justify-content:flex-end}' +
       '.pp-head-tools .pp-search{flex:0 1 220px;min-width:80px;width:auto}' +
-      '.pp-page-head .pp-scope-bar,.pp-panel-headline .pp-scope-bar{padding:0;gap:10px;min-width:0}' +
+      '.pp-page-head .pp-scope-bar,.pp-panel-headline .pp-scope-bar{padding:0;column-gap:20px;min-width:0}' +
       '.pp-page-head .pp-scope-bar .pp-tab,.pp-panel-headline .pp-scope-bar .pp-tab{height:30px}' +
       '.pp-new-prompt{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
       '.pp-menu-trigger{width:26px;height:26px;border-radius:7px}' +
