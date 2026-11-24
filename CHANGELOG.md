@@ -14,12 +14,15 @@ All notable changes to this project are documented here. The format follows
   **Current workspace** and **Global shared pool** with a quiet segmented control. The composer panel shows
   the same two modes and the workspace list only.
 - The annotation context line names the session and its count (`Current session · 5 annotations`) and
-  carries **Review annotations** on the right. Prompt mode adds the scope switch and the type filter on
-  the same row, so the mode switch is never mixed with filters or groups.
+  carries **Review annotations** on the right. On the page, prompt mode adds the scope switch and, when
+  no editor is open, the type filter on the same row; the composer panel keeps only the scope switch,
+  because its editor already owns the type control.
 - **Settings is a destination**, not a third tab row: it opens from the header menu, hides the browsing
   header, and offers two sections (**Annotations / Prompts**) with one back control. The global group
   order, seed reset, “All” switch and retention switches now live in the Prompts section; the separate
   Global settings tab was removed.
+- A new prompt stays a draft until **Save**: its temporary row is left out of the mode and group counts,
+  so the count reflects only stored prompts and changes after the save.
 - **Rows show one verb, one queue action and an overflow menu.** Prompt rows are **Insert · + · ⋯**
   (edit / duplicate / delete); annotation rows keep **Locate** on the left and are **Insert · ⋯**
   (save as prompt / delete). The old five-icon strip is gone, every destructive action still asks first,
@@ -34,19 +37,19 @@ All notable changes to this project are documented here. The format follows
   coloured focal points.
 - The page and panel headers were rebuilt: mode switch on the left, search / primary action / overflow
   and help on the right. **Save current input** moved into the overflow menu and appears as a normal
-  action only when it applies; the type filter moved next to the prompt scope. The panel dropped its
-  duplicated title/slogan row and accent gradient.
+  action only when it applies; the type filter moved next to the prompt scope on the page. The panel
+  dropped its duplicated title/slogan row and accent gradient.
 - The reading column is capped at **760px** and centered (rows, list, queue) while the scrollbar stays at
   the edge. Rows use a 44px minimum height, a 13px/600 title, 12px body and 16px/1.5px line icons;
   settings cards lost their drop shadows.
 - Empty states and verbs now describe the model directly: annotations explain right-click **Annotate**,
-  prompts explain insert and queue, and the send queue is consistently called **Send tray** (待发送)
+  prompts explain insert and queue, and the send queue is consistently called **Send queue** (待发送队列)
   instead of Outbox in the UI.
 
 ### Added
 
 - A **How it works** entry (question-mark button in the header) with a two-column card explaining
-  annotations, prompts and the shared tray. It is a reference, not an automatic tour.
+  annotations, prompts and the shared queue. It is a reference, not an automatic tour.
 - The annotation context line exposes **Review annotations** only when the session has annotations, and
   both mode tabs carry live counts.
 

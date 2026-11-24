@@ -122,8 +122,6 @@ window.__ModuleLoader__.load({
       'page.more': '更多',
       'page.contextNotes': '当前会话',
       'page.contextCount': '{n} 条批注',
-      'page.contextPrompts': '当前工作区',
-      'page.contextPromptCount': '{n} 条提示词',
       'page.reviewNotes': '整理批注',
       'help.open': '使用说明',
       'help.title': '提示池怎么用',
@@ -446,8 +444,6 @@ window.__ModuleLoader__.load({
       'page.more': 'More',
       'page.contextNotes': 'Current session',
       'page.contextCount': '{n} annotation(s)',
-      'page.contextPrompts': 'Current workspace',
-      'page.contextPromptCount': '{n} prompt(s)',
       'page.reviewNotes': 'Review annotations',
       'help.open': 'How it works',
       'help.title': 'How the prompt pool works',
@@ -2186,6 +2182,16 @@ window.__ModuleLoader__.load({
         if (family) counts['nested:' + family] = (counts['nested:' + family] || 0) + 1;
       }
       return counts;
+    }
+
+    /**
+     * A new row exists in the store as soon as its editor opens, so it can be
+     * patched on save. Tab counts must ignore it until that save happens.
+     */
+    function countPoolItems(items, editing) {
+      const list = Array.isArray(items) ? items : [];
+      if (!editing || editing.isNew !== true) return list;
+      return list.filter((item) => item.id !== editing.id);
     }
 
     /** Destinations offered when a captured draft is saved: the groups on show. */
@@ -4618,10 +4624,6 @@ window.__ModuleLoader__.load({
       const globalTabs = tabs.filter((entry) => entry.id === 'all' || entry.group === 'builtin' || entry.group === 'custom');
       const workspaceGroup = currentWorkspaceId ? 'workspace:' + currentWorkspaceId : '';
       const captureGroups = captureChoices(state.categories, workspaceList, currentWorkspaceId, state.settings);
-      const tabCounts = tabCountsOf(state.items.filter((item) => {
-        const family = familyOf(groupOf(item));
-        return family === 'builtin' || family === 'custom';
-      }));
       const [tab, setPageTab] = useState(() => {
         const stored = pageTabState.get().id;
         return stored && tabs.some((entry) => entry.id === stored) ? stored : fallbackTabFor(tabs);
@@ -4664,6 +4666,11 @@ window.__ModuleLoader__.load({
       useEffect(() => () => window.clearTimeout(statusTimer.current), []);
       const { editing, setEditing, startEdit, save, cancelEdit, pasteImages } = usePoolEditor(flash);
       const { trayEditing, setTrayEditing, saveTrayEdit, pasteTrayImages } = useTrayEditor(flash);
+      const countedItems = countPoolItems(state.items, editing);
+      const tabCounts = tabCountsOf(countedItems.filter((item) => {
+        const family = familyOf(groupOf(item));
+        return family === 'builtin' || family === 'custom';
+      }));
       // A stored tab can point at a group that was hidden or deleted since.
       useEffect(() => {
         if (tabs.some((entry) => entry.id === tab)) return;
@@ -5061,6 +5068,9 @@ window.__ModuleLoader__.load({
 
       /** The active scope decides the new item's classification. */
       const create = () => {
+        // One editor at a time: a second draft would leave the first one
+        // unsaved and counted again.
+        if (editing) return;
         if (scope === 'workspace' && !workspaceGroup) {
           flash({ kind: 'error', text: translate('status.noWorkspace') });
           return;
@@ -5069,6 +5079,7 @@ window.__ModuleLoader__.load({
           ? workspaceGroup
           : groupForTab(activeGlobalTab, '');
         setQuery('');
+        setTypeFilter('all');
         const item = poolActions.add({
           id: uid(),
           group,
@@ -5079,7 +5090,7 @@ window.__ModuleLoader__.load({
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '', images: [], type: '' });
+        setEditing({ id: item.id, group, title: '', body: '', images: [], type: '', isNew: true });
       };
 
       const rowOf = (item, index) => renderPoolRow({
@@ -5122,7 +5133,7 @@ window.__ModuleLoader__.load({
           { className: 'pp-page-head' },
           h(ScopeBar, {
             value: activeMode,
-            counts: { notes: notesList.length, prompts: state.items.length },
+            counts: { notes: notesList.length, prompts: countedItems.length },
             onChange: switchMode,
           }),
           h(
@@ -5183,18 +5194,22 @@ window.__ModuleLoader__.load({
               { className: 'pp-prompt-bar' },
               h(PromptScopeBar, { value: scope, onChange: changePromptScope }),
               h('span', { className: 'pp-grow' }),
-              h(
-                'select',
-                {
-                  className: 'pp-input pp-type-filter',
-                  value: typeFilter,
-                  'aria-label': translate('row.type'),
-                  onChange: (event) => setTypeFilter(event.target.value),
-                },
-                h('option', { value: 'all' }, translate('row.allTypes')),
-                h('option', { value: 'none' }, translate('row.typeNone')),
-                PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
-              ),
+              // The editor carries its own type control; a second copy beside
+              // it would compete for the same decision.
+              editing
+                ? null
+                : h(
+                    'select',
+                    {
+                      className: 'pp-input pp-type-filter',
+                      value: typeFilter,
+                      'aria-label': translate('row.type'),
+                      onChange: (event) => setTypeFilter(event.target.value),
+                    },
+                    h('option', { value: 'all' }, translate('row.allTypes')),
+                    h('option', { value: 'none' }, translate('row.typeNone')),
+                    PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
+                  ),
             ),
         scope === 'global'
           ? h(
@@ -8959,7 +8974,6 @@ window.__ModuleLoader__.load({
         ...buildTabs(state.categories, workspaces.items, state.settings, currentWorkspaceId),
       ]));
       const [query, setQuery] = useState('');
-      const [typeFilter, setTypeFilter] = useState('all');
       const [scope, setScope] = useState(() => (
         props && (props.initialScope === 'global' || props.initialScope === 'workspace') ? props.initialScope : 'notes'
       ));
@@ -9149,14 +9163,11 @@ window.__ModuleLoader__.load({
 
       const items = useMemo(() => {
         if (scope === 'notes') return [];
-        const matchesType = (item) => typeFilter === 'all'
-          || (typeFilter === 'none' ? !normalizePromptType(item.type) : normalizePromptType(item.type) === typeFilter);
         const scoped = state.items.filter((item) => groupOf(item) === workspaceGroup);
-        const typed = scoped.filter(matchesType);
         const needle = query.trim().toLowerCase();
-        if (!needle) return typed;
-        return typed.filter((item) => (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0);
-      }, [state.items, scope, workspaceGroup, query, typeFilter]);
+        if (!needle) return scoped;
+        return scoped.filter((item) => (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0);
+      }, [state.items, scope, workspaceGroup, query]);
 
       const actions = props.inputActions;
       const canAct = actions && typeof actions.setDraft === 'function';
@@ -9288,6 +9299,8 @@ window.__ModuleLoader__.load({
       };
 
       const newItem = () => {
+        // One editor at a time, same reason as the page's create().
+        if (editing) return;
         if (!workspaceGroup) {
           flash({ kind: 'error', text: translate('status.noWorkspace') });
           return;
@@ -9304,7 +9317,7 @@ window.__ModuleLoader__.load({
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '', images: [], type: '' });
+        setEditing({ id: item.id, group, title: '', body: '', images: [], type: '', isNew: true });
       };
 
       const deleteItem = (item, text) => {
@@ -9842,7 +9855,7 @@ window.__ModuleLoader__.load({
             { className: 'pp-panel-headline' },
             h(ScopeBar, {
               value: activeMode,
-              counts: { notes: notesList.length, prompts: state.items.filter((item) => groupOf(item) === workspaceGroup).length },
+              counts: { notes: notesList.length, prompts: countPoolItems(state.items, editing).filter((item) => groupOf(item) === workspaceGroup).length },
               onChange: switchMode,
             }),
             h('span', { className: 'pp-grow' }),
@@ -9916,30 +9929,7 @@ window.__ModuleLoader__.load({
                 ? h('button', { type: 'button', className: 'pp-link', onClick: openReview }, translate('page.reviewNotes'))
                 : null,
             )
-          : h(
-              'div',
-              { className: 'pp-prompt-bar' },
-              h(
-                'span',
-                { className: 'pp-note-context-text' },
-                translate('page.contextPrompts'),
-                h('span', { className: 'pp-context-sep', 'aria-hidden': true }, ' · '),
-                translate('page.contextPromptCount', { n: items.length }),
-              ),
-              h('span', { className: 'pp-grow' }),
-              h(
-                'select',
-                {
-                  className: 'pp-input pp-type-filter',
-                  value: typeFilter,
-                  'aria-label': translate('row.type'),
-                  onChange: (event) => setTypeFilter(event.target.value),
-                },
-                h('option', { value: 'all' }, translate('row.allTypes')),
-                h('option', { value: 'none' }, translate('row.typeNone')),
-                PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
-              ),
-            ),
+          : null,
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
         confirmClear && tray.length > 0
           ? h(TrayClearConfirm, {
@@ -10012,7 +10002,7 @@ window.__ModuleLoader__.load({
               : items.length === 0
                 ? h(EmptyState, {
                     iconName: 'prompt',
-                    text: translate(query.trim() || typeFilter !== 'all' ? 'panel.emptyTab' : 'panel.empty'),
+                    text: translate(query.trim() ? 'panel.emptyTab' : 'panel.empty'),
                   })
                 : items.map(rowOf),
         ),

@@ -140,6 +140,16 @@ const findNew = (tree) => nodes(tree, []).find(
 const findCancel = (tree) => nodes(tree, []).find(
   (node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('row.cancel') >= 0,
 );
+/** The mode tab's live count; null when the scope bar is missing. */
+const promptTabCount = (tree) => {
+  const bar = nodes(tree, []).find(
+    (node) => typeof node.type === 'function' && node.type.name === 'ScopeBar',
+  );
+  return bar && bar.props && bar.props.counts ? bar.props.counts.prompts : null;
+};
+const typeFilterCount = (tree) => nodes(tree, []).filter(
+  (node) => node.type === 'select' && String(node.props && node.props.className).indexOf('pp-type-filter') >= 0,
+).length;
 
 const panelProps = {
   sessionId: 's1',
@@ -330,6 +340,9 @@ for (const [slotName, props, label] of [
 
   // New then cancel must not leave an empty row; a search must not hide the new row.
   const beforeNew = itemCount();
+  const countBeforeNew = promptTabCount(tree);
+  const filtersBeforeNew = typeFilterCount(tree);
+  if (countBeforeNew === null) failures.push(`${label}: the prompts tab count was not found`);
   const search = findSearch(tree);
   if (search) {
     search.props.onChange({ target: { value: 'no-such-prompt' } });
@@ -343,12 +356,31 @@ for (const [slotName, props, label] of [
     const searchAfter = findSearch(tree);
     if (search && (!searchAfter || searchAfter.props.value !== '')) failures.push(`${label}: the search still hides the new row`);
     if (itemCount() !== beforeNew + 1) failures.push(`${label}: new did not add exactly one row`);
+    // The unsaved draft is a store row already; it must not inflate the mode
+    // count, and it must not add a second type selector beside the editor.
+    if (countBeforeNew !== null && promptTabCount(tree) !== countBeforeNew) {
+      failures.push(`${label}: the unsaved draft changed the tab count`);
+    }
+    if (typeFilterCount(tree) !== 0) failures.push(`${label}: the editor left ${typeFilterCount(tree)} type filter(s) on screen`);
+    // A second click while the editor is open must reuse that editor instead
+    // of leaving the first draft behind, uncounted.
+    const secondNew = findNew(tree);
+    if (secondNew) secondNew.props.onClick();
+    tree = render();
+    if (itemCount() !== beforeNew + 1) failures.push(`${label}: a second new left an extra draft behind`);
+    if (countBeforeNew !== null && promptTabCount(tree) !== countBeforeNew) {
+      failures.push(`${label}: a second new changed the tab count`);
+    }
     const cancel = findCancel(tree);
     if (!cancel) failures.push(`${label}: the editor's cancel button was not found`);
     else {
       cancel.props.onClick();
       tree = render();
       if (itemCount() !== beforeNew) failures.push(`${label}: cancel left ${itemCount() - beforeNew} empty row(s)`);
+      if (countBeforeNew !== null && promptTabCount(tree) !== countBeforeNew) {
+        failures.push(`${label}: cancel changed the tab count`);
+      }
+      if (typeFilterCount(tree) !== filtersBeforeNew) failures.push(`${label}: cancel did not restore the type filter`);
     }
   }
   if (failures.length === before) console.log(`[ok] ${label}: new then cancel leaves no empty row`);

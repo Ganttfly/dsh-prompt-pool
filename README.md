@@ -95,12 +95,13 @@ the conversation, so the agent gets a precise instruction and you do not lose th
 - **Prompt types** — each prompt has at most one fixed type: decision / question / opinion / idea /
   supplement / to-do / inspiration, or unclassified. Saving a note seeds it from the annotation kind
   (agree and disagree both map to decision); the type can be changed in the save step or the editor and
-  filtered from the list header. Templates, habits and notes are groups, not types.
-- **Composer panel** — search, the current workspace's prompt list, type filtering, per-row **Insert**,
+  filtered from the sidebar page's list header. Templates, habits and notes are groups, not types.
+- **Composer panel** — search, the current workspace's prompt list, per-row **Insert**,
   **+** and **⋯**, and the shared send queue with collapse, clear and send. Its two modes are
   **Annotations** (current session) and **Prompts** (current workspace); the panel never shows the global
-  shared pool. Drag its top edge to change the height, or its left edge to change the width; pin it to
-  keep it open over the conversation.
+  shared pool. The editor owns the prompt type, and a new prompt is not counted until it is saved. Drag
+  its top edge to change the height, or its left edge to change the width; pin it to keep it open over
+  the conversation.
 - **Sidebar page** — the full workbench over the same data: **Annotations**, and **Prompts** with
   **Current workspace / Global shared pool**, defaulting to annotations. Workspace prompts use the type
   filter; the global shared pool keeps the existing group tabs for the built-in and custom groups.
