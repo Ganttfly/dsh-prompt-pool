@@ -3744,8 +3744,8 @@ window.__ModuleLoader__.load({
     function PromptPoolIcon(props) {
       const size = typeof props.size === 'number' && props.size > 0 ? props.size : 18;
       const active = props.active === true;
-      // The saved-prompt bookmark stays readable at 12px; the spark is added only
-      // where it can keep its shape.
+      // Two offset prompt cards: the 01 direction from the icon study. At 12px
+      // the two cards alone read cleanly; the text lines would turn into noise.
       const micro = size <= 12;
       return h(
         'svg',
@@ -3755,7 +3755,7 @@ window.__ModuleLoader__.load({
           viewBox: '0 0 24 24',
           fill: 'none',
           stroke: 'currentColor',
-          strokeWidth: micro ? 2 : active ? 1.9 : 1.7,
+          strokeWidth: micro ? 2 : active ? 1.95 : 1.75,
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
           'aria-hidden': true,
@@ -3763,15 +3763,14 @@ window.__ModuleLoader__.load({
         },
         h('path', {
           d: micro
-            ? 'M7.2 3.4h8.6a1.7 1.7 0 0 1 1.7 1.7v15.1l-6-4.2-6 4.2V5.1a1.7 1.7 0 0 1 1.7-1.7z'
-            : 'M4.8 3.4h8.7a1.7 1.7 0 0 1 1.7 1.7v15.1l-6.05-4.25L3.1 20.2V5.1a1.7 1.7 0 0 1 1.7-1.7z',
-          fill: 'currentColor',
-          stroke: 'none',
+            ? 'M8.7 4.9h7.2a3.2 3.2 0 0 1 3.2 3.2v7.2'
+            : 'M8 4.5h8.2a3.3 3.3 0 0 1 3.3 3.3v8.2',
         }),
+        h('rect', micro
+          ? { x: 4, y: 8, width: 12.3, height: 12.3, rx: 2.3 }
+          : { x: 3.5, y: 7.5, width: 13, height: 13, rx: 2.4 }),
         micro ? null : h('path', {
-          d: 'M19.5 1.6L20.4 3.8L22.6 4.7L20.4 5.6L19.5 7.8L18.6 5.6L16.4 4.7L18.6 3.8Z',
-          fill: 'currentColor',
-          stroke: 'none',
+          d: 'M6.75 12h6.4M6.75 15.5h4.4',
         }),
       );
     }
