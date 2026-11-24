@@ -35,9 +35,9 @@ All notable changes to this project are documented here. The format follows
   annotation list and review card share that wash; the prompt row keeps its own type tints. Blue is
   reserved for primary actions, the active mode and the prompt scope, so a screen has at most two
   coloured focal points.
-- The prompt pool has a new **command-spark** mark: a `>` prompt, an underscore and a four-point spark replace
-  the three text lines in the composer trigger, sidebar tab, selection menu and tab icon. A tighter cut keeps
-  the mark legible at the 9–12px sizes used by the trigger and menu.
+- The prompt pool uses a **saved-prompt bookmark** mark: a bookmark and a four-point spark replace the three
+  text lines in the composer trigger, sidebar tab, selection menu and tab icon. The trigger mark is 16px, one
+  step above the 14px mode icons; queue source icons are 11px.
 - The page and panel headers were rebuilt: mode switch on the left, search / primary action / overflow
   and help on the right. **Save current input** moved into the overflow menu and appears as a normal
   action only when it applies; the type filter moved next to the prompt scope on the page. The panel

@@ -3533,7 +3533,7 @@ window.__ModuleLoader__.load({
                 ui.set({ open: !ui.get().open });
               },
             },
-            h('span', { className: 'pp-trigger-brand', 'aria-hidden': true }, h(PromptPoolIcon, { size: 10 })),
+            h('span', { className: 'pp-trigger-brand', 'aria-hidden': true }, h(PromptPoolIcon, { size: 16 })),
             h('span', { className: 'pp-trigger-label' }, label),
           ),
           h(
@@ -3744,7 +3744,8 @@ window.__ModuleLoader__.load({
     function PromptPoolIcon(props) {
       const size = typeof props.size === 'number' && props.size > 0 ? props.size : 18;
       const active = props.active === true;
-      // The command-spark mark has a tighter cut for the 9-12px trigger and menu.
+      // The saved-prompt bookmark stays readable at 12px; the spark is added only
+      // where it can keep its shape.
       const micro = size <= 12;
       return h(
         'svg',
@@ -3754,18 +3755,21 @@ window.__ModuleLoader__.load({
           viewBox: '0 0 24 24',
           fill: 'none',
           stroke: 'currentColor',
-          strokeWidth: micro ? 2.1 : active ? 1.9 : 1.7,
+          strokeWidth: micro ? 2 : active ? 1.9 : 1.7,
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
           'aria-hidden': true,
           style: { display: 'block' },
         },
-        h('path', { d: micro ? 'M4.5 7.1L8.6 12L4.5 16.9' : 'M4.2 6.8L9.2 12L4.2 17.2' }),
-        h('path', { d: micro ? 'M11.4 16.9H18.2' : 'M11.4 17.2H18.6' }),
         h('path', {
           d: micro
-            ? 'M18.1 2.3L19.0 4.5L21.2 5.4L19.0 6.3L18.1 8.5L17.2 6.3L15.0 5.4L17.2 4.5Z'
-            : 'M18.2 1.8L19.2 4.2L21.6 5.2L19.2 6.2L18.2 8.6L17.2 6.2L14.8 5.2L17.2 4.2Z',
+            ? 'M7.2 3.4h8.6a1.7 1.7 0 0 1 1.7 1.7v15.1l-6-4.2-6 4.2V5.1a1.7 1.7 0 0 1 1.7-1.7z'
+            : 'M4.8 3.4h8.7a1.7 1.7 0 0 1 1.7 1.7v15.1l-6.05-4.25L3.1 20.2V5.1a1.7 1.7 0 0 1 1.7-1.7z',
+          fill: 'currentColor',
+          stroke: 'none',
+        }),
+        micro ? null : h('path', {
+          d: 'M19.5 1.6L20.4 3.8L22.6 4.7L20.4 5.6L19.5 7.8L18.6 5.6L16.4 4.7L18.6 3.8Z',
           fill: 'currentColor',
           stroke: 'none',
         }),
@@ -10149,8 +10153,8 @@ window.__ModuleLoader__.load({
       '.pp-trigger-bar{display:inline-flex;align-items:center;height:28px;flex:none;border:1px solid color-mix(in srgb,var(--pp-accent) 20%,var(--pp-line));border-radius:9px;background:var(--pp-surface);box-shadow:0 1px 2px rgba(0,0,0,.05);overflow:hidden}' +
       '.pp-trigger-bar .pp-trigger{height:26px;border:0;border-radius:0;padding:0 7px;gap:4px;font-weight:600;color:var(--pp-accent);background:color-mix(in srgb,var(--pp-accent) 7%,transparent)}' +
       '.pp-trigger-label{display:none}' +
-      '.pp-trigger-brand{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:none;border-radius:4px;background:transparent;color:var(--pp-accent)}' +
-      '.pp-trigger-brand svg{width:9px;height:9px}' +
+      '.pp-trigger-brand{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:none;border-radius:4px;background:transparent;color:var(--pp-accent)}' +
+      '.pp-trigger-brand svg{width:16px;height:16px}' +
       '.pp-trigger-bar .pp-trigger:hover{background:color-mix(in srgb,var(--pp-accent) 12%,transparent)}' +
       '.pp-trigger-bar .pp-trigger[data-open="true"]{background:color-mix(in srgb,var(--pp-accent) 15%,transparent)}' +
       '.pp-trigger-action{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 6px;border:0;border-left:1px solid color-mix(in srgb,var(--pp-accent) 14%,var(--pp-line));border-radius:0;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;line-height:1;cursor:pointer;white-space:nowrap;transition:background .14s ease,color .14s ease}' +
@@ -10578,7 +10582,7 @@ window.__ModuleLoader__.load({
       '@media (hover:none){.pp-chip-actions{opacity:1}}' +
       '.pp-chip-n{flex:none;padding-top:1px;font-size:11px;line-height:1.55;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
       '.pp-chip-source{flex:none;align-self:flex-start;display:inline-flex;align-items:center;gap:3px;margin-top:2px;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--pp-ink-2) 10%,transparent);color:var(--pp-ink-2);font-size:9.5px;line-height:15px}' +
-      '.pp-chip-source-icon{display:inline-flex;align-items:center}.pp-chip-source-icon svg{width:10px;height:10px}' +
+      '.pp-chip-source-icon{display:inline-flex;align-items:center}.pp-chip-source-icon svg{width:11px;height:11px}' +
       '.pp-chip-t{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:12px;line-height:1.55;color:var(--pp-ink);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}' +
       '.pp-chip .pp-icon{width:22px;height:22px}' +
       '.pp-actions .pp-icon svg,.pp-chip-actions .pp-icon svg{width:13px;height:13px;stroke-width:1.2}' +
