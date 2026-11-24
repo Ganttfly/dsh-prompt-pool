@@ -34,9 +34,9 @@ the **Prompts** menu saves the current draft, creates a prompt, or opens the pro
 
 The sidebar is the full workbench with three destinations. **Annotations** lists the session's notes;
 **Prompts** holds the current workspace's prompts; **Shared** holds the cross-workspace pool. The page
-header carries help, **Save current input** and **Settings**; select notes and choose **Summarize** in the
-bottom bar to open the review card. **Shared** keeps its built-in and custom group tabs on a context row;
-workspace prompts go straight to the list. Saving a note as a prompt opens a confirmation step where the
+header stacks the destinations above the search field and the header actions (help, **Save current input**,
+**Settings**); select notes and choose **Summarize** in the bottom bar to open the review card. **Shared**
+keeps its built-in and custom group tabs on a context row; workspace prompts go straight to the list. Saving a note as a prompt opens a confirmation step where the
 title, body, images and target group can be edited, with a reminder that the conversation context is not
 carried over.
 

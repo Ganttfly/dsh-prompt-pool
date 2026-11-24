@@ -5030,11 +5030,15 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-page-head' },
-          h(ScopeBar, {
-            value: activeMode,
-            counts: { notes: notesList.length, prompts: workspaceCount, global: sharedItems.length },
-            onChange: switchMode,
-          }),
+          h(
+            'div',
+            { className: 'pp-page-tabs' },
+            h(ScopeBar, {
+              value: activeMode,
+              counts: { notes: notesList.length, prompts: workspaceCount, global: sharedItems.length },
+              onChange: switchMode,
+            }),
+          ),
           h(
             'div',
             { className: 'pp-head-tools' },
@@ -10068,11 +10072,10 @@ window.__ModuleLoader__.load({
       '.pp-help-icon svg{width:14px;height:14px}' +
       '.pp-help-body{font-size:11.5px;line-height:1.6;color:var(--pp-ink-2)}' +
       '.pp-help-card .pp-modal-actions{margin-top:2px}' +
-      // The page header carries the three destinations on the left and the
-      // contextual tools on the right. The context row below holds either the
-      // workspace caption or the shared pool's group tabs.
-      '.pp-head-tools{display:flex;align-items:center;gap:6px;flex:1;min-width:0;justify-content:flex-end}' +
-      '.pp-head-tools .pp-search{flex:0 1 220px;min-width:80px;width:auto}' +
+      // The page header stacks two rows: the three destinations, then the
+      // search field with the contextual tools.
+      '.pp-head-tools{display:flex;align-items:center;gap:6px;flex:none;width:100%;min-width:0;justify-content:flex-end}' +
+      '.pp-head-tools .pp-search{flex:1 1 200px;min-width:80px;width:auto}' +
       '.pp-page-head .pp-scope-bar,.pp-panel-headline .pp-scope-bar{padding:0;column-gap:20px;min-width:0}' +
       '.pp-page-head .pp-scope-bar .pp-tab,.pp-panel-headline .pp-scope-bar .pp-tab{height:30px}' +
       '.pp-new-prompt{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
@@ -10148,7 +10151,8 @@ window.__ModuleLoader__.load({
       '.pp-btn-icon{display:inline-flex;align-items:center;flex:none}.pp-btn-icon svg{width:14px;height:14px}' +
       '.pp-list{overflow-y:auto;padding:6px max(8px,calc((100% - 760px) / 2)) 20px;flex:1;min-height:0}' +
       '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
-      '.pp-page-head{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 12px 6px;border-bottom:1px solid var(--pp-line);flex-wrap:nowrap}' +
+      '.pp-page-head{display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0;padding:8px 12px 6px;border-bottom:1px solid var(--pp-line);flex-wrap:nowrap}' +
+      '.pp-page-tabs{display:flex;align-items:center;min-width:0}' +
       '.pp-panel-head{flex-direction:column;align-items:stretch;gap:0;padding:0}' +
       '.pp-panel-brand{display:flex;align-items:center;gap:7px;min-width:0;padding:1px 12px 5px}' +
       '.pp-panel-brand-mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;border-radius:7px;background:color-mix(in srgb,var(--pp-accent) 9%,transparent);color:var(--pp-accent)}' +
