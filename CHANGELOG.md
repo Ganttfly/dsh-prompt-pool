@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The sidebar page now has three destinations: **Annotations**, **Prompts** (current workspace only) and
+  **Shared** (the built-in and custom groups), instead of nesting a workspace / shared switch under
+  **Prompts**. Shared group tabs and the type filter share one context row, removing a row from the page;
+  the composer panel keeps its two modes.
 - The page and panel headers now expose **How it works**, **Save current input** and **Settings**
   directly instead of hiding them behind a `⋯` menu. The panel adds a brand row with the pool mark and
   name, and pin / close moved into it. The annotation context line is gone: the page lists notes without a

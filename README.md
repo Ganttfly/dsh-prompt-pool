@@ -32,17 +32,18 @@ the **Prompts** menu saves the current draft, creates a prompt, or opens the pro
 
 ![The prompt pool as a full page in the right sidebar](docs/images/sidebar.png)
 
-The sidebar is the full workbench. **Annotations** lists the session's notes; **Prompts** switches
-between **Current workspace** and **Global shared pool**. The page header carries help, **Save current
-input** and **Settings**; select notes and choose **Summarize** in the bottom bar to open the review card.
-Workspace prompts are filtered by type; the global shared pool keeps its built-in and custom group tabs.
+The sidebar is the full workbench with three destinations. **Annotations** lists the session's notes;
+**Prompts** holds the current workspace's prompts; **Shared** holds the cross-workspace pool. The page
+header carries help, **Save current input** and **Settings**; select notes and choose **Summarize** in the
+bottom bar to open the review card. Workspace prompts are filtered by type; **Shared** keeps its built-in
+and custom group tabs, on the same context row as the type filter.
 Saving a note as a prompt opens a confirmation step where the title, body, images, type and target group can
 be edited, with a reminder that the conversation context is not carried over.
 
 ![Prompt pool settings: post-use retention, built-in reset, group display, and the plugin info card](docs/images/settings.png)
 
 Settings is a destination with two sections. **Annotations** controls whether notes stay after generating
-a draft or saving as a prompt. **Prompts** holds the global group order and display, the built-in prompt
+a draft or saving as a prompt. **Prompts** holds the shared-pool group order and display, the built-in prompt
 reset, the post-use retention switches and the plugin info card.
 
 ## Why a prompt pool?
@@ -54,7 +55,7 @@ Working with an agent is rarely one prompt. The friction sits between messages:
 | You are still shaping the prompt, but the send button is one keystroke away. | Park the draft in a group; nothing runs until you release it. |
 | The next prompts are already in your head, and retyping them breaks the sequence. | Queue them in order and release one by one, with progress and Stop. |
 | A long answer needs a precise reply on one sentence, not a vague “looks good”. | Annotate the passage inline; the note stays on the exact words and can be reviewed alone or merged into one quoted instruction. |
-| The constraint lives in an earlier message or another workspace. | Right-click capture saves to the current workspace or the global shared pool, so project-specific prompts stay with the project. |
+| The constraint lives in an earlier message or another workspace. | Right-click capture saves to the current workspace or the shared pool, so project-specific prompts stay with the project. |
 
 The goal is not another notes app. It is to keep the context, the exact wording and the next action next to
 the conversation, so the agent gets a precise instruction and you do not lose the thread.
@@ -66,8 +67,9 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   waits for the composer to be accepted before the next starts. On hosts that expose the conversation
   queue, items go straight into the queue without touching the composer; otherwise the composer path
   is used. While a release runs, both views show progress and a Stop control; the queue is locked
-  until it finishes. The **Send queue** holds prompts only and appears in prompt mode; annotation mode
-  hides it. Its header switches between **one by one** and **merge**, and merge previews every queued
+  until it finishes. The **Send queue** holds prompts only: it appears on the page's **Prompts** and
+  **Shared** destinations and in the panel's **Prompts** mode; **Annotations** hides it. Its header
+  switches between **one by one** and **merge**, and merge previews every queued
   prompt and its image attachments before handing one numbered message to the session queue; the images
   are shown as thumbnails outside the editable text and travel as attachments. There is no second subset
   selection. Annotations are reviewed and sent from the Annotations page instead.
@@ -89,8 +91,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   prompt, use the Refresh link, then Save as prompt or Send from the status bar. Select all / Clear sit
   in the same status bar, so the list has no banner above it. Short quotes get an optional
   complete-sentence/question line in the prompt only (never in the annotation list), and it is omitted
-  when incomplete or redundant. The review card uses the annotation amber; the workspace prompt mode,
-  the global shared pool and the send queue share the prompt blue. Annotations never enter the send queue,
+  when incomplete or redundant. The review card uses the annotation amber; the prompt destinations and
+  the send queue share the prompt blue. Annotations never enter the send queue,
   and single annotations have no direct-send control.
   Saved notes keep a green marker; notes are stored per session, survive reloads, and are not shown in
   another session.
@@ -101,12 +103,14 @@ the conversation, so the agent gets a precise instruction and you do not lose th
 - **Composer panel** — a brand row with the pool mark and name, search, the current workspace's prompt
   list, per-row **Insert**, **+** and **⋯**, and the shared send queue with collapse, clear and send.
   Help, **Save current input** and **Settings** sit beside search. Its two modes are **Annotations**
-  (current session) and **Prompts** (current workspace); the panel never shows the global shared pool.
+  (current session) and **Prompts** (current workspace); the panel never shows the shared pool.
   The editor owns the prompt type, and a new prompt is not counted until it is saved. Drag its top edge
   to change the height, or its left edge to change the width; pin it to keep it open over the conversation.
-- **Sidebar page** — the full workbench over the same data: **Annotations**, and **Prompts** with
-  **Current workspace / Global shared pool**, defaulting to annotations. Workspace prompts use the type
-  filter; the global shared pool keeps the existing group tabs for the built-in and custom groups.
+- **Sidebar page** — the full workbench over the same data, with three destinations: **Annotations**,
+  **Prompts** for the current workspace, and **Shared** for the cross-workspace pool; it opens on
+  annotations. Workspace prompts use the type filter; **Shared** keeps the existing group tabs for the
+  built-in and custom groups. The context row below the destinations holds either the workspace caption or
+  the group tabs, with the type filter on the right.
 - **Save step** — saving a note as a prompt no longer writes immediately. It opens a confirmation with the
   title, body, images, type and destination group, plus a reminder that the conversation context is not
   carried over. The source session, node and quote are not stored on the prompt.
@@ -114,17 +118,17 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   menu offers **Copy** and **Add to the prompt pool**, whose submenu lists the groups currently on show;
   picking one stores the selection as a new item there. The group used last time leads the submenu;
   Shift+F10 opens the same menu, and a right-click without a selection keeps the browser menu.
-- **Groups** — the global shared pool keeps frequent / notes / templates built in, plus your own categories;
+- **Groups** — the shared pool keeps frequent / notes / templates built in, plus your own categories;
   each workspace has its own prompt pool instead of a global workspace group. Each family can be expanded,
   folded into a single tab, or hidden; the **All** tab can be hidden too.
 - **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
   can reset the built-in set in the current interface language. Edited built-ins can be kept as
   ordinary items; custom items and the queue are left alone.
 - **Settings** — a destination with two sections. **Annotations** holds annotation retention;
-  **Prompts** holds the two post-use retention switches, the built-in prompt reset, and the global shared
-  pool's group order/display (including whether the **All** tab shows). Settings opens on Annotations.
+  **Prompts** holds the two post-use retention switches, the built-in prompt reset, and the shared pool's
+  group order/display (including whether the **All** tab shows). Settings opens on Annotations.
   Workspaces no longer have their own settings page; save and capture destinations are the current
-  workspace plus the global shared pool.
+  workspace plus the shared pool.
 - **Guarded destructive actions** — deleting an item, clearing the queue and removing a queued entry all
   ask first; deletes and clears can be undone from the toast.
 - **Chinese and English** — every label follows the harness language, including the sidebar tab name.
@@ -152,12 +156,12 @@ does not turn it on.
 1. Click **提示池 / Prompt pool** beside the composer (or open the sidebar page).
 2. Click **Save current input** in the page or panel header (the icon beside help). It copies the composer
    content — text and image attachments — into the pool. A small popup offers the current workspace and the
-   global shared-pool groups, and the toast names the destination. The composer keeps its text.
+   shared-pool groups, and the toast names the destination. The composer keeps its text.
 3. Select text in a conversation and right-click: the menu offers **Copy** and **Add to the prompt
-   pool**; open the submenu and pick the current workspace or a global group.
+   pool**; open the submenu and pick the current workspace or a shared-pool group.
 4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 100
    full-width or 200 half-width characters, and the badge appears right after the passage. The pool's
-   **Annotations** mode collects the notes; **Locate** scrolls to a passage, **Insert** writes one note
+   **Annotations** page collects the notes; **Locate** scrolls to a passage, **Insert** writes one note
    into the composer, and **⋯ → Save as prompt** files one note into a group. Select notes and choose
    **Summarize** in the bottom bar to open the review card; check and route the notes in the rows, then use
    Save as prompt or Send in the status bar. Annotations do not enter the send queue.

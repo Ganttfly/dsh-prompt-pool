@@ -125,7 +125,7 @@ window.__ModuleLoader__.load({
       'help.notesTitle': '批注',
       'help.notesBody': '在回复里选中一句话，右键选择「批注」。批注只属于当前会话；点底部的「汇总批注」可以把它们合并成一条指令。',
       'help.promptsTitle': '提示词',
-      'help.promptsBody': '把反复使用的指令存进库里。点「插入」进输入框，点「＋」加入待发送队列；它是共享队列，发送后按顺序进入输入框。',
+      'help.promptsBody': '把反复使用的指令存进库里：「提示词」放当前工作区，「共享池」放跨工作区共用的分组。点「插入」进输入框，点「＋」加入待发送队列；它是共享队列，发送后按顺序进入输入框。',
       'help.close': '知道了',
       'status.noComposer': '没有可用的输入框：请先打开一个对话页签',
       'status.noWorkspace': '当前会话还没有工作区，无法新建工作区提示词。',
@@ -255,7 +255,7 @@ window.__ModuleLoader__.load({
       'scope.notes': '批注',
       'scope.prompts': '提示词',
       'scope.workspace': '当前工作区',
-      'scope.global': '全局共享池',
+      'scope.global': '共享池',
       'note.placeholder': '写点什么：回答、疑问或修改意见',
       'note.limitHint': '最多 100 个全角或 200 个半角字符',
 
@@ -443,7 +443,7 @@ window.__ModuleLoader__.load({
       'help.notesTitle': 'Annotations',
       'help.notesBody': 'Select a sentence in a reply and choose “Annotate” from the context menu. Annotations belong to the current session; the “Summarize” control at the bottom merges them into one instruction.',
       'help.promptsTitle': 'Prompts',
-      'help.promptsBody': 'Save instructions you reuse. “Insert” puts one in the composer; “+” adds it to the send queue. The queue is shared and sends into the composer in order.',
+      'help.promptsBody': 'Save instructions you reuse: Prompts holds the current workspace, and Shared holds the groups used across workspaces. “Insert” puts one in the composer; “+” adds it to the send queue. The queue is shared and sends into the composer in order.',
       'help.close': 'Got it',
       'status.noComposer': 'No composer available: open a conversation tab first',
       'status.noWorkspace': 'This session has no workspace yet, so a workspace prompt cannot be created.',
@@ -573,7 +573,7 @@ window.__ModuleLoader__.load({
       'scope.notes': 'Annotations',
       'scope.prompts': 'Prompts',
       'scope.workspace': 'Current workspace',
-      'scope.global': 'Global shared pool',
+      'scope.global': 'Shared',
       'note.placeholder': 'Write an answer, a question or a correction',
       'note.limitHint': 'Up to 100 full-width or 200 half-width characters',
 
@@ -4341,12 +4341,18 @@ window.__ModuleLoader__.load({
       );
     }
 
+    // Three destinations on the page, two in the panel: the panel is too narrow
+    // to carry the shared pool, and its list is workspace prompts only.
+    const PAGE_SCOPE_ENTRIES = [
+      { id: 'notes', label: 'scope.notes', icon: 'annotation' },
+      { id: 'prompts', label: 'scope.prompts', icon: 'prompt' },
+      { id: 'global', label: 'scope.global', icon: 'layers' },
+    ];
+    const PANEL_SCOPE_ENTRIES = PAGE_SCOPE_ENTRIES.slice(0, 2);
+
     function ScopeBar(props) {
-      const entries = [
-        { id: 'notes', label: 'scope.notes' },
-        { id: 'prompts', label: 'scope.prompts' },
-      ];
-      const active = props.value === 'notes' ? 'notes' : 'prompts';
+      const entries = props.entries || PAGE_SCOPE_ENTRIES;
+      const active = entries.some((entry) => entry.id === props.value) ? props.value : entries[0].id;
       const counts = props.counts || {};
       const [barRef, indicator] = useTabIndicator(active, active === 'notes' ? 'notes' : 'accent');
       return h(
@@ -4383,35 +4389,11 @@ window.__ModuleLoader__.load({
           h('span', {
             className: 'pp-tab-icon',
             'aria-hidden': true,
-          }, icon(entry.id === 'notes' ? 'annotation' : 'prompt')),
+          }, icon(entry.icon)),
           translate(entry.label),
           counts[entry.id] > 0
             ? h('span', { className: 'pp-tab-count' }, String(counts[entry.id]))
             : null,
-        )),
-      );
-    }
-
-    /** Workspace / global switch inside the prompt mode. */
-    function PromptScopeBar(props) {
-      const entries = [
-        { id: 'workspace', label: 'scope.workspace' },
-        { id: 'global', label: 'scope.global' },
-      ];
-      return h(
-        'div',
-        { className: 'pp-seg', role: 'group', 'aria-label': translate('scope.prompts') },
-        entries.map((entry) => h(
-          'button',
-          {
-            key: entry.id,
-            type: 'button',
-            className: 'pp-seg-item',
-            'data-active': props.value === entry.id ? 'true' : 'false',
-            'aria-pressed': props.value === entry.id ? 'true' : 'false',
-            onClick: () => props.onChange(entry.id),
-          },
-          translate(entry.label),
         )),
       );
     }
@@ -4652,9 +4634,6 @@ window.__ModuleLoader__.load({
       const [scope, setScope] = useState(() => (
         props && (props.initialScope === 'global' || props.initialScope === 'workspace') ? props.initialScope : 'notes'
       ));
-      const [promptScope, setPromptScope] = useState(() => (
-        props && props.initialScope === 'global' ? 'global' : 'workspace'
-      ));
       const [settingsOpen, setSettingsOpen] = useState(false);
       const [helpOpen, setHelpOpen] = useState(false);
       const [reviewOpen, setReviewOpen] = useState(false);
@@ -4681,10 +4660,12 @@ window.__ModuleLoader__.load({
       const { editing, setEditing, startEdit, save, cancelEdit, pasteImages } = usePoolEditor(flash);
       const { trayEditing, setTrayEditing, saveTrayEdit, pasteTrayImages } = useTrayEditor(flash);
       const countedItems = countPoolItems(state.items, editing);
-      const tabCounts = tabCountsOf(countedItems.filter((item) => {
+      const sharedItems = countedItems.filter((item) => {
         const family = familyOf(groupOf(item));
         return family === 'builtin' || family === 'custom';
-      }));
+      });
+      const tabCounts = tabCountsOf(sharedItems);
+      const workspaceCount = countedItems.filter((item) => groupOf(item) === workspaceGroup).length;
       // A stored tab can point at a group that was hidden or deleted since.
       useEffect(() => {
         if (tabs.some((entry) => entry.id === tab)) return;
@@ -4701,14 +4682,11 @@ window.__ModuleLoader__.load({
         setPendingRemove(null);
         if (next === 'global' && !globalTabs.some((entry) => entry.id === tab)) setTab(activeGlobalTab);
       };
-      const activeMode = scope === 'notes' ? 'notes' : 'prompts';
+      const activeMode = scope === 'notes' ? 'notes' : scope === 'global' ? 'global' : 'prompts';
       const switchMode = (next) => {
         if (next === 'notes') changeScope('notes');
-        else changeScope(promptScope);
-      };
-      const changePromptScope = (next) => {
-        setPromptScope(next);
-        changeScope(next);
+        else if (next === 'global') changeScope('global');
+        else changeScope('workspace');
       };
       // A failed write outranks a transient toast: the change is not saved.
       const notice = status || (storage.failed ? { kind: 'error', text: translate('status.storageFailed') } : null);
@@ -5147,7 +5125,7 @@ window.__ModuleLoader__.load({
           { className: 'pp-page-head' },
           h(ScopeBar, {
             value: activeMode,
-            counts: { notes: notesList.length, prompts: countedItems.length },
+            counts: { notes: notesList.length, prompts: workspaceCount, global: sharedItems.length },
             onChange: switchMode,
           }),
           h(
@@ -5193,7 +5171,28 @@ window.__ModuleLoader__.load({
           : h(
               'div',
               { className: 'pp-prompt-bar' },
-              h(PromptScopeBar, { value: scope, onChange: changePromptScope }),
+              scope === 'global'
+                ? h(
+                    TabScroller,
+                    { active: activeGlobalTab, revision: globalTabs.length },
+                    h(
+                      'div',
+                      { className: 'pp-bar pp-global-bar', role: 'tablist', onKeyDown: focusTabByKey },
+                      h(TabBar, {
+                        tabs: globalTabs,
+                        counts: tabCounts,
+                        active: activeGlobalTab,
+                        ...tabHandlers((next) => {
+                          setSettingsOpen(false);
+                          setReviewOpen(false);
+                          setReviewProcessing(false);
+                          setTab(next);
+                        }, activeGlobalTab, fallbackTabFor(globalTabs)),
+                        onDelete: (id) => setPendingCategory(id),
+                      }),
+                    ),
+                  )
+                : h('span', { className: 'pp-context-label' }, translate('scope.workspace')),
               h('span', { className: 'pp-grow' }),
               // The editor carries its own type control; a second copy beside
               // it would compete for the same decision.
@@ -5212,28 +5211,6 @@ window.__ModuleLoader__.load({
                     PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
                   ),
             ),
-        scope === 'global'
-          ? h(
-              TabScroller,
-              { active: activeGlobalTab, revision: globalTabs.length },
-              h(
-                'div',
-                { className: 'pp-bar pp-global-bar', role: 'tablist', onKeyDown: focusTabByKey },
-                h(TabBar, {
-                  tabs: globalTabs,
-                  counts: tabCounts,
-                  active: activeGlobalTab,
-                  ...tabHandlers((next) => {
-                    setSettingsOpen(false);
-                    setReviewOpen(false);
-                    setReviewProcessing(false);
-                    setTab(next);
-                  }, activeGlobalTab, fallbackTabFor(globalTabs)),
-                  onDelete: (id) => setPendingCategory(id),
-                }),
-              ),
-            )
-          : null,
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
         confirmClear && sessionTray.length > 0
           ? h(TrayClearConfirm, {
@@ -9821,6 +9798,7 @@ window.__ModuleLoader__.load({
             'div',
             { className: 'pp-panel-headline' },
             h(ScopeBar, {
+              entries: PANEL_SCOPE_ENTRIES,
               value: activeMode,
               counts: { notes: notesList.length, prompts: countPoolItems(state.items, editing).filter((item) => groupOf(item) === workspaceGroup).length },
               onChange: switchMode,
@@ -10158,14 +10136,14 @@ window.__ModuleLoader__.load({
       // The scope switcher is the page's primary navigation, so it reads as a
       // row of underlines: no fill and a wider column gap. A rounded rule slides
       // between the tabs instead of each tab carrying its own border.
-      '.pp-scope-bar{position:relative;gap:6px 20px;padding:8px 12px 12px}' +
+      '.pp-scope-bar{position:relative;gap:6px 16px;padding:8px 12px 12px}' +
       '.pp-scope-bar .pp-tab{height:28px;padding:0 1px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent}' +
       '.pp-scope-bar .pp-tab:hover{background:transparent;color:var(--pp-ink)}' +
-      // Two scope themes survive the switch: annotations underline in amber,
-      // prompts (workspace and the global shared pool) in prompt blue. The amber
-      // label still mixes in the primary ink so it stays legible on both themes.
+      // Two destination themes: annotations underline in amber, prompts and the
+      // shared pool in prompt blue. The amber label still mixes in the primary ink
+      // so it stays legible on both themes.
       '.pp-scope-bar .pp-tab[data-scope="notes"][data-active="true"]{border-bottom-color:var(--pp-note-line);background:transparent;color:var(--pp-note-ink);font-weight:600}' +
-      '.pp-scope-bar .pp-tab[data-scope="workspace"][data-active="true"],.pp-scope-bar .pp-tab[data-scope="global"][data-active="true"],.pp-scope-bar .pp-tab[data-scope="prompts"][data-active="true"]{border-bottom-color:var(--pp-accent);background:transparent;color:var(--pp-accent);font-weight:600}' +
+      '.pp-scope-bar .pp-tab[data-scope="global"][data-active="true"],.pp-scope-bar .pp-tab[data-scope="prompts"][data-active="true"]{border-bottom-color:var(--pp-accent);background:transparent;color:var(--pp-accent);font-weight:600}' +
       // The sliding rule is the tab's underline; the border above is only the
       // pre-measurement fallback and steps aside once the rule has a position.
       '.pp-tab-indicator{position:absolute;z-index:1;height:3px;border-radius:999px;background:var(--pp-accent);pointer-events:none;transition:left .2s cubic-bezier(.2,.7,.2,1),width .2s cubic-bezier(.2,.7,.2,1)}' +
@@ -10224,24 +10202,22 @@ window.__ModuleLoader__.load({
       '.pp-help-icon svg{width:14px;height:14px}' +
       '.pp-help-body{font-size:11.5px;line-height:1.6;color:var(--pp-ink-2)}' +
       '.pp-help-card .pp-modal-actions{margin-top:2px}' +
-      // The page header carries the two-mode switch on the left and the contextual
-      // tools on the right. Both rows stay on one line; the group tabs live below
-      // the prompt bar and scroll on their own.
+      // The page header carries the three destinations on the left and the
+      // contextual tools on the right. The context row below holds either the
+      // workspace caption or the shared pool's group tabs.
       '.pp-head-tools{display:flex;align-items:center;gap:6px;flex:1;min-width:0;justify-content:flex-end}' +
       '.pp-head-tools .pp-search{flex:0 1 220px;min-width:80px;width:auto}' +
-      '.pp-page-head .pp-scope-bar,.pp-panel-headline .pp-scope-bar{padding:0;gap:14px;min-width:0}' +
+      '.pp-page-head .pp-scope-bar,.pp-panel-headline .pp-scope-bar{padding:0;gap:10px;min-width:0}' +
       '.pp-page-head .pp-scope-bar .pp-tab,.pp-panel-headline .pp-scope-bar .pp-tab{height:30px}' +
       '.pp-new-prompt{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
       '.pp-menu-trigger{width:26px;height:26px;border-radius:7px}' +
-      '.pp-prompt-bar{display:flex;align-items:center;gap:8px;min-height:34px;padding:4px 12px 6px;border-bottom:1px solid var(--pp-line);font-size:11.5px;color:var(--pp-ink-2)}' +
+      // One context row under the mode tabs: the workspace caption on the left,
+      // or the shared pool's group tabs on the same line as the type filter.
+      '.pp-prompt-bar{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-bottom:1px solid var(--pp-line);font-size:11.5px;color:var(--pp-ink-2)}' +
+      '.pp-prompt-bar .pp-tabscroll{flex:0 1 auto;min-width:0;margin:0;padding:0}' +
+      '.pp-prompt-bar .pp-global-bar{margin:0}' +
       '.pp-prompt-bar .pp-type-filter{flex:none;margin-left:auto}' +
-      // A pale blue recess with a raised surface chip: the same geometry as the
-      // group tabs, without competing with the mode switch above it.
-      '.pp-seg{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:8px;background:color-mix(in srgb,var(--pp-accent) 7%,transparent);box-shadow:inset 0 1px 2px color-mix(in srgb,var(--pp-accent) 8%,transparent)}' +
-      '.pp-seg-item{height:24px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:color-mix(in srgb,var(--pp-ink-2) 66%,var(--pp-accent));font:inherit;font-size:11.5px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer}' +
-      '.pp-seg-item:hover:not([data-active="true"]){background:color-mix(in srgb,var(--pp-accent) 10%,transparent);color:var(--pp-accent)}' +
-      '.pp-seg-item:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
-      '.pp-seg-item[data-active="true"]{background:var(--dsw-alias-bg-base,var(--pp-surface));color:var(--pp-ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px color-mix(in srgb,var(--pp-accent) 16%,transparent)}' +
+      '.pp-context-label{white-space:nowrap;color:var(--pp-ink-2)}' +
       // Row actions: one visible verb, one queue verb, and everything else in a
       // fixed-position menu so it can escape the list's scroll clip.
       '.pp-row-insert{display:inline-flex;align-items:center;gap:4px;height:24px;flex:none;padding:0 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-accent);font:inherit;font-size:11.5px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer}' +

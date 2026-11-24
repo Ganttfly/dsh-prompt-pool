@@ -100,19 +100,12 @@ const render = () => {
 };
 const tabBar = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function' && node.type.name === 'TabBar');
 const scopeBar = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function' && node.type.name === 'ScopeBar');
-const promptScopeBar = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function' && node.type.name === 'PromptScopeBar');
 const openGlobalScope = (tree) => {
   const scope = scopeBar(tree);
   if (!scope) return false;
   const buttons = nodes(scope.type(scope.props || {}), []).filter((node) => node.type === 'button');
-  if (buttons.length < 2) return false;
-  buttons[1].props.onClick();
-  const seg = promptScopeBar(render());
-  if (!seg) return false;
-  const options = nodes(seg.type(seg.props || {}), []).filter((node) => node.type === 'button'
-    && String(node.props && node.props.className || '').indexOf('pp-seg-item') >= 0);
-  if (options.length < 2) return false;
-  options[1].props.onClick();
+  if (buttons.length < 3) return false;
+  buttons[2].props.onClick();
   return true;
 };
 
