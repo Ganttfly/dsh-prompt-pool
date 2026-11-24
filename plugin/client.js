@@ -81,7 +81,7 @@ window.__ModuleLoader__.load({
       'panel.resizeWidth': '拖动调整宽度，双击还原',
       'panel.pin': '钉住面板',
       'panel.unpin': '取消钉住',
-      'panel.empty': '池子是空的。写一句，然后点「存草稿」。',
+      'panel.empty': '池子是空的。点「＋ 提示词」新建，或点「保存当前输入」收下输入框内容。',
       'panel.emptyTab': '这一栏还没有内容。',
       'page.emptyTab': '这里还没有提示词。',
       'tab.all': '全部',
@@ -199,9 +199,6 @@ window.__ModuleLoader__.load({
       'row.familyWorkspace': '工作区分组',
       'tab.familyBuiltin': '内置分组',
       'row.classification': '分组',
-      'row.type': '类型',
-      'row.typeNone': '未分类',
-      'row.allTypes': '全部类型',
       'page.new': '提示词',
 
       'row.noCategory': '未分组',
@@ -355,13 +352,6 @@ window.__ModuleLoader__.load({
       'note.kind.idea': '思路',
       'note.kind.supplement': '补充信息',
       'note.kind.todo': '待办',
-      'prompt.type.decision': '决策',
-      'prompt.type.question': '问题',
-      'prompt.type.opinion': '意见',
-      'prompt.type.idea': '思路',
-      'prompt.type.supplement': '补充',
-      'prompt.type.todo': '待办',
-      'prompt.type.inspiration': '灵感',
       'menu.last': '上次',
       'menu.count': '{n} 条',
       'menu.saved': '已加入「{group}」',
@@ -399,7 +389,7 @@ window.__ModuleLoader__.load({
       'panel.resizeWidth': 'Drag to resize the width, double-click to reset',
       'panel.pin': 'Pin the panel',
       'panel.unpin': 'Unpin the panel',
-      'panel.empty': 'The pool is empty. Write something, then press Save draft.',
+      'panel.empty': 'The pool is empty. Press + Prompt to create one, or Save current input to keep the composer text.',
       'panel.emptyTab': 'Nothing in this tab yet.',
       'page.emptyTab': 'No prompts here yet.',
       'tab.all': 'All',
@@ -517,9 +507,6 @@ window.__ModuleLoader__.load({
       'row.familyWorkspace': 'Workspace groups',
       'tab.familyBuiltin': 'Built-in groups',
       'row.classification': 'Group',
-      'row.type': 'Type',
-      'row.typeNone': 'Unclassified',
-      'row.allTypes': 'All types',
       'page.new': 'Prompt',
 
       'row.noCategory': 'Ungrouped',
@@ -673,13 +660,6 @@ window.__ModuleLoader__.load({
       'note.kind.idea': 'Idea',
       'note.kind.supplement': 'Additional info',
       'note.kind.todo': 'To do',
-      'prompt.type.decision': 'Decision',
-      'prompt.type.question': 'Question',
-      'prompt.type.opinion': 'Opinion',
-      'prompt.type.idea': 'Idea',
-      'prompt.type.supplement': 'Supplement',
-      'prompt.type.todo': 'To do',
-      'prompt.type.inspiration': 'Inspiration',
       'menu.last': 'Last used',
       'menu.count': '{n} item(s)',
       'menu.saved': 'Added to {group}',
@@ -1213,45 +1193,6 @@ window.__ModuleLoader__.load({
       return list;
     }
 
-    /** One fixed semantic type per prompt; the user can leave it empty. */
-    const PROMPT_TYPES = [
-      { id: 'decision', label: 'prompt.type.decision', icon: 'check' },
-      { id: 'question', label: 'prompt.type.question', icon: 'question' },
-      { id: 'opinion', label: 'prompt.type.opinion', icon: 'pen' },
-      { id: 'idea', label: 'prompt.type.idea', icon: 'bulb' },
-      { id: 'supplement', label: 'prompt.type.supplement', icon: 'info' },
-      { id: 'todo', label: 'prompt.type.todo', icon: 'todo' },
-      { id: 'inspiration', label: 'prompt.type.inspiration', icon: 'sparkle' },
-    ];
-    const PROMPT_TYPE_IDS = PROMPT_TYPES.map((entry) => entry.id);
-    const NOTE_PROMPT_TYPES = {
-      agree: 'decision',
-      disagree: 'decision',
-      question: 'question',
-      comment: 'opinion',
-      idea: 'idea',
-      supplement: 'supplement',
-      todo: 'todo',
-    };
-
-    function normalizePromptType(value) {
-      return PROMPT_TYPE_IDS.indexOf(value) >= 0 ? value : '';
-    }
-
-    function promptTypeMeta(value) {
-      return PROMPT_TYPES.find((entry) => entry.id === normalizePromptType(value)) || null;
-    }
-
-    function promptTypeForNote(note) {
-      return note && NOTE_PROMPT_TYPES[note.kind] ? NOTE_PROMPT_TYPES[note.kind] : '';
-    }
-
-    /** A mixed batch has no single type; a uniform batch keeps it. */
-    function promptTypeForNotes(list) {
-      const types = new Set((Array.isArray(list) ? list : []).map(promptTypeForNote).filter(Boolean));
-      return types.size === 1 ? [...types][0] : '';
-    }
-
     function sanitizeItem(raw) {
       if (!raw || typeof raw !== 'object') return null;
       const body = typeof raw.body === 'string' ? raw.body : '';
@@ -1264,7 +1205,6 @@ window.__ModuleLoader__.load({
         title: typeof raw.title === 'string' ? raw.title : '',
         body,
         images,
-        type: normalizePromptType(raw.type),
         createdAt: Number.isFinite(raw.createdAt) ? raw.createdAt : now,
         updatedAt: Number.isFinite(raw.updatedAt) ? raw.updatedAt : now,
         ...(raw.seed === true ? { seed: true } : {}),
@@ -2599,7 +2539,6 @@ window.__ModuleLoader__.load({
         title: item.title,
         body: item.body,
         images: normalizeImages(item.images),
-        type: normalizePromptType(item.type),
       });
 
       const cancelEdit = () => {
@@ -2622,7 +2561,6 @@ window.__ModuleLoader__.load({
           title: editing.title.trim(),
           body: editing.body,
           images: editing.images || [],
-          type: normalizePromptType(editing.type),
         });
         setEditing(null);
         flash({ kind: 'ok', text: translate('status.savedToPool') });
@@ -2736,18 +2674,6 @@ window.__ModuleLoader__.load({
                   )
                 : null,
             ),
-            h(
-              'select',
-              {
-                className: 'pp-input',
-                style: { width: 'auto', maxWidth: '120px' },
-                value: normalizePromptType(editing.type),
-                'aria-label': translate('row.type'),
-                onChange: (event) => setEditing({ ...editing, type: normalizePromptType(event.target.value) }),
-              },
-              h('option', { value: '' }, translate('row.typeNone')),
-              PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
-            ),
             h('span', { className: 'pp-grow' }),
             h('button', { type: 'button', className: 'pp-mini', onClick: onCancel }, translate('row.cancel')),
             h('button', { type: 'button', className: 'pp-primary', onClick: onSave }, translate('row.save')),
@@ -2758,17 +2684,6 @@ window.__ModuleLoader__.load({
       return h(
         'div',
         { key: item.id, className: 'pp-row pp-page-item' },
-        h(
-          'span',
-          { className: 'pp-row-leading' },
-          (() => {
-            const meta = promptTypeMeta(item.type);
-            return h(TypeMark, {
-              name: meta ? meta.icon : '',
-              title: meta ? translate(meta.label) : translate('row.typeNone'),
-            });
-          })(),
-        ),
         h(
           'div',
           { className: 'pp-main', ...(mainTitle ? { title: mainTitle } : {}), onClick: () => (onMain || onStartEdit)(item) },
@@ -4630,7 +4545,6 @@ window.__ModuleLoader__.load({
       };
       // The page opens on the tab chosen in Settings (once per mount).
       const [query, setQuery] = useState('');
-      const [typeFilter, setTypeFilter] = useState('all');
       const [scope, setScope] = useState(() => (
         props && (props.initialScope === 'global' || props.initialScope === 'workspace') ? props.initialScope : 'notes'
       ));
@@ -4780,19 +4694,16 @@ window.__ModuleLoader__.load({
 
       const items = useMemo(() => {
         if (scope === 'notes') return [];
-        const matchesType = (item) => typeFilter === 'all'
-          || (typeFilter === 'none' ? !normalizePromptType(item.type) : normalizePromptType(item.type) === typeFilter);
         const base = scope === 'workspace'
           ? state.items.filter((item) => groupOf(item) === workspaceGroup)
           : state.items.filter((item) => {
               const family = familyOf(groupOf(item));
               return (family === 'builtin' || family === 'custom') && matchesTab(item, activeGlobalTab);
             });
-        const typed = base.filter(matchesType);
         const needle = query.trim().toLowerCase();
-        if (!needle) return typed;
-        return typed.filter((item) => (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0);
-      }, [state.items, scope, workspaceGroup, activeGlobalTab, query, typeFilter]);
+        if (!needle) return base;
+        return base.filter((item) => (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0);
+      }, [state.items, scope, workspaceGroup, activeGlobalTab, query]);
 
       const goConversation = () => {
         try {
@@ -4907,7 +4818,6 @@ window.__ModuleLoader__.load({
             title: draftTitle(note.body || note.quote),
             body: composeNoteLine(note),
             images: normalizeImages(note.images),
-            type: promptTypeForNote(note),
             createdAt: now,
             updatedAt: now,
           });
@@ -4990,7 +4900,6 @@ window.__ModuleLoader__.load({
           title: draftTitle(review.text),
           body: review.text,
           images: review.images,
-          type: promptTypeForNotes(chosen),
           choices: ordered,
           defaultGroup: preferred,
           onSaved: () => {
@@ -5071,18 +4980,16 @@ window.__ModuleLoader__.load({
           ? workspaceGroup
           : groupForTab(activeGlobalTab, '');
         setQuery('');
-        setTypeFilter('all');
         const item = poolActions.add({
           id: uid(),
           group,
           title: '',
           body: '',
           images: [],
-          type: '',
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '', images: [], type: '', isNew: true });
+        setEditing({ id: item.id, group, title: '', body: '', images: [], isNew: true });
       };
 
       const rowOf = (item, index) => renderPoolRow({
@@ -5166,51 +5073,32 @@ window.__ModuleLoader__.load({
             }, icon('gear')),
           ),
         ),
-        scope === 'notes'
-          ? null
-          : h(
+        scope === 'global'
+          ? h(
               'div',
               { className: 'pp-prompt-bar' },
-              scope === 'global'
-                ? h(
-                    TabScroller,
-                    { active: activeGlobalTab, revision: globalTabs.length },
-                    h(
-                      'div',
-                      { className: 'pp-bar pp-global-bar', role: 'tablist', onKeyDown: focusTabByKey },
-                      h(TabBar, {
-                        tabs: globalTabs,
-                        counts: tabCounts,
-                        active: activeGlobalTab,
-                        ...tabHandlers((next) => {
-                          setSettingsOpen(false);
-                          setReviewOpen(false);
-                          setReviewProcessing(false);
-                          setTab(next);
-                        }, activeGlobalTab, fallbackTabFor(globalTabs)),
-                        onDelete: (id) => setPendingCategory(id),
-                      }),
-                    ),
-                  )
-                : h('span', { className: 'pp-context-label' }, translate('scope.workspace')),
-              h('span', { className: 'pp-grow' }),
-              // The editor carries its own type control; a second copy beside
-              // it would compete for the same decision.
-              editing
-                ? null
-                : h(
-                    'select',
-                    {
-                      className: 'pp-input pp-type-filter',
-                      value: typeFilter,
-                      'aria-label': translate('row.type'),
-                      onChange: (event) => setTypeFilter(event.target.value),
-                    },
-                    h('option', { value: 'all' }, translate('row.allTypes')),
-                    h('option', { value: 'none' }, translate('row.typeNone')),
-                    PROMPT_TYPES.map((type) => h('option', { key: type.id, value: type.id }, translate(type.label))),
-                  ),
-            ),
+              h(
+                TabScroller,
+                { active: activeGlobalTab, revision: globalTabs.length },
+                h(
+                  'div',
+                  { className: 'pp-bar pp-global-bar', role: 'tablist', onKeyDown: focusTabByKey },
+                  h(TabBar, {
+                    tabs: globalTabs,
+                    counts: tabCounts,
+                    active: activeGlobalTab,
+                    ...tabHandlers((next) => {
+                      setSettingsOpen(false);
+                      setReviewOpen(false);
+                      setReviewProcessing(false);
+                      setTab(next);
+                    }, activeGlobalTab, fallbackTabFor(globalTabs)),
+                    onDelete: (id) => setPendingCategory(id),
+                  }),
+                ),
+              ),
+            )
+          : null,
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
         confirmClear && sessionTray.length > 0
           ? h(TrayClearConfirm, {
@@ -5286,7 +5174,7 @@ window.__ModuleLoader__.load({
                     {
                       iconName: scope === 'global' ? 'layers' : 'prompt',
                       text: translate(
-                        query.trim() || typeFilter !== 'all'
+                        query.trim()
                           ? 'page.noMatch'
                           : scope === 'global' && activeGlobalTab === 'all'
                             ? 'page.empty'
@@ -6412,7 +6300,7 @@ window.__ModuleLoader__.load({
     const noteSave = (() => {
       const empty = {
         open: false, noteIds: [], markStored: false, title: '', body: '', images: [],
-        type: '', choices: [], defaultGroup: '', token: 0,
+        choices: [], defaultGroup: '', token: 0,
       };
       if (typeof window === 'undefined') return createStore(empty);
       if (!window.__dshPromptPoolNoteSaveV1) window.__dshPromptPoolNoteSaveV1 = createStore(empty);
@@ -6420,7 +6308,7 @@ window.__ModuleLoader__.load({
     })();
     const closeNoteSave = () => noteSave.set({
       open: false, noteIds: [], markStored: false, title: '', body: '', images: [],
-      type: '', choices: [], defaultGroup: '', token: 0,
+      choices: [], defaultGroup: '', token: 0,
     });
     const openNoteSave = (draft) => noteSave.set({
       open: true,
@@ -6429,7 +6317,6 @@ window.__ModuleLoader__.load({
       title: typeof draft.title === 'string' ? draft.title : '',
       body: typeof draft.body === 'string' ? draft.body : '',
       images: normalizeImages(draft.images),
-      type: normalizePromptType(draft.type),
       choices: Array.isArray(draft.choices) ? draft.choices : [],
       defaultGroup: typeof draft.defaultGroup === 'string' ? draft.defaultGroup : '',
       onSaved: typeof draft.onSaved === 'function' ? draft.onSaved : null,
@@ -7126,7 +7013,6 @@ window.__ModuleLoader__.load({
       const draft = props.draft;
       const [title, setTitle] = useState(draft.title || '');
       const [body, setBody] = useState(draft.body || '');
-      const [type, setType] = useState(normalizePromptType(draft.type));
       const [group, setGroup] = useState(draft.defaultGroup || (draft.choices[0] && draft.choices[0].value) || BUILTIN_GROUP.note);
       const [images, setImages] = useState(normalizeImages(draft.images));
       const { preview, openImage, closeImage } = useImagePreview();
@@ -7145,7 +7031,6 @@ window.__ModuleLoader__.load({
           title: title.trim(),
           body,
           images,
-          type: normalizePromptType(type),
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
@@ -7201,17 +7086,6 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'pp-note-save-row' },
-            h(
-              'select',
-              {
-                className: 'pp-note-save-select',
-                value: type,
-                'aria-label': translate('row.type'),
-                onChange: (event) => setType(normalizePromptType(event.target.value)),
-              },
-              h('option', { value: '' }, translate('row.typeNone')),
-              PROMPT_TYPES.map((entry) => h('option', { key: entry.id, value: entry.id }, translate(entry.label))),
-            ),
             h(
               'select',
               {
@@ -7940,7 +7814,6 @@ window.__ModuleLoader__.load({
           // composer later still has the original text (the title is only a label).
           body: composeNoteLine(note),
           images: imagesForNotes([note]),
-          type: promptTypeForNote(note),
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
@@ -7968,7 +7841,6 @@ window.__ModuleLoader__.load({
           title: draftTitle(text),
           body: text,
           images: imagesForNotes(chosen),
-          type: promptTypeForNotes(chosen),
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
@@ -7994,7 +7866,6 @@ window.__ModuleLoader__.load({
           title: draftTitle(target && target.kind === 'note' && target.note ? target.note.quote : text),
           body: text,
           images: imagesForNotes(notes),
-          type: target && target.kind === 'note' && target.note ? promptTypeForNote(target.note) : promptTypeForNotes(notes),
           choices: ordered,
           defaultGroup: preferred,
         });
@@ -8615,7 +8486,6 @@ window.__ModuleLoader__.load({
           title: draftTitle(body),
           body,
           images: [],
-          type: '',
           createdAt: now,
           updatedAt: now,
         });
@@ -9201,7 +9071,6 @@ window.__ModuleLoader__.load({
           title: draftTitle(text, occurrenceRef.current),
           body: text,
           images: normalizeImages(stored),
-          type: '',
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
@@ -9238,11 +9107,10 @@ window.__ModuleLoader__.load({
           title: '',
           body: '',
           images: [],
-          type: '',
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '', images: [], type: '', isNew: true });
+        setEditing({ id: item.id, group, title: '', body: '', images: [], isNew: true });
       };
 
       const deleteItem = (item, text) => {
@@ -9536,7 +9404,6 @@ window.__ModuleLoader__.load({
             title: draftTitle(note.body || note.quote),
             body: composeNoteLine(note),
             images: normalizeImages(note.images),
-            type: promptTypeForNote(note),
             createdAt: now,
             updatedAt: now,
           });
@@ -9613,7 +9480,6 @@ window.__ModuleLoader__.load({
           title: draftTitle(review.text),
           body: review.text,
           images: review.images,
-          type: promptTypeForNotes(chosen),
           choices: ordered,
           defaultGroup: preferred,
           onSaved: () => {
@@ -10211,13 +10077,11 @@ window.__ModuleLoader__.load({
       '.pp-page-head .pp-scope-bar .pp-tab,.pp-panel-headline .pp-scope-bar .pp-tab{height:30px}' +
       '.pp-new-prompt{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
       '.pp-menu-trigger{width:26px;height:26px;border-radius:7px}' +
-      // One context row under the mode tabs: the workspace caption on the left,
-      // or the shared pool's group tabs on the same line as the type filter.
+      // The shared pool gets one context row under the mode tabs for its group
+      // tabs; workspace prompts go straight to the list.
       '.pp-prompt-bar{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-bottom:1px solid var(--pp-line);font-size:11.5px;color:var(--pp-ink-2)}' +
       '.pp-prompt-bar .pp-tabscroll{flex:0 1 auto;min-width:0;margin:0;padding:0}' +
       '.pp-prompt-bar .pp-global-bar{margin:0}' +
-      '.pp-prompt-bar .pp-type-filter{flex:none;margin-left:auto}' +
-      '.pp-context-label{white-space:nowrap;color:var(--pp-ink-2)}' +
       // Row actions: one visible verb, one queue verb, and everything else in a
       // fixed-position menu so it can escape the list's scroll clip.
       '.pp-row-insert{display:inline-flex;align-items:center;gap:4px;height:24px;flex:none;padding:0 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-accent);font:inherit;font-size:11.5px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer}' +
@@ -10294,13 +10158,11 @@ window.__ModuleLoader__.load({
       '.pp-panel-tools{display:flex;align-items:center;gap:6px;padding:6px 12px}' +
       '.pp-panel-actions{display:flex;align-items:center;gap:8px;width:208px;flex:none}' +
       '.pp-panel-actions .pp-mini{width:100px;min-width:100px;padding:0 5px;justify-content:center;overflow:hidden;text-overflow:ellipsis}' +
-      '.pp-type-placeholder{box-sizing:border-box;width:104px;height:26px;flex:none;visibility:hidden}' +
       '.pp-panel-tools .pp-search{min-width:0;width:100%}' +
       '.pp-page-title{font-size:14px;font-weight:600}' +
       '.pp-panel-title{display:inline-flex;align-items:center;gap:6px;flex:none;margin-right:2px}' +
       '.pp-page-sub{color:var(--pp-ink-2);font-size:12px}' +
       '.pp-search{box-sizing:border-box;height:26px;flex:1;min-width:120px;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-surface);color:inherit;font:inherit;font-size:12px;padding:0 9px;outline:none}' +
-      '.pp-type-filter{height:26px;flex:none;width:104px;max-width:104px;padding:0 6px;border-radius:8px;font-size:11px;cursor:pointer}' +
       '.pp-search:focus{border-color:var(--pp-accent)}' +
       '.pp-settings{max-width:640px;padding:16px 20px;color:var(--pp-ink);font-size:13px;line-height:1.6}' +
       '.pp-set-title{font-size:15px;font-weight:600;line-height:1.35;margin-bottom:2px}' +

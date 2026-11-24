@@ -35,10 +35,10 @@ the **Prompts** menu saves the current draft, creates a prompt, or opens the pro
 The sidebar is the full workbench with three destinations. **Annotations** lists the session's notes;
 **Prompts** holds the current workspace's prompts; **Shared** holds the cross-workspace pool. The page
 header carries help, **Save current input** and **Settings**; select notes and choose **Summarize** in the
-bottom bar to open the review card. Workspace prompts are filtered by type; **Shared** keeps its built-in
-and custom group tabs, on the same context row as the type filter.
-Saving a note as a prompt opens a confirmation step where the title, body, images, type and target group can
-be edited, with a reminder that the conversation context is not carried over.
+bottom bar to open the review card. **Shared** keeps its built-in and custom group tabs on a context row;
+workspace prompts go straight to the list. Saving a note as a prompt opens a confirmation step where the
+title, body, images and target group can be edited, with a reminder that the conversation context is not
+carried over.
 
 ![Prompt pool settings: post-use retention, built-in reset, group display, and the plugin info card](docs/images/settings.png)
 
@@ -83,7 +83,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
   losing the point in a separate scratchpad; click the badge to edit. **Annotations** page always
   exists: **Locate** scrolls to the passage, **Insert** writes one note into the composer, and
-  **⋯ → Save as prompt** opens a confirmation step for the title, body, images, type and target group.
+  **⋯ → Save as prompt** opens a confirmation step for the title, body, images and target group.
   The page's bottom bar shows the selected count and **Summarize**; it opens the review card, which sits
   at the bottom like the send queue, collapses to a strip, and can be resized by dragging its top edge
   (double-click to reset). Rows gain checkboxes, immediate execution and to-do routing; Locate stays,
@@ -96,24 +96,19 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   and single annotations have no direct-send control.
   Saved notes keep a green marker; notes are stored per session, survive reloads, and are not shown in
   another session.
-- **Prompt types** — each prompt has at most one fixed type: decision / question / opinion / idea /
-  supplement / to-do / inspiration, or unclassified. Saving a note seeds it from the annotation kind
-  (agree and disagree both map to decision); the type can be changed in the save step or the editor and
-  filtered from the sidebar page's list header. Templates, habits and notes are groups, not types.
 - **Composer panel** — a brand row with the pool mark and name, search, the current workspace's prompt
   list, per-row **Insert**, **+** and **⋯**, and the shared send queue with collapse, clear and send.
   Help, **Save current input** and **Settings** sit beside search. Its two modes are **Annotations**
   (current session) and **Prompts** (current workspace); the panel never shows the shared pool.
-  The editor owns the prompt type, and a new prompt is not counted until it is saved. Drag its top edge
+  A new prompt is not counted until it is saved. Drag its top edge
   to change the height, or its left edge to change the width; pin it to keep it open over the conversation.
 - **Sidebar page** — the full workbench over the same data, with three destinations: **Annotations**,
   **Prompts** for the current workspace, and **Shared** for the cross-workspace pool; it opens on
-  annotations. Workspace prompts use the type filter; **Shared** keeps the existing group tabs for the
-  built-in and custom groups. The context row below the destinations holds either the workspace caption or
-  the group tabs, with the type filter on the right.
+  annotations. Workspace prompts go straight to the list; **Shared** keeps the group tabs for the built-in
+  and custom groups on a context row below the destinations.
 - **Save step** — saving a note as a prompt no longer writes immediately. It opens a confirmation with the
-  title, body, images, type and destination group, plus a reminder that the conversation context is not
-  carried over. The source session, node and quote are not stored on the prompt.
+  title, body, images and destination group, plus a reminder that the conversation context is not carried
+  over. The source session, node and quote are not stored on the prompt.
 - **Right-click to save** — select text in a reply or in one of your own messages, then right-click: the
   menu offers **Copy** and **Add to the prompt pool**, whose submenu lists the groups currently on show;
   picking one stores the selection as a new item there. The group used last time leads the submenu;

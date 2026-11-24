@@ -251,7 +251,6 @@ else {
         if (!draft || draft.open !== true || !Array.isArray(draft.choices) || draft.choices.length === 0) fail('the save step did not open');
         else {
           if (draft.choices[0].value !== 'builtin:oftenuse') fail('the default group is not first');
-          if (draft.type !== 'opinion') fail(`the save step lost the type: ${draft.type}`);
           if (draft.body !== '【note.kind.comment】「构建是否接受参数？」：接受分支参数') fail('the save step lost the composed body');
           const sheet = saveSheet();
           const saveButton = sheet && findAll(sheet, (node) => node.type === 'button'
@@ -262,7 +261,6 @@ else {
             const pool = window.__dshPromptPoolStoreV1.get();
             const added = pool.items[pool.items.length - 1];
             if (!added || added.group !== 'builtin:oftenuse') fail(`promoted into ${added && added.group}`);
-            else if (added.type !== 'opinion') fail(`promoted type ${added && added.type}`);
             else if (added.body !== '【note.kind.comment】「构建是否接受参数？」：接受分支参数') fail(`promoted body ${JSON.stringify(added.body)}`);
             const note = window.__dshPromptPoolNotesV1.get().items.find((entry) => entry.id === 'n2');
             if (!note || note.promotedGroup !== 'builtin:oftenuse') fail('the note was not marked as stored');
@@ -437,27 +435,6 @@ else {
   else console.log('[ok] the idea and supplement kinds keep their labels');
   if (!source.includes("const NOTE_KIND_DEFAULT = 'agree'")) fail('a new bubble does not default to 同意');
   else console.log('[ok] a new annotation defaults to 同意');
-}
-
-// Prompt types are one fixed value: derived from the annotation kind, never a
-// free-form multi-tag. Mixed batches stay unclassified.
-const promptTypeStart = source.indexOf('const PROMPT_TYPES =');
-const promptTypeEnd = source.indexOf('function sanitizeItem', promptTypeStart);
-if (promptTypeStart < 0 || promptTypeEnd < 0) fail('the prompt type helpers were not found');
-else {
-  const types = new Function(`${source.slice(promptTypeStart, promptTypeEnd)}; return { normalizePromptType, promptTypeForNote, promptTypeForNotes };`)();
-  if (types.promptTypeForNote({ kind: 'agree' }) !== 'decision') fail('agree did not map to a decision');
-  else if (types.promptTypeForNote({ kind: 'disagree' }) !== 'decision') fail('disagree did not map to a decision');
-  else if (types.promptTypeForNote({ kind: 'question' }) !== 'question') fail('question did not map to a question');
-  else if (types.promptTypeForNote({ kind: 'comment' }) !== 'opinion') fail('comment did not map to an opinion');
-  else if (types.promptTypeForNote({ kind: 'idea' }) !== 'idea') fail('idea did not map to an idea');
-  else if (types.promptTypeForNote({ kind: 'supplement' }) !== 'supplement') fail('supplement did not map to a supplement');
-  else if (types.promptTypeForNote({ kind: 'todo' }) !== 'todo') fail('todo did not map to a todo');
-  else if (types.normalizePromptType('bogus') !== '') fail('an unknown prompt type was accepted');
-  else if (types.normalizePromptType('inspiration') !== 'inspiration') fail('the inspiration type was rejected');
-  else if (types.promptTypeForNotes([{ kind: 'agree' }, { kind: 'disagree' }]) !== 'decision') fail('a uniform batch lost its type');
-  else if (types.promptTypeForNotes([{ kind: 'agree' }, { kind: 'todo' }]) !== '') fail('a mixed batch got a single type');
-  else console.log('[ok] prompt types are fixed and derived from annotation kinds');
 }
 
 // The inline badge must use the conversation's text size, not its own pixel

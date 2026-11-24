@@ -8,10 +8,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Prompt types are gone: prompts no longer carry a type, and the row badge, list filter and the type control
+  in the editor and save step were removed. Annotation kinds stay, since they still separate agreement,
+  disagreement, questions and the other notes.
+- The empty prompt panel now points at **+ Prompt** and **Save current input** instead of the old Save draft
+  button.
 - The sidebar page now has three destinations: **Annotations**, **Prompts** (current workspace only) and
   **Shared** (the built-in and custom groups), instead of nesting a workspace / shared switch under
-  **Prompts**. Shared group tabs and the type filter share one context row, removing a row from the page;
-  the composer panel keeps its two modes.
+  **Prompts**. Shared group tabs sit on their own context row; workspace prompts go straight to the list,
+  and the composer panel keeps its two modes.
 - Underline tabs gained more breathing room: page destinations and panel modes now use a 20px gap,
   matching the settings tabs.
 - The page and panel headers now expose **How it works**, **Save current input** and **Settings**
@@ -19,8 +24,8 @@ All notable changes to this project are documented here. The format follows
   name, and pin / close moved into it. The annotation context line is gone: the page lists notes without a
   count banner, and the bottom bar's **Summarize** is the only entry to the review card.
 - Every icon now comes from one 24px grid with a 1.8px stroke and a 12 / 14 / 16 / 20px size ladder.
-  Prompt and annotation types use distinct shapes instead of seven colours and emoji; annotation marks keep
-  one amber identity, and inline chips, queue controls and header tools share the same outline set.
+  Annotation kinds use distinct shapes instead of seven colours and emoji; annotation marks keep one amber
+  identity, and inline chips, queue controls and header tools share the same outline set.
 
 ## [2.1.0] — 2026-11-24
 
