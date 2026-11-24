@@ -58,6 +58,8 @@ All notable changes to this project are documented here. The format follows
 - Overflow menus in the composer panel (the header `⋯` and each row `⋯`) stay on screen when the host
   composer seat establishes a fixed-position containing block through `will-change: transform`; menu
   coordinates are now offset by that ancestor instead of assuming the viewport origin.
+- The **+ Prompt** button vertically centers its plus icon and label instead of sitting them on the text
+  baseline.
 
 ## [Unreleased]
 

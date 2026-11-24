@@ -10291,7 +10291,7 @@ window.__ModuleLoader__.load({
       '.pp-head-tools .pp-search{flex:0 1 220px;min-width:80px;width:auto}' +
       '.pp-page-head .pp-scope-bar,.pp-panel-headline .pp-scope-bar{padding:0;gap:14px;min-width:0}' +
       '.pp-page-head .pp-scope-bar .pp-tab,.pp-panel-headline .pp-scope-bar .pp-tab{height:30px}' +
-      '.pp-new-prompt{height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
+      '.pp-new-prompt{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
       '.pp-menu-trigger{width:26px;height:26px;border-radius:7px}' +
       '.pp-head-more{display:inline-flex;flex:none}' +
       '.pp-note-context,.pp-prompt-bar{display:flex;align-items:center;gap:8px;min-height:34px;padding:4px 12px 6px;border-bottom:1px solid var(--pp-line);font-size:11.5px;color:var(--pp-ink-2)}' +
