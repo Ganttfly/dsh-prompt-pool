@@ -267,9 +267,11 @@ else {
           const bodyStrip = editBody ? findAll(editBody, (node) => typeof node.type === 'function'
             && node.type.name === 'ImageStrip') : [];
           const imagePicker = editBody ? findComponent(editBody, 'ImagePicker') : null;
-          const metaPicker = card ? findAll(card, (node) => node.props
-            && String(node.props.className || '').split(' ').indexOf('pp-edit-meta') >= 0)
-            .some((meta) => !!findComponent(meta, 'ImagePicker')) : false;
+          const metaNode = card ? findAll(card, (node) => node.props
+            && String(node.props.className || '').split(' ').indexOf('pp-edit-meta') >= 0)[0] : null;
+          const metaPicker = metaNode ? !!findComponent(metaNode, 'ImagePicker') : false;
+          const metaCount = metaNode ? findAll(metaNode, (node) => node.props
+            && String(node.props.className || '').split(' ').indexOf('pp-edit-count') >= 0)[0] : null;
           if (!card) fail('the annotation editor does not use the shared card');
           else if (picks.length !== 7) fail(`the annotation editor offers ${picks.length} kinds, expected 7`);
           else if (shared.length !== 5) fail('the annotation editor is missing a shared row');
@@ -277,6 +279,8 @@ else {
           else if (bodyStrip.length !== 1) fail('the annotation editor body is missing its saved image');
           else if (!imagePicker || imagePicker.props.compact !== true) fail('the annotation editor body lost its in-body image button');
           else if (metaPicker) fail('the annotation editor meta row still carries the image controls');
+          else if (!metaCount) fail('the annotation editor has no length counter');
+          else if (!/ \/ 1000$/.test((metaCount.children || []).join(''))) fail('the annotation length counter does not use the 1,000-cell cap');
           else console.log('[ok] the annotation editor keeps images and the add-image plus inside the body card');
 
           const editingRowBefore = findAll(editingView || [], (node) => node.props
@@ -502,11 +506,11 @@ else {
   else console.log('[ok] the notes tab stays visible without annotations');
 }
 
-// The badge and editor share one display-width budget: 100 full-width or 200
+// Both editors share one display-width budget: 500 full-width or 1,000
 // half-width characters. Exercise the pure helpers at the boundary.
-const widthStart = source.indexOf('const NOTE_BODY_MAX =');
+const widthStart = source.indexOf('const BODY_ZERO_WIDTH =');
 const widthEnd = source.indexOf('/** Keep only fields', widthStart);
-if (widthStart < 0 || widthEnd < 0) fail('the note width helpers were not found');
+if (widthStart < 0 || widthEnd < 0) fail('the body width helpers were not found');
 else {
   const helpers = new Function(`${source.slice(widthStart, widthEnd)}
     return { NOTE_BODY_MAX, noteBodyText, noteBodyWidth, clampNoteBody, clampNoteText, mergeNoteBodyInput, noteHighlightActive };`)();
@@ -514,22 +518,22 @@ else {
     if (actual !== expected) fail(`${label}: ${JSON.stringify(actual)} != ${JSON.stringify(expected)}`);
     else console.log('[ok] ' + label);
   };
-  same(helpers.NOTE_BODY_MAX, 200, 'the badge budget is 200 half-width cells');
-  same(helpers.noteBodyText('あ'.repeat(105)), 'あ'.repeat(100) + '…', '100 full-width characters fit and the 101st truncates');
-  same(helpers.noteBodyText('a'.repeat(210)), 'a'.repeat(200) + '…', '200 half-width characters fit and the 201st truncates');
-  same(helpers.noteBodyText('あ'.repeat(100)), 'あ'.repeat(100), '100 full-width characters fit without an ellipsis');
-  same(helpers.noteBodyText('a'.repeat(200)), 'a'.repeat(200), '200 half-width characters fit without an ellipsis');
-  same(helpers.noteBodyWidth('あ'.repeat(50) + 'a'.repeat(100)), 200, 'mixed text counts a full-width character as two cells');
+  same(helpers.NOTE_BODY_MAX, 1000, 'the badge budget is 1,000 half-width cells');
+  same(helpers.noteBodyText('あ'.repeat(505)), 'あ'.repeat(500) + '…', '500 full-width characters fit and the 501st truncates');
+  same(helpers.noteBodyText('a'.repeat(1010)), 'a'.repeat(1000) + '…', '1,000 half-width characters fit and the 1,001st truncates');
+  same(helpers.noteBodyText('あ'.repeat(500)), 'あ'.repeat(500), '500 full-width characters fit without an ellipsis');
+  same(helpers.noteBodyText('a'.repeat(1000)), 'a'.repeat(1000), '1,000 half-width characters fit without an ellipsis');
+  same(helpers.noteBodyWidth('あ'.repeat(250) + 'a'.repeat(500)), 1000, 'mixed text counts a full-width character as two cells');
   same(helpers.noteBodyWidth('😀'), 2, 'an emoji counts as a full-width character');
-  same(helpers.clampNoteBody('あ'.repeat(105)), 'あ'.repeat(100), 'the editor clamps 105 full-width characters to 100');
-  same(helpers.clampNoteBody('a'.repeat(205)), 'a'.repeat(200), 'the editor clamps 205 half-width characters to 200');
-  same(helpers.mergeNoteBodyInput('a'.repeat(200), 'a'.repeat(200) + 'b'), 'a'.repeat(200), 'typing at the cap leaves the old body intact');
-  same(helpers.mergeNoteBodyInput('a'.repeat(199), 'a'.repeat(199) + 'あ'), 'a'.repeat(199), 'a wide character that does not fit is rejected');
-  same(helpers.mergeNoteBodyInput('a'.repeat(198), 'a'.repeat(198) + 'あ'), 'a'.repeat(198) + 'あ', 'a wide character that fits is accepted');
-  same(helpers.mergeNoteBodyInput('', 'a'.repeat(220)), 'a'.repeat(200), 'pasting into an empty body takes the prefix');
-  same(helpers.mergeNoteBodyInput('a'.repeat(200), 'b'.repeat(220)), 'b'.repeat(200), 'pasting over the whole body takes the prefix');
-  same(helpers.mergeNoteBodyInput('a'.repeat(195), 'a'.repeat(195) + 'b'.repeat(20)), 'a'.repeat(195) + 'b'.repeat(5), 'an overflowing insertion adds only the part that fits');
-  same(helpers.mergeNoteBodyInput('a'.repeat(200), 'a'.repeat(10) + 'あ' + 'a'.repeat(189)), 'a'.repeat(200), 'an overflowing replacement does not cut the old tail');
+  same(helpers.clampNoteBody('あ'.repeat(505)), 'あ'.repeat(500), 'the editor clamps 505 full-width characters to 500');
+  same(helpers.clampNoteBody('a'.repeat(1005)), 'a'.repeat(1000), 'the editor clamps 1,005 half-width characters to 1,000');
+  same(helpers.mergeNoteBodyInput('a'.repeat(1000), 'a'.repeat(1000) + 'b'), 'a'.repeat(1000), 'typing at the cap leaves the old body intact');
+  same(helpers.mergeNoteBodyInput('a'.repeat(999), 'a'.repeat(999) + 'あ'), 'a'.repeat(999), 'a wide character that does not fit is rejected');
+  same(helpers.mergeNoteBodyInput('a'.repeat(998), 'a'.repeat(998) + 'あ'), 'a'.repeat(998) + 'あ', 'a wide character that fits is accepted');
+  same(helpers.mergeNoteBodyInput('', 'a'.repeat(1020)), 'a'.repeat(1000), 'pasting into an empty body takes the prefix');
+  same(helpers.mergeNoteBodyInput('a'.repeat(1000), 'b'.repeat(1020)), 'b'.repeat(1000), 'pasting over the whole body takes the prefix');
+  same(helpers.mergeNoteBodyInput('a'.repeat(995), 'a'.repeat(995) + 'b'.repeat(20)), 'a'.repeat(995) + 'b'.repeat(5), 'an overflowing insertion adds only the part that fits');
+  same(helpers.mergeNoteBodyInput('a'.repeat(1000), 'a'.repeat(10) + 'あ' + 'a'.repeat(989)), 'a'.repeat(1000), 'an overflowing replacement does not cut the old tail');
   same(helpers.noteHighlightActive(0, null), false, 'no notes and no draft paints nothing');
   same(helpers.noteHighlightActive(0, { anchor: {} }), true, 'an unsaved draft paints its passage');
   same(helpers.noteHighlightActive(2, null), true, 'saved notes paint without a draft');

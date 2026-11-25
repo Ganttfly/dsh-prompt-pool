@@ -82,8 +82,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   are shown as thumbnails outside the editable text and travel as attachments. There is no second subset
   selection. Annotations are reviewed and sent from the Annotations page instead.
 - **Annotate while you read** — select a passage in an assistant reply and right-click **Annotate**:
-  pick a kind from its submenu (note / question / agree / disagree / idea / additional info / to-do), type up to 100
-  full-width or 200 half-width characters (or leave it empty for a glyph-only badge), and the badge lands
+  pick a kind from its submenu (note / question / agree / disagree / idea / additional info / to-do), type up to 500
+  full-width or 1,000 half-width characters (or leave it empty for a glyph-only badge), and the badge lands
   right after the passage with a matching underline. Each kind has its own vivid color, shared by the
   badge, the inline chip and the underline. Picking a kind preselects it in the bubble; without a pick
   new notes start as **Agree**. The block picker starts on the kind last used there (initially
@@ -127,8 +127,9 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   Clicking a row's title opens the editor; the type badge leads the title. Both editors share one card —
   title, kind chips, body, meta row and action row — so an annotation and a prompt keep the same rhythm.
   The add-image action is a plus at the bottom-left inside the body field, matching the composer.
-  Prompt text is capped at 2,000 characters; type `@` to reference a file. Switching to another item
-  with unsaved edits first asks whether to keep editing, discard, or save and switch.
+  Both editors measure the body in display cells, capped at 500 full-width or 1,000 half-width
+  characters, and show a live count; prompt text also accepts `@` to reference a file. Switching to
+  another item with unsaved edits first asks whether to keep editing, discard, or save and switch.
   Help, **Save current input** and **Settings** sit beside search. Its two modes are **Annotations**
   (current session) and **Prompts** (current workspace); the panel never shows the shared pool.
   A new prompt is not counted until it is saved. Drag its top edge
@@ -186,8 +187,8 @@ does not turn it on.
    shared-pool groups, and the toast names the destination. The composer keeps its text.
 3. Select text in a conversation and right-click: the menu offers **Copy** and **Add to the prompt
    pool**; open the submenu and pick the current workspace or a shared-pool group.
-4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 100
-   full-width or 200 half-width characters, and the badge appears right after the passage. The **Annotate**
+4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 500
+   full-width or 1,000 half-width characters, and the badge appears right after the passage. The **Annotate**
    button in the page header (or **+ Annotate** in the composer menu) starts the block picker instead: move
    over an assistant paragraph and click to keep adding notes; Esc leaves. The pool's **Annotations** page
    collects the notes; **Locate** scrolls to a passage, **Insert** writes one note into the composer, and the

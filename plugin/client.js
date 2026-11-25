@@ -186,7 +186,7 @@ window.__ModuleLoader__.load({
       'editor.unsavedStay': '继续编辑',
       'editor.unsavedDiscard': '不保存',
       'editor.unsavedSave': '保存并切换',
-      'row.lengthHint': '最多 2,000 字符，支持 @ 引用文件',
+      'row.lengthHint': '最多 500 个全角或 1,000 个半角字符，支持 @ 引用文件',
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
       'row.type': '类型',
@@ -289,7 +289,7 @@ window.__ModuleLoader__.load({
       'scope.hint.prompts.title': '这里的提示词只属于当前工作区，不会出现在其他工作区。',
       'scope.hint.global.title': '内置分组和自定义分组在所有工作区共用。',
       'note.placeholder': '写点什么：回答、疑问或修改意见',
-      'note.limitHint': '最多 100 个全角或 200 个半角字符',
+      'note.limitHint': '最多 500 个全角或 1,000 个半角字符',
 
       'note.noneSelected': '先勾选至少一条批注',
       'note.review.title': '预览提示词',
@@ -531,7 +531,7 @@ window.__ModuleLoader__.load({
       'editor.unsavedStay': 'Keep editing',
       'editor.unsavedDiscard': 'Discard',
       'editor.unsavedSave': 'Save and switch',
-      'row.lengthHint': 'Up to 2,000 characters; use @ to reference files',
+      'row.lengthHint': 'Up to 500 full-width or 1,000 half-width characters; use @ to reference files',
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
       'row.type': 'Type',
@@ -634,7 +634,7 @@ window.__ModuleLoader__.load({
       'scope.hint.prompts.title': 'Prompts here belong to this workspace and do not appear in other workspaces.',
       'scope.hint.global.title': 'Built-in and custom groups are shared across all workspaces.',
       'note.placeholder': 'Write an answer, a question or a correction',
-      'note.limitHint': 'Up to 100 full-width or 200 half-width characters',
+      'note.limitHint': 'Up to 500 full-width or 1,000 half-width characters',
 
       'note.noneSelected': 'Select at least one annotation first',
       'note.review.title': 'Prompt preview',
@@ -1344,10 +1344,11 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * Prompt bodies are reusable instructions, not documents: 2,000 characters
-     * leaves room for a detailed brief while stopping a pasted essay.
+     * Prompt bodies are reusable instructions, not documents: 500 full-width or
+     * 1,000 half-width characters (1,000 cells) leaves room for a detailed brief
+     * while stopping a pasted essay. Both editors share the same cell budget.
      */
-    const PROMPT_BODY_MAX = 2000;
+    const PROMPT_BODY_MAX = 1000;
 
     /**
      * Prompt intents: the glyph names the kind of instruction, and the hue is
@@ -2864,13 +2865,9 @@ window.__ModuleLoader__.load({
               rows: 4,
               autoFocus: true,
               sessionId,
-              maxLength: PROMPT_BODY_MAX,
               onChange: (event) => {
                 const value = String(event.target.value || '');
-                setEditing({
-                  ...editing,
-                  body: value.length > PROMPT_BODY_MAX ? value.slice(0, PROMPT_BODY_MAX) : value,
-                });
+                setEditing({ ...editing, body: mergeBodyInput(editing.body, value, PROMPT_BODY_MAX) });
               },
               onPasteImages,
               onKeyDown: (event) => {
@@ -2900,10 +2897,10 @@ window.__ModuleLoader__.load({
               'span',
               {
                 className: 'pp-edit-count',
-                'data-near': editing.body.length >= PROMPT_BODY_MAX * 0.9 ? 'true' : undefined,
-                'data-full': editing.body.length >= PROMPT_BODY_MAX ? 'true' : undefined,
+                'data-near': bodyWidth(editing.body) >= PROMPT_BODY_MAX * 0.9 && bodyWidth(editing.body) < PROMPT_BODY_MAX ? 'true' : undefined,
+                'data-full': bodyWidth(editing.body) >= PROMPT_BODY_MAX ? 'true' : undefined,
               },
-              `${editing.body.length} / ${PROMPT_BODY_MAX}`,
+              `${bodyWidth(editing.body)} / ${PROMPT_BODY_MAX}`,
             ),
           ),
           h(
@@ -6049,7 +6046,6 @@ window.__ModuleLoader__.load({
           value: props.value,
           placeholder: props.placeholder,
           rows: props.rows || 5,
-          maxLength: props.maxLength,
           autoFocus: props.autoFocus === true,
           onChange: (event) => {
             props.onChange(event);
@@ -6187,53 +6183,42 @@ window.__ModuleLoader__.load({
     const NOTE_KIND_IDS = NOTE_KINDS.map((kind) => kind.id);
     const NOTE_KIND_DEFAULT = 'agree';
     /**
-     * The annotation body budget in half-width cells, shared by the editor and
-     * the inline badge: 100 full-width characters (CJK, full-width punctuation,
-     * emoji) or 200 half-width ones, mixed text pro rata.
+     * Body budgets are measured in half-width cells, not UTF-16 units: 500
+     * full-width characters (CJK, full-width punctuation, emoji) or 1,000
+     * half-width ones, mixed text pro rata. The annotation editor, the prompt
+     * editor and the inline annotation badge all use this same measure.
      */
-    const NOTE_BODY_MAX = 200;
     /** Zero-width code points: combining marks and emoji joiners/variations. */
-    const NOTE_ZERO_WIDTH = /[\u200b-\u200f\u2060\ufe0e\ufe0f]|\p{M}/u;
+    const BODY_ZERO_WIDTH = /[\u200b-\u200f\u2060\ufe0e\ufe0f]|\p{M}/u;
     /** Code points that take two cells: East Asian wide/fullwidth and emoji. */
-    const NOTE_WIDE = /[\u1100-\u115f\u2e80-\u303e\u3041-\u33ff\u3400-\u4dbf\u4e00-\u9fff\ua000-\ua4cf\ua960-\ua97f\uac00-\ud7a3\uf900-\ufaff\ufe10-\ufe19\ufe30-\ufe6f\uff00-\uff60\uffe0-\uffe6]|\p{Emoji_Presentation}/u;
+    const BODY_WIDE = /[\u1100-\u115f\u2e80-\u303e\u3041-\u33ff\u3400-\u4dbf\u4e00-\u9fff\ua000-\ua4cf\ua960-\ua97f\uac00-\ud7a3\uf900-\ufaff\ufe10-\ufe19\ufe30-\ufe6f\uff00-\uff60\uffe0-\uffe6]|\p{Emoji_Presentation}/u;
 
-    function noteKind(kind) {
-      return NOTE_KINDS.find((entry) => entry.id === kind)
-        || NOTE_KINDS.find((entry) => entry.id === NOTE_KIND_DEFAULT)
-        || NOTE_KINDS[0];
-    }
-
-    /** Half-width cells one code point occupies in the badge. */
-    function noteCharCells(char) {
+    /** Half-width cells one code point occupies. */
+    function bodyCharCells(char) {
       if (!char) return 0;
-      if (NOTE_ZERO_WIDTH.test(char)) return 0;
-      return NOTE_WIDE.test(char) ? 2 : 1;
+      if (BODY_ZERO_WIDTH.test(char)) return 0;
+      return BODY_WIDE.test(char) ? 2 : 1;
     }
 
-    /** The width of one note body in half-width cells. */
-    function noteBodyWidth(body) {
+    /** The display width of a body in half-width cells. */
+    function bodyWidth(body) {
       let width = 0;
-      for (const char of String(body || '')) width += noteCharCells(char);
+      for (const char of String(body || '')) width += bodyCharCells(char);
       return width;
     }
 
     /** Cut a string to at most `limit` half-width cells without splitting a character. */
-    function clampNoteText(value, limit) {
+    function clampBodyText(value, limit) {
       let width = 0;
       let text = '';
       const max = Math.max(0, limit);
       for (const char of String(value || '')) {
-        const cells = noteCharCells(char);
+        const cells = bodyCharCells(char);
         if (width + cells > max) break;
         text += char;
         width += cells;
       }
       return text;
-    }
-
-    /** Cut a note body to the badge budget without splitting a character. */
-    function clampNoteBody(body) {
-      return clampNoteText(body, NOTE_BODY_MAX);
     }
 
     /**
@@ -6243,10 +6228,11 @@ window.__ModuleLoader__.load({
      * cutting the old tail. A full replacement (select all, then paste) takes
      * as much of the new text as the budget allows.
      */
-    function mergeNoteBodyInput(previous, next) {
+    function mergeBodyInput(previous, next, limit) {
       const prev = String(previous || '');
       const value = String(next || '');
-      if (noteBodyWidth(value) <= NOTE_BODY_MAX) return value;
+      const max = Math.max(0, limit);
+      if (bodyWidth(value) <= max) return value;
       const before = Array.from(prev);
       const after = Array.from(value);
       // The edit is one contiguous replacement: common head, changed middle,
@@ -6263,9 +6249,9 @@ window.__ModuleLoader__.load({
       const inserted = after.slice(head, after.length - tail).join('');
       // Select all + paste: the old body is intentionally gone, so the pasted
       // text may be trimmed instead of being swallowed whole.
-      if (removed.length === before.length) return clampNoteBody(value);
-      const room = NOTE_BODY_MAX - noteBodyWidth(prev) + noteBodyWidth(removed.join(''));
-      const allowed = clampNoteText(inserted, room);
+      if (removed.length === before.length) return clampBodyText(value, max);
+      const room = max - bodyWidth(prev) + bodyWidth(removed.join(''));
+      const allowed = clampBodyText(inserted, room);
       // A replacement has to fit untouched; a pure insertion may take the
       // prefix that fits while the existing text stays intact.
       if (removed.length > 0 && Array.from(allowed).length !== Array.from(inserted).length) return prev;
@@ -6274,7 +6260,33 @@ window.__ModuleLoader__.load({
         ...Array.from(allowed),
         ...before.slice(head + removed.length),
       ].join('');
-      return clampNoteBody(result);
+      return clampBodyText(result, max);
+    }
+
+    /** The annotation body budget: 500 full-width or 1,000 half-width characters. */
+    const NOTE_BODY_MAX = 1000;
+
+    function noteKind(kind) {
+      return NOTE_KINDS.find((entry) => entry.id === kind)
+        || NOTE_KINDS.find((entry) => entry.id === NOTE_KIND_DEFAULT)
+        || NOTE_KINDS[0];
+    }
+
+    /** Annotation-specific names for the shared cell helpers. */
+    function noteBodyWidth(body) {
+      return bodyWidth(body);
+    }
+
+    function clampNoteText(value, limit) {
+      return clampBodyText(value, limit);
+    }
+
+    function clampNoteBody(body) {
+      return clampBodyText(body, NOTE_BODY_MAX);
+    }
+
+    function mergeNoteBodyInput(previous, next) {
+      return mergeBodyInput(previous, next, NOTE_BODY_MAX);
     }
 
     /** The visible badge text, whitespace-collapsed and capped by display width. */
@@ -8875,6 +8887,15 @@ window.__ModuleLoader__.load({
                         'div',
                         { className: 'pp-edit-meta' },
                         h('span', { className: 'pp-edit-hint' }, translate('note.limitHint')),
+                        h(
+                          'span',
+                          {
+                            className: 'pp-edit-count',
+                            'data-near': noteBodyWidth(editBody) >= NOTE_BODY_MAX * 0.9 && noteBodyWidth(editBody) < NOTE_BODY_MAX ? 'true' : undefined,
+                            'data-full': noteBodyWidth(editBody) >= NOTE_BODY_MAX ? 'true' : undefined,
+                          },
+                          `${noteBodyWidth(editBody)} / ${NOTE_BODY_MAX}`,
+                        ),
                       ),
                       h(
                         'div',
