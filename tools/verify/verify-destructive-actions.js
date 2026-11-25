@@ -269,6 +269,13 @@ for (const [slotName, props, label] of [
         if (nodes(editMeta, []).some(
           (node) => typeof node.type === 'function' && node.type.name === 'ImageStrip',
         )) failures.push('the prompt image strip is still inside the meta row');
+        const hint = nodes(editMeta, []).find(
+          (node) => node.type === 'span'
+            && String(node.props && node.props.className || '').split(' ').indexOf('pp-edit-hint') >= 0,
+        );
+        if (!hint || !Array.isArray(hint.children) || hint.children.indexOf('row.lengthHint') < 0) {
+          failures.push('the prompt editor does not state its length policy');
+        }
       }
       const picks = nodes(tree, []).filter(
         (node) => node.type === 'button' && String(node.props && node.props.className || '').indexOf('pp-type-pick') >= 0,

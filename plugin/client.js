@@ -186,6 +186,7 @@ window.__ModuleLoader__.load({
       'editor.unsavedStay': '继续编辑',
       'editor.unsavedDiscard': '不保存',
       'editor.unsavedSave': '保存并切换',
+      'row.lengthHint': '不限长度，支持 @ 引用文件',
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
       'row.type': '类型',
@@ -530,6 +531,7 @@ window.__ModuleLoader__.load({
       'editor.unsavedStay': 'Keep editing',
       'editor.unsavedDiscard': 'Discard',
       'editor.unsavedSave': 'Save and switch',
+      'row.lengthHint': 'No length limit; use @ to reference files',
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
       'row.type': 'Type',
@@ -2869,6 +2871,7 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'pp-edit-meta' },
+            h('span', { className: 'pp-edit-hint' }, translate('row.lengthHint')),
             h(ImagePicker, {
               images: editing.images || [],
               showStrip: false,
@@ -3912,36 +3915,47 @@ window.__ModuleLoader__.load({
     }
 
     // ------------------------------------------------------------ sidebar icon
+    // The same pool mark, reduced to a 24-unit grid. Bubbles and the eye are
+    // dropped below 22px where they turn into specks; the ring and the fish
+    // silhouette carry the mark at tab / trigger sizes.
+    const POOL_ICON_BODY = 'M10.4 0C9.4 -2.6 7.6 -4.7 5.3 -5.9C1.6 -7.7 -3.2 -7.2 -6.4 -4.7C-7.8 -3.6 -8.8 -2.2 -9.4 -0.6L-14.2 -5.0L-12.1 0L-14.2 5.0L-9.4 0.6C-8.8 2.2 -7.8 3.6 -6.4 4.7C-3.2 7.2 1.6 7.7 5.3 5.9C7.6 4.7 9.4 2.6 10.4 0Z';
+    const POOL_ICON_EYE = 'M4.4 -3.5a1.3 1.3 0 1 0 0 2.6a1.3 1.3 0 1 0 0-2.6Z';
+    const POOL_ICON_FIN = 'M1.4 -5.8C1.9 -8.4 -0.6 -9.7 -3.8 -8.8C-2.3 -8.0 -1.1 -7.0 -0.4 -5.6Z';
+
     function PromptPoolIcon(props) {
       const size = typeof props.size === 'number' && props.size > 0 ? props.size : 18;
-      // Two offset prompt cards: the 01 direction from the icon study. At 12px
-      // the two cards alone read cleanly; the text lines would turn into noise.
-      const micro = size <= 12;
+      const micro = size <= 14;
+      const compact = size < 22;
+      const ringWidth = micro ? 2 : compact ? 1.75 : 1.6;
+      const fishScale = micro ? 0.48 : compact ? 0.44 : 0.394;
       return h(
         'svg',
         {
           width: size,
           height: size,
           viewBox: '0 0 24 24',
-          fill: 'none',
-          stroke: 'currentColor',
-          strokeWidth: micro ? 2 : 1.8,
-          strokeLinecap: 'round',
-          strokeLinejoin: 'round',
+          fill: 'currentColor',
           'aria-hidden': true,
           style: { display: 'block' },
         },
-        h('path', {
-          d: micro
-            ? 'M8.7 4.9h7.2a3.2 3.2 0 0 1 3.2 3.2v7.2'
-            : 'M8 4.5h8.2a3.3 3.3 0 0 1 3.3 3.3v8.2',
+        h('circle', {
+          cx: 12,
+          cy: 12,
+          r: 9.4,
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: ringWidth,
         }),
-        h('rect', micro
-          ? { x: 4, y: 8, width: 12.3, height: 12.3, rx: 2.3 }
-          : { x: 3.5, y: 7.5, width: 13, height: 13, rx: 2.4 }),
-        micro ? null : h('path', {
-          d: 'M6.75 12h6.4M6.75 15.5h4.4',
-        }),
+        h(
+          'g',
+          { transform: 'translate(12.2 12.8) rotate(-15) scale(' + fishScale + ')' },
+          h('path', {
+            d: compact ? POOL_ICON_BODY : POOL_ICON_BODY + POOL_ICON_EYE,
+            fill: 'currentColor',
+            fillRule: 'evenodd',
+          }),
+          h('path', { d: POOL_ICON_FIN, fill: 'currentColor' }),
+        ),
       );
     }
 
