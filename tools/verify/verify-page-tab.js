@@ -100,6 +100,11 @@ const render = () => {
 };
 const tabBar = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function' && node.type.name === 'TabBar');
 const scopeBar = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function' && node.type.name === 'ScopeBar');
+const scopeNote = (tree) => nodes(tree, []).find((node) => String(node.props && node.props.className || '').split(' ').indexOf('pp-scope-note') >= 0);
+const scopeNoteKey = (tree) => {
+  const node = scopeNote(tree);
+  return node && Array.isArray(node.children) ? node.children[0] : null;
+};
 const openGlobalScope = (tree) => {
   const scope = scopeBar(tree);
   if (!scope) return false;
@@ -111,9 +116,21 @@ const openGlobalScope = (tree) => {
 
 const failures = [];
 let tree = render();
+const initialNote = scopeNote(tree);
+if (scopeNoteKey(tree) !== 'scope.hint.notes') failures.push('the notes scope hint is missing');
+if (!initialNote || initialNote.props.title !== 'scope.hint.notes.title') failures.push('the notes scope hint has no full description');
+const initialBar = scopeBar(tree);
+const initialButtons = initialBar ? nodes(initialBar.type(initialBar.props || {}), []).filter((node) => node.type === 'button') : [];
+if (initialButtons.length < 2) failures.push('the prompt scope tab is missing');
+else {
+  initialButtons[1].props.onClick();
+  tree = render();
+  if (scopeNoteKey(tree) !== 'scope.hint.prompts') failures.push('the prompt scope hint does not follow the tab');
+}
 if (!openGlobalScope(tree)) failures.push('the global scope tab is missing');
 else {
   tree = render();
+  if (scopeNoteKey(tree) !== 'scope.hint.global') failures.push('the shared scope hint does not follow the tab');
   let bar = tabBar(tree);
   if (!bar) {
     failures.push('the tab bar was not rendered');

@@ -276,6 +276,12 @@ window.__ModuleLoader__.load({
       'scope.prompts': '提示词',
       'scope.workspace': '当前工作区',
       'scope.global': '共享池',
+      'scope.hint.notes': '仅当前会话',
+      'scope.hint.prompts': '仅当前工作区',
+      'scope.hint.global': '所有工作区共用',
+      'scope.hint.notes.title': '批注按会话保存，只显示当前会话的批注。',
+      'scope.hint.prompts.title': '这里的提示词只属于当前工作区，不会出现在其他工作区。',
+      'scope.hint.global.title': '内置分组和自定义分组在所有工作区共用。',
       'note.placeholder': '写点什么：回答、疑问或修改意见',
       'note.limitHint': '最多 100 个全角或 200 个半角字符',
 
@@ -608,6 +614,12 @@ window.__ModuleLoader__.load({
       'scope.prompts': 'Prompts',
       'scope.workspace': 'Current workspace',
       'scope.global': 'Shared',
+      'scope.hint.notes': 'This session only',
+      'scope.hint.prompts': 'This workspace only',
+      'scope.hint.global': 'Shared across workspaces',
+      'scope.hint.notes.title': 'Annotations are saved with this session and appear only here.',
+      'scope.hint.prompts.title': 'Prompts here belong to this workspace and do not appear in other workspaces.',
+      'scope.hint.global.title': 'Built-in and custom groups are shared across all workspaces.',
       'note.placeholder': 'Write an answer, a question or a correction',
       'note.limitHint': 'Up to 100 full-width or 200 half-width characters',
 
@@ -4278,6 +4290,11 @@ window.__ModuleLoader__.load({
       { id: 'global', label: 'scope.global', icon: 'layers' },
     ];
     const PANEL_SCOPE_ENTRIES = PAGE_SCOPE_ENTRIES.slice(0, 2);
+    const PAGE_SCOPE_HINTS = {
+      notes: { text: 'scope.hint.notes', title: 'scope.hint.notes.title' },
+      prompts: { text: 'scope.hint.prompts', title: 'scope.hint.prompts.title' },
+      global: { text: 'scope.hint.global', title: 'scope.hint.global.title' },
+    };
 
     function ScopeBar(props) {
       const entries = props.entries || PAGE_SCOPE_ENTRIES;
@@ -5053,6 +5070,10 @@ window.__ModuleLoader__.load({
               counts: { notes: notesList.length, prompts: workspaceCount, global: sharedItems.length },
               onChange: switchMode,
             }),
+            h('span', {
+              className: 'pp-scope-note',
+              title: translate(PAGE_SCOPE_HINTS[activeMode].title),
+            }, translate(PAGE_SCOPE_HINTS[activeMode].text)),
           ),
           scope === 'global'
             ? h(
@@ -10665,7 +10686,9 @@ window.__ModuleLoader__.load({
       '.pp-list{overflow-y:auto;padding:6px 12px 20px;flex:1;min-height:0}' +
       '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
       '.pp-page-head{display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0;padding:8px 12px 6px;border-bottom:1px solid var(--pp-line);flex-wrap:nowrap}' +
-      '.pp-page-tabs{display:flex;align-items:center;min-width:0}' +
+      '.pp-page-tabs{display:flex;align-items:center;gap:12px;min-width:0}' +
+      '.pp-page-tabs .pp-scope-bar{flex:none}' +
+      '.pp-scope-note{margin-left:auto;min-width:0;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px;line-height:1.3;letter-spacing:.01em}' +
       '.pp-panel-head{flex-direction:column;align-items:stretch;gap:0;padding:0}' +
       '.pp-panel-brand{display:flex;align-items:center;gap:7px;min-width:0;padding:1px 12px 5px}' +
       '.pp-panel-brand-mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;border-radius:7px;background:color-mix(in srgb,var(--pp-accent) 9%,transparent);color:var(--pp-accent)}' +
