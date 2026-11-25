@@ -268,7 +268,6 @@ window.__ModuleLoader__.load({
       'note.pick.undo': '撤销上一条',
       'note.pick.done': '完成',
       'note.pick.anchorFailed': '无法定位这个段落，请换一段试试。',
-      'note.pick.exists': '这一段已有批注，未重复添加。',
       'note.pick.meta': '{kind} · {n} 字',
       'note.pick.paragraph': '段落',
       'note.pick.listItem': '列表项',
@@ -614,7 +613,6 @@ window.__ModuleLoader__.load({
       'note.pick.undo': 'Undo last',
       'note.pick.done': 'Done',
       'note.pick.anchorFailed': 'Could not anchor this block. Try another one.',
-      'note.pick.exists': 'This block already has an annotation.',
       'note.pick.meta': '{kind} · {n} chars',
       'note.pick.paragraph': 'Paragraph',
       'note.pick.listItem': 'List item',
@@ -5313,7 +5311,7 @@ window.__ModuleLoader__.load({
                   onClick: () => {
                     setReviewOpen(false);
                     setSettingsOpen(false);
-                    notePickActions.start(activeSessionId);
+                    notePickActions.start(activeSessionId, 'page');
                   },
                 },
                   h('span', { className: 'pp-btn-icon' }, icon('plus')),
@@ -5410,6 +5408,7 @@ window.__ModuleLoader__.load({
               ? h(NotesView, {
                   notes: notesList,
                   sessionId: activeSessionId,
+                  surface: 'page',
                   reviewMode: reviewOpen && reviewProcessing,
                   onCompose: composeSessionNotes,
                   onInsertNote: insertNote,
@@ -6365,6 +6364,8 @@ window.__ModuleLoader__.load({
      * transcript order. The record ages out; the list reads it on mount too.
      */
     const NOTE_FRESH_MS = 3200;
+    /** How long a picker request may wait for its surface to mount. */
+    const NOTE_EDIT_REQUEST_MS = 6000;
     const noteFresh = (() => {
       const empty = { id: '', sessionId: '', token: 0, at: 0 };
       if (typeof window === 'undefined') return createStore(empty);
@@ -6565,6 +6566,36 @@ window.__ModuleLoader__.load({
     })();
 
     /**
+     * A picker request to open one annotation in its inline list editor. Both the
+     * page and the panel mount NotesView, so the request names its surface; only
+     * that copy consumes it. The request expires so a closed surface cannot open
+     * a stale editor much later.
+     */
+    const noteEditRequest = (() => {
+      const empty = { id: '', sessionId: '', surface: '', token: 0, at: 0 };
+      if (typeof window === 'undefined') return createStore(empty);
+      if (!window.__dshPromptPoolNoteEditRequestV1) window.__dshPromptPoolNoteEditRequestV1 = createStore(empty);
+      return window.__dshPromptPoolNoteEditRequestV1;
+    })();
+    const noteEditRequestActions = {
+      request(id, sessionId, surface) {
+        if (typeof id !== 'string' || !id || typeof sessionId !== 'string' || !sessionId) return;
+        const target = surface === 'page' ? 'page' : 'panel';
+        noteEditRequest.set({
+          id,
+          sessionId,
+          surface: target,
+          token: (noteEditRequest.get().token || 0) + 1,
+          at: Date.now(),
+        });
+      },
+      clear(token) {
+        if (!token || noteEditRequest.get().token !== token) return;
+        noteEditRequest.set({ id: '', sessionId: '', surface: '', token: 0, at: 0 });
+      },
+    };
+
+    /**
      * Notes unchecked from the bulk draft/save actions. Keeping the excluded
      * ids instead of the picked ones means a new note starts selected, and a
      * session switch starts from "everything selected" without stale picks.
@@ -6652,20 +6683,20 @@ window.__ModuleLoader__.load({
     }
     /** Block-level annotation picker: active while the cursor chooses a passage. */
     const notePick = (() => {
-      const empty = { active: false, sessionId: '', token: 0 };
+      const empty = { active: false, sessionId: '', source: '', token: 0 };
       if (typeof window === 'undefined') return createStore(empty);
       if (!window.__dshPromptPoolNotePickV1) window.__dshPromptPoolNotePickV1 = createStore(empty);
       return window.__dshPromptPoolNotePickV1;
     })();
     const notePickActions = {
-      start(sessionId) {
+      start(sessionId, source) {
         const id = typeof sessionId === 'string' ? sessionId : '';
         if (!id) return;
-        notePick.set({ active: true, sessionId: id, token: Date.now() });
+        notePick.set({ active: true, sessionId: id, source: source === 'page' ? 'page' : 'panel', token: Date.now() });
       },
       stop() {
         if (!notePick.get().active) return;
-        notePick.set({ active: false, sessionId: '', token: 0 });
+        notePick.set({ active: false, sessionId: '', source: '', token: 0 });
       },
     };
 
@@ -6693,6 +6724,7 @@ window.__ModuleLoader__.load({
     const useChatView = () => useSyncExternalStore(chatView.subscribe, chatView.get, chatView.get);
     const useNoteDraft = () => useSyncExternalStore(noteDraft.subscribe, noteDraft.get, noteDraft.get);
     const useNoteFocus = () => useSyncExternalStore(noteFocus.subscribe, noteFocus.get, noteFocus.get);
+    const useNoteEditRequest = () => useSyncExternalStore(noteEditRequest.subscribe, noteEditRequest.get, noteEditRequest.get);
     const useNotePrompt = () => useSyncExternalStore(notePrompt.subscribe, notePrompt.get, notePrompt.get);
     const useNoteConfirm = () => useSyncExternalStore(noteConfirm.subscribe, noteConfirm.get, noteConfirm.get);
     const useNoteStatus = () => useSyncExternalStore(noteStatus.subscribe, noteStatus.get, noteStatus.get);
@@ -7562,8 +7594,8 @@ window.__ModuleLoader__.load({
     /**
      * The hover picker. It reads the live transcript, keeps its highlight on a
      * semantic block, and adds an empty annotation when the block is clicked.
-     * The editor lives in the annotations list, so the picker can stay active
-     * for several blocks in a row.
+     * The new annotation, or the one already on that block, opens in the list
+     * editor and picking ends so the editor can take focus.
      */
     function NotePicker() {
       const pick = useNotePick();
@@ -7678,6 +7710,29 @@ window.__ModuleLoader__.load({
           const root = noteChatRoot(pick.sessionId);
           return root && root.contains(flow) ? flow : null;
         };
+        /**
+         * Open the annotation in the list and leave picking mode. A picker
+         * started on the annotations page edits in place when that list is
+         * visible; otherwise the panel is opened on its annotations tab.
+         */
+        const revealNote = (id) => {
+          if (!id) return;
+          const pageListVisible = typeof document !== 'undefined'
+            && Array.from(document.querySelectorAll('.pp-page .pp-notes')).some((node) => (
+              typeof node.getClientRects === 'function' && node.getClientRects().length > 0
+            ));
+          const surface = pick.source === 'page' && pageListVisible ? 'page' : 'panel';
+          if (surface === 'panel') {
+            ui.set({ open: true });
+            try {
+              bridge.request({ type: 'open-view', scope: 'notes', create: false });
+            } catch (_error) {
+              /* the panel reports an unavailable workspace if needed */
+            }
+          }
+          noteEditRequestActions.request(id, pick.sessionId, surface);
+          notePickActions.stop();
+        };
         const onDown = (event) => {
           const flow = flowFor(event.target);
           if (event.button === 2) {
@@ -7714,7 +7769,7 @@ window.__ModuleLoader__.load({
           }
           const existing = blockNoteAt(notes.get().items, pick.sessionId, anchor);
           if (existing) {
-            showToast(translate('note.pick.exists'));
+            revealNote(existing.id);
             return;
           }
           const id = uid();
@@ -7735,6 +7790,7 @@ window.__ModuleLoader__.load({
           });
           lastIdRef.current = id;
           setCount((value) => value + 1);
+          revealNote(id);
         };
         const onClick = (event) => {
           if (Date.now() > suppressClickUntil) return;
@@ -8499,6 +8555,8 @@ window.__ModuleLoader__.load({
       const selection = useNoteSelection();
       const reviewState = useNoteReview();
       const fresh = useNoteFresh();
+      const editRequest = useNoteEditRequest();
+      const surface = props.surface === 'page' ? 'page' : 'panel';
       const reviewMode = props.reviewMode === true;
       const freshRows = useRef(new Map());
       const [editId, setEditId] = useState('');
@@ -8509,7 +8567,14 @@ window.__ModuleLoader__.load({
       const immediateFor = (note) => noteReviewImmediate(reviewState, note);
       const { preview, openImage, closeImage } = useImagePreview();
       const picked = notesForSelection(list, sessionId, selection);
-      const matches = (note) => !filter
+      // An annotation opened by the picker must stay visible even when the
+      // current search would otherwise filter it out of the list.
+      const requestedId = editRequest.id && editRequest.sessionId === sessionId && editRequest.surface === surface
+        ? editRequest.id
+        : '';
+      const matches = (note) => note.id === editId
+        || note.id === requestedId
+        || !filter
         || String(note.quote || '').toLowerCase().indexOf(filter) >= 0
         || String(note.body || '').toLowerCase().indexOf(filter) >= 0
         || translate(noteKind(note.kind).label).toLowerCase().indexOf(filter) >= 0;
@@ -8578,7 +8643,8 @@ window.__ModuleLoader__.load({
       /** Opening another annotation must not silently drop the current edit. */
       const requestBeginEdit = (note) => {
         if (reviewMode || !note) return;
-        if (editId && editId !== note.id) {
+        if (editId === note.id) return;
+        if (editId) {
           const current = list.find((entry) => entry.id === editId);
           if (current && editChanged(current)) {
             setPendingSwitch(note);
@@ -8588,6 +8654,39 @@ window.__ModuleLoader__.load({
         }
         beginEdit(note);
       };
+
+      /** Scroll a row into view after its editor has replaced the compact row. */
+      const revealRow = (id) => {
+        if (!id) return;
+        const scroll = () => {
+          const row = freshRows.current.get(id);
+          if (row && typeof row.scrollIntoView === 'function') {
+            row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+        };
+        if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+          window.requestAnimationFrame(() => window.requestAnimationFrame(scroll));
+        } else {
+          scroll();
+        }
+      };
+
+      // The block picker opens its annotation here. The request names this
+      // surface, so a page and a panel mounted together cannot both start an
+      // editor for the same click.
+      useEffect(() => {
+        if (!editRequest.id || !editRequest.token) return;
+        if (editRequest.sessionId !== sessionId || editRequest.surface !== surface) return;
+        if (Date.now() - editRequest.at > NOTE_EDIT_REQUEST_MS) {
+          noteEditRequestActions.clear(editRequest.token);
+          return;
+        }
+        const note = list.find((entry) => entry.id === editRequest.id);
+        if (!note) return;
+        noteEditRequestActions.clear(editRequest.token);
+        if (editId !== note.id) requestBeginEdit(note);
+        revealRow(note.id);
+      }, [editRequest.token, editRequest.id, editRequest.sessionId, editRequest.surface, editRequest.at, sessionId, surface, list, editId]);
 
       const settleSwitch = (action) => {
         const target = pendingSwitch;
@@ -10733,6 +10832,7 @@ window.__ModuleLoader__.load({
               ? h(NotesView, {
                   notes: notesList,
                   sessionId: notesSessionId,
+                  surface: 'panel',
                   reviewMode: reviewOpen && reviewProcessing,
                   onCompose: composeSessionNotes,
                   onInsertNote: insertNoteText,

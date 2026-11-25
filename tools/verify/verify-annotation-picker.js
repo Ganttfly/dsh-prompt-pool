@@ -55,7 +55,20 @@ if (!blockNoteAtSource) {
 
 const pickerStart = source.indexOf('function NotePicker()');
 check(source.includes('const existing = blockNoteAt(notes.get().items, pick.sessionId, anchor);'), 'the picker checks for an existing block annotation');
-check(source.includes("translate('note.pick.exists')"), 'the picker explains why a duplicate click added nothing');
+check(source.includes('revealNote(existing.id);'), 'an existing block annotation opens in the list editor');
+check(source.includes('revealNote(id);'), 'a new block annotation opens in the list editor');
+check(!source.includes("translate('note.pick.exists')"), 'opening an existing annotation no longer shows a duplicate toast');
+check(source.includes('noteEditRequestActions.request(id, pick.sessionId, surface);'), 'the picker asks the target surface to edit the annotation');
+check(source.includes("if (surface === 'panel') {"), 'a panel target opens the panel before editing');
+check(source.includes("bridge.request({ type: 'open-view', scope: 'notes', create: false });"), 'the opened panel switches to the annotations view');
+check(source.includes("source: source === 'page' ? 'page' : 'panel'"), 'the picker records whether it started on the page or the panel');
+check(source.includes("notePickActions.start(activeSessionId, 'page');"), 'the annotations page starts the picker for its own surface');
+check(source.includes("const surface = props.surface === 'page' ? 'page' : 'panel';"), 'each notes list knows which surface it serves');
+check(source.includes("surface: 'page',"), 'the page passes its surface to the notes list');
+check(source.includes("surface: 'panel',"), 'the panel passes its surface to the notes list');
+check(source.includes('noteEditRequestActions.clear(editRequest.token);'), 'the notes list consumes the edit request');
+check(source.includes('revealRow(note.id);'), 'the requested annotation is scrolled into view');
+check(source.includes('const NOTE_EDIT_REQUEST_MS = 6000;'), 'an unconsumed edit request expires');
 check(
   pickerStart >= 0
     && source.indexOf('blockNoteAt(notes.get()', pickerStart) >= 0

@@ -17,8 +17,10 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 **Annotate while you read.** Select a passage and add a note right where it belongs, without leaving the
 reply; the original wording stays attached, so the context is easy to follow and no key point slips away.
 Or choose **+ Annotate** in the page header and click any assistant block: an amber outline marks the
-paragraph, list item, heading, quote, code block or table cell before the note lands. The **Annotations**
-page collects the notes for that session — locate a passage, insert one note, or save it as a prompt.
+paragraph, list item, heading, quote, code block or table cell before the note lands. The new note opens
+in the annotation list editor; if that list is not visible, the panel opens on **Annotations** first.
+Clicking a block that already carries a note opens that note for editing instead of adding another. The
+**Annotations** page collects the notes for that session — locate a passage, insert one note, or save it as a prompt.
 Click a note's body to edit its kind and text while the quote stays read-only; each kind keeps its own
 vivid color on the badge, the inline chip and the quoted underline. Select notes and choose **Summarize**
 at the bottom to merge them into one quoted draft. Annotations stay with their own session
@@ -110,10 +112,10 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   composer's **Annotations** menu starts with **+ Annotate**. The pointer turns into a picker only
   over an eligible block: hovering a paragraph, list item, heading, quote, code block or table cell
   in an assistant reply draws an amber outline and a `Paragraph · 42 chars` label. Click to add an
-  empty annotation and keep picking; clicking a block that already has a block-level note leaves that
-  note in place instead of stacking a duplicate. The bottom bar counts the batch, carries the seven
-  kind chips, and offers **Undo last**, **View annotations** and **Done**; Esc or a click outside the
-  conversation leaves the mode.
+  empty annotation: its editor opens in the list and the pick ends; if the list is not visible, the
+  panel opens on **Annotations** first. Clicking a block that already has a block-level note opens
+  that note for editing instead of stacking a duplicate. The bottom bar carries the seven kind chips, **View
+  annotations** and **Done**; Esc or a click outside the conversation leaves the mode.
   Only assistant replies are accepted; your own messages and image-only or empty blocks are
   refused, and ineligible blocks keep the normal pointer and show no outline or label. The picker
   only covers the conversation body, so the composer, turn rail and the rest of the app stay
@@ -192,7 +194,9 @@ does not turn it on.
 4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 500
    full-width or 1,000 half-width characters, and the badge appears right after the passage. The **Annotate**
    button in the page header (or **+ Annotate** in the composer menu) starts the block picker instead: move
-   over an assistant paragraph and click to keep adding notes; Esc leaves. The pool's **Annotations** page
+   over an assistant paragraph and click once; its editor opens in the list, and the panel opens on
+   **Annotations** first if the list is not visible. Esc leaves before you pick. The pool's
+   **Annotations** page
    collects the notes; **Locate** scrolls to a passage, **Insert** writes one note into the composer, and the
    **Save as prompt** icon files one note into a group. Click a note's body to edit its kind and text in place;
    the quote is read-only. Select notes and choose **Summarize** in the bottom bar to open the review card;
