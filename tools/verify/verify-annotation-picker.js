@@ -53,7 +53,10 @@ check(source.includes("notePickActions.start(sessionId)"), 'the composer menu st
 check(source.includes("translate('note.pick.page')"), 'the annotations page offers its own picker entry');
 check(source.includes("const seat = document.querySelector('[data-composer-seat]');"), 'the picker bar anchors to the composer');
 check(source.includes("element.style.bottom = Math.round(offset) + 'px';"), 'the picker bar clears the composer');
-check(source.includes('html.pp-pick-cursor [data-chat-flow]'), 'the pick cursor stays inside the conversation flow');
+check(!source.includes('html.pp-pick-cursor [data-chat-flow]'), 'the pick cursor is not painted over the whole conversation flow');
+check(source.includes('html.pp-pick-cursor .pp-pick-hover'), 'the pick cursor follows the eligible block');
+check(source.includes("hovered.classList.add('pp-pick-hover')") && source.includes("hovered.classList.remove('pp-pick-hover')"), 'the hover mark is applied and cleared');
+check(source.includes('setHover(target.block);'), 'only a valid target receives the pick cursor');
 check(source.includes("const flowFor = (node) => {"), 'the picker resolves the current conversation flow');
 check(source.includes("if (!element || !flow || !root.contains(flow) || closestOf(element, '.pp-pick-bar'))"), 'the picker only highlights blocks in the conversation flow');
 check(source.includes('if (!target) return;'), 'invalid targets add nothing and show no warning');

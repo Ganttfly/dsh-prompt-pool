@@ -12,9 +12,10 @@ All notable changes to this project are documented here. The format follows
   Annotations menu start a block picker: only assistant replies are eligible, and paragraphs, list items,
   headings, quotes, code blocks and table cells get an amber outline plus a size label. Each click adds an
   empty annotation without leaving the mode; the bottom bar counts the batch and offers undo, view and
-  done, and Esc or a click outside the conversation exits. The picker stays inside the conversation body,
-  so the composer and turn rail keep their normal cursor and click behavior, and ineligible blocks show
-  neither outline nor label.
+  done, and Esc or a click outside the conversation exits. Only the eligible block under the pointer
+  gets the pick cursor; ineligible blocks keep the normal pointer and show neither outline nor label.
+  The picker stays inside the conversation body, so the composer and turn rail keep their normal cursor
+  and click behavior.
 - Annotation bodies are editable on the **Annotations** page: click a row's body to change its kind and
   text inline. The quoted passage stays read-only, and review mode keeps its checkbox and routing flow.
 

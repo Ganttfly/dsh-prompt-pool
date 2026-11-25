@@ -100,15 +100,16 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   Saved notes keep a green marker; notes are stored per session, survive reloads, and are not shown in
   another session.
 - **Point at a block** — the **Annotations** page header carries an **Annotate** button, and the
-  composer's **Annotations** menu starts with **+ Annotate**. The pointer turns into a picker: moving over
-  a paragraph, list item, heading, quote, code block or table cell in an assistant reply draws an amber
-  outline and a `Paragraph · 42 chars` label. Click to add an empty annotation and keep picking; the
-  bottom bar counts the batch and offers **Undo last**, **View annotations** and **Done**, and Esc or a
-  click outside the conversation leaves the mode. Only assistant replies are accepted; your own messages
-  and image-only or empty blocks are refused, and ineligible blocks show no outline or label. The picker
-  only covers the conversation body, so the composer, turn rail and the rest of the app stay clickable. The
-  block's text becomes the quote, so **Locate** still works. Right-click selection remains the exact-phrase
-  path.
+  composer's **Annotations** menu starts with **+ Annotate**. The pointer turns into a picker only
+  over an eligible block: hovering a paragraph, list item, heading, quote, code block or table cell
+  in an assistant reply draws an amber outline and a `Paragraph · 42 chars` label. Click to add an
+  empty annotation and keep picking; the bottom bar counts the batch and offers **Undo last**,
+  **View annotations** and **Done**, and Esc or a click outside the conversation leaves the mode.
+  Only assistant replies are accepted; your own messages and image-only or empty blocks are
+  refused, and ineligible blocks keep the normal pointer and show no outline or label. The picker
+  only covers the conversation body, so the composer, turn rail and the rest of the app stay
+  clickable. The block's text becomes the quote, so **Locate** still works. Right-click selection
+  remains the exact-phrase path.
 - **Edit in the list** — on the **Annotations** page, click a note's body to edit its kind and text in
   place. The quoted passage is read-only; review mode keeps its checkbox and routing flow.
 - **Composer panel** — a brand row with the pool mark and name, search, the current workspace's prompt
