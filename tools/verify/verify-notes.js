@@ -601,6 +601,9 @@ else {
   else if (kinds.some((kind) => !new RegExp('::highlight\\(prompt-pool-note-' + kind.id + '\\)\\{[^}]*' + kind.color).test(source))) {
     fail('a highlight underline does not match its kind color');
   } else console.log('[ok] every highlight underline matches its annotation kind');
+  const editInputRule = /\.pp-edit \.pp-edit-input,\.pp-edit \.pp-textarea\{([^}]*)\}/.exec(source);
+  if (!editInputRule || editInputRule[1].indexOf('resize:none') < 0) fail('the editors still show the native resize grip');
+  else console.log('[ok] the editors hide the native resize grip');
   if (!source.includes("'note.kind.idea': '思路'")) fail('the Chinese idea label is not 思路');
   else if (!source.includes("'note.kind.idea': 'Idea'")) fail('the English idea label changed');
   else if (!source.includes("'note.kind.supplement': '补充信息'")) fail('the Chinese supplement label changed');

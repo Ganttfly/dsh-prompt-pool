@@ -43,7 +43,8 @@ All notable changes to this project are documented here. The format follows
   annotation or prompt while the editor has unsaved edits now asks first: keep editing, discard, or save
   and switch. Both editors now share one display-width budget: 500 full-width or 1,000 half-width
   characters, with a live count that turns amber near the cap and red at it; `@` still references
-  files.
+  files. The editor text field no longer shows the browser's native resize grip, so the shared card
+  keeps its fixed rows.
 - The send queue starts collapsed as a one-line strip in both the page and the panel; opening it is a
   choice and the state persists.
 - The empty prompt panel now points at **+ Prompt** and **Save current input** instead of the old Save draft
