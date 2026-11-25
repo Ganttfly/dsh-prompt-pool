@@ -110,8 +110,10 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   composer's **Annotations** menu starts with **+ Annotate**. The pointer turns into a picker only
   over an eligible block: hovering a paragraph, list item, heading, quote, code block or table cell
   in an assistant reply draws an amber outline and a `Paragraph · 42 chars` label. Click to add an
-  empty annotation and keep picking; the bottom bar counts the batch, carries the seven kind chips,
-  and offers **Undo last**, **View annotations** and **Done**; Esc or a click outside the conversation leaves the mode.
+  empty annotation and keep picking; clicking a block that already has a block-level note leaves that
+  note in place instead of stacking a duplicate. The bottom bar counts the batch, carries the seven
+  kind chips, and offers **Undo last**, **View annotations** and **Done**; Esc or a click outside the
+  conversation leaves the mode.
   Only assistant replies are accepted; your own messages and image-only or empty blocks are
   refused, and ineligible blocks keep the normal pointer and show no outline or label. The picker
   only covers the conversation body, so the composer, turn rail and the rest of the app stay

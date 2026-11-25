@@ -268,6 +268,7 @@ window.__ModuleLoader__.load({
       'note.pick.undo': '撤销上一条',
       'note.pick.done': '完成',
       'note.pick.anchorFailed': '无法定位这个段落，请换一段试试。',
+      'note.pick.exists': '这一段已有批注，未重复添加。',
       'note.pick.meta': '{kind} · {n} 字',
       'note.pick.paragraph': '段落',
       'note.pick.listItem': '列表项',
@@ -613,6 +614,7 @@ window.__ModuleLoader__.load({
       'note.pick.undo': 'Undo last',
       'note.pick.done': 'Done',
       'note.pick.anchorFailed': 'Could not anchor this block. Try another one.',
+      'note.pick.exists': 'This block already has an annotation.',
       'note.pick.meta': '{kind} · {n} chars',
       'note.pick.paragraph': 'Paragraph',
       'note.pick.listItem': 'List item',
@@ -7241,6 +7243,23 @@ window.__ModuleLoader__.load({
     }
 
     /**
+     * The annotation already anchored at this exact semantic block. Blocks in
+     * one reply share a node key, so the block-start offset tells paragraphs
+     * apart; the quote keeps a phrase note that starts at the block's first
+     * character from counting as a whole-block note.
+     */
+    function blockNoteAt(items, sessionId, anchor) {
+      if (!Array.isArray(items) || !anchor) return null;
+      return items.find((note) => (
+        note
+        && note.sessionId === sessionId
+        && note.nodeKey === anchor.nodeKey
+        && Number(note.offset) === Number(anchor.offset)
+        && note.quote === anchor.quote
+      )) || null;
+    }
+
+    /**
      * Find the stored quote inside one element's text. Context match wins over
      * the stored offset, because a reply can be re-rendered with different
      * neighbour nodes while its text stays the same.
@@ -7691,6 +7710,11 @@ window.__ModuleLoader__.load({
           const anchor = captureElementAnchor(pick.sessionId, target);
           if (!anchor) {
             showToast(translate('note.pick.anchorFailed'), 'error');
+            return;
+          }
+          const existing = blockNoteAt(notes.get().items, pick.sessionId, anchor);
+          if (existing) {
+            showToast(translate('note.pick.exists'));
             return;
           }
           const id = uid();

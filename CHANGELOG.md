@@ -31,6 +31,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The block picker no longer stacks duplicate annotations on one block: clicking a paragraph that
+  already carries a block-level note leaves the existing note untouched and shows a one-line notice,
+  while different blocks in the same reply still each get their own note.
 - Prompt rows no longer carry a separate edit icon: clicking the title opens the editor, while duplicate
   and delete stay as row actions. The type badge sits before the title instead of replacing the first line.
 - The annotation and prompt editors now share one card: the same 28px title row, 22px kind chips, 90px

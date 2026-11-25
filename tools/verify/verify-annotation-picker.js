@@ -38,6 +38,31 @@ check(source.includes("element.closest('p,li,h1,h2,h3,h4,h5,h6,blockquote,pre,td
 check(source.includes('textOffsetIn(target.source, target.block, 0)'), 'a block anchor offsets from the block start');
 check(source.includes('function captureElementAnchor(sessionId, target)'), 'block anchors reuse the text-anchor builder');
 
+const blockNoteAtSource = /function blockNoteAt\(items, sessionId, anchor\) \{[\s\S]*?\n    \}/.exec(source);
+if (!blockNoteAtSource) {
+  failures.push('blockNoteAt is missing');
+} else {
+  const blockNoteAt = new Function(blockNoteAtSource[0] + '; return blockNoteAt;')();
+  const notes = [
+    { id: 'a', sessionId: 's', nodeKey: 'node-1', offset: 5, quote: 'first' },
+    { id: 'b', sessionId: 's', nodeKey: 'node-1', offset: 40, quote: 'second' },
+  ];
+  check(blockNoteAt(notes, 's', { nodeKey: 'node-1', offset: 5, quote: 'first' }) === notes[0], 'a block with an annotation is recognized');
+  check(blockNoteAt(notes, 's', { nodeKey: 'node-1', offset: 6, quote: 'second' }) === null, 'another block in the same reply is not a duplicate');
+  check(blockNoteAt(notes, 's', { nodeKey: 'node-1', offset: 5, quote: 'part' }) === null, 'a phrase note at the block start is not a block duplicate');
+  check(blockNoteAt(notes, 'other', { nodeKey: 'node-1', offset: 5, quote: 'first' }) === null, 'the same block in another session is not a duplicate');
+}
+
+const pickerStart = source.indexOf('function NotePicker()');
+check(source.includes('const existing = blockNoteAt(notes.get().items, pick.sessionId, anchor);'), 'the picker checks for an existing block annotation');
+check(source.includes("translate('note.pick.exists')"), 'the picker explains why a duplicate click added nothing');
+check(
+  pickerStart >= 0
+    && source.indexOf('blockNoteAt(notes.get()', pickerStart) >= 0
+    && source.indexOf('blockNoteAt(notes.get()', pickerStart) < source.indexOf('notesActions.add({', pickerStart),
+  'the duplicate check runs before the note is added',
+);
+
 check(source.includes("const NOTE_CHIP_VERSION = '7';"), 'inline chips are rebuilt at version 7');
 check(source.includes("text.setAttribute('data-text', shown)"), 'the inline chip keeps its text out of textContent');
 check(!/text\.textContent\s*=\s*shown/.test(source), 'the inline chip no longer writes textContent');
