@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Point-and-click annotation. **+ Annotate** in the page header and **+ Annotate** in the composer's
+  Annotations menu start a block picker: only assistant replies are eligible, and paragraphs, list items,
+  headings, quotes, code blocks and table cells get an amber outline plus a size label. Each click adds an
+  empty annotation without leaving the mode; the bottom bar counts the batch and offers undo, view and
+  done, and Esc or a click outside the conversation exits.
+- Annotation bodies are editable on the **Annotations** page: click a row's body to change its kind and
+  text inline. The quoted passage stays read-only, and review mode keeps its checkbox and routing flow.
+
 ### Changed
 
 - Prompt types are gone: prompts no longer carry a type, and the row badge, list filter and the type control
@@ -37,6 +47,8 @@ All notable changes to this project are documented here. The format follows
 - Every icon now comes from one 24px grid with a 1.8px stroke and a 12 / 14 / 16 / 20px size ladder.
   Annotation kinds use distinct shapes instead of seven colours and emoji; annotation marks keep one amber
   identity, and inline chips, queue controls and header tools share the same outline set.
+- Inline annotation chips no longer write their label into the conversation text, so a block quote never
+  picks up chip text; older chips are rebuilt once (version 6).
 
 ## [2.1.0] — 2026-11-24
 

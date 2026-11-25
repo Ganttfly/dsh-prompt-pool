@@ -246,6 +246,21 @@ window.__ModuleLoader__.load({
       'menu.copied': '已复制',
       'menu.copyFailed': '复制失败：请按 {shortcut}',
       'note.add': '+ 批注',
+      'note.pick.page': '批注',
+      'note.pick.hint': '移到助手回复的段落上点击添加；Esc 退出',
+      'note.pick.count': '已添加 {n} 条',
+      'note.pick.undo': '撤销上一条',
+      'note.pick.done': '完成',
+      'note.pick.invalid': '这里不能批注：只支持助手回复的文本块',
+      'note.pick.anchorFailed': '无法定位这个段落，请换一段试试。',
+      'note.pick.meta': '{kind} · {n} 字',
+      'note.pick.paragraph': '段落',
+      'note.pick.listItem': '列表项',
+      'note.pick.heading': '标题',
+      'note.pick.quote': '引用',
+      'note.pick.code': '代码块',
+      'note.pick.cell': '表格单元',
+      'note.pick.reply': '整条回复',
       'note.anchorFailed': '无法定位这段选中文字，请重新选择助手回复中的一句话。',
       'note.title': '批注',
       'scope.notes': '批注',
@@ -325,6 +340,8 @@ window.__ModuleLoader__.load({
       'note.save': '保存',
       'note.cancel': '取消',
       'note.delete': '删除',
+      'note.edit': '编辑批注',
+      'note.emptyBody': '待补充',
       'note.compose': '汇总批注',
       'note.composeHint': '把选中的批注汇总后插入输入框',
       'note.composeStoreHint': '把选中的批注存成一条提示词',
@@ -552,6 +569,21 @@ window.__ModuleLoader__.load({
       'menu.copied': 'Copied',
       'menu.copyFailed': 'Copy failed: press {shortcut}',
       'note.add': '+ Annotate',
+      'note.pick.page': 'Annotate',
+      'note.pick.hint': 'Move over a paragraph in the assistant reply and click; Esc to exit',
+      'note.pick.count': '{n} added',
+      'note.pick.undo': 'Undo last',
+      'note.pick.done': 'Done',
+      'note.pick.invalid': 'Only text blocks in the assistant reply can be annotated',
+      'note.pick.anchorFailed': 'Could not anchor this block. Try another one.',
+      'note.pick.meta': '{kind} · {n} chars',
+      'note.pick.paragraph': 'Paragraph',
+      'note.pick.listItem': 'List item',
+      'note.pick.heading': 'Heading',
+      'note.pick.quote': 'Quote',
+      'note.pick.code': 'Code block',
+      'note.pick.cell': 'Table cell',
+      'note.pick.reply': 'Whole reply',
       'note.anchorFailed': 'Could not anchor that selection. Select a passage in the assistant reply again.',
       'note.title': 'Annotations',
       'scope.notes': 'Annotations',
@@ -631,6 +663,8 @@ window.__ModuleLoader__.load({
       'note.save': 'Save',
       'note.cancel': 'Cancel',
       'note.delete': 'Delete',
+      'note.edit': 'Edit annotation',
+      'note.emptyBody': 'Add details',
       'note.compose': 'Summarize',
       'note.composeHint': 'Summarize the selected annotations into one draft',
       'note.composeStoreHint': 'Save the selected annotations as one prompt',
@@ -3500,6 +3534,18 @@ window.__ModuleLoader__.load({
               domainMenu === 'annotations'
                 ? [
                     h('button', {
+                      key: 'annotate',
+                      type: 'button',
+                      role: 'menuitem',
+                      className: 'pp-trigger-menu-item',
+                      onClick: () => {
+                        setDomainMenu(null);
+                        notePickActions.start(sessionId);
+                      },
+                    },
+                    h('span', { className: 'pp-trigger-menu-mark' }, icon('annotation')),
+                    h('span', { className: 'pp-trigger-menu-label' }, translate('note.add'))),
+                    h('button', {
                       key: 'summary',
                       type: 'button',
                       role: 'menuitem',
@@ -4941,7 +4987,17 @@ window.__ModuleLoader__.load({
               onChange: (event) => setQuery(event.target.value),
             }),
             scope === 'notes'
-              ? null
+              ? h('button', {
+                  type: 'button',
+                  className: 'pp-primary pp-new-prompt',
+                  onClick: () => {
+                    setReviewOpen(false);
+                    setSettingsOpen(false);
+                    notePickActions.start(activeSessionId);
+                  },
+                },
+                  h('span', { className: 'pp-btn-icon' }, icon('plus')),
+                  translate('note.pick.page'))
               : h('button', { type: 'button', className: 'pp-primary pp-new-prompt', onClick: create },
                   h('span', { className: 'pp-btn-icon' }, icon('plus')),
                   translate('page.new')),
@@ -5782,7 +5838,7 @@ window.__ModuleLoader__.load({
     /** Tallest a card can get, for the occlusion test against a floating panel. */
 
     /** Bumped when badge placement changes, so old chips are rebuilt in place. */
-    const NOTE_CHIP_VERSION = '5';
+    const NOTE_CHIP_VERSION = '6';
 
     /**
      * Annotation kinds: the glyph and label tell them apart. Every kind shares
@@ -6218,6 +6274,25 @@ window.__ModuleLoader__.load({
         }, 2800);
       }
     }
+    /** Block-level annotation picker: active while the cursor chooses a passage. */
+    const notePick = (() => {
+      const empty = { active: false, sessionId: '', token: 0 };
+      if (typeof window === 'undefined') return createStore(empty);
+      if (!window.__dshPromptPoolNotePickV1) window.__dshPromptPoolNotePickV1 = createStore(empty);
+      return window.__dshPromptPoolNotePickV1;
+    })();
+    const notePickActions = {
+      start(sessionId) {
+        const id = typeof sessionId === 'string' ? sessionId : '';
+        if (!id) return;
+        notePick.set({ active: true, sessionId: id, token: Date.now() });
+      },
+      stop() {
+        if (!notePick.get().active) return;
+        notePick.set({ active: false, sessionId: '', token: 0 });
+      },
+    };
+
     function openNoteConfirm(run, event) {
       const target = event && event.currentTarget ? event.currentTarget : null;
       const surface = target && typeof target.closest === 'function' ? target.closest('.pp-page, .pp-panel') : null;
@@ -6244,6 +6319,7 @@ window.__ModuleLoader__.load({
     const useNotePrompt = () => useSyncExternalStore(notePrompt.subscribe, notePrompt.get, notePrompt.get);
     const useNoteConfirm = () => useSyncExternalStore(noteConfirm.subscribe, noteConfirm.get, noteConfirm.get);
     const useNoteStatus = () => useSyncExternalStore(noteStatus.subscribe, noteStatus.get, noteStatus.get);
+    const useNotePick = () => useSyncExternalStore(notePick.subscribe, notePick.get, notePick.get);
     const useNoteSelection = () => useSyncExternalStore(noteSelection.subscribe, noteSelection.get, noteSelection.get);
     const useNoteReview = () => useSyncExternalStore(noteReview.subscribe, noteReview.get, noteReview.get);
 
@@ -6684,6 +6760,109 @@ window.__ModuleLoader__.load({
       }
     }
 
+    const PICK_KIND_LABELS = {
+      paragraph: 'note.pick.paragraph',
+      listItem: 'note.pick.listItem',
+      heading: 'note.pick.heading',
+      quote: 'note.pick.quote',
+      code: 'note.pick.code',
+      cell: 'note.pick.cell',
+      reply: 'note.pick.reply',
+    };
+    const pickKindLabel = (kind) => PICK_KIND_LABELS[kind] || PICK_KIND_LABELS.paragraph;
+
+    /** The label used by the block picker for one semantic block. */
+    function pickKindForBlock(block, source) {
+      if (!block || block === source) return 'reply';
+      const tag = String(block.tagName || '').toLowerCase();
+      if (tag === 'li') return 'listItem';
+      if (/^h[1-6]$/.test(tag)) return 'heading';
+      if (tag === 'blockquote') return 'quote';
+      if (tag === 'pre') return 'code';
+      if (tag === 'td' || tag === 'th') return 'cell';
+      return 'paragraph';
+    }
+
+    /**
+     * Resolve the semantic block under a viewport point. Only assistant replies
+     * are annotatable; inline controls and the annotation overlay are ignored.
+     */
+    function pickTargetAt(x, y, sessionId) {
+      try {
+        if (typeof document === 'undefined') return null;
+        const root = noteChatRoot(sessionId);
+        if (!root) return null;
+        const element = document.elementFromPoint(x, y);
+        if (!element || !root.contains(element)) return null;
+        if (element.closest('.pp-pick-bar, .pp-note-bubble, .pp-note-layer, .pp-root, .pp-note-inline')) return null;
+        const source = element.closest('[data-text-interaction-source]');
+        if (!source || !root.contains(source)) return null;
+        const row = source.closest('[data-chat-flow-kind]');
+        if (!row || row.getAttribute('data-chat-flow-kind') !== 'assistant-step') return null;
+        const keyed = source.closest('[data-chat-node-key]') || row.closest('[data-chat-node-key]');
+        const nodeKey = keyed ? keyed.getAttribute('data-chat-node-key') || '' : '';
+        if (!nodeKey) return null;
+        let block = element.closest('p,li,h1,h2,h3,h4,h5,h6,blockquote,pre,td,th');
+        if (block && (!source.contains(block) || block.closest('.pp-note-inline'))) block = null;
+        if (!block) {
+          // The container itself is only a valid target when it has no block
+          // children. Otherwise the pointer is on whitespace between paragraphs
+          // and the whole reply would be an unexpectedly large target.
+          if (source.querySelector('p,li,h1,h2,h3,h4,h5,h6,blockquote,pre,td,th')) return null;
+          block = source;
+        }
+        const raw = block.textContent || '';
+        const quote = raw.trim();
+        if (!quote) return null;
+        return {
+          block,
+          source,
+          keyed,
+          nodeKey,
+          kind: pickKindForBlock(block, source),
+          quote,
+        };
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    /** Build the same value anchor as a text selection, but for a whole block. */
+    function captureElementAnchor(sessionId, target) {
+      try {
+        if (!target || !target.block || !target.source) return null;
+        const raw = target.block.textContent || '';
+        const quote = raw.trim();
+        if (!quote) return null;
+        const lead = raw.length - raw.trimStart().length;
+        const base = target.block === target.source ? 0 : textOffsetIn(target.source, target.block, 0);
+        const offset = base + lead;
+        const text = target.source.textContent || '';
+        const prefix = text.slice(Math.max(0, offset - 24), offset);
+        const suffix = text.slice(offset + quote.length, offset + quote.length + 24);
+        const context = noteContextAt(text, offset, quote);
+        let rowIndex = 0;
+        const scroll = noteChatRoot(sessionId);
+        if (scroll) {
+          const rows = scroll.querySelectorAll('[data-chat-node-key]');
+          const at = Array.prototype.indexOf.call(rows, target.keyed);
+          rowIndex = at >= 0 ? at : rows.length;
+        }
+        return {
+          nodeKey: target.nodeKey,
+          quote,
+          prefix,
+          suffix,
+          offset,
+          context: context.text,
+          contextKind: context.kind,
+          order: rowIndex * 1000000 + offset,
+        };
+      } catch (_error) {
+        return null;
+      }
+    }
+
     /**
      * Find the stored quote inside one element's text. Context match wins over
      * the stored offset, because a reply can be re-rendered with different
@@ -6984,6 +7163,244 @@ window.__ModuleLoader__.load({
       );
     }
 
+    /**
+     * The hover picker. It reads the live transcript, keeps its highlight on a
+     * semantic block, and adds an empty annotation when the block is clicked.
+     * The editor lives in the annotations list, so the picker can stay active
+     * for several blocks in a row.
+     */
+    function NotePicker() {
+      const pick = useNotePick();
+      const [count, setCount] = useState(0);
+      const boxRef = useRef(null);
+      const labelRef = useRef(null);
+      const barRef = useRef(null);
+      const lastIdRef = useRef('');
+
+      useEffect(() => {
+        if (!pick.active || !pick.sessionId) return undefined;
+        setCount(0);
+        lastIdRef.current = '';
+        const html = document.documentElement;
+        html.classList.add('pp-pick-cursor');
+        const box = boxRef.current;
+        const label = labelRef.current;
+        let raf = 0;
+        let lastX = -1;
+        let lastY = -1;
+        let suppressClickUntil = 0;
+        const closestOf = (node, selector) => (node && node.closest ? node.closest(selector) : null);
+        const hide = () => {
+          if (box) box.style.display = 'none';
+          if (label) label.style.display = 'none';
+        };
+        const placeBar = () => {
+          const element = barRef.current;
+          if (!element) return;
+          const seat = document.querySelector('[data-composer-seat]');
+          const offset = seat ? Math.max(18, window.innerHeight - seat.getBoundingClientRect().top + 10) : 22;
+          element.style.bottom = Math.round(offset) + 'px';
+        };
+        const placeText = (text, x, y, invalid) => {
+          if (!label) return;
+          label.textContent = text;
+          label.dataset.invalid = invalid ? 'true' : 'false';
+          label.style.display = 'block';
+          label.style.left = Math.max(8, Math.min(window.innerWidth - 280, x)) + 'px';
+          label.style.top = Math.max(8, Math.min(window.innerHeight - 26, y)) + 'px';
+        };
+        const draw = () => {
+          raf = 0;
+          if (!pick.active) return;
+          const root = noteChatRoot(pick.sessionId);
+          if (!root || lastX < 0 || lastY < 0) {
+            hide();
+            return;
+          }
+          const element = document.elementFromPoint(lastX, lastY);
+          if (!element || !root.contains(element) || closestOf(element, '.pp-pick-bar')) {
+            hide();
+            return;
+          }
+          const target = pickTargetAt(lastX, lastY, pick.sessionId);
+          if (!target) {
+            if (box) box.style.display = 'none';
+            placeText(translate('note.pick.invalid'), lastX + 12, lastY + 14, true);
+            return;
+          }
+          const rect = target.block.getBoundingClientRect();
+          const left = Math.max(4, rect.left);
+          const top = Math.max(4, rect.top);
+          const right = Math.min(window.innerWidth - 4, rect.right);
+          const bottom = Math.min(window.innerHeight - 4, rect.bottom);
+          if (right <= left || bottom <= top) {
+            hide();
+            return;
+          }
+          if (box) {
+            box.style.display = 'block';
+            box.style.left = Math.round(left) + 'px';
+            box.style.top = Math.round(top) + 'px';
+            box.style.width = Math.round(right - left) + 'px';
+            box.style.height = Math.round(bottom - top) + 'px';
+          }
+          const kind = translate(pickKindLabel(target.kind));
+          const labelTop = rect.top >= 30 ? rect.top - 22 : Math.min(window.innerHeight - 26, rect.bottom + 4);
+          placeText(translate('note.pick.meta', { kind, n: target.quote.length }), rect.left, labelTop, false);
+        };
+        const schedule = (x, y) => {
+          lastX = x;
+          lastY = y;
+          if (!raf) raf = window.requestAnimationFrame(draw);
+        };
+        const onMove = (event) => {
+          if (event.pointerType === 'touch') return;
+          schedule(event.clientX, event.clientY);
+        };
+        const onScroll = () => {
+          if (lastX >= 0) schedule(lastX, lastY);
+        };
+        const onResize = () => {
+          placeBar();
+          if (lastX >= 0) schedule(lastX, lastY);
+        };
+        const onDown = (event) => {
+          if (event.button === 2) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            notePickActions.stop();
+            return;
+          }
+          if (event.button !== 0) return;
+          if (closestOf(event.target, '.pp-pick-bar')) return;
+          const root = noteChatRoot(pick.sessionId);
+          if (!root || !event.target || !root.contains(event.target)) {
+            notePickActions.stop();
+            return;
+          }
+          if (closestOf(event.target, '.pp-note-layer')) {
+            notePickActions.stop();
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          suppressClickUntil = Date.now() + 500;
+          const target = pickTargetAt(event.clientX, event.clientY, pick.sessionId);
+          if (!target) {
+            showToast(translate('note.pick.invalid'), 'error');
+            return;
+          }
+          const anchor = captureElementAnchor(pick.sessionId, target);
+          if (!anchor) {
+            showToast(translate('note.pick.anchorFailed'), 'error');
+            return;
+          }
+          const id = uid();
+          const now = Date.now();
+          notesActions.add({
+            ...anchor,
+            id,
+            sessionId: pick.sessionId,
+            kind: NOTE_KIND_DEFAULT,
+            dx: 0,
+            dy: 0,
+            promotedGroup: '',
+            promotedAt: 0,
+            body: '',
+            images: [],
+            createdAt: now,
+            updatedAt: now,
+          });
+          lastIdRef.current = id;
+          setCount((value) => value + 1);
+        };
+        const onClick = (event) => {
+          if (Date.now() > suppressClickUntil) return;
+          if (closestOf(event.target, '.pp-pick-bar')) return;
+          const root = noteChatRoot(pick.sessionId);
+          if (!root || !event.target || !root.contains(event.target)) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+        };
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return;
+          event.preventDefault();
+          event.stopPropagation();
+          notePickActions.stop();
+        };
+        const onPrevent = (event) => {
+          if (closestOf(event.target, '.pp-pick-bar')) return;
+          event.preventDefault();
+        };
+        const onContext = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        };
+        placeBar();
+        window.addEventListener('pointermove', onMove, true);
+        window.addEventListener('pointerdown', onDown, true);
+        window.addEventListener('click', onClick, true);
+        window.addEventListener('keydown', onKey, true);
+        window.addEventListener('contextmenu', onContext, true);
+        window.addEventListener('selectstart', onPrevent, true);
+        window.addEventListener('dragstart', onPrevent, true);
+        window.addEventListener('resize', onResize);
+        document.addEventListener('scroll', onScroll, true);
+        return () => {
+          html.classList.remove('pp-pick-cursor');
+          if (raf) window.cancelAnimationFrame(raf);
+          window.removeEventListener('pointermove', onMove, true);
+          window.removeEventListener('pointerdown', onDown, true);
+          window.removeEventListener('click', onClick, true);
+          window.removeEventListener('keydown', onKey, true);
+          window.removeEventListener('contextmenu', onContext, true);
+          window.removeEventListener('selectstart', onPrevent, true);
+          window.removeEventListener('dragstart', onPrevent, true);
+          window.removeEventListener('resize', onResize);
+          document.removeEventListener('scroll', onScroll, true);
+        };
+      }, [pick.active, pick.sessionId, pick.token]);
+
+      if (!pick.active) return null;
+      const undo = () => {
+        const id = lastIdRef.current;
+        if (!id) return;
+        notesActions.remove(id);
+        lastIdRef.current = '';
+        setCount((value) => Math.max(0, value - 1));
+      };
+      const viewAll = () => {
+        ui.set({ open: true });
+        try {
+          bridge.request({ type: 'open-view', scope: 'notes', create: false });
+        } catch (_error) {
+          /* the panel reports an unavailable workspace if needed */
+        }
+        notePickActions.stop();
+      };
+      return h(
+        React.Fragment,
+        null,
+        h('div', { key: 'pick-box', ref: boxRef, className: 'pp-pick-box', 'aria-hidden': 'true' }),
+        h('div', { key: 'pick-label', ref: labelRef, className: 'pp-pick-label', 'aria-hidden': 'true' }),
+        h(
+          'div',
+          { key: 'pick-bar', ref: barRef, className: 'pp-pick-bar', role: 'status' },
+          h('span', { className: 'pp-pick-text' }, count > 0
+            ? translate('note.pick.count', { n: count })
+            : translate('note.pick.hint')),
+          count > 0
+            ? h('button', { type: 'button', className: 'pp-pick-btn', onClick: undo }, translate('note.pick.undo'))
+            : null,
+          h('button', { type: 'button', className: 'pp-pick-btn', onClick: viewAll }, translate('note.menu.view')),
+          h('button', { type: 'button', className: 'pp-pick-btn pp-pick-primary', onClick: () => notePickActions.stop() }, translate('note.pick.done')),
+        ),
+      );
+    }
+
     function NotesLayer() {
       useLocaleTick();
       const notesState = useNotesState();
@@ -7070,14 +7487,17 @@ window.__ModuleLoader__.load({
           chip.setAttribute('data-version', NOTE_CHIP_VERSION);
           chip.setAttribute('role', 'button');
           chip.setAttribute('tabindex', '0');
-          chip.setAttribute('title', shown ? `${translate(meta.label)}：${shown}` : translate(meta.label));
+          const chipLabel = shown ? `${translate(meta.label)}：${shown}` : translate(meta.label);
+          chip.setAttribute('title', chipLabel);
+          chip.setAttribute('aria-label', chipLabel);
           const icon = document.createElement('span');
           icon.className = 'pp-note-inline-icon';
           icon.innerHTML = iconMarkup(meta.icon);
           const text = document.createElement('span');
           text.className = 'pp-note-inline-text';
-          // A kind-only note is just its glyph.
-          text.textContent = shown;
+          // Keep the chip out of textContent so block quotes and anchors never
+          // pick up its label; the visible text comes from the data attribute.
+          text.setAttribute('data-text', shown);
           chip.appendChild(icon);
           if (shown) chip.appendChild(text);
           const open = (event) => {
@@ -7470,6 +7890,7 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'pp-note-layer' },
         h('style', { key: 'css' }, NOTES_CSS),
+        h(NotePicker, { key: 'picker' }),
         prompt.open && promptStyle
           ? h(
               'div',
@@ -7635,6 +8056,9 @@ window.__ModuleLoader__.load({
       const selection = useNoteSelection();
       const reviewState = useNoteReview();
       const reviewMode = props.reviewMode === true;
+      const [editId, setEditId] = useState('');
+      const [editBody, setEditBody] = useState('');
+      const [editKind, setEditKind] = useState(NOTE_KIND_DEFAULT);
       const immediateFor = (note) => noteReviewImmediate(reviewState, note);
       const { preview, openImage, closeImage } = useImagePreview();
       const picked = notesForSelection(list, sessionId, selection);
@@ -7644,6 +8068,23 @@ window.__ModuleLoader__.load({
         || translate(noteKind(note.kind).label).toLowerCase().indexOf(filter) >= 0;
 
       const flash = (text, kind) => showToast(text, kind);
+
+      const beginEdit = (note) => {
+        if (reviewMode || !note) return;
+        setEditId(note.id);
+        setEditBody(note.body || '');
+        setEditKind(noteKind(note.kind).id);
+      };
+      const cancelEdit = () => {
+        setEditId('');
+        setEditBody('');
+        setEditKind(NOTE_KIND_DEFAULT);
+      };
+      const saveEdit = (note) => {
+        if (!note) return;
+        notesActions.patch(note.id, { kind: editKind, body: clampNoteBody(editBody.trim()) });
+        cancelEdit();
+      };
 
       const compose = () => {
         if (picked.length === 0) {
@@ -7821,6 +8262,7 @@ window.__ModuleLoader__.load({
                 className: 'pp-notes-row',
                 key: note.id,
                 'data-promoted': note.promotedGroup ? 'true' : undefined,
+                'data-editing': !reviewMode && editId === note.id ? 'true' : undefined,
               },
               reviewMode
                 ? h('input', {
@@ -7851,7 +8293,61 @@ window.__ModuleLoader__.load({
                     ? h('span', { className: 'pp-notes-tag' }, translate('note.stored', { group: labelOfGroup(note.promotedGroup) }))
                     : null,
                 ),
-                h('div', { className: 'pp-notes-text' }, note.body || translate(meta.label)),
+                !reviewMode && editId === note.id
+                  ? h(
+                      'div',
+                      { className: 'pp-notes-edit', onClick: (event) => event.stopPropagation() },
+                      h(
+                        'div',
+                        { className: 'pp-note-kinds' },
+                        NOTE_KINDS.map((entry) => h(
+                          'button',
+                          {
+                            key: entry.id,
+                            type: 'button',
+                            className: 'pp-note-kind',
+                            'data-kind': entry.id,
+                            'data-active': editKind === entry.id ? 'true' : 'false',
+                            onClick: () => setEditKind(entry.id),
+                          },
+                          h('span', { className: 'pp-note-kind-icon', 'aria-hidden': true }, icon(entry.icon)),
+                          translate(entry.label),
+                        )),
+                      ),
+                      h('textarea', {
+                        className: 'pp-note-input',
+                        value: editBody,
+                        rows: 3,
+                        autoFocus: true,
+                        placeholder: translate('note.placeholder'),
+                        onChange: (event) => setEditBody(clampNoteBody(event.target.value)),
+                        onKeyDown: (event) => {
+                          if (event.key === 'Escape') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            cancelEdit();
+                          } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            saveEdit(note);
+                          }
+                        },
+                      }),
+                      h(
+                        'div',
+                        { className: 'pp-notes-edit-foot' },
+                        h('span', { className: 'pp-notes-edit-hint' }, translate('note.limitHint')),
+                        h('button', { type: 'button', className: 'pp-note-btn', onClick: cancelEdit }, translate('note.cancel')),
+                        h('button', { type: 'button', className: 'pp-note-btn pp-pick-primary', onClick: () => saveEdit(note) }, translate('note.save')),
+                      ),
+                    )
+                  : h('div', {
+                      className: 'pp-notes-text',
+                      'data-editable': reviewMode ? undefined : 'true',
+                      'data-empty': !note.body ? 'true' : undefined,
+                      title: reviewMode ? undefined : translate('note.edit'),
+                      onClick: reviewMode ? undefined : () => beginEdit(note),
+                    }, note.body || translate('note.emptyBody')),
                 note.images && note.images.length > 0
                   ? h(ImageStrip, { images: note.images, compact: true, max: 4, onOpen: openImage })
                   : null,
@@ -10440,7 +10936,7 @@ window.__ModuleLoader__.load({
       // wash, so kind is read from the icon and label instead of hue.
       '.pp-note-inline{box-sizing:border-box;display:inline-flex;align-items:center;gap:.25em;height:auto;max-width:100%;margin:0 .12em 0 .32em;padding:.02em .36em;border:1px dashed rgba(var(--pp-inline-ink,var(--pp-inline-tint)),.9);border-radius:5px;background:rgba(var(--pp-inline-tint),.28);color:inherit;font:inherit;font-family:var(--dsw-font-family,inherit);font-size:var(--dsh-content-font-size,14px);font-style:normal;font-weight:400;line-height:1.32;vertical-align:middle;white-space:normal;user-select:none;-webkit-user-select:none;cursor:pointer}' +
       '.pp-note-inline-icon{flex:none;display:inline-flex;align-items:center;color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)))}.pp-note-inline-icon svg{width:12px;height:12px;stroke-width:2.1}' +
-      '.pp-note-inline-text{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:inherit}' +
+      '.pp-note-inline-text{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:inherit}.pp-note-inline-text::before{content:attr(data-text)}' +
       '.pp-note-inline:hover{border-color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)));background:rgba(var(--pp-inline-tint),.4)}' +
       '.pp-note-kinds{display:flex;flex-wrap:wrap;gap:2px;margin:0}' +
       '.pp-note-kind{display:inline-flex;align-items:center;gap:3px;height:20px;padding:0 5px;border:1px solid var(--pp-note-line);border-radius:999px;background:transparent;color:var(--pp-note-ink-2);font:inherit;font-size:10.5px;cursor:pointer}' +
@@ -10471,7 +10967,29 @@ window.__ModuleLoader__.load({
       '.pp-note-link:hover{color:var(--pp-note-ink);text-decoration:underline;text-underline-offset:2px}' +
       '.pp-review-select-link{color:var(--pp-accent);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--pp-accent) 45%,transparent);text-underline-offset:3px;text-decoration-thickness:1px}' +
       '.pp-review-select-link:hover{color:var(--pp-ink);text-decoration-color:currentColor;text-decoration-thickness:1.5px}' +
-      '.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}.pp-note-icon:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}.pp-note-icon.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-ask{display:inline-flex;align-items:center;gap:4px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap}';
+      '.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}.pp-note-icon:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}.pp-note-icon.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-ask{display:inline-flex;align-items:center;gap:4px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap}' +
+      'html.pp-pick-cursor,html.pp-pick-cursor *{cursor:url("data:image/svg+xml,%3Csvg%20xmlns=\'http://www.w3.org/2000/svg\'%20width=\'24\'%20height=\'24\'%20viewBox=\'0%200%2024%2024\'%3E%3Cpath%20d=\'M5%203.5h7.5v2H7v6H5z\'%20fill=\'%23d9a441\'%20stroke=\'%23fff\'%20stroke-width=\'1\'/%3E%3Cpath%20d=\'M12%2011v9M7.5%2015.5h9\'%20stroke=\'%23d9a441\'%20stroke-width=\'2\'%20stroke-linecap=\'round\'/%3E%3C/svg%3E") 5 4,crosshair!important}' +
+      'html.pp-pick-cursor .pp-pick-bar,html.pp-pick-cursor .pp-pick-bar *{cursor:default!important}' +
+      'html.pp-pick-cursor .pp-pick-btn{cursor:pointer!important}' +
+      '.pp-pick-box{position:fixed;z-index:1;display:none;box-sizing:border-box;border:1.5px solid rgba(217,164,65,.92);border-radius:4px;background:rgba(217,164,65,.09);box-shadow:0 0 0 1px rgba(255,255,255,.35) inset;pointer-events:none}' +
+      '.pp-pick-label{position:fixed;z-index:3;display:none;max-width:272px;box-sizing:border-box;padding:2px 6px;border-radius:5px;background:var(--pp-note-accent);color:#fff;font:inherit;font-size:11px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.16)}' +
+      '.pp-pick-label[data-invalid="true"]{background:var(--pp-note-danger)}' +
+      '.pp-pick-bar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:4;display:flex;align-items:center;gap:6px;max-width:calc(100vw - 24px);box-sizing:border-box;padding:7px 8px 7px 12px;border:1px solid var(--pp-note-line);border-radius:10px;background:var(--pp-note-surface);box-shadow:0 12px 32px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);color:var(--pp-note-ink);font:inherit;font-size:11px;line-height:1.4;pointer-events:auto;cursor:default}' +
+      '.pp-pick-bar .pp-pick-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-note-ink-2)}' +
+      '.pp-pick-btn{height:24px;padding:0 9px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:11px;white-space:nowrap;cursor:pointer}' +
+      '.pp-pick-btn:hover{background:var(--pp-note-hover)}' +
+      '.pp-pick-btn.pp-pick-primary{border-color:transparent;background:var(--pp-note-accent);color:#fff}' +
+      '.pp-pick-btn.pp-pick-primary:hover{filter:brightness(1.06)}' +
+      '.pp-notes-row[data-editing="true"]{background:color-mix(in srgb,var(--pp-note) 6%,transparent);border-color:color-mix(in srgb,var(--pp-note) 38%,var(--pp-line))}' +
+      '.pp-notes-text[data-editable="true"]{cursor:text}' +
+      '.pp-notes-text[data-editable="true"]:hover{color:var(--pp-ink)}' +
+      '.pp-notes-text[data-empty="true"]{color:var(--pp-ink-2);font-style:italic}' +
+      '.pp-notes-edit{display:flex;flex-direction:column;gap:6px;margin-top:2px}' +
+      '.pp-notes-edit .pp-note-kinds{gap:3px}' +
+      '.pp-notes-edit .pp-note-input{min-height:58px;max-height:140px;font-size:11.5px}' +
+      '.pp-notes-edit-foot{display:flex;align-items:center;gap:6px}' +
+      '.pp-notes-edit-hint{margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:10.5px}' +
+      '.pp-notes-edit .pp-pick-primary{border-color:transparent;background:var(--pp-note-accent);color:#fff}';
 
     // ------------------------------------------------------------------- plugin
     return {

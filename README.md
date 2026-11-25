@@ -16,9 +16,12 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 
 **Annotate while you read.** Select a passage and add a note right where it belongs, without leaving the
 reply; the original wording stays attached, so the context is easy to follow and no key point slips away.
-The **Annotations** page on the right collects the notes for that session — locate a passage, insert one
-note, or save it as a prompt. Select notes and choose **Summarize** at the bottom to merge them into one
-quoted draft. Annotations stay with their own session and never leak into another conversation.
+Or choose **+ Annotate** in the page header and click any assistant block: an amber outline marks the
+paragraph, list item, heading, quote, code block or table cell before the note lands. The **Annotations**
+page collects the notes for that session — locate a passage, insert one note, or save it as a prompt.
+Click a note's body to edit its kind and text while the quote stays read-only. Select notes and choose
+**Summarize** at the bottom to merge them into one quoted draft. Annotations stay with their own session
+and never leak into another conversation.
 
 ![Prompt pool panel in Prompts mode: current workspace items and the send queue](docs/images/panel.png)
 
@@ -96,6 +99,16 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   and single annotations have no direct-send control.
   Saved notes keep a green marker; notes are stored per session, survive reloads, and are not shown in
   another session.
+- **Point at a block** — the **Annotations** page header carries an **Annotate** button, and the
+  composer's **Annotations** menu starts with **+ Annotate**. The pointer turns into a picker: moving over
+  a paragraph, list item, heading, quote, code block or table cell in an assistant reply draws an amber
+  outline and a `Paragraph · 42 chars` label. Click to add an empty annotation and keep picking; the
+  bottom bar counts the batch and offers **Undo last**, **View annotations** and **Done**, and Esc or a
+  click outside the conversation leaves the mode. Only assistant replies are accepted; your own messages
+  and image-only or empty blocks are refused. The block's text becomes the quote, so **Locate** still
+  works. Right-click selection remains the exact-phrase path.
+- **Edit in the list** — on the **Annotations** page, click a note's body to edit its kind and text in
+  place. The quoted passage is read-only; review mode keeps its checkbox and routing flow.
 - **Composer panel** — a brand row with the pool mark and name, search, the current workspace's prompt
   list, per-row **Insert**, **+**, edit, duplicate and delete, and the shared send queue with collapse, clear and send.
   Help, **Save current input** and **Settings** sit beside search. Its two modes are **Annotations**
@@ -155,11 +168,14 @@ does not turn it on.
 3. Select text in a conversation and right-click: the menu offers **Copy** and **Add to the prompt
    pool**; open the submenu and pick the current workspace or a shared-pool group.
 4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 100
-   full-width or 200 half-width characters, and the badge appears right after the passage. The pool's
-   **Annotations** page collects the notes; **Locate** scrolls to a passage, **Insert** writes one note
-   into the composer, and the **Save as prompt** icon files one note into a group. Select notes and choose
-   **Summarize** in the bottom bar to open the review card; check and route the notes in the rows, then use
-   Save as prompt or Send in the status bar. Annotations do not enter the send queue.
+   full-width or 200 half-width characters, and the badge appears right after the passage. The **Annotate**
+   button in the page header (or **+ Annotate** in the composer menu) starts the block picker instead: move
+   over an assistant paragraph and click to keep adding notes; Esc leaves. The pool's **Annotations** page
+   collects the notes; **Locate** scrolls to a passage, **Insert** writes one note into the composer, and the
+   **Save as prompt** icon files one note into a group. Click a note's body to edit its kind and text in place;
+   the quote is read-only. Select notes and choose **Summarize** in the bottom bar to open the review card;
+   check and route the notes in the rows, then use Save as prompt or Send in the status bar. Annotations do
+   not enter the send queue.
 5. Add prompts to the send queue with **+**, reorder them in the queue, then send them one by one or switch
    to **Merge** for a preview.
 6. Sequential sends are written into the composer and submitted in turn; merged sends become one
