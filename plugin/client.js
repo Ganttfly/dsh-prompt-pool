@@ -3731,12 +3731,13 @@ window.__ModuleLoader__.load({
 
     /** Round "add one occurrence" control; the same item may be added repeatedly. */
     /** One shared type badge for annotations and prompts. */
-    function TypeMark({ name, title }) {
+    function TypeMark({ name, title, tone }) {
       return h(
         'span',
         {
           className: 'pp-type-mark',
           title: title || '',
+          style: tone ? { '--pp-kind': tone } : undefined,
         },
         icon(name || 'prompt'),
       );
@@ -5835,21 +5836,23 @@ window.__ModuleLoader__.load({
     /** Narrower columns fall back to numbered pins instead of cards. */
     /** Tallest a card can get, for the occlusion test against a floating panel. */
 
-    /** Bumped when badge placement changes, so old chips are rebuilt in place. */
-    const NOTE_CHIP_VERSION = '6';
+    /** Bumped when badge placement or styling changes, so old chips are rebuilt in place. */
+    const NOTE_CHIP_VERSION = '7';
 
     /**
-     * Annotation kinds: the glyph and label tell them apart. Every kind shares
-     * the one amber wash so annotations read as a single layer in the reply.
+     * Annotation kinds: the glyph and label name the type, and a muted hue makes
+     * it recognisable at a glance in the badge, the editor and the highlighted
+     * passage. The hues are semantic, not decorative: the amber wash stays the
+     * annotation layer's own accent in the dock chrome.
      */
     const NOTE_KINDS = [
-      { id: 'agree', icon: 'check', prefix: 'Agree-', label: 'note.kind.agree' },
-      { id: 'disagree', icon: 'x', prefix: 'Disagree-', label: 'note.kind.disagree' },
-      { id: 'question', icon: 'question', prefix: 'Question-', label: 'note.kind.question' },
-      { id: 'comment', icon: 'pen', prefix: 'Comment-', label: 'note.kind.comment' },
-      { id: 'idea', icon: 'bulb', prefix: 'Idea-', label: 'note.kind.idea' },
-      { id: 'supplement', icon: 'info', prefix: 'Supplement-', label: 'note.kind.supplement' },
-      { id: 'todo', icon: 'todo', prefix: 'Todo-', label: 'note.kind.todo' },
+      { id: 'agree', icon: 'check', prefix: 'Agree-', label: 'note.kind.agree', color: '#2f8a5f' },
+      { id: 'disagree', icon: 'x', prefix: 'Disagree-', label: 'note.kind.disagree', color: '#b04a4a' },
+      { id: 'question', icon: 'question', prefix: 'Question-', label: 'note.kind.question', color: '#3f74c0' },
+      { id: 'comment', icon: 'pen', prefix: 'Comment-', label: 'note.kind.comment', color: '#6b7c90' },
+      { id: 'idea', icon: 'bulb', prefix: 'Idea-', label: 'note.kind.idea', color: '#a97a24' },
+      { id: 'supplement', icon: 'info', prefix: 'Supplement-', label: 'note.kind.supplement', color: '#7a5fbd' },
+      { id: 'todo', icon: 'todo', prefix: 'Todo-', label: 'note.kind.todo', color: '#1f8588' },
     ];
     const NOTE_KIND_IDS = NOTE_KINDS.map((kind) => kind.id);
     const NOTE_KIND_DEFAULT = 'agree';
@@ -7500,6 +7503,7 @@ window.__ModuleLoader__.load({
           chip.className = 'pp-note-inline';
           chip.setAttribute('data-pp-inline', note.id);
           chip.setAttribute('data-kind', meta.id);
+          chip.style.setProperty('--pp-kind', meta.color);
           chip.setAttribute('data-text', shown);
           chip.setAttribute('data-version', NOTE_CHIP_VERSION);
           chip.setAttribute('role', 'button');
@@ -7954,7 +7958,7 @@ window.__ModuleLoader__.load({
                 key: 'bubble',
                 ref: bubbleRef,
                 className: 'pp-note-bubble',
-                style: { ...bubbleStyle, '--pp-bubble-tint': '217,164,65', '--pp-bubble-ink': '158,110,26' },
+                style: { ...bubbleStyle, '--pp-bubble-kind': noteKind(kind).color },
                 'data-kind': kind,
                 onPointerDown: (event) => event.stopPropagation(),
               },
@@ -7982,6 +7986,7 @@ window.__ModuleLoader__.load({
                     className: 'pp-note-kind',
                     'data-kind': entry.id,
                     'data-active': kind === entry.id ? 'true' : 'false',
+                    style: { '--pp-kind': entry.color },
                     onClick: () => setKind(entry.id),
                   },
                   h('span', { className: 'pp-note-kind-icon', 'aria-hidden': true }, icon(entry.icon)),
@@ -8304,6 +8309,7 @@ window.__ModuleLoader__.load({
                   h(TypeMark, {
                     name: meta.icon,
                     title: translate(meta.label),
+                    tone: meta.color,
                   }),
                   h('span', { className: 'pp-notes-quote-text' }, noteQuoteText(note.quote)),
                   note.promotedGroup
@@ -8325,6 +8331,7 @@ window.__ModuleLoader__.load({
                             className: 'pp-note-kind',
                             'data-kind': entry.id,
                             'data-active': editKind === entry.id ? 'true' : 'false',
+                            style: { '--pp-kind': entry.color },
                             onClick: () => setEditKind(entry.id),
                           },
                           h('span', { className: 'pp-note-kind-icon', 'aria-hidden': true }, icon(entry.icon)),
@@ -9060,7 +9067,12 @@ window.__ModuleLoader__.load({
                         },
                         h(
                           'span',
-                          { key: 'icon', className: 'pp-selkind-icon', 'aria-hidden': true },
+                          {
+                            key: 'icon',
+                            className: 'pp-selkind-icon',
+                            'aria-hidden': true,
+                            style: { '--pp-kind': kind.color },
+                          },
                           icon(kind.icon),
                         ),
                         h('span', { key: 'name', className: 'pp-selname' }, translate(kind.label)),
@@ -10757,7 +10769,7 @@ window.__ModuleLoader__.load({
       '.pp-selrow:focus-visible{outline:2px solid var(--pp-accent);outline-offset:-2px}' +
       '.pp-selname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '.pp-selchev{flex:none;color:var(--pp-ink-2);font-size:11px}' +
-      '.pp-selkind-icon{flex:none;display:inline-flex;align-items:center;justify-content:center;width:16px;color:rgb(158,110,26)}.pp-selkind-icon svg{width:14px;height:14px}' +
+      '.pp-selkind-icon{flex:none;display:inline-flex;align-items:center;justify-content:center;width:16px;color:color-mix(in srgb,var(--pp-kind,#a97a24) 72%,var(--pp-ink))}.pp-selkind-icon svg{width:14px;height:14px}' +
       '.pp-selkey{flex:none;color:var(--pp-ink-2);font-size:11px}' +
       '.pp-selcount{flex:none;color:var(--pp-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +
       '.pp-sellast{flex:none;padding:0 5px;border-radius:5px;background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px;line-height:16px}' +
@@ -10773,21 +10785,23 @@ window.__ModuleLoader__.load({
      * Highlight API paints ranges that the markdown DOM never contains.
      */
     const NOTES_CSS =
-      // One amber underline for every annotation kind: the type is carried by the
-      // icon and label in the dock, not by seven competing highlight colors.
-      '::highlight(prompt-pool-note-comment){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-question){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-agree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-disagree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-idea){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '::highlight(prompt-pool-note-todo){text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:rgba(217,164,65,1);text-decoration-thickness:2px;text-underline-offset:2px}' +
-      '.pp-note-layer{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);--pp-inline-tint:217,164,65;--pp-inline-ink:158,110,26;position:fixed;inset:0;z-index:2147482000;pointer-events:none}' +
+      // Every kind carries its own muted underline, matching its badge and the
+      // chips in the editor. The 2px line stays quiet enough to read as one
+      // annotation layer even when several kinds sit in the same reply.
+      '::highlight(prompt-pool-note-agree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:#2f8a5f;text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-disagree){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:#b04a4a;text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-question){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:#3f74c0;text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-comment){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:#6b7c90;text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-idea){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:#a97a24;text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-supplement){text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:#7a5fbd;text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '::highlight(prompt-pool-note-todo){text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:#1f8588;text-decoration-thickness:2px;text-underline-offset:2px}' +
+      '.pp-note-layer{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);position:fixed;inset:0;z-index:2147482000;pointer-events:none}' +
       '.pp-note-bubble{position:fixed;z-index:1;display:flex;flex-direction:column;gap:8px;width:310px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;padding:11px;border:1px solid var(--pp-note-line);border-radius:12px;background:var(--pp-note-surface);box-shadow:0 18px 48px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left;pointer-events:auto}' +
-      '.pp-note-bubble-quote{box-sizing:border-box;padding:6px 8px;border-radius:8px;background:rgba(var(--pp-bubble-tint),.10);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.pp-note-bubble-quote-icon{display:inline-flex;align-items:center;vertical-align:-2px;margin-right:4px;color:rgb(var(--pp-bubble-ink,var(--pp-bubble-tint)))}.pp-note-bubble-quote-icon svg{width:12px;height:12px;stroke-width:2.1}' +
+      '.pp-note-bubble-quote{box-sizing:border-box;padding:6px 8px;border-radius:8px;background:color-mix(in srgb,var(--pp-bubble-kind,#a97a24) 10%,transparent);color:var(--pp-note-ink-2);font-size:11px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.pp-note-bubble-quote-icon{display:inline-flex;align-items:center;vertical-align:-2px;margin-right:4px;color:color-mix(in srgb,var(--pp-bubble-kind,#a97a24) 72%,var(--pp-note-ink))}.pp-note-bubble-quote-icon svg{width:12px;height:12px;stroke-width:2.1}' +
       '.pp-note-bubble-hint{color:var(--pp-note-danger);font-size:11px}' +
       
       '.pp-note-input{width:100%;box-sizing:border-box;min-height:48px;max-height:120px;padding:6px 8px;border:1px solid var(--pp-note-line);border-radius:8px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent);color:inherit;font:inherit;font-size:12px;line-height:1.5;resize:none;outline:none}' +
-      '.pp-note-input:focus{border-color:rgba(var(--pp-bubble-ink,var(--pp-bubble-tint)),.9);box-shadow:0 0 0 2px rgba(var(--pp-bubble-ink,var(--pp-bubble-tint)),.14)}' +
+      '.pp-note-input:focus{border-color:color-mix(in srgb,var(--pp-bubble-kind,#a97a24) 72%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--pp-bubble-kind,#a97a24) 14%,transparent)}' +
       '.pp-note-bubble-foot{display:flex;align-items:center;gap:8px}.pp-note-bubble-ask{flex:1;color:var(--pp-note-ink-2);font-size:11px;line-height:1.4}.pp-note-bubble-actions{display:flex;gap:6px;margin-left:auto}.pp-note-bubble .pp-note-btn{height:24px;padding:0 9px;font-size:11px;border-radius:7px}.pp-note-btn-quiet-danger{border-color:transparent;background:transparent;color:var(--pp-note-danger)}.pp-note-btn-quiet-danger:hover{background:rgba(var(--pp-note-danger-rgb,239,68,68),.10)}' +
       '.pp-note-btn{height:24px;padding:0 10px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
       '.pp-review-secondary{border-color:var(--pp-line-2);background:var(--pp-surface);color:var(--pp-ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)}' +
@@ -10799,7 +10813,7 @@ window.__ModuleLoader__.load({
       '.pp-note-btn-primary:hover{background:var(--pp-note-accent);filter:brightness(1.05)}' +
       '.pp-note-btn-danger{color:var(--pp-note-danger);border-color:color-mix(in srgb,var(--pp-note-danger) 40%,transparent)}' +
       '.pp-note-btn-danger:hover{background:color-mix(in srgb,var(--pp-note-danger) 10%,transparent)}' +
-      '.pp-notes{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);--pp-inline-tint:217,164,65;--pp-inline-ink:158,110,26;display:flex;flex-direction:column;box-sizing:border-box;width:100%;border:1px solid var(--pp-note-line);border-radius:10px;background:color-mix(in srgb,var(--pp-note) 4%,var(--dsw-alias-bg-base,#fff));color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +
+      '.pp-notes{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-note-hover:color-mix(in srgb,var(--pp-note-ink) 8%,transparent);--pp-note-danger:var(--dsw-alias-state-error-primary,#dc2626);--pp-note-ok:var(--dsw-alias-state-success-primary,#16a34a);display:flex;flex-direction:column;box-sizing:border-box;width:100%;border:1px solid var(--pp-note-line);border-radius:10px;background:color-mix(in srgb,var(--pp-note) 4%,var(--dsw-alias-bg-base,#fff));color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +
       '.pp-notes-embedded{border:0;border-radius:0;background:transparent}' +
       '.pp-notes-embedded .pp-notes-head{padding:8px 2px 4px}' +
       '.pp-notes-embedded .pp-notes-list{max-height:none;overflow:visible;padding:0}' +
@@ -10820,12 +10834,12 @@ window.__ModuleLoader__.load({
       '.pp-notes-n{flex:none;min-width:16px;height:16px;margin-top:1px;border-radius:999px;background:color-mix(in srgb,var(--pp-note) 18%,transparent);color:var(--pp-note-ink);font-size:10px;line-height:16px;text-align:center;font-variant-numeric:tabular-nums}' +
       '.pp-notes-main{flex:1;min-width:0}' +
       '.pp-notes-quote{display:flex;align-items:center;gap:6px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap;overflow:hidden}' +
-      '.pp-notes-quote .pp-type-mark{background:color-mix(in srgb,var(--pp-note) 18%,transparent);color:var(--pp-note-ink);border:0}' +
+      '.pp-notes-quote .pp-type-mark{background:color-mix(in srgb,var(--pp-kind,var(--pp-note-accent)) 16%,transparent);color:color-mix(in srgb,var(--pp-kind,var(--pp-note-accent)) 68%,var(--pp-note-ink));border:0}' +
       '.pp-notes-quote-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-notes-empty{padding:14px 12px;color:var(--pp-note-ink-2);font-size:12px;line-height:1.6}' +
       '.pp-notes-empty .pp-empty-mark{justify-content:flex-start;margin-bottom:4px;opacity:.5}' +
       '.pp-notes-empty .pp-empty-mark svg{width:20px;height:20px}' +
-      '.pp-page-foot.pp-review-foot{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);--pp-inline-tint:217,164,65;--pp-inline-ink:158,110,26;padding:0;gap:0;border-color:var(--pp-line-2);background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
+      '.pp-page-foot.pp-review-foot{--pp-note-accent:var(--pp-annotation,#8a6200);--pp-note-ink:var(--dsw-alias-label-primary,#111827);--pp-note-ink-2:var(--dsw-alias-label-secondary,#6b7280);--pp-note-line:var(--dsw-alias-border-l1,#e5e7eb);--pp-note-surface:var(--dsw-alias-bg-overlay,#fff);padding:0;gap:0;border-color:var(--pp-line-2);background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
       '.pp-page-foot.pp-merge-foot{--pp-note-accent:var(--pp-accent)}' +
       '.pp-page-foot.pp-merge-foot .pp-notes{--pp-note-accent:var(--pp-accent)}' +
       '.pp-review-foot>.pp-review{padding:0;gap:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}' +
@@ -10949,16 +10963,16 @@ window.__ModuleLoader__.load({
       '.pp-note-save-hint{color:var(--pp-note-ink-2);font-size:10.5px;line-height:1.45}' +
       '.pp-note-save-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:2px}' +
       '.pp-notes-row[data-promoted="true"]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary,#2f9e63) 35%,var(--pp-note-line))}' +
-      // Type chips share one neutral capsule; the selected one takes the amber
-      // wash, so kind is read from the icon and label instead of hue.
-      '.pp-note-inline{box-sizing:border-box;display:inline-flex;align-items:center;gap:.25em;height:auto;max-width:100%;margin:0 .12em 0 .32em;padding:.02em .36em;border:1px dashed rgba(var(--pp-inline-ink,var(--pp-inline-tint)),.9);border-radius:5px;background:rgba(var(--pp-inline-tint),.28);color:inherit;font:inherit;font-family:var(--dsw-font-family,inherit);font-size:var(--dsh-content-font-size,14px);font-style:normal;font-weight:400;line-height:1.32;vertical-align:middle;white-space:normal;user-select:none;-webkit-user-select:none;cursor:pointer}' +
-      '.pp-note-inline-icon{flex:none;display:inline-flex;align-items:center;color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)))}.pp-note-inline-icon svg{width:12px;height:12px;stroke-width:2.1}' +
+      // Type chips stay neutral until selected: each icon carries its kind hue,
+      // and selecting one washes the capsule in that same hue.
+      '.pp-note-inline{box-sizing:border-box;display:inline-flex;align-items:center;gap:.25em;height:auto;max-width:100%;margin:0 .12em 0 .32em;padding:.02em .36em;border:1px dashed color-mix(in srgb,var(--pp-kind,#a97a24) 62%,transparent);border-radius:5px;background:color-mix(in srgb,var(--pp-kind,#a97a24) 20%,transparent);color:inherit;font:inherit;font-family:var(--dsw-font-family,inherit);font-size:var(--dsh-content-font-size,14px);font-style:normal;font-weight:400;line-height:1.32;vertical-align:middle;white-space:normal;user-select:none;-webkit-user-select:none;cursor:pointer}' +
+      '.pp-note-inline-icon{flex:none;display:inline-flex;align-items:center;color:color-mix(in srgb,var(--pp-kind,#a97a24) 70%,currentColor)}.pp-note-inline-icon svg{width:12px;height:12px;stroke-width:2.1}' +
       '.pp-note-inline-text{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:inherit}.pp-note-inline-text::before{content:attr(data-text)}' +
-      '.pp-note-inline:hover{border-color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)));background:rgba(var(--pp-inline-tint),.4)}' +
+      '.pp-note-inline:hover{border-color:color-mix(in srgb,var(--pp-kind,#a97a24) 82%,transparent);background:color-mix(in srgb,var(--pp-kind,#a97a24) 30%,transparent)}' +
       '.pp-note-kinds{display:flex;flex-wrap:wrap;gap:2px;margin:0}' +
       '.pp-note-kind{display:inline-flex;align-items:center;gap:3px;height:20px;padding:0 5px;border:1px solid var(--pp-note-line);border-radius:999px;background:transparent;color:var(--pp-note-ink-2);font:inherit;font-size:10.5px;cursor:pointer}' +
-      '.pp-note-kind[data-active="true"]{border-color:rgba(var(--pp-inline-ink,var(--pp-inline-tint)),.9);color:var(--pp-note-ink);background:rgba(var(--pp-inline-tint),.24)}' +
-      '.pp-note-kind-icon{display:inline-flex;align-items:center;color:rgb(var(--pp-inline-ink,var(--pp-inline-tint)))}.pp-note-kind-icon svg{width:12px;height:12px;stroke-width:2.1}' +
+      '.pp-note-kind[data-active="true"]{border-color:color-mix(in srgb,var(--pp-kind,#a97a24) 55%,transparent);color:color-mix(in srgb,var(--pp-kind,#a97a24) 65%,var(--pp-note-ink));background:color-mix(in srgb,var(--pp-kind,#a97a24) 18%,transparent)}' +
+      '.pp-note-kind-icon{display:inline-flex;align-items:center;color:color-mix(in srgb,var(--pp-kind,#a97a24) 72%,var(--pp-note-ink))}.pp-note-kind-icon svg{width:12px;height:12px;stroke-width:2.1}' +
       '.pp-note-limit{color:var(--pp-note-ink-2);font-size:10px;font-variant-numeric:tabular-nums}' +
       '.pp-note-limit-count{font-variant-numeric:tabular-nums}' +
       '.pp-note-prompt{position:fixed;z-index:3;display:flex;flex-direction:column;gap:2px;width:210px;box-sizing:border-box;padding:5px;border:1px solid var(--pp-note-line);border-radius:10px;background:var(--pp-note-surface);box-shadow:0 14px 34px rgba(0,0,0,.2);color:var(--pp-note-ink);font-size:12px;line-height:1.5;text-align:left;pointer-events:auto}' +
@@ -10967,7 +10981,7 @@ window.__ModuleLoader__.load({
       '.pp-note-prompt-row{display:flex;align-items:center;gap:6px;width:100%;height:26px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}' +
       '.pp-note-prompt-row:hover,.pp-note-prompt-row:focus-visible{background:var(--pp-note-hover);outline:none}' +
       '.pp-note-prompt-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-      '.pp-note-prompt-tag{flex:none;padding:0 5px;border-radius:5px;background:rgba(var(--pp-bubble-tint,232,176,40),.16);color:var(--pp-note-ink-2);font-size:10px;line-height:16px}' +
+      '.pp-note-prompt-tag{flex:none;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--pp-note-accent,#8a6200) 12%,transparent);color:var(--pp-note-ink-2);font-size:10px;line-height:16px}' +
       '.pp-note-prompt-sep{height:1px;margin:3px 6px;background:var(--pp-note-line)}' +
       '.pp-note-prompt-cancel{color:var(--pp-note-ink-2)}' +
       '.pp-note-prompt-message{padding:2px 8px;color:var(--pp-note-ink);font-size:12px;line-height:1.5}' +

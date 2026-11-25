@@ -19,8 +19,9 @@ reply; the original wording stays attached, so the context is easy to follow and
 Or choose **+ Annotate** in the page header and click any assistant block: an amber outline marks the
 paragraph, list item, heading, quote, code block or table cell before the note lands. The **Annotations**
 page collects the notes for that session — locate a passage, insert one note, or save it as a prompt.
-Click a note's body to edit its kind and text while the quote stays read-only. Select notes and choose
-**Summarize** at the bottom to merge them into one quoted draft. Annotations stay with their own session
+Click a note's body to edit its kind and text while the quote stays read-only; each kind keeps its own
+muted color on the badge, the inline chip and the quoted underline. Select notes and choose **Summarize**
+at the bottom to merge them into one quoted draft. Annotations stay with their own session
 and never leak into another conversation.
 
 ![Prompt pool panel in Prompts mode: current workspace items and the send queue](docs/images/panel.png)
@@ -79,8 +80,9 @@ the conversation, so the agent gets a precise instruction and you do not lose th
 - **Annotate while you read** — select a passage in an assistant reply and right-click **Annotate**:
   pick a kind from its submenu (note / question / agree / disagree / idea / additional info / to-do), type up to 100
   full-width or 200 half-width characters (or leave it empty for a glyph-only badge), and the badge lands
-  right after the passage with a matching underline. Picking a kind preselects it in the bubble; without
-  a pick new notes start as **Agree**. Add images from the bubble or paste them into its body, and the
+  right after the passage with a matching underline. Each kind has its own muted color, shared by the
+  badge, the inline chip and the underline. Picking a kind preselects it in the bubble; without a pick
+  new notes start as **Agree**. Add images from the bubble or paste them into its body, and the
   thumbnails stay with the annotation. The badge follows the conversation's text size, so it grows with
   the reading font instead of staying small.
   The note stays on the exact wording, so you can keep reading and come back to the context instead of

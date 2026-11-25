@@ -415,16 +415,28 @@ else {
   }
   if (new Set(kinds.map((kind) => kind.icon)).size !== kinds.length) fail('annotation kinds no longer have distinct icons');
   else console.log('[ok] every annotation kind has its own icon');
+  const kindColors = kinds.map((kind) => kind.color);
+  const validColors = kindColors.every((color) => /^#[0-9a-f]{6}$/i.test(color || ''));
+  if (!validColors) fail('an annotation kind has no valid hex color');
+  else if (new Set(kindColors).size !== kinds.length) fail('two annotation kinds share one color');
+  else console.log('[ok] every annotation kind has its own color');
   const notesRule = /\.pp-notes\{([^}]*)\}/.exec(source);
   const quoteMarkRule = /\.pp-notes-quote \.pp-type-mark\{([^}]*)\}/.exec(source);
-  const amberWash = notesRule && notesRule[1].indexOf('--pp-inline-tint:217,164,65') >= 0
-    && quoteMarkRule && quoteMarkRule[1].indexOf('background:color-mix(in srgb,var(--pp-note) 18%,transparent)') >= 0;
-  if (!amberWash) fail('annotation kinds no longer share one amber wash');
-  else console.log('[ok] every annotation kind shares the amber wash');
-  const amberInk = notesRule && notesRule[1].indexOf('--pp-inline-ink:158,110,26') >= 0
-    && quoteMarkRule && quoteMarkRule[1].indexOf('color:var(--pp-note-ink)') >= 0;
-  if (!amberInk) fail('annotation kinds no longer share one amber ink shade');
-  else console.log('[ok] every annotation kind shares the amber ink');
+  const kindWash = quoteMarkRule && quoteMarkRule[1].indexOf('var(--pp-kind') >= 0
+    && quoteMarkRule[1].indexOf('var(--pp-note-ink)') >= 0;
+  if (!kindWash) fail('the annotation type mark does not use the kind color');
+  else if (notesRule && notesRule[1].indexOf('--pp-inline-tint:') >= 0) fail('the notes scope still carries one shared amber wash');
+  else console.log('[ok] the type mark takes its kind color instead of one amber wash');
+  const activeKindRule = /\.pp-note-kind\[data-active="true"\]\{([^}]*)\}/.exec(source);
+  if (!activeKindRule || activeKindRule[1].indexOf('var(--pp-kind') < 0) {
+    fail('the selected kind chip does not use the kind color');
+  } else console.log('[ok] the selected kind chip takes its kind color');
+  const missingUnderline = kinds.filter((kind) => !source.includes('::highlight(prompt-pool-note-' + kind.id + ')'));
+  if (missingUnderline.length > 0) fail('annotation kinds without a highlight rule: ' + missingUnderline.map((kind) => kind.id).join(', '));
+  else if (!source.includes('::highlight(prompt-pool-note-supplement){')) fail('the supplement highlight rule is missing');
+  else if (kinds.some((kind) => !new RegExp('::highlight\\(prompt-pool-note-' + kind.id + '\\)\\{[^}]*' + kind.color).test(source))) {
+    fail('a highlight underline does not match its kind color');
+  } else console.log('[ok] every highlight underline matches its annotation kind');
   if (!source.includes("'note.kind.idea': '思路'")) fail('the Chinese idea label is not 思路');
   else if (!source.includes("'note.kind.idea': 'Idea'")) fail('the English idea label changed');
   else if (!source.includes("'note.kind.supplement': '补充信息'")) fail('the Chinese supplement label changed');
@@ -444,15 +456,15 @@ else {
   if (chipRule[1].indexOf('font:inherit') < 0) fail('the badge does not inherit the conversation font');
   if (chipRule[1].indexOf('font-family:var(--dsw-font-family,inherit)') < 0) fail('the badge does not use the host text font family');
   if (chipRule[1].indexOf('font-size:11px') >= 0) fail('the badge still carries a fixed 11px font');
-  if (chipRule[1].indexOf('background:rgba(var(--pp-inline-tint),.28)') < 0) fail('the badge background is not deepened');
-  if (chipRule[1].indexOf('border:1px dashed rgba(var(--pp-inline-ink,var(--pp-inline-tint)),.9)') < 0) fail('the badge border does not use the ink shade');
+  if (chipRule[1].indexOf('background:color-mix(in srgb,var(--pp-kind,#a97a24) 20%,transparent)') < 0) fail('the badge background is not deepened by its kind color');
+  if (chipRule[1].indexOf('border:1px dashed color-mix(in srgb,var(--pp-kind,#a97a24) 62%,transparent)') < 0) fail('the badge border does not use the kind color');
   if (chipRule[1].indexOf('max-width:100%') < 0 || chipRule[1].indexOf('white-space:normal') < 0) fail('a long badge cannot wrap inside the column');
 }
 const underlineRule = /::highlight\(prompt-pool-note-comment\)\{([^}]*)\}/.exec(source);
 if (!underlineRule) fail('the comment highlight rule is missing');
-else if (underlineRule[1].indexOf('text-decoration-thickness:2px') < 0 || underlineRule[1].indexOf('rgba(217,164,65,1)') < 0) {
-  fail('the comment underline is not the 2px amber rule');
-} else console.log('[ok] the badge wash and the highlighted underline share the amber');
+else if (underlineRule[1].indexOf('text-decoration-thickness:2px') < 0 || underlineRule[1].indexOf('#6b7c90') < 0) {
+  fail('the comment underline is not the 2px comment hue');
+} else console.log('[ok] the badge wash and the highlighted underline share the kind hue');
 const inlineIconRule = /\.pp-note-inline-icon svg\{([^}]*)\}/.exec(source);
 if (!inlineIconRule || inlineIconRule[1].indexOf('width:12px') < 0 || inlineIconRule[1].indexOf('height:12px') < 0 || inlineIconRule[1].indexOf('stroke-width:2.1') < 0) {
   fail('the badge icon does not use the 12px icon step');

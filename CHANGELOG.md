@@ -48,10 +48,14 @@ All notable changes to this project are documented here. The format follows
   treatment applies to the menu rows, marks and count pills. The stale **Save draft** entry is now
   **Save current input**.
 - Every icon now comes from one 24px grid with a 1.8px stroke and a 12 / 14 / 16 / 20px size ladder.
-  Annotation kinds use distinct shapes instead of seven colours and emoji; annotation marks keep one amber
-  identity, and inline chips, queue controls and header tools share the same outline set.
+  Annotation kinds use distinct shapes instead of emoji, and inline chips, queue controls and header tools
+  share the same outline set.
+- Annotation kinds now have seven muted colours: green agree, red disagree, blue question, slate comment,
+  amber idea, violet supplement and teal to-do. The colour follows the kind through the body badge, the
+  chip after the quoted passage, the kind chips in both editors, the review list and the quote underline.
+  The picker outline, review card and trigger wash stay amber.
 - Inline annotation chips no longer write their label into the conversation text, so a block quote never
-  picks up chip text; older chips are rebuilt once (version 6).
+  picks up chip text; older chips are rebuilt once (version 7).
 
 ## [2.1.0] — 2026-11-24
 

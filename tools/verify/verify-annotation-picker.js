@@ -38,7 +38,7 @@ check(source.includes("element.closest('p,li,h1,h2,h3,h4,h5,h6,blockquote,pre,td
 check(source.includes('textOffsetIn(target.source, target.block, 0)'), 'a block anchor offsets from the block start');
 check(source.includes('function captureElementAnchor(sessionId, target)'), 'block anchors reuse the text-anchor builder');
 
-check(source.includes("const NOTE_CHIP_VERSION = '6';"), 'inline chips are rebuilt at version 6');
+check(source.includes("const NOTE_CHIP_VERSION = '7';"), 'inline chips are rebuilt at version 7');
 check(source.includes("text.setAttribute('data-text', shown)"), 'the inline chip keeps its text out of textContent');
 check(!/text\.textContent\s*=\s*shown/.test(source), 'the inline chip no longer writes textContent');
 check(source.includes('.pp-note-inline-text::before{content:attr(data-text)}'), 'the inline chip draws its label from data-text');
