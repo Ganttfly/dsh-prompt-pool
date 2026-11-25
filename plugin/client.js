@@ -2746,6 +2746,7 @@ window.__ModuleLoader__.load({
       if (editing && editing.id === item.id) {
         const editType = promptTypeMeta(editing.type);
         const editTypeId = normalizePromptType(editing.type);
+        const editImages = Array.isArray(editing.images) ? editing.images : [];
         return h(
           'div',
           {
@@ -2778,26 +2779,47 @@ window.__ModuleLoader__.load({
               : current)),
             clearable: true,
           }),
-          h(MentionField, {
-            value: editing.body,
-            placeholder: translate('row.bodyPlaceholder'),
-            rows: 4,
-            autoFocus: true,
-            sessionId,
-            onChange: (event) => setEditing({ ...editing, body: event.target.value }),
-            onPasteImages,
-            onKeyDown: (event) => {
-              if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-                event.preventDefault();
-                onSave();
-              }
+          h(
+            'div',
+            {
+              className: 'pp-edit-body',
+              'data-has-images': editImages.length > 0 ? 'true' : undefined,
             },
-          }),
+            editImages.length > 0
+              ? h(
+                  'div',
+                  { className: 'pp-edit-attachments' },
+                  h(ImageStrip, {
+                    images: editImages,
+                    onRemove: (image) => setEditing((current) => (current
+                      ? { ...current, images: (current.images || []).filter((entry) => entry.id !== image.id) }
+                      : current)),
+                    onOpen: onOpenImage,
+                  }),
+                )
+              : null,
+            h(MentionField, {
+              value: editing.body,
+              placeholder: translate('row.bodyPlaceholder'),
+              rows: 4,
+              autoFocus: true,
+              sessionId,
+              onChange: (event) => setEditing({ ...editing, body: event.target.value }),
+              onPasteImages,
+              onKeyDown: (event) => {
+                if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                  event.preventDefault();
+                  onSave();
+                }
+              },
+            }),
+          ),
           h(
             'div',
             { className: 'pp-edit-meta' },
             h(ImagePicker, {
               images: editing.images || [],
+              showStrip: false,
               onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
               onError,
               onOpen: onOpenImage,
@@ -3994,11 +4016,13 @@ window.__ModuleLoader__.load({
       return h(
         'div',
         { className: 'pp-image-picker' },
-        h(ImageStrip, {
-          images: list,
-          onRemove: (image) => props.onChange(list.filter((entry) => entry.id !== image.id)),
-          onOpen: props.onOpen,
-        }),
+        props.showStrip === false
+          ? null
+          : h(ImageStrip, {
+              images: list,
+              onRemove: (image) => props.onChange(list.filter((entry) => entry.id !== image.id)),
+              onOpen: props.onOpen,
+            }),
         h(
           'button',
           {
@@ -11077,6 +11101,13 @@ window.__ModuleLoader__.load({
       '.pp-note-input:focus{border-color:color-mix(in srgb,var(--pp-bubble-kind,#a97a24) 72%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--pp-bubble-kind,#a97a24) 14%,transparent)}' +
       '.pp-edit .pp-edit-input,.pp-edit .pp-textarea{width:100%;box-sizing:border-box;min-height:84px;max-height:180px;padding:7px 9px;border:1px solid var(--pp-edit-line);border-radius:8px;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font:inherit;font-size:12px;line-height:1.55;resize:vertical;outline:none}' +
       '.pp-edit .pp-edit-input:focus,.pp-edit .pp-textarea:focus{border-color:color-mix(in srgb,var(--pp-edit-accent) 72%,var(--pp-edit-line));box-shadow:0 0 0 2px color-mix(in srgb,var(--pp-edit-accent) 14%,transparent)}' +
+      '.pp-edit-body{display:flex;flex-direction:column;min-height:90px;border:1px solid var(--pp-edit-line);border-radius:8px;background:var(--dsw-alias-bg-base);overflow:hidden}' +
+      '.pp-edit-body:focus-within{border-color:color-mix(in srgb,var(--pp-edit-accent) 72%,var(--pp-edit-line));box-shadow:0 0 0 2px color-mix(in srgb,var(--pp-edit-accent) 14%,transparent)}' +
+      '.pp-edit-attachments{display:flex;flex-wrap:wrap;gap:6px;padding:8px 8px 0}' +
+      '.pp-edit-attachments .pp-images{margin-top:0;gap:6px}' +
+      '.pp-edit-attachments .pp-image{width:52px;height:52px;border-radius:9px}' +
+      '.pp-edit-body .pp-textarea{flex:1;min-height:84px;max-height:180px;border:0;border-radius:0;background:transparent;box-shadow:none;padding:8px 9px}' +
+      '.pp-edit-body .pp-textarea:focus{border-color:transparent;box-shadow:none}' +
       '.pp-note-bubble-foot{display:flex;align-items:center;gap:8px}.pp-note-bubble-ask{flex:1;color:var(--pp-note-ink-2);font-size:11px;line-height:1.4}.pp-note-bubble-actions{display:flex;gap:6px;margin-left:auto}.pp-note-bubble .pp-note-btn{height:24px;padding:0 9px;font-size:11px;border-radius:7px}.pp-note-btn-quiet-danger{border-color:transparent;background:transparent;color:var(--pp-note-danger)}.pp-note-btn-quiet-danger:hover{background:rgba(var(--pp-note-danger-rgb,239,68,68),.10)}' +
       '.pp-note-btn{height:24px;padding:0 10px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
       '.pp-review-secondary{border-color:var(--pp-line-2);background:var(--pp-surface);color:var(--pp-ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)}' +

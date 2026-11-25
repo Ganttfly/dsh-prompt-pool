@@ -36,8 +36,8 @@ All notable changes to this project are documented here. The format follows
 - The annotation and prompt editors now share one card: the same 28px title row, 22px kind chips, 90px
   body, 28px meta row and 28px action row, with each domain keeping its amber or blue identity. The
   annotation quote moves into the title row and its locate/row actions hide while editing; the prompt
-  editor puts images in the meta row and its group selector in the action row. A selected prompt kind
-  carries a small × and clicking the chip clears the type.
+  editor keeps image thumbnails inside the body card above its text field and puts the group selector in
+  the action row. A selected prompt kind carries a small × and clicking the chip clears the type.
 - The send queue starts collapsed as a one-line strip in both the page and the panel; opening it is a
   choice and the state persists.
 - The empty prompt panel now points at **+ Prompt** and **Save current input** instead of the old Save draft

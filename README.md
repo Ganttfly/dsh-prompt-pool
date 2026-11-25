@@ -44,8 +44,9 @@ header stacks the destinations above the search field and the header actions (he
 **Settings**); a one-line hint at the right edge of the destination row names the current scope. **Shared**
 puts its built-in and custom group tabs between the two. Select notes and choose
 **Summarize** in the bottom bar to open the review card; workspace prompts go straight to the list. Saving a note as a prompt opens a confirmation step where the
-title, body, images and target group can be edited, with a reminder that the conversation context is not
-carried over.
+title, body, images and target group are edited in one card, with the image thumbnails sitting inside the
+body field like the composer's own attachments and a reminder that the conversation context is not carried
+over.
 
 ![Prompt pool settings: post-use retention, built-in reset, group display, and the plugin info card](docs/images/settings.png)
 

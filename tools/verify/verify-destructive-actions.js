@@ -81,7 +81,7 @@ const fixture = () => JSON.stringify({
   settings: {},
   items: [
     { id: 'i1', group: 'builtin:note', title: '一', body: '第一条', images: [] },
-    { id: 'i2', group: 'builtin:note', title: '', body: '第二条', images: [] },
+    { id: 'i2', group: 'builtin:note', title: '', body: '第二条', images: [{ id: 'img1', type: 'image/png', name: 'a.png' }] },
   ],
   tray: [{ key: 'k1', itemId: 'i1', body: '第一条', images: [] }, { key: 'k2', itemId: 'i2', body: '第二条', images: [] }],
 });
@@ -233,6 +233,43 @@ for (const [slotName, props, label] of [
           (node) => String(node.props && node.props.className || '').split(' ').indexOf(name) >= 0,
         )).length : 0;
       if (!promptCard || sharedRows !== 4) failures.push('the prompt editor is missing a shared editor row');
+      const bodyCard = promptCard
+        ? nodes(promptCard, []).find(
+          (node) => node.type === 'div'
+            && String(node.props && node.props.className || '').split(' ').indexOf('pp-edit-body') >= 0,
+        )
+        : null;
+      if (!bodyCard) failures.push('the prompt editor has no body card');
+      else {
+        if (bodyCard.props['data-has-images'] !== 'true') failures.push('the body card does not mark its images');
+        const bodyStrip = nodes(bodyCard, []).find(
+          (node) => typeof node.type === 'function' && node.type.name === 'ImageStrip',
+        );
+        if (!bodyStrip || !Array.isArray(bodyStrip.props.images) || bodyStrip.props.images.length !== 1) {
+          failures.push('the prompt image is not inside the body card');
+        }
+        const bodyMention = nodes(bodyCard, []).find(
+          (node) => typeof node.type === 'function' && node.type.name === 'MentionField',
+        );
+        if (!bodyMention) failures.push('the prompt textarea is not inside the body card');
+      }
+      const editMeta = promptCard
+        ? nodes(promptCard, []).find(
+          (node) => node.type === 'div'
+            && String(node.props && node.props.className || '').split(' ').indexOf('pp-edit-meta') >= 0,
+        )
+        : null;
+      if (!editMeta) failures.push('the prompt editor has no meta row');
+      else {
+        const picker = nodes(editMeta, []).find(
+          (node) => typeof node.type === 'function' && node.type.name === 'ImagePicker',
+        );
+        if (!picker) failures.push('the prompt meta row lost its image picker');
+        else if (picker.props.showStrip !== false) failures.push('the meta image picker still renders a second thumbnail row');
+        if (nodes(editMeta, []).some(
+          (node) => typeof node.type === 'function' && node.type.name === 'ImageStrip',
+        )) failures.push('the prompt image strip is still inside the meta row');
+      }
       const picks = nodes(tree, []).filter(
         (node) => node.type === 'button' && String(node.props && node.props.className || '').indexOf('pp-type-pick') >= 0,
       );
