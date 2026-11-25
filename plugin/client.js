@@ -251,7 +251,6 @@ window.__ModuleLoader__.load({
       'note.pick.count': '已添加 {n} 条',
       'note.pick.undo': '撤销上一条',
       'note.pick.done': '完成',
-      'note.pick.invalid': '这里不能批注：只支持助手回复的文本块',
       'note.pick.anchorFailed': '无法定位这个段落，请换一段试试。',
       'note.pick.meta': '{kind} · {n} 字',
       'note.pick.paragraph': '段落',
@@ -574,7 +573,6 @@ window.__ModuleLoader__.load({
       'note.pick.count': '{n} added',
       'note.pick.undo': 'Undo last',
       'note.pick.done': 'Done',
-      'note.pick.invalid': 'Only text blocks in the assistant reply can be annotated',
       'note.pick.anchorFailed': 'Could not anchor this block. Try another one.',
       'note.pick.meta': '{kind} · {n} chars',
       'note.pick.paragraph': 'Paragraph',
@@ -6794,6 +6792,8 @@ window.__ModuleLoader__.load({
         if (!root) return null;
         const element = document.elementFromPoint(x, y);
         if (!element || !root.contains(element)) return null;
+        const flow = element.closest('[data-chat-flow]');
+        if (!flow || !root.contains(flow)) return null;
         if (element.closest('.pp-pick-bar, .pp-note-bubble, .pp-note-layer, .pp-root, .pp-note-inline')) return null;
         const source = element.closest('[data-text-interaction-source]');
         if (!source || !root.contains(source)) return null;
@@ -7201,10 +7201,9 @@ window.__ModuleLoader__.load({
           const offset = seat ? Math.max(18, window.innerHeight - seat.getBoundingClientRect().top + 10) : 22;
           element.style.bottom = Math.round(offset) + 'px';
         };
-        const placeText = (text, x, y, invalid) => {
+        const placeText = (text, x, y) => {
           if (!label) return;
           label.textContent = text;
-          label.dataset.invalid = invalid ? 'true' : 'false';
           label.style.display = 'block';
           label.style.left = Math.max(8, Math.min(window.innerWidth - 280, x)) + 'px';
           label.style.top = Math.max(8, Math.min(window.innerHeight - 26, y)) + 'px';
@@ -7218,14 +7217,14 @@ window.__ModuleLoader__.load({
             return;
           }
           const element = document.elementFromPoint(lastX, lastY);
-          if (!element || !root.contains(element) || closestOf(element, '.pp-pick-bar')) {
+          const flow = closestOf(element, '[data-chat-flow]');
+          if (!element || !flow || !root.contains(flow) || closestOf(element, '.pp-pick-bar')) {
             hide();
             return;
           }
           const target = pickTargetAt(lastX, lastY, pick.sessionId);
           if (!target) {
-            if (box) box.style.display = 'none';
-            placeText(translate('note.pick.invalid'), lastX + 12, lastY + 14, true);
+            hide();
             return;
           }
           const rect = target.block.getBoundingClientRect();
@@ -7246,7 +7245,7 @@ window.__ModuleLoader__.load({
           }
           const kind = translate(pickKindLabel(target.kind));
           const labelTop = rect.top >= 30 ? rect.top - 22 : Math.min(window.innerHeight - 26, rect.bottom + 4);
-          placeText(translate('note.pick.meta', { kind, n: target.quote.length }), rect.left, labelTop, false);
+          placeText(translate('note.pick.meta', { kind, n: target.quote.length }), rect.left, labelTop);
         };
         const schedule = (x, y) => {
           lastX = x;
@@ -7264,8 +7263,19 @@ window.__ModuleLoader__.load({
           placeBar();
           if (lastX >= 0) schedule(lastX, lastY);
         };
+        const flowFor = (node) => {
+          const flow = closestOf(node, '[data-chat-flow]');
+          if (!flow) return null;
+          const root = noteChatRoot(pick.sessionId);
+          return root && root.contains(flow) ? flow : null;
+        };
         const onDown = (event) => {
+          const flow = flowFor(event.target);
           if (event.button === 2) {
+            if (!flow) {
+              notePickActions.stop();
+              return;
+            }
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
@@ -7274,8 +7284,7 @@ window.__ModuleLoader__.load({
           }
           if (event.button !== 0) return;
           if (closestOf(event.target, '.pp-pick-bar')) return;
-          const root = noteChatRoot(pick.sessionId);
-          if (!root || !event.target || !root.contains(event.target)) {
+          if (!flow) {
             notePickActions.stop();
             return;
           }
@@ -7288,10 +7297,7 @@ window.__ModuleLoader__.load({
           event.stopImmediatePropagation();
           suppressClickUntil = Date.now() + 500;
           const target = pickTargetAt(event.clientX, event.clientY, pick.sessionId);
-          if (!target) {
-            showToast(translate('note.pick.invalid'), 'error');
-            return;
-          }
+          if (!target) return;
           const anchor = captureElementAnchor(pick.sessionId, target);
           if (!anchor) {
             showToast(translate('note.pick.anchorFailed'), 'error');
@@ -7319,8 +7325,7 @@ window.__ModuleLoader__.load({
         const onClick = (event) => {
           if (Date.now() > suppressClickUntil) return;
           if (closestOf(event.target, '.pp-pick-bar')) return;
-          const root = noteChatRoot(pick.sessionId);
-          if (!root || !event.target || !root.contains(event.target)) return;
+          if (!flowFor(event.target)) return;
           event.preventDefault();
           event.stopPropagation();
           event.stopImmediatePropagation();
@@ -7333,9 +7338,11 @@ window.__ModuleLoader__.load({
         };
         const onPrevent = (event) => {
           if (closestOf(event.target, '.pp-pick-bar')) return;
+          if (!flowFor(event.target)) return;
           event.preventDefault();
         };
         const onContext = (event) => {
+          if (!flowFor(event.target)) return;
           event.preventDefault();
           event.stopPropagation();
         };
@@ -10968,12 +10975,11 @@ window.__ModuleLoader__.load({
       '.pp-review-select-link{color:var(--pp-accent);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--pp-accent) 45%,transparent);text-underline-offset:3px;text-decoration-thickness:1px}' +
       '.pp-review-select-link:hover{color:var(--pp-ink);text-decoration-color:currentColor;text-decoration-thickness:1.5px}' +
       '.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}.pp-note-icon:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}.pp-note-icon.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-ask{display:inline-flex;align-items:center;gap:4px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap}' +
-      'html.pp-pick-cursor,html.pp-pick-cursor *{cursor:url("data:image/svg+xml,%3Csvg%20xmlns=\'http://www.w3.org/2000/svg\'%20width=\'24\'%20height=\'24\'%20viewBox=\'0%200%2024%2024\'%3E%3Cpath%20d=\'M5%203.5h7.5v2H7v6H5z\'%20fill=\'%23d9a441\'%20stroke=\'%23fff\'%20stroke-width=\'1\'/%3E%3Cpath%20d=\'M12%2011v9M7.5%2015.5h9\'%20stroke=\'%23d9a441\'%20stroke-width=\'2\'%20stroke-linecap=\'round\'/%3E%3C/svg%3E") 5 4,crosshair!important}' +
+      'html.pp-pick-cursor [data-chat-flow],html.pp-pick-cursor [data-chat-flow] *{cursor:url("data:image/svg+xml,%3Csvg%20xmlns=\'http://www.w3.org/2000/svg\'%20width=\'24\'%20height=\'24\'%20viewBox=\'0%200%2024%2024\'%3E%3Cpath%20d=\'M5%203.5h7.5v2H7v6H5z\'%20fill=\'%23d9a441\'%20stroke=\'%23fff\'%20stroke-width=\'1\'/%3E%3Cpath%20d=\'M12%2011v9M7.5%2015.5h9\'%20stroke=\'%23d9a441\'%20stroke-width=\'2\'%20stroke-linecap=\'round\'/%3E%3C/svg%3E") 5 4,crosshair!important}' +
       'html.pp-pick-cursor .pp-pick-bar,html.pp-pick-cursor .pp-pick-bar *{cursor:default!important}' +
       'html.pp-pick-cursor .pp-pick-btn{cursor:pointer!important}' +
       '.pp-pick-box{position:fixed;z-index:1;display:none;box-sizing:border-box;border:1.5px solid rgba(217,164,65,.92);border-radius:4px;background:rgba(217,164,65,.09);box-shadow:0 0 0 1px rgba(255,255,255,.35) inset;pointer-events:none}' +
       '.pp-pick-label{position:fixed;z-index:3;display:none;max-width:272px;box-sizing:border-box;padding:2px 6px;border-radius:5px;background:var(--pp-note-accent);color:#fff;font:inherit;font-size:11px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.16)}' +
-      '.pp-pick-label[data-invalid="true"]{background:var(--pp-note-danger)}' +
       '.pp-pick-bar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:4;display:flex;align-items:center;gap:6px;max-width:calc(100vw - 24px);box-sizing:border-box;padding:7px 8px 7px 12px;border:1px solid var(--pp-note-line);border-radius:10px;background:var(--pp-note-surface);box-shadow:0 12px 32px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);color:var(--pp-note-ink);font:inherit;font-size:11px;line-height:1.4;pointer-events:auto;cursor:default}' +
       '.pp-pick-bar .pp-pick-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-note-ink-2)}' +
       '.pp-pick-btn{height:24px;padding:0 9px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:11px;white-space:nowrap;cursor:pointer}' +

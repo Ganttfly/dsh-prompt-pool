@@ -105,8 +105,10 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   outline and a `Paragraph · 42 chars` label. Click to add an empty annotation and keep picking; the
   bottom bar counts the batch and offers **Undo last**, **View annotations** and **Done**, and Esc or a
   click outside the conversation leaves the mode. Only assistant replies are accepted; your own messages
-  and image-only or empty blocks are refused. The block's text becomes the quote, so **Locate** still
-  works. Right-click selection remains the exact-phrase path.
+  and image-only or empty blocks are refused, and ineligible blocks show no outline or label. The picker
+  only covers the conversation body, so the composer, turn rail and the rest of the app stay clickable. The
+  block's text becomes the quote, so **Locate** still works. Right-click selection remains the exact-phrase
+  path.
 - **Edit in the list** — on the **Annotations** page, click a note's body to edit its kind and text in
   place. The quoted passage is read-only; review mode keeps its checkbox and routing flow.
 - **Composer panel** — a brand row with the pool mark and name, search, the current workspace's prompt

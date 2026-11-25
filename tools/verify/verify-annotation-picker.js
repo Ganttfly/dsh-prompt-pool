@@ -53,7 +53,11 @@ check(source.includes("notePickActions.start(sessionId)"), 'the composer menu st
 check(source.includes("translate('note.pick.page')"), 'the annotations page offers its own picker entry');
 check(source.includes("const seat = document.querySelector('[data-composer-seat]');"), 'the picker bar anchors to the composer');
 check(source.includes("element.style.bottom = Math.round(offset) + 'px';"), 'the picker bar clears the composer');
-check(source.includes('html.pp-pick-cursor'), 'the picker supplies its own cursor');
+check(source.includes('html.pp-pick-cursor [data-chat-flow]'), 'the pick cursor stays inside the conversation flow');
+check(source.includes("const flowFor = (node) => {"), 'the picker resolves the current conversation flow');
+check(source.includes("if (!element || !flow || !root.contains(flow) || closestOf(element, '.pp-pick-bar'))"), 'the picker only highlights blocks in the conversation flow');
+check(source.includes('if (!target) return;'), 'invalid targets add nothing and show no warning');
+check(!source.includes('note.pick.invalid'), 'the picker no longer carries invalid-target copy');
 check(source.includes("window.addEventListener('keydown', onKey, true);"), 'Escape is captured while picking');
 
 for (const failure of failures) console.error('[fail]', failure);
