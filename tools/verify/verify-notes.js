@@ -159,7 +159,9 @@ const notesSeed = () => JSON.stringify({
     },
     {
       id: 'n2', sessionId: 's1', nodeKey: 'node-1', quote: '构建是否接受参数？',
-      prefix: '', suffix: '', offset: 30, order: 1, kind: 'comment', body: '接受分支参数', createdAt: 2, updatedAt: 2,
+      prefix: '', suffix: '', offset: 30, order: 1, kind: 'comment', body: '接受分支参数',
+      images: [{ id: 'img-n2', type: 'image/png', name: 'note.png' }],
+      createdAt: 2, updatedAt: 2,
     },
   ],
 });
@@ -260,10 +262,18 @@ else {
           const shared = card ? findAll(card, (node) => node.props
             && ['pp-edit-title', 'pp-edit-quote', 'pp-edit-input', 'pp-edit-meta', 'pp-edit-actions']
               .some((name) => String(node.props.className || '').split(' ').indexOf(name) >= 0)) : [];
+          const editBody = card ? findAll(card, (node) => node.props
+            && String(node.props.className || '').split(' ').indexOf('pp-edit-body') >= 0)[0] : null;
+          const bodyStrip = editBody ? findAll(editBody, (node) => typeof node.type === 'function'
+            && node.type.name === 'ImageStrip') : [];
+          const imagePicker = card ? findComponent(card, 'ImagePicker') : null;
           if (!card) fail('the annotation editor does not use the shared card');
           else if (picks.length !== 7) fail(`the annotation editor offers ${picks.length} kinds, expected 7`);
           else if (shared.length !== 5) fail('the annotation editor is missing a shared row');
-          else console.log('[ok] the annotation editor uses the shared card, kind chips and row rhythm');
+          else if (!editBody || editBody.props['data-has-images'] !== 'true') fail('the annotation editor does not put images inside the body card');
+          else if (bodyStrip.length !== 1) fail('the annotation editor body is missing its saved image');
+          else if (!imagePicker || imagePicker.props.showStrip !== false) fail('the annotation editor meta row repeats the image strip');
+          else console.log('[ok] the annotation editor keeps images inside the body card and offers an image picker');
           const cancel = card && findAll(card, (node) => node.type === 'button' && textOf(node).indexOf('note.cancel') >= 0)[0];
           if (cancel) cancel.props.onClick();
           notesView();

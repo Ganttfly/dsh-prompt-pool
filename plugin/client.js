@@ -6231,10 +6231,20 @@ window.__ModuleLoader__.load({
         return note;
       },
       patch(id, fields) {
+        const before = notes.get().items.find((note) => note.id === id);
         mutateNotes((state) => ({
           ...state,
           items: state.items.map((note) => (note.id === id ? { ...note, ...fields, updatedAt: Date.now() } : note)),
         }));
+        // A note, a review batch or a saved prompt may share the same bytes;
+        // an image removed from the editor goes only when nothing needs it.
+        if (before && Array.isArray(fields.images)) {
+          const keep = new Set(fields.images.map((image) => image.id));
+          const drop = (before.images || []).map((image) => image.id).filter((imageId) => !keep.has(imageId));
+          const used = referencedImageIds();
+          const garbage = drop.filter((imageId) => !used.has(imageId));
+          if (garbage.length > 0) deleteImageBlobs(garbage).catch(() => {});
+        }
       },
       /** Apply the same fields to several notes in one write. */
       patchMany(ids, fields) {
@@ -8304,6 +8314,7 @@ window.__ModuleLoader__.load({
       const [editId, setEditId] = useState('');
       const [editBody, setEditBody] = useState('');
       const [editKind, setEditKind] = useState(NOTE_KIND_DEFAULT);
+      const [editImages, setEditImages] = useState([]);
       const immediateFor = (note) => noteReviewImmediate(reviewState, note);
       const { preview, openImage, closeImage } = useImagePreview();
       const picked = notesForSelection(list, sessionId, selection);
@@ -8336,21 +8347,32 @@ window.__ModuleLoader__.load({
 
       const flash = (text, kind) => showToast(text, kind);
 
+      const closeEdit = () => {
+        setEditId('');
+        setEditBody('');
+        setEditKind(NOTE_KIND_DEFAULT);
+        setEditImages([]);
+      };
       const beginEdit = (note) => {
         if (reviewMode || !note) return;
         setEditId(note.id);
         setEditBody(note.body || '');
         setEditKind(noteKind(note.kind).id);
+        setEditImages(normalizeImages(note.images));
       };
       const cancelEdit = () => {
-        setEditId('');
-        setEditBody('');
-        setEditKind(NOTE_KIND_DEFAULT);
+        const note = list.find((entry) => entry.id === editId);
+        if (note && editImages.length > 0) discardUnsavedImages({ images: editImages }, note);
+        closeEdit();
       };
       const saveEdit = (note) => {
         if (!note) return;
-        notesActions.patch(note.id, { kind: editKind, body: clampNoteBody(editBody.trim()) });
-        cancelEdit();
+        notesActions.patch(note.id, {
+          kind: editKind,
+          body: clampNoteBody(editBody.trim()),
+          images: normalizeImages(editImages),
+        });
+        closeEdit();
       };
 
       const compose = () => {
@@ -8600,32 +8622,61 @@ window.__ModuleLoader__.load({
                         label: translate('row.type'),
                         onPick: (id) => setEditKind(id),
                       }),
-                      h('textarea', {
-                        className: 'pp-note-input pp-edit-input',
-                        value: editBody,
-                        rows: 4,
-                        autoFocus: true,
-                        placeholder: translate('note.placeholder'),
-                        onChange: (event) => setEditBody(clampNoteBody(event.target.value)),
-                        onKeyDown: (event) => {
-                          if (event.key === 'Escape') {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            cancelEdit();
-                          } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            saveEdit(note);
-                          }
+                      h(
+                        'div',
+                        {
+                          className: 'pp-edit-body',
+                          'data-has-images': editImages.length > 0 ? 'true' : undefined,
                         },
-                      }),
-                      note.images && note.images.length > 0
-                        ? h(ImageStrip, { images: note.images, compact: true, max: 4, onOpen: openImage })
-                        : null,
+                        editImages.length > 0
+                          ? h(
+                              'div',
+                              { className: 'pp-edit-attachments' },
+                              h(ImageStrip, {
+                                images: editImages,
+                                onRemove: (image) => setEditImages((current) => current.filter((entry) => entry.id !== image.id)),
+                                onOpen: openImage,
+                              }),
+                            )
+                          : null,
+                        h('textarea', {
+                          className: 'pp-note-input pp-edit-input',
+                          value: editBody,
+                          rows: 4,
+                          autoFocus: true,
+                          placeholder: translate('note.placeholder'),
+                          onChange: (event) => setEditBody(clampNoteBody(event.target.value)),
+                          onPaste: (event) => {
+                            const files = imageFilesFromClipboard(event);
+                            if (files.length === 0) return;
+                            event.preventDefault();
+                            appendImageAssets(files, editImages, (text) => flash(text, 'error'))
+                              .then((images) => setEditImages(normalizeImages(images)));
+                          },
+                          onKeyDown: (event) => {
+                            if (event.key === 'Escape') {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              cancelEdit();
+                            } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              saveEdit(note);
+                            }
+                          },
+                        }),
+                      ),
                       h(
                         'div',
                         { className: 'pp-edit-meta' },
                         h('span', { className: 'pp-edit-hint' }, translate('note.limitHint')),
+                        h(ImagePicker, {
+                          images: editImages,
+                          showStrip: false,
+                          onChange: (images) => setEditImages(normalizeImages(images)),
+                          onOpen: openImage,
+                          onError: (text) => flash(text, 'error'),
+                        }),
                       ),
                       h(
                         'div',
@@ -10971,6 +11022,9 @@ window.__ModuleLoader__.load({
       '.pp-edit-hint{margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px}' +
       '.pp-edit .pp-image-picker{gap:8px;margin-top:0}' +
       '.pp-edit .pp-image-add{height:28px;padding:0 10px;border-radius:7px}' +
+      '.pp-edit[data-domain="annotations"] .pp-edit-meta .pp-image-picker{flex:0 0 auto;margin-left:auto}' +
+      '.pp-notes .pp-edit .pp-image-picker{gap:8px;margin-top:0}' +
+      '.pp-notes .pp-edit .pp-image-add{height:28px;padding:0 10px;border-radius:7px}' +
       '.pp-mention{position:relative;flex:1;display:flex}' +
         '.pp-mention-menu{position:absolute;z-index:6;top:100%;left:0;right:0;margin-top:2px;max-height:180px;overflow:auto;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface);box-shadow:0 8px 24px rgba(0,0,0,.14)}' +
         '.pp-mention-note{padding:8px 10px;font-size:11px;color:var(--pp-ink-2)}' +
@@ -11104,10 +11158,10 @@ window.__ModuleLoader__.load({
       '.pp-edit-body{display:flex;flex-direction:column;min-height:90px;border:1px solid var(--pp-edit-line);border-radius:8px;background:var(--dsw-alias-bg-base);overflow:hidden}' +
       '.pp-edit-body:focus-within{border-color:color-mix(in srgb,var(--pp-edit-accent) 72%,var(--pp-edit-line));box-shadow:0 0 0 2px color-mix(in srgb,var(--pp-edit-accent) 14%,transparent)}' +
       '.pp-edit-attachments{display:flex;flex-wrap:wrap;gap:6px;padding:8px 8px 0}' +
-      '.pp-edit-attachments .pp-images{margin-top:0;gap:6px}' +
-      '.pp-edit-attachments .pp-image{width:52px;height:52px;border-radius:9px}' +
-      '.pp-edit-body .pp-textarea{flex:1;min-height:84px;max-height:180px;border:0;border-radius:0;background:transparent;box-shadow:none;padding:8px 9px}' +
-      '.pp-edit-body .pp-textarea:focus{border-color:transparent;box-shadow:none}' +
+      '.pp-edit .pp-edit-attachments .pp-images{margin-top:0;gap:6px}' +
+      '.pp-edit .pp-edit-attachments .pp-image{width:52px;height:52px;border-radius:9px}' +
+      '.pp-edit-body .pp-textarea,.pp-edit-body .pp-edit-input{flex:1;min-height:84px;max-height:180px;border:0;border-radius:0;background:transparent;box-shadow:none;padding:8px 9px}' +
+      '.pp-edit-body .pp-textarea:focus,.pp-edit-body .pp-edit-input:focus{border-color:transparent;box-shadow:none}' +
       '.pp-note-bubble-foot{display:flex;align-items:center;gap:8px}.pp-note-bubble-ask{flex:1;color:var(--pp-note-ink-2);font-size:11px;line-height:1.4}.pp-note-bubble-actions{display:flex;gap:6px;margin-left:auto}.pp-note-bubble .pp-note-btn{height:24px;padding:0 9px;font-size:11px;border-radius:7px}.pp-note-btn-quiet-danger{border-color:transparent;background:transparent;color:var(--pp-note-danger)}.pp-note-btn-quiet-danger:hover{background:rgba(var(--pp-note-danger-rgb,239,68,68),.10)}' +
       '.pp-note-btn{height:24px;padding:0 10px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
       '.pp-review-secondary{border-color:var(--pp-line-2);background:var(--pp-surface);color:var(--pp-ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)}' +

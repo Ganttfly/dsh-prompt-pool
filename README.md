@@ -87,9 +87,9 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   right after the passage with a matching underline. Each kind has its own vivid color, shared by the
   badge, the inline chip and the underline. Picking a kind preselects it in the bubble; without a pick
   new notes start as **Agree**. The block picker starts on the kind last used there (initially
-  **Note**), and its seven kind chips sit in the bottom bar. Add images from the bubble or paste them into its body, and the
-  thumbnails stay with the annotation. The badge follows the conversation's text size, so it grows with
-  the reading font instead of staying small.
+  **Note**), and its seven kind chips sit in the bottom bar. Add images from the bubble or the page
+  editor, or paste them into either body, and the thumbnails stay with the annotation. The badge follows
+  the conversation's text size, so it grows with the reading font instead of staying small.
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
   losing the point in a separate scratchpad; click the badge to edit. **Annotations** page always
   exists: **Locate** scrolls to the passage, **Insert** writes one note into the composer, and

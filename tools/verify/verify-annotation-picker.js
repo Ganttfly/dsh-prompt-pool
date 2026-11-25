@@ -43,8 +43,15 @@ check(source.includes("text.setAttribute('data-text', shown)"), 'the inline chip
 check(!/text\.textContent\s*=\s*shown/.test(source), 'the inline chip no longer writes textContent');
 check(source.includes('.pp-note-inline-text::before{content:attr(data-text)}'), 'the inline chip draws its label from data-text');
 
-check(source.includes("const [editBody, setEditBody] = useState('');"), 'the list editor holds only the body');
-check(source.includes('notesActions.patch(note.id, { kind: editKind, body: clampNoteBody(editBody.trim()) });'), 'saving from the list patches kind and body only');
+check(source.includes("const [editBody, setEditBody] = useState('');"), 'the list editor holds the body');
+check(source.includes("const [editImages, setEditImages] = useState([]);"), 'the list editor holds its images');
+check(
+  source.includes('notesActions.patch(note.id, {')
+    && source.includes('kind: editKind,')
+    && source.includes('body: clampNoteBody(editBody.trim()),')
+    && source.includes('images: normalizeImages(editImages),'),
+  'saving from the list patches kind, body and images',
+);
 check(!/notesActions\.patch\(note\.id,\s*\{[^}]*quote/.test(source), 'the list editor never patches the quote');
 check(source.includes("'data-editable': reviewMode ? undefined : 'true'"), 'annotation bodies are editable outside review mode');
 check(source.includes("title: reviewMode ? undefined : translate('note.edit')"), 'the editable body announces the editor');
