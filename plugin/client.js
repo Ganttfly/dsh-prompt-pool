@@ -312,7 +312,7 @@ window.__ModuleLoader__.load({
       'note.summary.done': '已生成草稿',
       'note.summary.failed': '无法写入输入框，请稍后再试。',
       'note.menu.view': '查看批注',
-      'prompt.menu.save': '保存草稿',
+      'prompt.menu.save': '保存当前输入',
       'prompt.menu.new': '新建提示词',
       'prompt.menu.view': '查看提示词',
       'note.review.savePrompt': '存成提示词',
@@ -620,7 +620,7 @@ window.__ModuleLoader__.load({
       'note.summary.done': 'Draft generated',
       'note.summary.failed': 'Could not write to the composer. Try again later.',
       'note.menu.view': 'View annotations',
-      'prompt.menu.save': 'Save draft',
+      'prompt.menu.save': 'Save current input',
       'prompt.menu.new': 'New prompt',
       'prompt.menu.view': 'View prompts',
       'note.review.savePrompt': 'Save as prompt',
@@ -3458,6 +3458,7 @@ window.__ModuleLoader__.load({
             {
               type: 'button',
               className: 'pp-trigger-action',
+              'data-domain': 'annotations',
               title: translate('scope.notes'),
               'aria-label': translate('scope.notes'),
               'aria-haspopup': 'menu',
@@ -3479,6 +3480,7 @@ window.__ModuleLoader__.load({
             {
               type: 'button',
               className: 'pp-trigger-action',
+              'data-domain': 'prompts',
               title: translate('scope.prompts'),
               'aria-label': translate('scope.prompts'),
               'aria-haspopup': 'menu',
@@ -3499,6 +3501,7 @@ window.__ModuleLoader__.load({
               {
                 key: 'domain-menu',
                 className: 'pp-trigger-menu pp-root',
+                'data-domain': domainMenu,
                 role: 'menu',
                 'aria-label': label + ' · ' + translate(domainMenu === 'annotations' ? 'scope.notes' : 'scope.prompts'),
               },
@@ -9932,9 +9935,14 @@ window.__ModuleLoader__.load({
       '.pp-trigger-bar .pp-trigger[data-open="true"]{background:color-mix(in srgb,var(--pp-accent) 15%,transparent)}' +
       '.pp-trigger-action{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 6px;border:0;border-left:1px solid color-mix(in srgb,var(--pp-accent) 14%,var(--pp-line));border-radius:0;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;line-height:1;cursor:pointer;white-space:nowrap;transition:background .14s ease,color .14s ease}' +
       '.pp-trigger-action > svg{width:12px;height:12px;flex:none;opacity:.8}' +
-      '.pp-trigger-action:hover:not([disabled]){background:color-mix(in srgb,var(--pp-accent) 7%,transparent);color:var(--pp-ink)}' +
+      '.pp-trigger-action:hover:not([disabled]){background:color-mix(in srgb,var(--pp-accent) 7%,transparent);color:var(--pp-accent)}' +
       '.pp-trigger-action[data-open="true"]{background:color-mix(in srgb,var(--pp-accent) 10%,transparent);color:var(--pp-accent)}' +
       '.pp-trigger-action[data-open="true"] > svg{opacity:1}' +
+      '.pp-trigger-action[data-domain="annotations"]:hover:not([disabled]){background:color-mix(in srgb,var(--pp-note) 10%,transparent);color:var(--pp-note-ink)}' +
+      '.pp-trigger-action[data-domain="annotations"][data-open="true"]{background:color-mix(in srgb,var(--pp-note) 12%,transparent);color:var(--pp-note-ink)}' +
+      '.pp-trigger-action[data-domain="annotations"][data-open="true"] .pp-trigger-chevron{color:var(--pp-note-ink)}' +
+      '.pp-trigger-action[data-domain="annotations"] .pp-trigger-count{background:color-mix(in srgb,var(--pp-note) 15%,transparent);color:var(--pp-note-ink)}' +
+      '.pp-trigger-action[data-domain="annotations"]:focus-visible{outline-color:var(--pp-note-line)}' +
       '.pp-trigger-action[disabled]{opacity:.45;cursor:not-allowed}' +
       '.pp-trigger-action:focus-visible,.pp-trigger-bar .pp-trigger:focus-visible{outline:2px solid var(--pp-accent-line);outline-offset:-2px}' +
       '.pp-trigger-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent);font-size:9.5px;font-weight:600;line-height:16px;font-variant-numeric:tabular-nums}' +
@@ -9942,19 +9950,20 @@ window.__ModuleLoader__.load({
       '.pp-trigger-action[data-open="true"] .pp-trigger-chevron{color:var(--pp-accent);opacity:1;transform:none}' +
 
       '.pp-summary-pop{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:min(300px,calc(100vw - 16px));padding:12px;border:1px solid var(--pp-line-2);border-radius:11px;background:var(--pp-surface-2);color:var(--pp-ink);box-shadow:0 14px 40px rgba(0,0,0,.22);font-size:12px;line-height:1.5}' +
-      '.pp-trigger-menu{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:min(224px,calc(100vw - 16px));max-height:320px;overflow:auto;padding:8px;border:1px solid var(--pp-line-2);border-radius:12px;background:var(--pp-surface);color:var(--pp-ink);box-shadow:0 16px 36px rgba(0,0,0,.17),0 2px 6px rgba(0,0,0,.06);font-size:12px}' +
+      '.pp-trigger-menu{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;box-sizing:border-box;width:100%;max-width:calc(100vw - 16px);max-height:320px;overflow:auto;padding:8px;border:1px solid var(--pp-line-2);border-radius:12px;background:var(--pp-surface);color:var(--pp-ink);box-shadow:0 16px 36px rgba(0,0,0,.17),0 2px 6px rgba(0,0,0,.06);font-size:12px;--pp-menu-ink:var(--pp-accent);--pp-menu-tint:var(--pp-accent);--pp-menu-soft:color-mix(in srgb,var(--pp-menu-tint) 13%,transparent);--pp-menu-line:color-mix(in srgb,var(--pp-menu-tint) 55%,transparent)}' +
+      '.pp-trigger-menu[data-domain="annotations"]{--pp-menu-ink:var(--pp-note-ink);--pp-menu-tint:var(--pp-note)}' +
       '.pp-trigger-menu-title{padding:5px 9px 8px;margin:0 2px 4px;border-bottom:1px solid color-mix(in srgb,var(--pp-line) 82%,transparent);color:var(--pp-ink-2);font-size:11px;font-weight:600;line-height:1.4}' +
       '.pp-trigger-chevron{display:inline-flex;align-items:center;margin-left:-1px;opacity:.55}' +
       '.pp-trigger-chevron svg{width:12px;height:12px}' +
       '.pp-trigger-menu-item{display:flex;align-items:center;gap:7px;width:100%;min-height:32px;box-sizing:border-box;padding:3px 7px;border:0;border-radius:8px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;transition:background .14s ease,color .14s ease}' +
-      '.pp-trigger-menu-item:hover:not([disabled]),.pp-trigger-menu-item:focus-visible:not([disabled]){background:var(--pp-accent-soft);color:var(--pp-accent)}' +
-      '.pp-trigger-menu-item:focus-visible{outline:2px solid var(--pp-accent-line);outline-offset:-2px}' +
-      '.pp-trigger-menu-item:hover .pp-trigger-menu-mark,.pp-trigger-menu-item:focus-visible .pp-trigger-menu-mark{background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent)}' +
+      '.pp-trigger-menu-item:hover:not([disabled]),.pp-trigger-menu-item:focus-visible:not([disabled]){background:var(--pp-menu-soft);color:var(--pp-menu-ink)}' +
+      '.pp-trigger-menu-item:focus-visible{outline:2px solid var(--pp-menu-line);outline-offset:-2px}' +
+      '.pp-trigger-menu-item:hover .pp-trigger-menu-mark,.pp-trigger-menu-item:focus-visible .pp-trigger-menu-mark{background:color-mix(in srgb,var(--pp-menu-tint) 15%,transparent);color:var(--pp-menu-ink)}' +
       '.pp-trigger-menu-item[disabled]{opacity:.45;cursor:not-allowed}' +
-      '.pp-trigger-menu-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;height:20px;border-radius:6px;background:color-mix(in srgb,var(--pp-accent) 7%,transparent);color:var(--pp-ink-2);transition:background .14s ease,color .14s ease}' +
+      '.pp-trigger-menu-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;height:20px;border-radius:6px;background:color-mix(in srgb,var(--pp-menu-tint) 8%,transparent);color:var(--pp-ink-2);transition:background .14s ease,color .14s ease}' +
       '.pp-trigger-menu-mark svg{width:14px;height:14px}' +
       '.pp-trigger-menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
-      '.pp-trigger-menu-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--pp-accent) 12%,transparent);color:var(--pp-accent);font-size:10px;font-weight:600;line-height:18px;font-variant-numeric:tabular-nums;text-align:center}' +
+      '.pp-trigger-menu-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--pp-menu-tint) 14%,transparent);color:var(--pp-menu-ink);font-size:10px;font-weight:600;line-height:18px;font-variant-numeric:tabular-nums;text-align:center}' +
       '.pp-trigger-notice{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;max-width:min(300px,calc(100vw - 16px));padding:6px 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface-2);color:var(--pp-ink-2);box-shadow:0 8px 24px rgba(0,0,0,.16);font-size:11px;line-height:1.4;pointer-events:none}' +
       '.pp-trigger-notice[data-kind="ok"]{color:var(--pp-ok)}' +
       '.pp-trigger-notice[data-kind="error"]{color:var(--pp-danger)}' +

@@ -216,9 +216,19 @@ const hasAnnotationCount = triggerCount && triggerCount.children[0] === '1';
 const triggerActions = triggerNodes.filter((node) => node.type === 'button' && hasClass(node, 'pp-trigger-action'));
 const hasAnnotations = triggerActions.some((node) => JSON.stringify(node).indexOf('scope.notes') >= 0);
 const hasPrompts = triggerActions.some((node) => JSON.stringify(node).indexOf('scope.prompts') >= 0);
+const hasAnnotationDomain = triggerActions.some((node) => node.props && node.props['data-domain'] === 'annotations');
+const hasPromptDomain = triggerActions.some((node) => node.props && node.props['data-domain'] === 'prompts');
 const queued = trigger && trigger.props['data-queued'] === 'true';
-console.log(`[check] trigger label=${triggerLabel} queued=${queued} badge=${triggerBadge} noteCount=${hasAnnotationCount} actions=${triggerActions.length} annotations=${hasAnnotations} prompts=${hasPrompts}`);
-if (!trigger || !triggerLabel || queued || triggerBadge || !hasAnnotationCount || triggerActions.length !== 2 || !hasAnnotations || !hasPrompts) process.exitCode = 1;
+console.log(`[check] trigger label=${triggerLabel} queued=${queued} badge=${triggerBadge} noteCount=${hasAnnotationCount} actions=${triggerActions.length} annotations=${hasAnnotations} prompts=${hasPrompts} domains=${hasAnnotationDomain}/${hasPromptDomain}`);
+if (!trigger || !triggerLabel || queued || triggerBadge || !hasAnnotationCount || triggerActions.length !== 2 || !hasAnnotations || !hasPrompts || !hasAnnotationDomain || !hasPromptDomain) process.exitCode = 1;
+
+// Each domain owns its hover identity and its menu uses the trigger bar width.
+const triggerCSS = source.slice(source.indexOf("'.pp-trigger-menu{"), source.indexOf("'.pp-trigger-notice{"));
+const menuMatchesBar = triggerCSS.indexOf('width:100%') >= 0;
+const menuDomainTheme = triggerCSS.indexOf('.pp-trigger-menu[data-domain="annotations"]') >= 0
+  && triggerCSS.indexOf('--pp-menu-tint') >= 0;
+console.log(`[check] trigger menu width=${menuMatchesBar} domainTheme=${menuDomainTheme}`);
+if (!menuMatchesBar || !menuDomainTheme) process.exitCode = 1;
 
 // The global pool's group tabs are one neutral segmented control and the
 // settings tabs are neutral underlines; only the scope bar tints its active tab.

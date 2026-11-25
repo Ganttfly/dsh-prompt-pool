@@ -26,6 +26,10 @@ All notable changes to this project are documented here. The format follows
   directly instead of hiding them behind a `⋯` menu. The panel adds a brand row with the pool mark and
   name, and pin / close moved into it. The annotation context line is gone: the page lists notes without a
   count banner, and the bottom bar's **Summarize** is the only entry to the review card.
+- The composer pool menus match the width of the trigger bar. Hover and open states follow each side's
+  identity: annotations use the amber note wash and ink, prompts keep the blue accent, and the same
+  treatment applies to the menu rows, marks and count pills. The stale **Save draft** entry is now
+  **Save current input**.
 - Every icon now comes from one 24px grid with a 1.8px stroke and a 12 / 14 / 16 / 20px size ladder.
   Annotation kinds use distinct shapes instead of seven colours and emoji; annotation marks keep one amber
   identity, and inline chips, queue controls and header tools share the same outline set.
