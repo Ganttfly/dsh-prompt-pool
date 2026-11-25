@@ -274,9 +274,119 @@ else {
           else if (bodyStrip.length !== 1) fail('the annotation editor body is missing its saved image');
           else if (!imagePicker || imagePicker.props.showStrip !== false) fail('the annotation editor meta row repeats the image strip');
           else console.log('[ok] the annotation editor keeps images inside the body card and offers an image picker');
-          const cancel = card && findAll(card, (node) => node.type === 'button' && textOf(node).indexOf('note.cancel') >= 0)[0];
+
+          const editingRowBefore = findAll(editingView || [], (node) => node.props
+            && String(node.props.className || '') === 'pp-notes-row'
+            && node.props['data-editing'] === 'true')[0];
+          const firstId = editingRowBefore ? editingRowBefore.props['data-note-id'] : '';
+          const otherId = firstId === 'n1' ? 'n2' : 'n1';
+          const firstNote = window.__dshPromptPoolNotesV1.get().items.find((entry) => entry.id === firstId);
+          const input = card ? findAll(card, (node) => node.type === 'textarea'
+            && String(node.props && node.props.className || '').indexOf('pp-edit-input') >= 0)[0] : null;
+          const otherBody = findAll(editingView || [], (node) => node.props
+            && String(node.props.className || '') === 'pp-notes-text')[0];
+          if (!input) fail('the annotation editor has no body field');
+          else if (!otherBody) fail('the second annotation cannot be opened while editing');
+          else {
+            input.props.onChange({ target: { value: '未保存的修改' } });
+            const currentView = notesView();
+            const nextBody = findAll(currentView || [], (node) => node.props
+              && String(node.props.className || '') === 'pp-notes-text')[0];
+            if (!nextBody) fail('the other annotation disappeared after typing');
+            else {
+              nextBody.props.onClick();
+              const asked = notesView();
+              const dialog = findComponent(asked, 'UnsavedSwitchDialog');
+              if (!dialog) fail('switching annotations dropped the edit without asking');
+              else {
+                dialog.props.onDiscard();
+                const after = notesView();
+                const editingRow = findAll(after || [], (node) => node.props
+                  && String(node.props.className || '') === 'pp-notes-row'
+                  && node.props['data-editing'] === 'true')[0];
+                const kept = window.__dshPromptPoolNotesV1.get().items.find((entry) => entry.id === firstId);
+                if (!editingRow || editingRow.props['data-note-id'] !== otherId) {
+                  fail('discarding the switch did not open the other annotation');
+                } else if (!kept || !firstNote || kept.body !== firstNote.body) {
+                  fail('discarding the switch saved the abandoned annotation');
+                } else {
+                  console.log('[ok] switching annotations asks before dropping unsaved work');
+                }
+              }
+            }
+          }
+          const cancel = findAll(notesView() || [], (node) => node.type === 'button'
+            && textOf(node).indexOf('note.cancel') >= 0)[0];
           if (cancel) cancel.props.onClick();
           notesView();
+
+          // Save and switch keeps the draft and opens the other annotation.
+          const firstRow = findAll(notesView() || [], (node) => node.props
+            && String(node.props.className || '') === 'pp-notes-row'
+            && node.props['data-note-id'] === firstId)[0];
+          const firstBody = firstRow ? findAll(firstRow, (node) => node.props
+            && String(node.props.className || '') === 'pp-notes-text')[0] : null;
+          if (!firstBody) fail('the first annotation cannot be reopened for the save test');
+          else {
+            firstBody.props.onClick();
+            const saveView = notesView();
+            const saveInput = saveView ? findAll(saveView, (node) => node.type === 'textarea'
+              && String(node.props && node.props.className || '').indexOf('pp-edit-input') >= 0)[0] : null;
+            if (!saveInput) fail('the annotation editor did not reopen for the save test');
+            else {
+              saveInput.props.onChange({ target: { value: '批注草稿' } });
+              const switchView = notesView();
+              const switchBody = findAll(switchView || [], (node) => node.props
+                && String(node.props.className || '') === 'pp-notes-text')[0];
+              if (!switchBody) fail('the other annotation disappeared for the save test');
+              else {
+                switchBody.props.onClick();
+                const saveAsked = findComponent(notesView(), 'UnsavedSwitchDialog');
+                if (!saveAsked) fail('the save test did not ask again');
+                else {
+                  saveAsked.props.onSave();
+                  const savedView = notesView();
+                  const savedRow = findAll(savedView || [], (node) => node.props
+                    && String(node.props.className || '') === 'pp-notes-row'
+                    && node.props['data-editing'] === 'true')[0];
+                  const saved = window.__dshPromptPoolNotesV1.get().items.find((entry) => entry.id === firstId);
+                  if (!savedRow || savedRow.props['data-note-id'] !== otherId) {
+                    fail('save and switch did not open the other annotation');
+                  } else if (!saved || saved.body !== '批注草稿') {
+                    fail('save and switch lost the annotation draft');
+                  } else {
+                    console.log('[ok] save and switch keeps the annotation draft');
+                  }
+                }
+              }
+            }
+            const lastCancel = findAll(notesView() || [], (node) => node.type === 'button'
+              && textOf(node).indexOf('note.cancel') >= 0)[0];
+            if (lastCancel) lastCancel.props.onClick();
+            notesView();
+
+            // Restore the fixture body the later promotion checks depend on.
+            if (firstNote) {
+              const restoreRow = findAll(notesView() || [], (node) => node.props
+                && String(node.props.className || '') === 'pp-notes-row'
+                && node.props['data-note-id'] === firstId)[0];
+              const restoreText = restoreRow ? findAll(restoreRow, (node) => node.props
+                && String(node.props.className || '') === 'pp-notes-text')[0] : null;
+              if (restoreText) {
+                restoreText.props.onClick();
+                const restoreView = notesView();
+                const restoreInput = restoreView ? findAll(restoreView, (node) => node.type === 'textarea'
+                  && String(node.props && node.props.className || '').indexOf('pp-edit-input') >= 0)[0] : null;
+                if (restoreInput) {
+                  restoreInput.props.onChange({ target: { value: firstNote.body } });
+                  const restoreSave = findAll(notesView() || [], (node) => node.type === 'button'
+                    && textOf(node).indexOf('note.save') >= 0)[0];
+                  if (restoreSave) restoreSave.props.onClick();
+                }
+              }
+              notesView();
+            }
+          }
         }
       }
 

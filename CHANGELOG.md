@@ -38,7 +38,9 @@ All notable changes to this project are documented here. The format follows
   annotation quote moves into the title row and its locate/row actions hide while editing. Both editors
   keep image thumbnails inside the body card above their text fields; the annotation editor gains the
   image picker and paste handling, while the prompt editor puts the group selector in the action row. A
-  selected prompt kind carries a small × and clicking the chip clears the type.
+  selected prompt kind carries a small × and clicking the chip clears the type. Switching to another
+  annotation or prompt while the editor has unsaved edits now asks first: keep editing, discard, or save
+  and switch.
 - The send queue starts collapsed as a one-line strip in both the page and the panel; opening it is a
   choice and the state persists.
 - The empty prompt panel now points at **+ Prompt** and **Save current input** instead of the old Save draft

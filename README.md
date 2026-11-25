@@ -126,6 +126,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   list, per-row **Insert**, **+**, duplicate and delete, and the shared send queue with collapse, clear and send.
   Clicking a row's title opens the editor; the type badge leads the title. Both editors share one card —
   title, kind chips, body, meta row and action row — so an annotation and a prompt keep the same rhythm.
+  Switching to another item with unsaved edits first asks whether to keep editing, discard, or save and switch.
   Help, **Save current input** and **Settings** sit beside search. Its two modes are **Annotations**
   (current session) and **Prompts** (current workspace); the panel never shows the shared pool.
   A new prompt is not counted until it is saved. Drag its top edge

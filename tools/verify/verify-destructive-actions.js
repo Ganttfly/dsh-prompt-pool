@@ -308,6 +308,130 @@ for (const [slotName, props, label] of [
         }
       }
     }
+
+    // Clicking another prompt while the editor has unsaved work must ask first.
+    const switchMains = nodes(tree, []).filter(
+      (node) => String(node.props && node.props.className || '').split(' ').indexOf('pp-main') >= 0,
+    );
+    if (switchMains.length < 2) failures.push('the page lost its prompt rows before the switch test');
+    else {
+      switchMains[0].props.onClick();
+      tree = render();
+      const mention = nodes(tree, []).find(
+        (node) => typeof node.type === 'function' && node.type.name === 'MentionField',
+      );
+      if (!mention) failures.push('the prompt editor lost its text field before the switch test');
+      else {
+        mention.props.onChange({ target: { value: 'unsaved prompt text' } });
+        tree = render();
+        const nextMains = nodes(tree, []).filter(
+          (node) => String(node.props && node.props.className || '').split(' ').indexOf('pp-main') >= 0,
+        );
+        const other = nextMains.find((node) => node.props.onClick !== switchMains[0].props.onClick);
+        if (!other) failures.push('the second prompt row is missing after editing the first');
+        else {
+          other.props.onClick();
+          tree = render();
+          const dialog = nodes(tree, []).find(
+            (node) => typeof node.type === 'function' && node.type.name === 'UnsavedSwitchDialog',
+          );
+          if (!dialog) failures.push('switching prompts dropped the edit without asking');
+          else {
+            dialog.props.onDiscard();
+            tree = render();
+            const titleInput = nodes(tree, []).find(
+              (node) => node.type === 'input'
+                && String(node.props && node.props.className || '').indexOf('pp-edit-title-input') >= 0,
+            );
+            if (!titleInput || titleInput.props.value !== '') {
+              failures.push('discarding the prompt switch did not open the other row');
+            } else {
+              console.log('[ok] page: switching prompts asks before dropping unsaved work');
+            }
+            const cancelNext = findCancel(tree);
+            if (cancelNext) cancelNext.props.onClick();
+            tree = render();
+
+            // Keeping the editor open preserves the draft.
+            const firstMains = nodes(tree, []).filter(
+              (node) => String(node.props && node.props.className || '').split(' ').indexOf('pp-main') >= 0,
+            );
+            const firstId = pool.get().items[0] && pool.get().items[0].id;
+            if (!firstId) failures.push('the first prompt lost its identity');
+            else {
+              firstMains[0].props.onClick();
+              tree = render();
+              const again = nodes(tree, []).find(
+                (node) => typeof node.type === 'function' && node.type.name === 'MentionField',
+              );
+              if (!again) failures.push('the prompt editor did not reopen for the stay test');
+              else {
+                again.props.onChange({ target: { value: 'draft to keep' } });
+                tree = render();
+                const otherAgain = nodes(tree, []).filter(
+                  (node) => String(node.props && node.props.className || '').split(' ').indexOf('pp-main') >= 0,
+                )[0];
+                if (!otherAgain) failures.push('the target prompt disappeared for the stay test');
+                else {
+                  otherAgain.props.onClick();
+                  tree = render();
+                  const stayDialog = nodes(tree, []).find(
+                    (node) => typeof node.type === 'function' && node.type.name === 'UnsavedSwitchDialog',
+                  );
+                  if (!stayDialog) failures.push('the stay test did not ask again');
+                  else {
+                    stayDialog.props.onCancel();
+                    tree = render();
+                    const stayInput = nodes(tree, []).find(
+                      (node) => typeof node.type === 'function' && node.type.name === 'MentionField',
+                    );
+                    const stillAsking = nodes(tree, []).some(
+                      (node) => typeof node.type === 'function' && node.type.name === 'UnsavedSwitchDialog',
+                    );
+                    if (!stayInput || stayInput.props.value !== 'draft to keep' || stillAsking) {
+                      failures.push('keeping the editor open lost the draft');
+                    } else {
+                      console.log('[ok] page: keep editing preserves the draft');
+                      const saveTarget = nodes(tree, []).filter(
+                        (node) => String(node.props && node.props.className || '').split(' ').indexOf('pp-main') >= 0,
+                      )[0];
+                      if (!saveTarget) failures.push('the target prompt disappeared for the save test');
+                      else {
+                        saveTarget.props.onClick();
+                        tree = render();
+                        const saveDialog = nodes(tree, []).find(
+                          (node) => typeof node.type === 'function' && node.type.name === 'UnsavedSwitchDialog',
+                        );
+                        if (!saveDialog) failures.push('the save test did not ask again');
+                        else {
+                          saveDialog.props.onSave();
+                          tree = render();
+                          const savedFirst = pool.get().items.find((entry) => entry.id === firstId);
+                          const targetTitle = nodes(tree, []).find(
+                            (node) => node.type === 'input'
+                              && String(node.props && node.props.className || '').indexOf('pp-edit-title-input') >= 0,
+                          );
+                          if (!savedFirst || savedFirst.body !== 'draft to keep') {
+                            failures.push('save and switch did not keep the draft');
+                          } else if (!targetTitle || targetTitle.props.value !== '') {
+                            failures.push('save and switch did not open the other row');
+                          } else {
+                            console.log('[ok] page: save and switch keeps the draft and opens the target');
+                          }
+                        }
+                      }
+                      const cancelLast = findCancel(tree);
+                      if (cancelLast) cancelLast.props.onClick();
+                      tree = render();
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   // A queued entry can carry edits the pool does not have, so removal asks too.

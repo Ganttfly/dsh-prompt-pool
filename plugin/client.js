@@ -181,6 +181,11 @@ window.__ModuleLoader__.load({
       'row.down': '下移',
       'row.save': '保存',
       'row.cancel': '取消',
+      'editor.unsavedTitle': '保存当前修改？',
+      'editor.unsavedText': '切换项目会丢弃尚未保存的内容。',
+      'editor.unsavedStay': '继续编辑',
+      'editor.unsavedDiscard': '不保存',
+      'editor.unsavedSave': '保存并切换',
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
       'row.type': '类型',
@@ -520,6 +525,11 @@ window.__ModuleLoader__.load({
       'row.down': 'Move down',
       'row.save': 'Save',
       'row.cancel': 'Cancel',
+      'editor.unsavedTitle': 'Save your changes?',
+      'editor.unsavedText': 'Switching to another item discards your unsaved changes.',
+      'editor.unsavedStay': 'Keep editing',
+      'editor.unsavedDiscard': 'Discard',
+      'editor.unsavedSave': 'Save and switch',
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
       'row.type': 'Type',
@@ -1579,12 +1589,34 @@ window.__ModuleLoader__.load({
             'div',
             { className: 'pp-modal-actions' },
             h('button', { type: 'button', className: props.confirmText ? 'pp-mini' : 'pp-primary', autoFocus: true, onClick: props.onCancel }, props.cancelText),
+            props.discardText
+              ? h('button', { type: 'button', className: 'pp-mini pp-modal-discard', onClick: props.onDiscard }, props.discardText)
+              : null,
             props.confirmText
               ? h('button', { type: 'button', className: 'pp-primary', onClick: props.onConfirm }, props.confirmText)
               : null,
           ),
         ),
       );
+    }
+
+    /** Ask before a switch would drop an editor's unsaved work. */
+    function UnsavedSwitchDialog(props) {
+      return h(ConfirmModal, {
+        label: translate('editor.unsavedTitle'),
+        children: h(
+          'div',
+          { className: 'pp-modal-copy' },
+          h('div', { className: 'pp-modal-title' }, translate('editor.unsavedTitle')),
+          h('div', { className: 'pp-modal-text' }, translate('editor.unsavedText')),
+        ),
+        cancelText: translate('editor.unsavedStay'),
+        discardText: translate('editor.unsavedDiscard'),
+        confirmText: translate('editor.unsavedSave'),
+        onCancel: props.onCancel,
+        onDiscard: props.onDiscard,
+        onConfirm: props.onSave,
+      });
     }
 
     /** The annotation delete confirmation, on the same shared modal as prompt deletion. */
@@ -2615,6 +2647,26 @@ window.__ModuleLoader__.load({
 
     function useReleaseState() {
       return useSyncExternalStore(releaseState.subscribe, releaseState.get, releaseState.get);
+    }
+
+    /** True when the prompt editor holds work the store does not have yet. */
+    function poolEditChanged(editing) {
+      if (!editing) return false;
+      const stored = pool.get().items.find((item) => item.id === editing.id);
+      const imagesOf = (value) => normalizeImages(value).map((entry) => entry.id).join('|');
+      if (!stored) {
+        return Boolean(
+          String(editing.title || '').trim()
+          || String(editing.body || '').trim()
+          || normalizePromptType(editing.type)
+          || imagesOf(editing.images),
+        );
+      }
+      return editing.title !== stored.title
+        || editing.body !== stored.body
+        || normalizePromptType(editing.type) !== normalizePromptType(stored.type)
+        || groupOf(editing) !== groupOf(stored)
+        || imagesOf(editing.images) !== imagesOf(stored.images);
     }
 
     /**
@@ -4643,6 +4695,7 @@ window.__ModuleLoader__.load({
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
       const [pendingRemove, setPendingRemove] = useState(null);
+      const [pendingStart, setPendingStart] = useState(null);
       const [captureOpen, setCaptureOpen] = useState(false);
       const [status, setStatus] = useState(null);
       const { preview, openImage, closeImage } = useImagePreview();
@@ -5075,6 +5128,34 @@ window.__ModuleLoader__.load({
         setEditing({ id: item.id, group, title: '', body: '', type: '', images: [], isNew: true });
       };
 
+      /** Opening another row must not silently drop the current editor. */
+      const requestStart = (item) => {
+        if (!editing || editing.id === item.id) {
+          if (!editing) startEdit(item);
+          return;
+        }
+        if (!poolEditChanged(editing)) {
+          cancelEdit();
+          startEdit(item);
+          return;
+        }
+        setPendingStart(item);
+      };
+
+      const settlePendingStart = (action) => {
+        const target = pendingStart;
+        if (!target) return;
+        setPendingStart(null);
+        if (action === 'stay') return;
+        if (action === 'save') {
+          if (!save()) return;
+        } else {
+          cancelEdit();
+        }
+        const fresh = pool.get().items.find((entry) => entry.id === target.id);
+        if (fresh) startEdit(fresh);
+      };
+
       const rowOf = (item, index) => renderPoolRow({
         key: item.id,
         item,
@@ -5094,8 +5175,8 @@ window.__ModuleLoader__.load({
             if (!normalizeSettings(state.settings).keepAfterInsert) removeItem(entry, translate('status.insertedAndRemoved'));
           },
         ),
-        onMain: startEdit,
-        onStartEdit: startEdit,
+        onMain: requestStart,
+        onStartEdit: requestStart,
         onQueue: queueItem,
         onDelete: setPendingDelete,
         onSave: save,
@@ -5227,6 +5308,13 @@ window.__ModuleLoader__.load({
                 removeItem(pendingDelete);
                 setPendingDelete(null);
               },
+            })
+          : null,
+        pendingStart
+          ? h(UnsavedSwitchDialog, {
+              onCancel: () => settlePendingStart('stay'),
+              onDiscard: () => settlePendingStart('discard'),
+              onSave: () => settlePendingStart('save'),
             })
           : null,
         pendingRemove && sessionTray.some((entry) => entry.key === pendingRemove.key)
@@ -8315,6 +8403,7 @@ window.__ModuleLoader__.load({
       const [editBody, setEditBody] = useState('');
       const [editKind, setEditKind] = useState(NOTE_KIND_DEFAULT);
       const [editImages, setEditImages] = useState([]);
+      const [pendingSwitch, setPendingSwitch] = useState(null);
       const immediateFor = (note) => noteReviewImmediate(reviewState, note);
       const { preview, openImage, closeImage } = useImagePreview();
       const picked = notesForSelection(list, sessionId, selection);
@@ -8373,6 +8462,45 @@ window.__ModuleLoader__.load({
           images: normalizeImages(editImages),
         });
         closeEdit();
+      };
+
+      /** True when the open editor differs from the saved annotation. */
+      const editChanged = (note) => {
+        if (!note) return false;
+        const imagesOf = (value) => normalizeImages(value).map((entry) => entry.id).join('|');
+        return editBody !== (note.body || '')
+          || editKind !== noteKind(note.kind).id
+          || imagesOf(editImages) !== imagesOf(note.images);
+      };
+
+      /** Opening another annotation must not silently drop the current edit. */
+      const requestBeginEdit = (note) => {
+        if (reviewMode || !note) return;
+        if (editId && editId !== note.id) {
+          const current = list.find((entry) => entry.id === editId);
+          if (current && editChanged(current)) {
+            setPendingSwitch(note);
+            return;
+          }
+          cancelEdit();
+        }
+        beginEdit(note);
+      };
+
+      const settleSwitch = (action) => {
+        const target = pendingSwitch;
+        if (!target) return;
+        setPendingSwitch(null);
+        if (action === 'stay') return;
+        if (action === 'save') {
+          const current = list.find((entry) => entry.id === editId);
+          if (current) saveEdit(current);
+          else closeEdit();
+        } else {
+          cancelEdit();
+        }
+        const fresh = list.find((entry) => entry.id === target.id);
+        if (fresh) beginEdit(fresh);
       };
 
       const compose = () => {
@@ -8691,7 +8819,7 @@ window.__ModuleLoader__.load({
                       'data-editable': reviewMode ? undefined : 'true',
                       'data-empty': !note.body ? 'true' : undefined,
                       title: reviewMode ? undefined : translate('note.edit'),
-                      onClick: reviewMode ? undefined : () => beginEdit(note),
+                      onClick: reviewMode ? undefined : () => requestBeginEdit(note),
                     }, note.body || translate('note.emptyBody')),
                 !editing && note.images && note.images.length > 0
                   ? h(ImageStrip, { images: note.images, compact: true, max: 4, onOpen: openImage })
@@ -8766,6 +8894,13 @@ window.__ModuleLoader__.load({
             ? h(EmptyState, { key: 'empty', iconName: 'annotation', className: 'pp-notes-empty', text: translate('note.empty') })
             : null,
         h(ImageLightbox, { key: 'lightbox', preview, onClose: closeImage }),
+        pendingSwitch && list.some((entry) => entry.id === pendingSwitch.id)
+          ? h(UnsavedSwitchDialog, {
+              onCancel: () => settleSwitch('stay'),
+              onDiscard: () => settleSwitch('discard'),
+              onSave: () => settleSwitch('save'),
+            })
+          : null,
       );
     }
 
@@ -10842,8 +10977,11 @@ window.__ModuleLoader__.load({
       '.pp-release-count{font-size:12px;color:var(--pp-ink-2);font-variant-numeric:tabular-nums}' +
       '.pp-modal{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:color-mix(in srgb,var(--pp-ink) 22%,transparent)}' +
       '.pp-modal-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px;padding:16px 18px;border:1px solid var(--pp-line);border-radius:12px;background:var(--pp-surface-2);box-shadow:0 18px 48px rgba(0,0,0,.24)}' +
+      '.pp-modal-copy{display:flex;flex-direction:column;gap:4px}' +
+      '.pp-modal-title{font-size:13px;font-weight:600;line-height:1.4;color:var(--pp-ink)}' +
       '.pp-modal-text{font-size:13px;line-height:1.65;color:var(--pp-ink)}' +
       '.pp-modal-actions{display:flex;justify-content:flex-end;gap:8px}' +
+      '.pp-modal-discard{color:var(--pp-danger)}' +
       '.pp-capture-options{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto}' +
       '.pp-capture-option{justify-content:flex-start;height:auto;min-height:26px;padding:5px 9px;text-align:left;white-space:normal}' +
       '.pp-mini{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:7px;border:1px solid var(--pp-line);background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
