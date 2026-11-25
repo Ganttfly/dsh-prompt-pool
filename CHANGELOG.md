@@ -50,11 +50,11 @@ All notable changes to this project are documented here. The format follows
 - Every icon now comes from one 24px grid with a 1.8px stroke and a 12 / 14 / 16 / 20px size ladder.
   Annotation kinds use distinct shapes instead of emoji, and inline chips, queue controls and header tools
   share the same outline set.
-- Annotation kinds now have seven vivid colours: green agree, red disagree, blue question, steel-blue
-  comment, golden idea, violet supplement and teal to-do. The colour follows the kind through the body
-  badge, the chip after the quoted passage, the kind chips in both editors, the review list and the quote
-  underline. Chips use a stronger wash and outline so the kind reads at a glance; the picker outline,
-  review card and trigger wash stay amber.
+- Annotation kinds now have seven vivid, clearly separated colours: green agree, red disagree, blue
+  question, cyan comment, orange idea, violet supplement and yellow to-do. The colour follows the kind
+  through the body badge, the chip after the quoted passage, the kind chips in both editors, the review
+  list and the quote underline. Chips use a stronger wash and outline so the kind reads at a glance; the
+  picker outline, review card and trigger wash stay amber.
 - Inline annotation chips no longer write their label into the conversation text, so a block quote never
   picks up chip text; older chips are rebuilt once (version 7).
 

@@ -462,7 +462,7 @@ else {
 }
 const underlineRule = /::highlight\(prompt-pool-note-comment\)\{([^}]*)\}/.exec(source);
 if (!underlineRule) fail('the comment highlight rule is missing');
-else if (underlineRule[1].indexOf('text-decoration-thickness:2px') < 0 || underlineRule[1].indexOf('#5b8fc9') < 0) {
+else if (underlineRule[1].indexOf('text-decoration-thickness:2px') < 0 || underlineRule[1].indexOf('#0891b2') < 0) {
   fail('the comment underline is not the 2px comment hue');
 } else console.log('[ok] the badge wash and the highlighted underline share the kind hue');
 const inlineIconRule = /\.pp-note-inline-icon svg\{([^}]*)\}/.exec(source);
