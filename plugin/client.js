@@ -2695,72 +2695,93 @@ window.__ModuleLoader__.load({
       return { trayEditing, setTrayEditing, saveTrayEdit, pasteTrayImages };
     }
 
+    /**
+     * The kind chips shared by the annotation and prompt editors. One control,
+     * one geometry: the icon carries the kind hue, the capsule stays neutral
+     * until picked.
+     */
+    function editorKinds(props) {
+      const entries = Array.isArray(props.entries) ? props.entries : [];
+      const value = props.value || '';
+      return h(
+        'div',
+        { className: 'pp-type-picks', role: 'group', 'aria-label': props.label || translate('row.type') },
+        entries.map((entry) => {
+          const active = value === entry.id;
+          const canClear = active && props.clearable === true;
+          return h(
+            'button',
+            {
+              key: entry.id,
+              type: 'button',
+              className: 'pp-type-pick',
+              'data-kind': entry.id,
+              'data-active': active ? 'true' : 'false',
+              style: { '--pp-kind': entry.color },
+              title: canClear ? translate('row.typeClear') : translate(entry.label),
+              'aria-label': canClear
+                ? translate(entry.label) + ' · ' + translate('row.typeClear')
+                : translate(entry.label),
+              'aria-pressed': active ? 'true' : 'false',
+              onClick: () => props.onPick(entry.id, active),
+            },
+            h('span', { className: 'pp-type-pick-icon', 'aria-hidden': true }, icon(entry.icon)),
+            translate(entry.label),
+            canClear
+              ? h('span', { className: 'pp-type-pick-x', 'aria-hidden': true }, icon('close'))
+              : null,
+          );
+        }),
+      );
+    }
+
     /** One pool row (or its editor), shared by the panel and the page. */
     function renderPoolRow(props) {
       const {
         item, index, total, editing, setEditing, categories, workspaces, sessionId,
-        editRows, editStyle, mainTitle, showTag, onInsert, onMain, onStartEdit,
+        editStyle, mainTitle, showTag, onInsert, onMain, onStartEdit,
         onQueue, onDelete, onSave, onCancel, onPasteImages, onOpenImage, onError,
       } = props;
 
       if (editing && editing.id === item.id) {
         const editType = promptTypeMeta(editing.type);
+        const editTypeId = normalizePromptType(editing.type);
         return h(
           'div',
-          { key: item.id, className: 'pp-edit', ...(editStyle ? { style: editStyle } : {}) },
+          {
+            key: item.id,
+            className: 'pp-edit',
+            'data-domain': 'prompts',
+            ...(editStyle ? { style: editStyle } : {}),
+          },
           h(
             'div',
             { className: 'pp-edit-title' },
-            editType
-              ? h(TypeMark, { name: editType.icon, title: translate(editType.label), tone: editType.color })
-              : null,
+            h(TypeMark, {
+              name: editType ? editType.icon : 'prompt',
+              title: editType ? translate(editType.label) : translate('row.type'),
+              tone: editType ? editType.color : undefined,
+            }),
             h('input', {
-              className: 'pp-input',
+              className: 'pp-input pp-edit-title-input',
               value: editing.title,
               placeholder: translate('row.titlePlaceholder'),
               onChange: (event) => setEditing({ ...editing, title: event.target.value }),
             }),
           ),
-          h(
-            'div',
-            { className: 'pp-type-picks', role: 'group', 'aria-label': translate('row.type') },
-            PROMPT_TYPES.map((entry) => {
-              const active = normalizePromptType(editing.type) === entry.id;
-              return h(
-                'button',
-                {
-                  key: entry.id,
-                  type: 'button',
-                  className: 'pp-type-pick',
-                  'data-active': active ? 'true' : 'false',
-                  style: { '--pp-kind': entry.color },
-                  title: translate(entry.label),
-                  'aria-label': translate(entry.label),
-                  'aria-pressed': active ? 'true' : 'false',
-                  onClick: () => setEditing((current) => (current
-                    ? { ...current, type: normalizePromptType(current.type) === entry.id ? '' : entry.id }
-                    : current)),
-                },
-                h('span', { className: 'pp-type-pick-icon', 'aria-hidden': true }, icon(entry.icon)),
-                translate(entry.label),
-              );
-            }),
-            normalizePromptType(editing.type)
-              ? h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'pp-type-clear',
-                    onClick: () => setEditing((current) => (current ? { ...current, type: '' } : current)),
-                  },
-                  translate('row.typeClear'),
-                )
-              : null,
-          ),
+          editorKinds({
+            entries: PROMPT_TYPES,
+            value: editTypeId,
+            label: translate('row.type'),
+            onPick: (id, active) => setEditing((current) => (current
+              ? { ...current, type: active ? '' : id }
+              : current)),
+            clearable: true,
+          }),
           h(MentionField, {
             value: editing.body,
             placeholder: translate('row.bodyPlaceholder'),
-            rows: editRows || 4,
+            rows: 4,
             autoFocus: true,
             sessionId,
             onChange: (event) => setEditing({ ...editing, body: event.target.value }),
@@ -2772,19 +2793,23 @@ window.__ModuleLoader__.load({
               }
             },
           }),
-          h(ImagePicker, {
-            images: editing.images || [],
-            onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
-            onError,
-            onOpen: onOpenImage,
-          }),
+          h(
+            'div',
+            { className: 'pp-edit-meta' },
+            h(ImagePicker, {
+              images: editing.images || [],
+              onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
+              onError,
+              onOpen: onOpenImage,
+            }),
+          ),
           h(
             'div',
             { className: 'pp-edit-actions' },
             h(
               'select',
               {
-                className: 'pp-input',
+                className: 'pp-input pp-edit-select',
                 style: { width: 'auto', maxWidth: '220px' },
                 value: groupOf(editing),
                 'aria-label': translate('row.classification'),
@@ -5036,7 +5061,6 @@ window.__ModuleLoader__.load({
         categories: state.categories,
         workspaces: workspaceList,
         sessionId: activeSessionId,
-        editRows: 5,
         editStyle: { margin: '6px 0' },
         showTag: scope === 'global' && activeGlobalTab === 'all',
         onInsert: (entry) => sendToComposer(
@@ -8502,54 +8526,60 @@ window.__ModuleLoader__.load({
                     onChange: () => toggleNoteSelected(sessionId, note.id),
                   })
                 : null,
-              h(RowActionIcon, {
-                name: 'locate',
-                label: translate('note.locate'),
-                onClick: () => locate(note),
-              }),
+              editing
+                ? null
+                : h(RowActionIcon, {
+                    name: 'locate',
+                    label: translate('note.locate'),
+                    onClick: () => locate(note),
+                  }),
               h(
                 'div',
                 { className: 'pp-notes-main' },
-                h(
-                  'div',
-                  { className: 'pp-notes-quote', title: note.quote },
-                  h(TypeMark, {
-                    name: meta.icon,
-                    title: translate(meta.label),
-                    tone: meta.color,
-                  }),
-                  h('span', { className: 'pp-notes-quote-text' }, noteQuoteText(note.quote)),
-                  isFresh ? h('span', { className: 'pp-notes-fresh' }, translate('note.justAdded')) : null,
-                  note.promotedGroup
-                    ? h('span', { className: 'pp-notes-tag' }, translate('note.stored', { group: labelOfGroup(note.promotedGroup) }))
-                    : null,
-                ),
+                editing
+                  ? null
+                  : h(
+                      'div',
+                      { className: 'pp-notes-quote', title: note.quote },
+                      h(TypeMark, {
+                        name: meta.icon,
+                        title: translate(meta.label),
+                        tone: meta.color,
+                      }),
+                      h('span', { className: 'pp-notes-quote-text' }, noteQuoteText(note.quote)),
+                      isFresh ? h('span', { className: 'pp-notes-fresh' }, translate('note.justAdded')) : null,
+                      note.promotedGroup
+                        ? h('span', { className: 'pp-notes-tag' }, translate('note.stored', { group: labelOfGroup(note.promotedGroup) }))
+                        : null,
+                    ),
                 editing
                   ? h(
                       'div',
-                      { className: 'pp-notes-edit', onClick: (event) => event.stopPropagation() },
+                      {
+                        className: 'pp-edit',
+                        'data-domain': 'annotations',
+                        onClick: (event) => event.stopPropagation(),
+                      },
                       h(
                         'div',
-                        { className: 'pp-note-kinds' },
-                        NOTE_KINDS.map((entry) => h(
-                          'button',
-                          {
-                            key: entry.id,
-                            type: 'button',
-                            className: 'pp-note-kind',
-                            'data-kind': entry.id,
-                            'data-active': editKind === entry.id ? 'true' : 'false',
-                            style: { '--pp-kind': entry.color },
-                            onClick: () => setEditKind(entry.id),
-                          },
-                          h('span', { className: 'pp-note-kind-icon', 'aria-hidden': true }, icon(entry.icon)),
-                          translate(entry.label),
-                        )),
+                        { className: 'pp-edit-title' },
+                        h(TypeMark, {
+                          name: meta.icon,
+                          title: translate(meta.label),
+                          tone: meta.color,
+                        }),
+                        h('span', { className: 'pp-edit-quote', title: note.quote }, noteQuoteText(note.quote)),
                       ),
+                      editorKinds({
+                        entries: NOTE_KINDS,
+                        value: editKind,
+                        label: translate('row.type'),
+                        onPick: (id) => setEditKind(id),
+                      }),
                       h('textarea', {
-                        className: 'pp-note-input',
+                        className: 'pp-note-input pp-edit-input',
                         value: editBody,
-                        rows: 3,
+                        rows: 4,
                         autoFocus: true,
                         placeholder: translate('note.placeholder'),
                         onChange: (event) => setEditBody(clampNoteBody(event.target.value)),
@@ -8565,12 +8595,20 @@ window.__ModuleLoader__.load({
                           }
                         },
                       }),
+                      note.images && note.images.length > 0
+                        ? h(ImageStrip, { images: note.images, compact: true, max: 4, onOpen: openImage })
+                        : null,
                       h(
                         'div',
-                        { className: 'pp-notes-edit-foot' },
-                        h('span', { className: 'pp-notes-edit-hint' }, translate('note.limitHint')),
-                        h('button', { type: 'button', className: 'pp-note-btn', onClick: cancelEdit }, translate('note.cancel')),
-                        h('button', { type: 'button', className: 'pp-note-btn pp-pick-primary', onClick: () => saveEdit(note) }, translate('note.save')),
+                        { className: 'pp-edit-meta' },
+                        h('span', { className: 'pp-edit-hint' }, translate('note.limitHint')),
+                      ),
+                      h(
+                        'div',
+                        { className: 'pp-edit-actions' },
+                        h('span', { className: 'pp-grow' }),
+                        h('button', { type: 'button', className: 'pp-mini', onClick: cancelEdit }, translate('note.cancel')),
+                        h('button', { type: 'button', className: 'pp-primary', onClick: () => saveEdit(note) }, translate('note.save')),
                       ),
                     )
                   : h('div', {
@@ -8580,7 +8618,7 @@ window.__ModuleLoader__.load({
                       title: reviewMode ? undefined : translate('note.edit'),
                       onClick: reviewMode ? undefined : () => beginEdit(note),
                     }, note.body || translate('note.emptyBody')),
-                note.images && note.images.length > 0
+                !editing && note.images && note.images.length > 0
                   ? h(ImageStrip, { images: note.images, compact: true, max: 4, onOpen: openImage })
                   : null,
                 reviewMode && note.kind === 'todo'
@@ -8625,7 +8663,7 @@ window.__ModuleLoader__.load({
                       )
                     : null,
               ),
-              reviewMode
+              reviewMode || editing
                 ? null
                 : h(
                     'div',
@@ -9894,7 +9932,6 @@ window.__ModuleLoader__.load({
         categories: state.categories,
         workspaces: workspaces.items,
         sessionId: props.sessionId,
-        editRows: 4,
         mainTitle: translate('row.insert'),
         showTag: scope === 'global' && activeGlobalTab === 'all',
         onInsert: insertItem,
@@ -10883,19 +10920,33 @@ window.__ModuleLoader__.load({
       '.pp-row-leading{display:inline-flex;align-items:center;flex:none;min-width:20px}' +
       '.pp-type-mark{flex:none;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:5px;background:color-mix(in srgb,var(--pp-ink) 5%,transparent);color:var(--pp-ink-2)}.pp-type-mark svg{width:12px;height:12px;stroke-width:2.1}' +
       '.pp-type-mark[data-tone="true"]{background:color-mix(in srgb,var(--pp-kind) 12%,transparent);color:color-mix(in srgb,var(--pp-kind) 74%,var(--pp-ink))}' +
-      '.pp-edit{padding:8px;border-radius:8px;background:var(--pp-surface);border:1px solid var(--pp-line);display:flex;flex-direction:column;gap:6px}' +
-      '.pp-edit-title{display:flex;align-items:center;gap:6px;min-width:0}' +
+      '.pp-edit{--pp-edit-accent:var(--pp-accent);--pp-edit-line:color-mix(in srgb,var(--pp-accent) 18%,var(--pp-line));--pp-edit-surface:color-mix(in srgb,var(--pp-accent) 2%,var(--pp-surface));display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--pp-edit-line);border-radius:10px;background:var(--pp-edit-surface)}' +
+      '.pp-edit[data-domain="annotations"]{--pp-edit-accent:var(--pp-note-accent);--pp-edit-line:color-mix(in srgb,var(--pp-note) 28%,var(--pp-line));--pp-edit-surface:color-mix(in srgb,var(--pp-note) 3%,var(--pp-surface))}' +
+      '.pp-edit-title{display:flex;align-items:center;gap:7px;min-width:0}' +
       '.pp-edit-title .pp-input{flex:1;min-width:0}' +
-      '.pp-type-picks{display:flex;flex-wrap:wrap;align-items:center;gap:4px}' +
-      '.pp-type-pick{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 7px;border:1px solid var(--pp-line);border-radius:6px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;cursor:pointer;white-space:nowrap}' +
-      '.pp-type-pick:hover{background:color-mix(in srgb,var(--pp-kind) 8%,transparent);border-color:color-mix(in srgb,var(--pp-kind) 36%,var(--pp-line));color:var(--pp-ink)}' +
+      '.pp-edit .pp-edit-title-input{height:28px;padding:0 8px;border-radius:7px;background:color-mix(in srgb,var(--pp-edit-accent) 4%,var(--dsw-alias-bg-base));font-size:12px}' +
+      '.pp-edit-quote{flex:1;min-width:0;display:flex;align-items:center;height:28px;box-sizing:border-box;padding:0 8px;border:1px solid var(--pp-edit-line);border-radius:7px;background:color-mix(in srgb,var(--pp-edit-accent) 5%,var(--dsw-alias-bg-base));color:var(--pp-ink-2);font-size:11px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.pp-type-picks{display:flex;flex-wrap:wrap;align-items:center;gap:3px}' +
+      '.pp-type-pick{display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 6px;border:1px solid var(--pp-edit-line);border-radius:7px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:10.5px;cursor:pointer;white-space:nowrap}' +
+      '.pp-type-pick:hover{background:color-mix(in srgb,var(--pp-kind) 8%,transparent);border-color:color-mix(in srgb,var(--pp-kind) 36%,var(--pp-edit-line));color:var(--pp-ink)}' +
       '.pp-type-pick[data-active="true"]{border-color:color-mix(in srgb,var(--pp-kind) 55%,transparent);background:color-mix(in srgb,var(--pp-kind) 14%,transparent);color:color-mix(in srgb,var(--pp-kind) 72%,var(--pp-ink))}' +
-      '.pp-type-pick-icon{display:inline-flex;align-items:center}' +
-      '.pp-type-pick-icon svg{width:12px;height:12px;stroke-width:2}' +
-      '.pp-type-clear{border:0;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:10.5px;cursor:pointer;padding:0 2px;text-decoration:underline;text-underline-offset:2px}' +
-      '.pp-type-clear:hover{color:var(--pp-ink)}' +
+      '.pp-type-pick-icon{display:inline-flex;align-items:center;color:color-mix(in srgb,var(--pp-kind) 72%,var(--pp-ink))}' +
+      '.pp-type-pick-icon svg{width:12px;height:12px;stroke-width:2.1}' +
+      '.pp-type-pick-x{display:inline-flex;align-items:center;margin-left:1px;color:color-mix(in srgb,var(--pp-kind) 64%,var(--pp-ink))}' +
+      '.pp-type-pick-x svg{width:10px;height:10px;stroke-width:2.2}' +
       '.pp-input,.pp-textarea{width:100%;box-sizing:border-box;border:1px solid var(--pp-line);border-radius:6px;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font:inherit;font-size:12px;padding:5px 7px;outline:none;resize:vertical}' +
       '.pp-input:focus,.pp-textarea:focus{border-color:var(--pp-accent)}' +
+      '.pp-edit .pp-edit-select{height:28px;padding:0 6px;border-radius:7px;font-size:11px}' +
+      '.pp-edit-meta{display:flex;align-items:center;gap:8px;min-height:28px}' +
+      '.pp-edit-meta .pp-image-picker{flex:1;min-width:0;margin:0}' +
+      '.pp-edit-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:28px}' +
+      '.pp-edit-actions .pp-grow{flex:1}' +
+      '.pp-edit-actions .pp-mini{height:28px;padding:0 12px;border-radius:7px}' +
+      '.pp-edit-actions .pp-primary{height:28px;padding:0 14px;border-radius:7px}' +
+      '.pp-edit[data-domain="annotations"] .pp-primary{border-color:var(--pp-note-accent);background:var(--pp-note-accent)}' +
+      '.pp-edit-hint{margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-edit .pp-image-picker{gap:8px;margin-top:0}' +
+      '.pp-edit .pp-image-add{height:28px;padding:0 10px;border-radius:7px}' +
       '.pp-mention{position:relative;flex:1;display:flex}' +
         '.pp-mention-menu{position:absolute;z-index:6;top:100%;left:0;right:0;margin-top:2px;max-height:180px;overflow:auto;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface);box-shadow:0 8px 24px rgba(0,0,0,.14)}' +
         '.pp-mention-note{padding:8px 10px;font-size:11px;color:var(--pp-ink-2)}' +
@@ -10904,7 +10955,6 @@ window.__ModuleLoader__.load({
         '.pp-mention-name{font-size:12px;white-space:nowrap}' +
         '.pp-mention-hint{color:var(--pp-ink-2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
         '.pp-textarea{min-height:64px}' +
-      '.pp-edit-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}' +
       '.pp-images{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px}' +
       '.pp-images-compact{gap:3px;margin-top:3px}' +
       '.pp-image{position:relative;display:inline-flex;width:44px;height:44px;flex:none;border:1px solid var(--pp-line);border-radius:6px;background:var(--pp-surface-2);overflow:hidden;cursor:zoom-in}' +
@@ -11025,6 +11075,8 @@ window.__ModuleLoader__.load({
       
       '.pp-note-input{width:100%;box-sizing:border-box;min-height:48px;max-height:120px;padding:6px 8px;border:1px solid var(--pp-note-line);border-radius:8px;background:color-mix(in srgb,var(--pp-note-ink) 3%,transparent);color:inherit;font:inherit;font-size:12px;line-height:1.5;resize:none;outline:none}' +
       '.pp-note-input:focus{border-color:color-mix(in srgb,var(--pp-bubble-kind,#a97a24) 72%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--pp-bubble-kind,#a97a24) 14%,transparent)}' +
+      '.pp-edit .pp-edit-input,.pp-edit .pp-textarea{width:100%;box-sizing:border-box;min-height:84px;max-height:180px;padding:7px 9px;border:1px solid var(--pp-edit-line);border-radius:8px;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font:inherit;font-size:12px;line-height:1.55;resize:vertical;outline:none}' +
+      '.pp-edit .pp-edit-input:focus,.pp-edit .pp-textarea:focus{border-color:color-mix(in srgb,var(--pp-edit-accent) 72%,var(--pp-edit-line));box-shadow:0 0 0 2px color-mix(in srgb,var(--pp-edit-accent) 14%,transparent)}' +
       '.pp-note-bubble-foot{display:flex;align-items:center;gap:8px}.pp-note-bubble-ask{flex:1;color:var(--pp-note-ink-2);font-size:11px;line-height:1.4}.pp-note-bubble-actions{display:flex;gap:6px;margin-left:auto}.pp-note-bubble .pp-note-btn{height:24px;padding:0 9px;font-size:11px;border-radius:7px}.pp-note-btn-quiet-danger{border-color:transparent;background:transparent;color:var(--pp-note-danger)}.pp-note-btn-quiet-danger:hover{background:rgba(var(--pp-note-danger-rgb,239,68,68),.10)}' +
       '.pp-note-btn{height:24px;padding:0 10px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}' +
       '.pp-review-secondary{border-color:var(--pp-line-2);background:var(--pp-surface);color:var(--pp-ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)}' +
@@ -11240,16 +11292,10 @@ window.__ModuleLoader__.load({
       '.pp-pick-btn:hover{background:var(--pp-note-hover)}' +
       '.pp-pick-btn.pp-pick-primary{border-color:transparent;background:var(--pp-note-accent);color:#fff}' +
       '.pp-pick-btn.pp-pick-primary:hover{filter:brightness(1.06)}' +
-      '.pp-notes-row[data-editing="true"]{background:color-mix(in srgb,var(--pp-note) 6%,transparent);border-color:color-mix(in srgb,var(--pp-note) 38%,var(--pp-line))}' +
+      '.pp-notes-row[data-editing="true"]{background:transparent;border:0;padding:0}' +
       '.pp-notes-text[data-editable="true"]{cursor:text}' +
       '.pp-notes-text[data-editable="true"]:hover{color:var(--pp-ink)}' +
-      '.pp-notes-text[data-empty="true"]{color:var(--pp-ink-2);font-style:italic}' +
-      '.pp-notes-edit{display:flex;flex-direction:column;gap:6px;margin-top:2px}' +
-      '.pp-notes-edit .pp-note-kinds{gap:3px}' +
-      '.pp-notes-edit .pp-note-input{min-height:58px;max-height:140px;font-size:11.5px}' +
-      '.pp-notes-edit-foot{display:flex;align-items:center;gap:6px}' +
-      '.pp-notes-edit-hint{margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:10.5px}' +
-      '.pp-notes-edit .pp-pick-primary{border-color:transparent;background:var(--pp-note-accent);color:#fff}';
+      '.pp-notes-text[data-empty="true"]{color:var(--pp-ink-2);font-style:italic}';
 
     // ------------------------------------------------------------------- plugin
     return {

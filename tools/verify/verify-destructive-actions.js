@@ -223,6 +223,16 @@ for (const [slotName, props, label] of [
     else {
       mains[1].props.onClick();
       tree = render();
+      const promptCard = nodes(tree, []).find(
+        (node) => node.type === 'div'
+          && String(node.props && node.props.className || '').split(' ').indexOf('pp-edit') >= 0
+          && node.props['data-domain'] === 'prompts',
+      );
+      const sharedRows = promptCard ? ['pp-edit-title', 'pp-edit-title-input', 'pp-edit-meta', 'pp-edit-actions']
+        .filter((name) => nodes(promptCard, []).some(
+          (node) => String(node.props && node.props.className || '').split(' ').indexOf(name) >= 0,
+        )).length : 0;
+      if (!promptCard || sharedRows !== 4) failures.push('the prompt editor is missing a shared editor row');
       const picks = nodes(tree, []).filter(
         (node) => node.type === 'button' && String(node.props && node.props.className || '').indexOf('pp-type-pick') >= 0,
       );
@@ -236,6 +246,17 @@ for (const [slotName, props, label] of [
           (node) => typeof node.type === 'function' && node.type.name === 'TypeMark',
         );
         if (!marksInEditor.some((node) => node.props.name === 'check')) failures.push('the editor title does not follow the chosen type');
+        const activeDecision = nodes(tree, []).find(
+          (node) => node.type === 'button' && node.props && node.props['data-kind'] === 'decision'
+            && node.props['data-active'] === 'true',
+        );
+        if (!activeDecision) failures.push('the chosen prompt type is not marked active');
+        else {
+          if (activeDecision.props.title !== 'row.typeClear') failures.push('the active type chip does not offer to clear');
+          if (!nodes(activeDecision, []).some(
+            (node) => String(node.props && node.props.className || '').split(' ').indexOf('pp-type-pick-x') >= 0,
+          )) failures.push('the active type chip has no clear mark');
+        }
         const save = nodes(tree, []).find(
           (node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('row.save') >= 0,
         );

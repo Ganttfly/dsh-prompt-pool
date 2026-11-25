@@ -245,6 +245,29 @@ else {
           else console.log('[ok] a new annotation is marked and labelled without moving the list order');
           freshStore.set({ id: '', sessionId: '', token: 0, at: 0 });
         }
+
+        const noteBody = findAll(view, (node) => node.props
+          && String(node.props.className || '') === 'pp-notes-text')[0];
+        if (!noteBody) fail('the annotation body cannot open its editor');
+        else {
+          noteBody.props.onClick();
+          const editingView = notesView();
+          const card = findAll(editingView || [], (node) => node.props
+            && String(node.props.className || '').split(' ').indexOf('pp-edit') >= 0
+            && node.props['data-domain'] === 'annotations')[0];
+          const picks = card ? findAll(card, (node) => node.type === 'button'
+            && String(node.props && node.props.className || '').indexOf('pp-type-pick') >= 0) : [];
+          const shared = card ? findAll(card, (node) => node.props
+            && ['pp-edit-title', 'pp-edit-quote', 'pp-edit-input', 'pp-edit-meta', 'pp-edit-actions']
+              .some((name) => String(node.props.className || '').split(' ').indexOf(name) >= 0)) : [];
+          if (!card) fail('the annotation editor does not use the shared card');
+          else if (picks.length !== 7) fail(`the annotation editor offers ${picks.length} kinds, expected 7`);
+          else if (shared.length !== 5) fail('the annotation editor is missing a shared row');
+          else console.log('[ok] the annotation editor uses the shared card, kind chips and row rhythm');
+          const cancel = card && findAll(card, (node) => node.type === 'button' && textOf(node).indexOf('note.cancel') >= 0)[0];
+          if (cancel) cancel.props.onClick();
+          notesView();
+        }
       }
 
       // The header annotation-summary action is gone; annotations queue per row.
