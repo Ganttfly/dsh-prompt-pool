@@ -18,7 +18,8 @@ All notable changes to this project are documented here. The format follows
   **Prompts**. Shared group tabs sit on their own context row; workspace prompts go straight to the list,
   and the composer panel keeps its two modes.
 - The page header keeps the three destinations on their own row and moves the search field and the header
-  actions to the row below, with the search field filling the width.
+  actions to the row below, with the search field filling the width. **Shared** puts its group tabs between
+  the destinations and the search field instead of below it.
 - Underline tabs gained more breathing room: page destinations and panel modes now use a 20px gap,
   matching the settings tabs.
 - The page and panel headers now expose **How it works**, **Save current input** and **Settings**

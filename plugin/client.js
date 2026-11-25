@@ -5039,6 +5039,32 @@ window.__ModuleLoader__.load({
               onChange: switchMode,
             }),
           ),
+          scope === 'global'
+            ? h(
+                'div',
+                { className: 'pp-prompt-bar' },
+                h(
+                  TabScroller,
+                  { active: activeGlobalTab, revision: globalTabs.length },
+                  h(
+                    'div',
+                    { className: 'pp-bar pp-global-bar', role: 'tablist', onKeyDown: focusTabByKey },
+                    h(TabBar, {
+                      tabs: globalTabs,
+                      counts: tabCounts,
+                      active: activeGlobalTab,
+                      ...tabHandlers((next) => {
+                        setSettingsOpen(false);
+                        setReviewOpen(false);
+                        setReviewProcessing(false);
+                        setTab(next);
+                      }, activeGlobalTab, fallbackTabFor(globalTabs)),
+                      onDelete: (id) => setPendingCategory(id),
+                    }),
+                  ),
+                ),
+              )
+            : null,
           h(
             'div',
             { className: 'pp-head-tools' },
@@ -5077,32 +5103,6 @@ window.__ModuleLoader__.load({
             }, icon('gear')),
           ),
         ),
-        scope === 'global'
-          ? h(
-              'div',
-              { className: 'pp-prompt-bar' },
-              h(
-                TabScroller,
-                { active: activeGlobalTab, revision: globalTabs.length },
-                h(
-                  'div',
-                  { className: 'pp-bar pp-global-bar', role: 'tablist', onKeyDown: focusTabByKey },
-                  h(TabBar, {
-                    tabs: globalTabs,
-                    counts: tabCounts,
-                    active: activeGlobalTab,
-                    ...tabHandlers((next) => {
-                      setSettingsOpen(false);
-                      setReviewOpen(false);
-                      setReviewProcessing(false);
-                      setTab(next);
-                    }, activeGlobalTab, fallbackTabFor(globalTabs)),
-                    onDelete: (id) => setPendingCategory(id),
-                  }),
-                ),
-              ),
-            )
-          : null,
         pendingCategory ? h(CategoryDeleteConfirm, { onConfirm: confirmCategoryDelete, onCancel: () => setPendingCategory(null) }) : null,
         confirmClear && sessionTray.length > 0
           ? h(TrayClearConfirm, {
@@ -10080,9 +10080,10 @@ window.__ModuleLoader__.load({
       '.pp-page-head .pp-scope-bar .pp-tab,.pp-panel-headline .pp-scope-bar .pp-tab{height:30px}' +
       '.pp-new-prompt{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
       '.pp-menu-trigger{width:26px;height:26px;border-radius:7px}' +
-      // The shared pool gets one context row under the mode tabs for its group
-      // tabs; workspace prompts go straight to the list.
+      // The shared pool gets one context row between the destinations and the
+      // search field for its group tabs; workspace prompts go straight to the list.
       '.pp-prompt-bar{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-bottom:1px solid var(--pp-line);font-size:11.5px;color:var(--pp-ink-2)}' +
+      '.pp-page-head .pp-prompt-bar{margin:0 -12px;padding:0 12px}' +
       '.pp-prompt-bar .pp-tabscroll{flex:0 1 auto;min-width:0;margin:0;padding:0}' +
       '.pp-prompt-bar .pp-global-bar{margin:0}' +
       // Row actions: one visible verb, one queue verb, and everything else in a
