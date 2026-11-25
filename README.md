@@ -27,8 +27,10 @@ and never leak into another conversation.
 ![Prompt pool panel in Prompts mode: current workspace items and the send queue](docs/images/panel.png)
 
 The composer panel has two modes: **Annotations** for the current session and **Prompts** for the
-current workspace. Prompt rows offer **Insert**, **+** (add to the send queue), and separate edit, duplicate
-and delete icons; the shared send queue sits at the bottom. Switching modes never changes the row styling. The
+current workspace. Prompt rows offer **Insert**, **+** (add to the send queue), duplicate and delete; clicking
+the title opens the editor. Each prompt can carry an optional intent badge — Decision, Question, Opinion,
+Idea, Supplement, To-do or Inspiration — which leads the title with its own hue. The shared send queue starts
+as a collapsed strip and expands when opened. Switching modes never changes the row styling. The
 panel opens with a brand row — the pool mark, its name, pin and close — and the row beside search carries
 help, **Save current input** and **Settings** directly. The composer trigger is a split bar: the brand cap
 opens the panel; the **Annotations** menu reviews the session's annotations or opens the annotations view;
@@ -82,7 +84,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   full-width or 200 half-width characters (or leave it empty for a glyph-only badge), and the badge lands
   right after the passage with a matching underline. Each kind has its own vivid color, shared by the
   badge, the inline chip and the underline. Picking a kind preselects it in the bubble; without a pick
-  new notes start as **Agree**. Add images from the bubble or paste them into its body, and the
+  new notes start as **Agree**. The block picker starts on the kind last used there (initially
+  **Note**), and its seven kind chips sit in the bottom bar. Add images from the bubble or paste them into its body, and the
   thumbnails stay with the annotation. The badge follows the conversation's text size, so it grows with
   the reading font instead of staying small.
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
@@ -105,8 +108,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   composer's **Annotations** menu starts with **+ Annotate**. The pointer turns into a picker only
   over an eligible block: hovering a paragraph, list item, heading, quote, code block or table cell
   in an assistant reply draws an amber outline and a `Paragraph · 42 chars` label. Click to add an
-  empty annotation and keep picking; the bottom bar counts the batch and offers **Undo last**,
-  **View annotations** and **Done**, and Esc or a click outside the conversation leaves the mode.
+  empty annotation and keep picking; the bottom bar counts the batch, carries the seven kind chips,
+  and offers **Undo last**, **View annotations** and **Done**; Esc or a click outside the conversation leaves the mode.
   Only assistant replies are accepted; your own messages and image-only or empty blocks are
   refused, and ineligible blocks keep the normal pointer and show no outline or label. The picker
   only covers the conversation body, so the composer, turn rail and the rest of the app stay
@@ -115,7 +118,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
 - **Edit in the list** — on the **Annotations** page, click a note's body to edit its kind and text in
   place. The quoted passage is read-only; review mode keeps its checkbox and routing flow.
 - **Composer panel** — a brand row with the pool mark and name, search, the current workspace's prompt
-  list, per-row **Insert**, **+**, edit, duplicate and delete, and the shared send queue with collapse, clear and send.
+  list, per-row **Insert**, **+**, duplicate and delete, and the shared send queue with collapse, clear and send.
+  Clicking a row's title opens the editor; the type badge leads the title.
   Help, **Save current input** and **Settings** sit beside search. Its two modes are **Annotations**
   (current session) and **Prompts** (current workspace); the panel never shows the shared pool.
   A new prompt is not counted until it is saved. Drag its top edge
@@ -123,7 +127,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
 - **Sidebar page** — the full workbench over the same data, with three destinations: **Annotations**,
   **Prompts** for the current workspace, and **Shared** for the cross-workspace pool; it opens on
   annotations. Workspace prompts go straight to the list; **Shared** keeps the group tabs for the built-in
-  and custom groups on a context row below the destinations.
+  and custom groups on a context row below the destinations. Prompt rows show their optional type badge, and
+  the send queue starts as a collapsed strip.
 - **Save step** — saving a note as a prompt no longer writes immediately. It opens a confirmation with the
   title, body, images and destination group, plus a reminder that the conversation context is not carried
   over. The source session, node and quote are not stored on the prompt.
@@ -181,8 +186,8 @@ does not turn it on.
    the quote is read-only. Select notes and choose **Summarize** in the bottom bar to open the review card;
    check and route the notes in the rows, then use Save as prompt or Send in the status bar. Annotations do
    not enter the send queue.
-5. Add prompts to the send queue with **+**, reorder them in the queue, then send them one by one or switch
-   to **Merge** for a preview.
+5. Add prompts to the send queue with **+**; click the collapsed queue strip to open it, reorder the
+   prompts, then send them one by one or switch to **Merge** for a preview.
 6. Sequential sends are written into the composer and submitted in turn; merged sends become one
    message after confirmation.
 

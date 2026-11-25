@@ -74,7 +74,7 @@ store.set(KEY, JSON.stringify({
   version: 2,
   seeded: 2,
   categories: [],
-  settings: {},
+  settings: { queueCollapsed: false },
   items: [
     { id: 'i1', group: 'builtin:note', title: 'one', body: 'first', images: [], createdAt: 1, updatedAt: 1 },
     { id: 'i2', group: 'builtin:note', title: 'two', body: 'second', images: [], createdAt: 1, updatedAt: 1 },

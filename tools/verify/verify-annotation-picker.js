@@ -62,6 +62,9 @@ check(source.includes("if (!element || !flow || !root.contains(flow) || closestO
 check(source.includes('if (!target) return;'), 'invalid targets add nothing and show no warning');
 check(!source.includes('note.pick.invalid'), 'the picker no longer carries invalid-target copy');
 check(source.includes("window.addEventListener('keydown', onKey, true);"), 'Escape is captured while picking');
+check(source.includes("pickKind: typeof settings.pickKind === 'string' ? settings.pickKind : 'comment'"), 'the block picker defaults to Note');
+check(source.includes('kind: pickKindRef.current'), 'the picker stamps the chosen kind');
+check(source.includes("poolActions.setSetting('pickKind', kind.id)"), 'the picker kind chips remember the choice');
 
 for (const failure of failures) console.error('[fail]', failure);
 console.log(failures.length === 0 ? '[ok] semantic block annotations are wired' : '[fail] ' + failures.length + ' check(s)');

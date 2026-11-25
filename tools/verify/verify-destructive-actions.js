@@ -81,7 +81,7 @@ const fixture = () => JSON.stringify({
   settings: {},
   items: [
     { id: 'i1', group: 'builtin:note', title: '一', body: '第一条', images: [] },
-    { id: 'i2', group: 'builtin:note', title: '二', body: '第二条', images: [] },
+    { id: 'i2', group: 'builtin:note', title: '', body: '第二条', images: [] },
   ],
   tray: [{ key: 'k1', itemId: 'i1', body: '第一条', images: [] }, { key: 'k2', itemId: 'i2', body: '第二条', images: [] }],
 });
@@ -175,6 +175,7 @@ for (const [slotName, props, label] of [
   }, 'panel'],
 ]) {
   const fixtureData = JSON.parse(fixture());
+  fixtureData.settings = { ...(fixtureData.settings || {}), queueCollapsed: false };
   if (label === 'panel') fixtureData.items = fixtureData.items.map((item) => ({ ...item, group: 'workspace:w1' }));
   store.set(STORAGE_KEY, JSON.stringify(fixtureData));
   const entries = loadModule();
@@ -200,6 +201,56 @@ for (const [slotName, props, label] of [
   if (trayLength() !== 2) failures.push(`${label}: fixture loss, tray = ${trayLength()}`);
   if (findConfirm(tree)) failures.push(`${label}: the clear confirm is rendered before anything was clicked`);
   if (findRemoveConfirm(tree)) failures.push(`${label}: the remove confirm is rendered before anything was clicked`);
+
+  if (label === 'page') {
+    // A blank title says so instead of echoing the body; editing starts from the
+    // row itself, so there is no separate pencil action any more.
+    const titleTexts = nodes(tree, []).filter(
+      (node) => String(node.props && node.props.className || '').indexOf('pp-title-text') >= 0,
+    );
+    if (!titleTexts.some((node) => node.children[0] === 'group.untitled')) failures.push('a blank title should read group.untitled');
+    if (!titleTexts.some((node) => node.children[0] === '一')) failures.push('a saved title should stay visible');
+    const editAction = nodes(tree, []).find(
+      (node) => typeof node.type === 'function' && node.type.name === 'RowActionIcon'
+        && node.props && node.props.name === 'edit',
+    );
+    if (editAction) failures.push('the row still offers a separate edit action');
+
+    const mains = nodes(tree, []).filter(
+      (node) => String(node.props && node.props.className || '').split(' ').indexOf('pp-main') >= 0,
+    );
+    if (mains.length < 2) failures.push('the page did not render both prompt rows');
+    else {
+      mains[1].props.onClick();
+      tree = render();
+      const picks = nodes(tree, []).filter(
+        (node) => node.type === 'button' && String(node.props && node.props.className || '').indexOf('pp-type-pick') >= 0,
+      );
+      if (picks.length !== 7) failures.push(`the editor should offer 7 prompt types, found ${picks.length}`);
+      const decision = picks.find((node) => node.props.title === 'prompt.type.decision');
+      if (!decision) failures.push('the decision type chip is missing');
+      else {
+        decision.props.onClick();
+        tree = render();
+        const marksInEditor = nodes(tree, []).filter(
+          (node) => typeof node.type === 'function' && node.type.name === 'TypeMark',
+        );
+        if (!marksInEditor.some((node) => node.props.name === 'check')) failures.push('the editor title does not follow the chosen type');
+        const save = nodes(tree, []).find(
+          (node) => node.type === 'button' && Array.isArray(node.children) && node.children.indexOf('row.save') >= 0,
+        );
+        if (!save) failures.push('the prompt editor lost its save action');
+        else {
+          save.props.onClick();
+          tree = render();
+          const savedMarks = nodes(tree, []).filter(
+            (node) => typeof node.type === 'function' && node.type.name === 'TypeMark',
+          );
+          if (!savedMarks.some((node) => node.props.name === 'check')) failures.push('the saved row does not show its type');
+        }
+      }
+    }
+  }
 
   // A queued entry can carry edits the pool does not have, so removal asks too.
   const queuedBefore = trayLength();

@@ -19,12 +19,19 @@ All notable changes to this project are documented here. The format follows
 - Annotation bodies are editable on the **Annotations** page: click a row's body to change its kind and
   text inline. The quoted passage stays read-only, the row's leading mark follows the kind picked in the
   editor before saving, and review mode keeps its checkbox and routing flow.
+- Block annotation now picks its kind up front: the picker bar carries the seven kind chips, starts on
+  the kind last used there (initially **Note**), remembers the switch, and stamps every note added in
+  that batch with it.
+- Prompts carry an optional intent badge again: **Decision**, **Question**, **Opinion**, **Idea**,
+  **Supplement**, **To-do** or **Inspiration**. The editor shows the seven chips, the chosen mark leads
+  the row title in its own hue, and a prompt without a title reads **Untitled**.
 
 ### Changed
 
-- Prompt types are gone: prompts no longer carry a type, and the row badge, list filter and the type control
-  in the editor and save step were removed. Annotation kinds stay, since they still separate agreement,
-  disagreement, questions and the other notes.
+- Prompt rows no longer carry a separate edit icon: clicking the title opens the editor, while duplicate
+  and delete stay as row actions. The type badge sits before the title instead of replacing the first line.
+- The send queue starts collapsed as a one-line strip in both the page and the panel; opening it is a
+  choice and the state persists.
 - The empty prompt panel now points at **+ Prompt** and **Save current input** instead of the old Save draft
   button.
 - The sidebar page now has three destinations: **Annotations**, **Prompts** (current workspace only) and
@@ -42,8 +49,8 @@ All notable changes to this project are documented here. The format follows
   count banner, and the bottom bar's **Summarize** is the only entry to the review card.
 - Page and panel lists now use the full width of their host instead of a centered 760px reading column;
   rows, footer and send queue share the same 12px gutter as the header.
-- Prompt rows expose edit, duplicate and delete as separate icons, and annotation rows expose save and
-  delete, instead of hiding them behind a `⋯` menu.
+- Prompt rows expose duplicate and delete as separate icons, and annotation rows expose save and
+  delete, instead of hiding them behind a `⋯` menu. Prompt rows are edited from the title.
 - The composer pool menus match the width of the trigger bar. Hover and open states follow each side's
   identity: annotations use the amber note wash and ink, prompts keep the blue accent, and the same
   treatment applies to the menu rows, marks and count pills. The stale **Save draft** entry is now

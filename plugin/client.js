@@ -100,7 +100,7 @@ window.__ModuleLoader__.load({
       'group.note': '便签',
       'group.oftenuse': '常用',
       'group.template': '模板',
-      'group.untitled': '（未命名）',
+      'group.untitled': '无标题',
       'mention.loading': '正在读取…',
       'mention.empty': '没有匹配项',
       'mention.noSessionTag': '无会话',
@@ -183,6 +183,15 @@ window.__ModuleLoader__.load({
       'row.cancel': '取消',
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
+      'row.type': '类型',
+      'row.typeClear': '清除类型',
+      'prompt.type.decision': '决策',
+      'prompt.type.question': '提问',
+      'prompt.type.opinion': '意见',
+      'prompt.type.idea': '思路',
+      'prompt.type.supplement': '补充',
+      'prompt.type.todo': '待办',
+      'prompt.type.inspiration': '灵感',
       'image.add': '添加图片',
       'image.pasteHint': '或直接 Ctrl+V 粘贴',
       'image.remove': '移除图片',
@@ -248,6 +257,7 @@ window.__ModuleLoader__.load({
       'note.add': '+ 批注',
       'note.pick.page': '批注',
       'note.pick.hint': '移到助手回复的段落上点击添加；Esc 退出',
+      'note.pick.kind': '批注类型',
       'note.pick.count': '已添加 {n} 条',
       'note.pick.undo': '撤销上一条',
       'note.pick.done': '完成',
@@ -422,7 +432,7 @@ window.__ModuleLoader__.load({
       'group.note': 'Note',
       'group.oftenuse': 'Frequent',
       'group.template': 'Template',
-      'group.untitled': '(untitled)',
+      'group.untitled': 'Untitled',
       'mention.loading': 'Loading…',
       'mention.empty': 'No matches',
       'mention.noSessionTag': 'no session',
@@ -505,6 +515,15 @@ window.__ModuleLoader__.load({
       'row.cancel': 'Cancel',
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
+      'row.type': 'Type',
+      'row.typeClear': 'Clear type',
+      'prompt.type.decision': 'Decision',
+      'prompt.type.question': 'Question',
+      'prompt.type.opinion': 'Opinion',
+      'prompt.type.idea': 'Idea',
+      'prompt.type.supplement': 'Supplement',
+      'prompt.type.todo': 'To-do',
+      'prompt.type.inspiration': 'Inspiration',
       'image.add': 'Add image',
       'image.pasteHint': 'or paste with Ctrl+V',
       'image.remove': 'Remove image',
@@ -570,6 +589,7 @@ window.__ModuleLoader__.load({
       'note.add': '+ Annotate',
       'note.pick.page': 'Annotate',
       'note.pick.hint': 'Move over a paragraph in the assistant reply and click; Esc to exit',
+      'note.pick.kind': 'Annotation type',
       'note.pick.count': '{n} added',
       'note.pick.undo': 'Undo last',
       'note.pick.done': 'Done',
@@ -1232,6 +1252,7 @@ window.__ModuleLoader__.load({
         group: groupOf(raw),
         title: typeof raw.title === 'string' ? raw.title : '',
         body,
+        type: normalizePromptType(raw.type),
         images,
         createdAt: Number.isFinite(raw.createdAt) ? raw.createdAt : now,
         updatedAt: Number.isFinite(raw.updatedAt) ? raw.updatedAt : now,
@@ -1294,6 +1315,31 @@ window.__ModuleLoader__.load({
     function groupForTab(tab, workspaceGroup) {
       if (tab === 'nested:workspace') return workspaceGroup || BUILTIN_GROUP.note;
       return familyOf(tab) ? tab : BUILTIN_GROUP.note;
+    }
+
+    /**
+     * Prompt intents: the glyph names the kind of instruction, and the hue is
+     * shared with the annotation kinds where the meanings overlap. A prompt has
+     * at most one type; the type is optional.
+     */
+    const PROMPT_TYPES = [
+      { id: 'decision', label: 'prompt.type.decision', icon: 'check', color: '#22c55e' },
+      { id: 'question', label: 'prompt.type.question', icon: 'question', color: '#3b82f6' },
+      { id: 'opinion', label: 'prompt.type.opinion', icon: 'pen', color: '#0891b2' },
+      { id: 'idea', label: 'prompt.type.idea', icon: 'bulb', color: '#f97316' },
+      { id: 'supplement', label: 'prompt.type.supplement', icon: 'info', color: '#8b5cf6' },
+      { id: 'todo', label: 'prompt.type.todo', icon: 'todo', color: '#e0a800' },
+      { id: 'inspiration', label: 'prompt.type.inspiration', icon: 'sparkle', color: '#ec4899' },
+    ];
+    const PROMPT_TYPE_IDS = PROMPT_TYPES.map((entry) => entry.id);
+
+    function normalizePromptType(value) {
+      return PROMPT_TYPE_IDS.indexOf(value) >= 0 ? value : '';
+    }
+
+    function promptTypeMeta(value) {
+      const id = normalizePromptType(value);
+      return PROMPT_TYPES.find((entry) => entry.id === id) || null;
     }
 
     /** Canonical group id → display info, or null when the target is gone. */
@@ -2072,13 +2118,17 @@ window.__ModuleLoader__.load({
       return {
         // The "all" tab is the catch-all view; hiding it leaves the group tabs.
         showAllTab: settings.showAllTab !== false,
-        queueCollapsed: settings.queueCollapsed === true,
+        // A queued batch starts as one quiet strip; expanding it is a choice.
+        queueCollapsed: settings.queueCollapsed !== false,
         // The group the right-click menu offered last, so it can lead the list.
         lastCaptureGroup: typeof settings.lastCaptureGroup === 'string' ? settings.lastCaptureGroup : '',
         // Annotations: where their markers draw, not what they hold.
         notesHighlight: settings.notesHighlight !== false,
         // Annotations survive Store unless the user opts out.
         noteKeepAfterStore: settings.noteKeepAfterStore !== false,
+        // The kind the block picker stamps on a new annotation; the picker bar
+        // lets the user change it, and the choice carries over next time.
+        pickKind: typeof settings.pickKind === 'string' ? settings.pickKind : 'comment',
         // Whether an item leaves the pool after it is used.
         keepAfterInsert: settings.keepAfterInsert !== false,
         keepAfterQueue: settings.keepAfterQueue !== false,
@@ -2566,6 +2616,7 @@ window.__ModuleLoader__.load({
         group: groupOf(item),
         title: item.title,
         body: item.body,
+        type: normalizePromptType(item.type),
         images: normalizeImages(item.images),
       });
 
@@ -2588,6 +2639,7 @@ window.__ModuleLoader__.load({
           group: editing.group,
           title: editing.title.trim(),
           body: editing.body,
+          type: normalizePromptType(editing.type),
           images: editing.images || [],
         });
         setEditing(null);
@@ -2638,15 +2690,59 @@ window.__ModuleLoader__.load({
       } = props;
 
       if (editing && editing.id === item.id) {
+        const editType = promptTypeMeta(editing.type);
         return h(
           'div',
           { key: item.id, className: 'pp-edit', ...(editStyle ? { style: editStyle } : {}) },
-          h('input', {
-            className: 'pp-input',
-            value: editing.title,
-            placeholder: translate('row.titlePlaceholder'),
-            onChange: (event) => setEditing({ ...editing, title: event.target.value }),
-          }),
+          h(
+            'div',
+            { className: 'pp-edit-title' },
+            editType
+              ? h(TypeMark, { name: editType.icon, title: translate(editType.label), tone: editType.color })
+              : null,
+            h('input', {
+              className: 'pp-input',
+              value: editing.title,
+              placeholder: translate('row.titlePlaceholder'),
+              onChange: (event) => setEditing({ ...editing, title: event.target.value }),
+            }),
+          ),
+          h(
+            'div',
+            { className: 'pp-type-picks', role: 'group', 'aria-label': translate('row.type') },
+            PROMPT_TYPES.map((entry) => {
+              const active = normalizePromptType(editing.type) === entry.id;
+              return h(
+                'button',
+                {
+                  key: entry.id,
+                  type: 'button',
+                  className: 'pp-type-pick',
+                  'data-active': active ? 'true' : 'false',
+                  style: { '--pp-kind': entry.color },
+                  title: translate(entry.label),
+                  'aria-label': translate(entry.label),
+                  'aria-pressed': active ? 'true' : 'false',
+                  onClick: () => setEditing((current) => (current
+                    ? { ...current, type: normalizePromptType(current.type) === entry.id ? '' : entry.id }
+                    : current)),
+                },
+                h('span', { className: 'pp-type-pick-icon', 'aria-hidden': true }, icon(entry.icon)),
+                translate(entry.label),
+              );
+            }),
+            normalizePromptType(editing.type)
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'pp-type-clear',
+                    onClick: () => setEditing((current) => (current ? { ...current, type: '' } : current)),
+                  },
+                  translate('row.typeClear'),
+                )
+              : null,
+          ),
           h(MentionField, {
             value: editing.body,
             placeholder: translate('row.bodyPlaceholder'),
@@ -2709,13 +2805,21 @@ window.__ModuleLoader__.load({
         );
       }
 
+      const typeMeta = promptTypeMeta(item.type);
       return h(
         'div',
         { key: item.id, className: 'pp-row pp-page-item' },
         h(
           'div',
           { className: 'pp-main', ...(mainTitle ? { title: mainTitle } : {}), onClick: () => (onMain || onStartEdit)(item) },
-          h('div', { className: 'pp-title' }, item.title || item.body.split('\n')[0] || (item.images && item.images[0] && (item.images[0].name || translate('image.only'))) || translate('group.untitled')),
+          h(
+            'div',
+            { className: 'pp-title' },
+            typeMeta
+              ? h(TypeMark, { name: typeMeta.icon, title: translate(typeMeta.label), tone: typeMeta.color })
+              : null,
+            h('span', { className: 'pp-title-text' }, item.title || translate('group.untitled')),
+          ),
           item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
           h(ImageStrip, { images: item.images, compact: true, onOpen: onOpenImage }),
         ),
@@ -2734,7 +2838,6 @@ window.__ModuleLoader__.load({
             translate('row.insert'),
           ),
           h(RowActionIcon, { name: 'plus', label: translate('row.select'), onClick: () => onQueue(item) }),
-          h(RowActionIcon, { name: 'edit', label: translate('row.edit'), onClick: () => onStartEdit(item) }),
           h(RowActionIcon, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
           h(RowActionIcon, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => onDelete(item) }),
         ),
@@ -3737,6 +3840,7 @@ window.__ModuleLoader__.load({
         {
           className: 'pp-type-mark',
           title: title || '',
+          'data-tone': tone ? 'true' : undefined,
           style: tone ? { '--pp-kind': tone } : undefined,
         },
         icon(name || 'prompt'),
@@ -4404,7 +4508,7 @@ window.__ModuleLoader__.load({
       const storage = useStorageState();
       const releaseInfo = useReleaseState();
       const noteBar = useNoteStatus();
-      const queueCollapsed = state.settings && state.settings.queueCollapsed === true;
+      const queueCollapsed = normalizeSettings(state.settings).queueCollapsed;
       const publishedWorkspaces = useWorkspaceDir();
       const sessionHint = useSessionDir().sessionId;
       const pageSessionId = (props && ((props.scope && props.scope.sessionId) || props.sessionId)) || '';
@@ -4895,11 +4999,12 @@ window.__ModuleLoader__.load({
           group,
           title: '',
           body: '',
+          type: '',
           images: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '', images: [], isNew: true });
+        setEditing({ id: item.id, group, title: '', body: '', type: '', images: [], isNew: true });
       };
 
       const rowOf = (item, index) => renderPoolRow({
@@ -7174,6 +7279,10 @@ window.__ModuleLoader__.load({
      */
     function NotePicker() {
       const pick = useNotePick();
+      const pool = usePoolState();
+      const pickKind = noteKind(normalizeSettings(pool.settings).pickKind).id;
+      const pickKindRef = useRef(pickKind);
+      pickKindRef.current = pickKind;
       const [count, setCount] = useState(0);
       const boxRef = useRef(null);
       const labelRef = useRef(null);
@@ -7321,7 +7430,7 @@ window.__ModuleLoader__.load({
             ...anchor,
             id,
             sessionId: pick.sessionId,
-            kind: NOTE_KIND_DEFAULT,
+            kind: pickKindRef.current,
             dx: 0,
             dy: 0,
             promotedGroup: '',
@@ -7412,6 +7521,25 @@ window.__ModuleLoader__.load({
           h('span', { className: 'pp-pick-text' }, count > 0
             ? translate('note.pick.count', { n: count })
             : translate('note.pick.hint')),
+          h(
+            'span',
+            { key: 'pick-kinds', className: 'pp-pick-kinds', role: 'group', 'aria-label': translate('note.pick.kind') },
+            NOTE_KINDS.map((kind) => h(
+              'button',
+              {
+                key: kind.id,
+                type: 'button',
+                className: 'pp-pick-kind',
+                'data-active': pickKind === kind.id ? 'true' : 'false',
+                style: { '--pp-kind': kind.color },
+                title: translate(kind.label),
+                'aria-label': translate(kind.label),
+                'aria-pressed': pickKind === kind.id ? 'true' : 'false',
+                onClick: () => poolActions.setSetting('pickKind', kind.id),
+              },
+              icon(kind.icon),
+            )),
+          ),
           count > 0
             ? h('button', { type: 'button', className: 'pp-pick-btn', onClick: undo }, translate('note.pick.undo'))
             : null,
@@ -9496,11 +9624,12 @@ window.__ModuleLoader__.load({
           group,
           title: '',
           body: '',
+          type: '',
           images: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '', images: [], isNew: true });
+        setEditing({ id: item.id, group, title: '', body: '', type: '', images: [], isNew: true });
       };
 
       const deleteItem = (item, text) => {
@@ -10654,7 +10783,8 @@ window.__ModuleLoader__.load({
       '.pp-toggle:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
       '.pp-toggle[data-selected="true"]{color:var(--pp-accent)}' +
       '.pp-main{flex:1;min-width:0;cursor:pointer}' +
-      '.pp-title{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.pp-title{display:flex;align-items:center;gap:5px;min-width:0;font-size:12.5px;font-weight:500}' +
+      '.pp-title-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '.pp-body{color:var(--pp-ink-2);font-size:12px;white-space:pre-wrap;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}' +
       '.pp-tag{flex:none;margin-top:2px;padding:0 5px;border-radius:5px;border:1px solid var(--pp-accent-line);background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px;line-height:15px}' +
       '.pp-actions{display:flex;gap:0;opacity:0;flex:none}' +
@@ -10671,7 +10801,18 @@ window.__ModuleLoader__.load({
       '.pp-row-actions{display:flex;align-items:center;gap:2px;flex:none}' +
       '.pp-row-leading{display:inline-flex;align-items:center;flex:none;min-width:20px}' +
       '.pp-type-mark{flex:none;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:5px;background:color-mix(in srgb,var(--pp-ink) 5%,transparent);color:var(--pp-ink-2)}.pp-type-mark svg{width:12px;height:12px;stroke-width:2.1}' +
+      '.pp-type-mark[data-tone="true"]{background:color-mix(in srgb,var(--pp-kind) 12%,transparent);color:color-mix(in srgb,var(--pp-kind) 74%,var(--pp-ink))}' +
       '.pp-edit{padding:8px;border-radius:8px;background:var(--pp-surface);border:1px solid var(--pp-line);display:flex;flex-direction:column;gap:6px}' +
+      '.pp-edit-title{display:flex;align-items:center;gap:6px;min-width:0}' +
+      '.pp-edit-title .pp-input{flex:1;min-width:0}' +
+      '.pp-type-picks{display:flex;flex-wrap:wrap;align-items:center;gap:4px}' +
+      '.pp-type-pick{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 7px;border:1px solid var(--pp-line);border-radius:6px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;cursor:pointer;white-space:nowrap}' +
+      '.pp-type-pick:hover{background:color-mix(in srgb,var(--pp-kind) 8%,transparent);border-color:color-mix(in srgb,var(--pp-kind) 36%,var(--pp-line));color:var(--pp-ink)}' +
+      '.pp-type-pick[data-active="true"]{border-color:color-mix(in srgb,var(--pp-kind) 55%,transparent);background:color-mix(in srgb,var(--pp-kind) 14%,transparent);color:color-mix(in srgb,var(--pp-kind) 72%,var(--pp-ink))}' +
+      '.pp-type-pick-icon{display:inline-flex;align-items:center}' +
+      '.pp-type-pick-icon svg{width:12px;height:12px;stroke-width:2}' +
+      '.pp-type-clear{border:0;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:10.5px;cursor:pointer;padding:0 2px;text-decoration:underline;text-underline-offset:2px}' +
+      '.pp-type-clear:hover{color:var(--pp-ink)}' +
       '.pp-input,.pp-textarea{width:100%;box-sizing:border-box;border:1px solid var(--pp-line);border-radius:6px;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font:inherit;font-size:12px;padding:5px 7px;outline:none;resize:vertical}' +
       '.pp-input:focus,.pp-textarea:focus{border-color:var(--pp-accent)}' +
       '.pp-mention{position:relative;flex:1;display:flex}' +
@@ -11002,11 +11143,16 @@ window.__ModuleLoader__.load({
       '.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}.pp-note-icon:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}.pp-note-icon.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-ask{display:inline-flex;align-items:center;gap:4px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap}' +
       'html.pp-pick-cursor .pp-pick-hover,html.pp-pick-cursor .pp-pick-hover *{cursor:url("data:image/svg+xml,%3Csvg%20xmlns=\'http://www.w3.org/2000/svg\'%20width=\'24\'%20height=\'24\'%20viewBox=\'0%200%2024%2024\'%3E%3Cpath%20d=\'M5%203.5h7.5v2H7v6H5z\'%20fill=\'%23d9a441\'%20stroke=\'%23fff\'%20stroke-width=\'1\'/%3E%3Cpath%20d=\'M12%2011v9M7.5%2015.5h9\'%20stroke=\'%23d9a441\'%20stroke-width=\'2\'%20stroke-linecap=\'round\'/%3E%3C/svg%3E") 5 4,crosshair!important}' +
       'html.pp-pick-cursor .pp-pick-bar,html.pp-pick-cursor .pp-pick-bar *{cursor:default!important}' +
-      'html.pp-pick-cursor .pp-pick-btn{cursor:pointer!important}' +
+      'html.pp-pick-cursor .pp-pick-btn,html.pp-pick-cursor .pp-pick-kind{cursor:pointer!important}' +
       '.pp-pick-box{position:fixed;z-index:1;display:none;box-sizing:border-box;border:1.5px solid rgba(217,164,65,.92);border-radius:4px;background:rgba(217,164,65,.09);box-shadow:0 0 0 1px rgba(255,255,255,.35) inset;pointer-events:none}' +
       '.pp-pick-label{position:fixed;z-index:3;display:none;max-width:272px;box-sizing:border-box;padding:2px 6px;border-radius:5px;background:var(--pp-note-accent);color:#fff;font:inherit;font-size:11px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.16)}' +
       '.pp-pick-bar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:4;display:flex;align-items:center;gap:6px;max-width:calc(100vw - 24px);box-sizing:border-box;padding:7px 8px 7px 12px;border:1px solid var(--pp-note-line);border-radius:10px;background:var(--pp-note-surface);box-shadow:0 12px 32px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);color:var(--pp-note-ink);font:inherit;font-size:11px;line-height:1.4;pointer-events:auto;cursor:default}' +
-      '.pp-pick-bar .pp-pick-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-note-ink-2)}' +
+      '.pp-pick-bar .pp-pick-text{flex:1 1 90px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-note-ink-2)}' +
+      '.pp-pick-kinds{display:inline-flex;align-items:center;gap:2px;flex:none}' +
+      '.pp-pick-kind{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:color-mix(in srgb,var(--pp-kind) 76%,var(--pp-note-ink))}' +
+      '.pp-pick-kind svg{width:13px;height:13px;stroke-width:2.1}' +
+      '.pp-pick-kind:hover{background:color-mix(in srgb,var(--pp-kind) 12%,transparent)}' +
+      '.pp-pick-kind[data-active="true"]{border-color:color-mix(in srgb,var(--pp-kind) 52%,transparent);background:color-mix(in srgb,var(--pp-kind) 16%,transparent);color:color-mix(in srgb,var(--pp-kind) 82%,var(--pp-note-ink))}' +
       '.pp-pick-btn{height:24px;padding:0 9px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:11px;white-space:nowrap;cursor:pointer}' +
       '.pp-pick-btn:hover{background:var(--pp-note-hover)}' +
       '.pp-pick-btn.pp-pick-primary{border-color:transparent;background:var(--pp-note-accent);color:#fff}' +
