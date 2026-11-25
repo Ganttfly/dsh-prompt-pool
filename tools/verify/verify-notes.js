@@ -266,14 +266,18 @@ else {
             && String(node.props.className || '').split(' ').indexOf('pp-edit-body') >= 0)[0] : null;
           const bodyStrip = editBody ? findAll(editBody, (node) => typeof node.type === 'function'
             && node.type.name === 'ImageStrip') : [];
-          const imagePicker = card ? findComponent(card, 'ImagePicker') : null;
+          const imagePicker = editBody ? findComponent(editBody, 'ImagePicker') : null;
+          const metaPicker = card ? findAll(card, (node) => node.props
+            && String(node.props.className || '').split(' ').indexOf('pp-edit-meta') >= 0)
+            .some((meta) => !!findComponent(meta, 'ImagePicker')) : false;
           if (!card) fail('the annotation editor does not use the shared card');
           else if (picks.length !== 7) fail(`the annotation editor offers ${picks.length} kinds, expected 7`);
           else if (shared.length !== 5) fail('the annotation editor is missing a shared row');
           else if (!editBody || editBody.props['data-has-images'] !== 'true') fail('the annotation editor does not put images inside the body card');
           else if (bodyStrip.length !== 1) fail('the annotation editor body is missing its saved image');
-          else if (!imagePicker || imagePicker.props.showStrip !== false) fail('the annotation editor meta row repeats the image strip');
-          else console.log('[ok] the annotation editor keeps images inside the body card and offers an image picker');
+          else if (!imagePicker || imagePicker.props.compact !== true) fail('the annotation editor body lost its in-body image button');
+          else if (metaPicker) fail('the annotation editor meta row still carries the image controls');
+          else console.log('[ok] the annotation editor keeps images and the add-image plus inside the body card');
 
           const editingRowBefore = findAll(editingView || [], (node) => node.props
             && String(node.props.className || '') === 'pp-notes-row'

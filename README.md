@@ -126,6 +126,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   list, per-row **Insert**, **+**, duplicate and delete, and the shared send queue with collapse, clear and send.
   Clicking a row's title opens the editor; the type badge leads the title. Both editors share one card —
   title, kind chips, body, meta row and action row — so an annotation and a prompt keep the same rhythm.
+  The add-image action is a plus at the bottom-left inside the body field, matching the composer.
   Prompt text has no character limit; type `@` to reference a file. Switching to another item with unsaved edits first asks whether to keep editing, discard, or save and switch.
   Help, **Save current input** and **Settings** sit beside search. Its two modes are **Annotations**
   (current session) and **Prompts** (current workspace); the panel never shows the shared pool.

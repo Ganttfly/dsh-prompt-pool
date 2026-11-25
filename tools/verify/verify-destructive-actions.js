@@ -252,6 +252,11 @@ for (const [slotName, props, label] of [
           (node) => typeof node.type === 'function' && node.type.name === 'MentionField',
         );
         if (!bodyMention) failures.push('the prompt textarea is not inside the body card');
+        const bodyPicker = nodes(bodyCard, []).find(
+          (node) => typeof node.type === 'function' && node.type.name === 'ImagePicker',
+        );
+        if (!bodyPicker) failures.push('the prompt body card lost its image picker');
+        else if (bodyPicker.props.compact !== true) failures.push('the prompt image picker is not the in-body plus button');
       }
       const editMeta = promptCard
         ? nodes(promptCard, []).find(
@@ -261,14 +266,9 @@ for (const [slotName, props, label] of [
         : null;
       if (!editMeta) failures.push('the prompt editor has no meta row');
       else {
-        const picker = nodes(editMeta, []).find(
-          (node) => typeof node.type === 'function' && node.type.name === 'ImagePicker',
-        );
-        if (!picker) failures.push('the prompt meta row lost its image picker');
-        else if (picker.props.showStrip !== false) failures.push('the meta image picker still renders a second thumbnail row');
         if (nodes(editMeta, []).some(
-          (node) => typeof node.type === 'function' && node.type.name === 'ImageStrip',
-        )) failures.push('the prompt image strip is still inside the meta row');
+          (node) => typeof node.type === 'function' && (node.type.name === 'ImagePicker' || node.type.name === 'ImageStrip'),
+        )) failures.push('the prompt meta row still carries the image controls');
         const hint = nodes(editMeta, []).find(
           (node) => node.type === 'span'
             && String(node.props && node.props.className || '').split(' ').indexOf('pp-edit-hint') >= 0,

@@ -2867,18 +2867,22 @@ window.__ModuleLoader__.load({
                 }
               },
             }),
+            h(
+              'div',
+              { className: 'pp-edit-tools' },
+              h(ImagePicker, {
+                images: editing.images || [],
+                compact: true,
+                onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
+                onError,
+                onOpen: onOpenImage,
+              }),
+            ),
           ),
           h(
             'div',
             { className: 'pp-edit-meta' },
             h('span', { className: 'pp-edit-hint' }, translate('row.lengthHint')),
-            h(ImagePicker, {
-              images: editing.images || [],
-              showStrip: false,
-              onChange: (images) => setEditing((current) => (current ? { ...current, images } : current)),
-              onError,
-              onOpen: onOpenImage,
-            }),
           ),
           h(
             'div',
@@ -4068,6 +4072,7 @@ window.__ModuleLoader__.load({
     function ImagePicker(props) {
       const inputRef = useRef(null);
       const [busy, setBusy] = useState(false);
+      const compact = props.compact === true;
       const list = Array.isArray(props.images) ? props.images : [];
       const addFiles = async (files) => {
         if (!files || files.length === 0) return;
@@ -4079,6 +4084,39 @@ window.__ModuleLoader__.load({
           setBusy(false);
         }
       };
+      const fileInput = h('input', {
+        ref: inputRef,
+        type: 'file',
+        accept: IMAGE_TYPES.join(','),
+        multiple: true,
+        style: { display: 'none' },
+        onChange: (event) => {
+          const files = Array.from(event.target.files || []);
+          event.target.value = '';
+          addFiles(files);
+        },
+      });
+      if (compact) {
+        return h(
+          'span',
+          { className: 'pp-image-picker pp-image-picker-compact' },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'pp-body-add',
+              title: translate('image.add') + ' · ' + translate('image.pasteHint'),
+              'aria-label': translate('image.add'),
+              disabled: busy,
+              onClick: () => {
+                if (inputRef.current) inputRef.current.click();
+              },
+            },
+            icon('plus'),
+          ),
+          fileInput,
+        );
+      }
       return h(
         'div',
         { className: 'pp-image-picker' },
@@ -4103,18 +4141,7 @@ window.__ModuleLoader__.load({
           translate('image.add'),
         ),
         h('span', { className: 'pp-hint' }, translate('image.pasteHint')),
-        h('input', {
-          ref: inputRef,
-          type: 'file',
-          accept: IMAGE_TYPES.join(','),
-          multiple: true,
-          style: { display: 'none' },
-          onChange: (event) => {
-            const files = Array.from(event.target.files || []);
-            event.target.value = '';
-            addFiles(files);
-          },
-        }),
+        fileInput,
       );
     }
 
@@ -8807,18 +8834,22 @@ window.__ModuleLoader__.load({
                             }
                           },
                         }),
+                        h(
+                          'div',
+                          { className: 'pp-edit-tools' },
+                          h(ImagePicker, {
+                            images: editImages,
+                            compact: true,
+                            onChange: (images) => setEditImages(normalizeImages(images)),
+                            onOpen: openImage,
+                            onError: (text) => flash(text, 'error'),
+                          }),
+                        ),
                       ),
                       h(
                         'div',
                         { className: 'pp-edit-meta' },
                         h('span', { className: 'pp-edit-hint' }, translate('note.limitHint')),
-                        h(ImagePicker, {
-                          images: editImages,
-                          showStrip: false,
-                          onChange: (images) => setEditImages(normalizeImages(images)),
-                          onOpen: openImage,
-                          onError: (text) => flash(text, 'error'),
-                        }),
                       ),
                       h(
                         'div',
@@ -11165,18 +11196,18 @@ window.__ModuleLoader__.load({
       '.pp-input:focus,.pp-textarea:focus{border-color:var(--pp-accent)}' +
       '.pp-edit .pp-edit-select{height:28px;padding:0 6px;border-radius:7px;font-size:11px}' +
       '.pp-edit-meta{display:flex;align-items:center;gap:8px;min-height:28px}' +
-      '.pp-edit-meta .pp-image-picker{flex:1;min-width:0;margin:0}' +
+      '.pp-edit-tools{display:flex;align-items:center;gap:6px;padding:0 6px 6px}' +
+      '.pp-edit .pp-image-picker-compact{display:flex;align-items:center;gap:0;margin:0;padding:0}' +
+      '.pp-body-add{width:28px;height:28px;flex:none;display:inline-flex;align-items:center;justify-content:center;padding:0;border:0;border-radius:7px;background:transparent;color:var(--pp-ink-2);cursor:pointer}' +
+      '.pp-body-add:hover:not([disabled]){background:color-mix(in srgb,var(--pp-edit-accent) 10%,transparent);color:var(--pp-edit-accent)}' +
+      '.pp-body-add[disabled]{opacity:.4;cursor:default}' +
+      '.pp-body-add svg{width:16px;height:16px}' +
       '.pp-edit-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:28px}' +
       '.pp-edit-actions .pp-grow{flex:1}' +
       '.pp-edit-actions .pp-mini{height:28px;padding:0 12px;border-radius:7px}' +
       '.pp-edit-actions .pp-primary{height:28px;padding:0 14px;border-radius:7px}' +
       '.pp-edit[data-domain="annotations"] .pp-primary{border-color:var(--pp-note-accent);background:var(--pp-note-accent)}' +
       '.pp-edit-hint{margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px}' +
-      '.pp-edit .pp-image-picker{gap:8px;margin-top:0}' +
-      '.pp-edit .pp-image-add{height:28px;padding:0 10px;border-radius:7px}' +
-      '.pp-edit[data-domain="annotations"] .pp-edit-meta .pp-image-picker{flex:0 0 auto;margin-left:auto}' +
-      '.pp-notes .pp-edit .pp-image-picker{gap:8px;margin-top:0}' +
-      '.pp-notes .pp-edit .pp-image-add{height:28px;padding:0 10px;border-radius:7px}' +
       '.pp-mention{position:relative;flex:1;display:flex}' +
         '.pp-mention-menu{position:absolute;z-index:6;top:100%;left:0;right:0;margin-top:2px;max-height:180px;overflow:auto;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface);box-shadow:0 8px 24px rgba(0,0,0,.14)}' +
         '.pp-mention-note{padding:8px 10px;font-size:11px;color:var(--pp-ink-2)}' +

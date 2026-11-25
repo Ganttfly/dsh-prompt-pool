@@ -36,8 +36,9 @@ All notable changes to this project are documented here. The format follows
 - The annotation and prompt editors now share one card: the same 28px title row, 22px kind chips, 90px
   body, 28px meta row and 28px action row, with each domain keeping its amber or blue identity. The
   annotation quote moves into the title row and its locate/row actions hide while editing. Both editors
-  keep image thumbnails inside the body card above their text fields; the annotation editor gains the
-  image picker and paste handling, while the prompt editor puts the group selector in the action row. A
+  keep image thumbnails inside the body card above their text fields and put an add-image plus at the
+  bottom-left inside the text field, matching the composer; the annotation editor gains the image picker
+  and paste handling, while the prompt editor puts the group selector in the action row. A
   selected prompt kind carries a small × and clicking the chip clears the type. Switching to another
   annotation or prompt while the editor has unsaved edits now asks first: keep editing, discard, or save
   and switch. The prompt editor also states that prompt text has no length limit and that `@` references
