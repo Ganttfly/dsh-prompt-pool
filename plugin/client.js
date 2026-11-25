@@ -8277,14 +8277,15 @@ window.__ModuleLoader__.load({
           { className: 'pp-notes-list' },
           list.map((note) => {
             if (!matches(note)) return null;
-            const meta = noteKind(note.kind);
+            const editing = !reviewMode && editId === note.id;
+            const meta = noteKind(editing ? editKind : note.kind);
             return h(
               'div',
               {
                 className: 'pp-notes-row',
                 key: note.id,
                 'data-promoted': note.promotedGroup ? 'true' : undefined,
-                'data-editing': !reviewMode && editId === note.id ? 'true' : undefined,
+                'data-editing': editing ? 'true' : undefined,
               },
               reviewMode
                 ? h('input', {
@@ -8316,7 +8317,7 @@ window.__ModuleLoader__.load({
                     ? h('span', { className: 'pp-notes-tag' }, translate('note.stored', { group: labelOfGroup(note.promotedGroup) }))
                     : null,
                 ),
-                !reviewMode && editId === note.id
+                editing
                   ? h(
                       'div',
                       { className: 'pp-notes-edit', onClick: (event) => event.stopPropagation() },

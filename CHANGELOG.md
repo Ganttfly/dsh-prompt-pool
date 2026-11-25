@@ -17,7 +17,8 @@ All notable changes to this project are documented here. The format follows
   The picker stays inside the conversation body, so the composer and turn rail keep their normal cursor
   and click behavior.
 - Annotation bodies are editable on the **Annotations** page: click a row's body to change its kind and
-  text inline. The quoted passage stays read-only, and review mode keeps its checkbox and routing flow.
+  text inline. The quoted passage stays read-only, the row's leading mark follows the kind picked in the
+  editor before saving, and review mode keeps its checkbox and routing flow.
 
 ### Changed
 

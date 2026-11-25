@@ -183,6 +183,30 @@ const check = (ok, label) => {
   check(Boolean(findStrip(tree)), 'the review dock starts as a collapsed strip');
   const notesClosed = renderNotes(tree);
   check(Boolean(notesClosed) && reviewChecks(notesClosed).length === 0, 'review controls stay hidden until the card opens');
+  const idleRow = (root, quote) => nodes(root).find((node) => String(node.props && node.props.className || '') === 'pp-notes-row'
+    && textOf(node).indexOf(quote) >= 0);
+  const typeMarkOf = (root, quote) => {
+    const row = idleRow(root, quote);
+    return row ? nodes(row).find((node) => typeof node.type === 'function' && node.type.name === 'TypeMark') : null;
+  };
+  const commentRow = idleRow(notesClosed, 'q3');
+  const commentBody = commentRow ? nodes(commentRow).find((node) => String(node.props && node.props.className || '') === 'pp-notes-text') : null;
+  check(Boolean(commentBody), 'an idle annotation body opens the list editor');
+  if (commentBody) {
+    commentBody.props.onClick();
+    let editingTree = renderNotes(tree);
+    const before = typeMarkOf(editingTree, 'q3');
+    check(Boolean(before) && before.props.name === 'pen', 'the quote icon starts from the saved kind');
+    const idea = nodes(editingTree).find((node) => node.type === 'button' && node.props && node.props['data-kind'] === 'idea');
+    check(Boolean(idea), 'the editor offers the idea kind');
+    if (idea) idea.props.onClick();
+    editingTree = renderNotes(tree);
+    const after = typeMarkOf(editingTree, 'q3');
+    check(Boolean(after) && after.props.name === 'bulb', 'the quote icon follows a kind chosen before saving');
+    const cancel = nodes(editingTree).find((node) => node.type === 'button' && textOf(node) === 'note.cancel');
+    if (cancel) cancel.props.onClick();
+    renderNotes(tree);
+  }
   const idleTrash = nodes(notesClosed).find((node) => typeof node.type === 'function'
     && node.type.name === 'RowActionIcon'
     && node.props && node.props.name === 'trash' && node.props.label === 'note.delete');
