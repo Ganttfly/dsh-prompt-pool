@@ -232,6 +232,19 @@ else {
           && String(node.props && node.props.className || '').indexOf('pp-note-check') >= 0);
         if (checks.length > 0) fail('annotation rows still render selection checkboxes');
         else console.log('[ok] annotation rows no longer use selection checkboxes');
+
+        const freshStore = window.__dshPromptPoolNoteFreshV1;
+        if (!freshStore) fail('the newly added annotation store is missing');
+        else {
+          freshStore.set({ id: 'n1', sessionId: 's1', token: 7, at: Date.now() });
+          const freshRow = findAll(notesView() || [], (node) => node.props
+            && String(node.props.className || '') === 'pp-notes-row'
+            && node.props['data-fresh'] === 'true')[0];
+          if (!freshRow) fail('the newly added annotation is not marked in the list');
+          else if (textOf(freshRow).indexOf('note.justAdded') < 0) fail('the newly added annotation has no just-added label');
+          else console.log('[ok] a new annotation is marked and labelled without moving the list order');
+          freshStore.set({ id: '', sessionId: '', token: 0, at: 0 });
+        }
       }
 
       // The header annotation-summary action is gone; annotations queue per row.
@@ -478,6 +491,19 @@ else console.log('[ok] the editor no longer uses a UTF-16 maxLength');
 if (!/onChange:\s*\(event\)\s*=>\s*\{[\s\S]{0,200}mergeNoteBodyInput\(current, next\)/.test(source)) {
   fail('the editor does not merge typed text by display width');
 }
+
+// The list marker is written by the one add path, and styled as a short-lived
+// inset accent rather than a permanent state.
+const addStart = source.indexOf('add(note) {');
+const addEnd = source.indexOf('patch(id, fields)', addStart);
+if (addStart < 0 || addEnd < 0 || source.slice(addStart, addEnd).indexOf('noteFresh.set(') < 0) {
+  fail('adding a note does not publish it for the list reveal');
+} else console.log('[ok] every new annotation publishes a reveal marker');
+const freshRule = /\.pp-notes-row\[data-fresh="true"\]\{([^}]*)\}/.exec(source);
+if (!freshRule || freshRule[1].indexOf('box-shadow:inset 3px 0 0 var(--pp-note-accent)') < 0) {
+  fail('the newly added annotation has no inset accent');
+} else if (!/\.pp-notes-fresh\{/.test(source)) fail('the just-added label has no style');
+else console.log('[ok] the newly added annotation gets a temporary accent and label');
 
 for (const failure of failures) console.error('[fail]', failure);
 console.log(failures.length === 0 ? '[ok] annotations live in the prompt pool' : `[fail] ${failures.length} check(s)`);

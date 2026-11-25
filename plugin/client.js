@@ -357,6 +357,7 @@ window.__ModuleLoader__.load({
       'note.delete': '删除',
       'note.edit': '编辑批注',
       'note.emptyBody': '待补充',
+      'note.justAdded': '刚刚添加',
       'note.compose': '汇总批注',
       'note.composeHint': '把选中的批注汇总后插入输入框',
       'note.composeStoreHint': '把选中的批注存成一条提示词',
@@ -695,6 +696,7 @@ window.__ModuleLoader__.load({
       'note.delete': 'Delete',
       'note.edit': 'Edit annotation',
       'note.emptyBody': 'Add details',
+      'note.justAdded': 'Just added',
       'note.compose': 'Summarize',
       'note.composeHint': 'Summarize the selected annotations into one draft',
       'note.composeStoreHint': 'Save the selected annotations as one prompt',
@@ -6142,6 +6144,18 @@ window.__ModuleLoader__.load({
       return window[NOTES_SINGLETON];
     })();
 
+    /**
+     * The annotation added last, so the list can reveal it without changing the
+     * transcript order. The record ages out; the list reads it on mount too.
+     */
+    const NOTE_FRESH_MS = 3200;
+    const noteFresh = (() => {
+      const empty = { id: '', sessionId: '', token: 0, at: 0 };
+      if (typeof window === 'undefined') return createStore(empty);
+      if (!window.__dshPromptPoolNoteFreshV1) window.__dshPromptPoolNoteFreshV1 = createStore(empty);
+      return window.__dshPromptPoolNoteFreshV1;
+    })();
+
     function mutateNotes(fn) {
       const prev = notes.get();
       const next = fn(prev);
@@ -6157,6 +6171,15 @@ window.__ModuleLoader__.load({
     const notesActions = {
       add(note) {
         mutateNotes((state) => ({ ...state, items: [...state.items, note] }));
+        if (note && note.id) {
+          const at = Date.now();
+          noteFresh.set({
+            id: note.id,
+            sessionId: typeof note.sessionId === 'string' ? note.sessionId : '',
+            token: at,
+            at,
+          });
+        }
         return note;
       },
       patch(id, fields) {
@@ -6440,6 +6463,7 @@ window.__ModuleLoader__.load({
     }
 
     const useNotesState = () => useSyncExternalStore(notes.subscribe, notes.get, notes.get);
+    const useNoteFresh = () => useSyncExternalStore(noteFresh.subscribe, noteFresh.get, noteFresh.get);
     const useChatView = () => useSyncExternalStore(chatView.subscribe, chatView.get, chatView.get);
     const useNoteDraft = () => useSyncExternalStore(noteDraft.subscribe, noteDraft.get, noteDraft.get);
     const useNoteFocus = () => useSyncExternalStore(noteFocus.subscribe, noteFocus.get, noteFocus.get);
@@ -8226,7 +8250,9 @@ window.__ModuleLoader__.load({
       const filter = typeof props.filter === 'string' ? props.filter.trim().toLowerCase() : '';
       const selection = useNoteSelection();
       const reviewState = useNoteReview();
+      const fresh = useNoteFresh();
       const reviewMode = props.reviewMode === true;
+      const freshRows = useRef(new Map());
       const [editId, setEditId] = useState('');
       const [editBody, setEditBody] = useState('');
       const [editKind, setEditKind] = useState(NOTE_KIND_DEFAULT);
@@ -8237,6 +8263,28 @@ window.__ModuleLoader__.load({
         || String(note.quote || '').toLowerCase().indexOf(filter) >= 0
         || String(note.body || '').toLowerCase().indexOf(filter) >= 0
         || translate(noteKind(note.kind).label).toLowerCase().indexOf(filter) >= 0;
+
+      // The newest record is revealed once, then the marker fades out. The
+      // transcript order stays the source of truth for the list.
+      useEffect(() => {
+        if (!fresh.id) return undefined;
+        const token = fresh.token;
+        const timer = window.setTimeout(() => {
+          if (noteFresh.get().token === token) noteFresh.set({ id: '', sessionId: '', token: 0, at: 0 });
+        }, Math.max(0, NOTE_FRESH_MS - (Date.now() - fresh.at)));
+        return () => window.clearTimeout(timer);
+      }, [fresh.id, fresh.token, fresh.at]);
+
+      useEffect(() => {
+        if (!fresh.id || fresh.sessionId !== sessionId) return;
+        if (Date.now() - fresh.at > NOTE_FRESH_MS) return;
+        const target = list.find((note) => note.id === fresh.id);
+        if (!target || !matches(target)) return;
+        const row = freshRows.current.get(fresh.id);
+        if (row && typeof row.scrollIntoView === 'function') {
+          row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, [fresh.id, fresh.token, sessionId]);
 
       const flash = (text, kind) => showToast(text, kind);
 
@@ -8428,13 +8476,22 @@ window.__ModuleLoader__.load({
             if (!matches(note)) return null;
             const editing = !reviewMode && editId === note.id;
             const meta = noteKind(editing ? editKind : note.kind);
+            const isFresh = fresh.id === note.id
+              && (!fresh.sessionId || fresh.sessionId === sessionId)
+              && Date.now() - fresh.at < NOTE_FRESH_MS;
             return h(
               'div',
               {
                 className: 'pp-notes-row',
                 key: note.id,
+                ref: (node) => {
+                  if (node) freshRows.current.set(note.id, node);
+                  else freshRows.current.delete(note.id);
+                },
+                'data-note-id': note.id,
                 'data-promoted': note.promotedGroup ? 'true' : undefined,
                 'data-editing': editing ? 'true' : undefined,
+                'data-fresh': isFresh ? 'true' : undefined,
               },
               reviewMode
                 ? h('input', {
@@ -8462,6 +8519,7 @@ window.__ModuleLoader__.load({
                     tone: meta.color,
                   }),
                   h('span', { className: 'pp-notes-quote-text' }, noteQuoteText(note.quote)),
+                  isFresh ? h('span', { className: 'pp-notes-fresh' }, translate('note.justAdded')) : null,
                   note.promotedGroup
                     ? h('span', { className: 'pp-notes-tag' }, translate('note.stored', { group: labelOfGroup(note.promotedGroup) }))
                     : null,
@@ -10992,7 +11050,7 @@ window.__ModuleLoader__.load({
       '.pp-notes-grow{flex:1;min-width:8px}' +
       '.pp-notes-ask{color:var(--pp-note-ink-2);font-size:11px}' +
       '.pp-notes-list{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;padding:0 8px 8px}' +
-      '.pp-notes-row{display:flex;align-items:flex-start;gap:8px;min-height:44px;box-sizing:border-box;padding:5px 6px;border:1px solid transparent;border-radius:8px;background:transparent}' +
+      '.pp-notes-row{display:flex;align-items:flex-start;gap:8px;min-height:44px;box-sizing:border-box;padding:5px 6px;border:1px solid transparent;border-radius:8px;background:transparent;transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease}' +
       '.pp-notes-row:hover{background:color-mix(in srgb,var(--pp-note) 9%,transparent)}' +
       '.pp-note-check{flex:none;width:14px;height:14px;margin:4px 0 0;accent-color:var(--pp-note);cursor:pointer}' +
       '.pp-notes-row .pp-notes-review-check{accent-color:var(--pp-note-accent)}' +
@@ -11128,6 +11186,8 @@ window.__ModuleLoader__.load({
       '.pp-note-save-hint{color:var(--pp-note-ink-2);font-size:10.5px;line-height:1.45}' +
       '.pp-note-save-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:2px}' +
       '.pp-notes-row[data-promoted="true"]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary,#2f9e63) 35%,var(--pp-note-line))}' +
+      '.pp-notes-row[data-fresh="true"]{background:color-mix(in srgb,var(--pp-note) 10%,transparent);border-color:color-mix(in srgb,var(--pp-note) 30%,var(--pp-note-line));box-shadow:inset 3px 0 0 var(--pp-note-accent)}' +
+      '.pp-notes-fresh{flex:none;height:16px;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--pp-note-accent) 14%,transparent);color:color-mix(in srgb,var(--pp-note-accent) 78%,var(--pp-note-ink));font-size:10px;line-height:16px;white-space:nowrap}' +
       // Type chips stay neutral until selected: each icon carries its kind hue,
       // and selecting one washes the capsule in that same hue.
       '.pp-note-inline{box-sizing:border-box;display:inline-flex;align-items:center;gap:.25em;height:auto;max-width:100%;margin:0 .12em 0 .32em;padding:.02em .36em;border:1px dashed color-mix(in srgb,var(--pp-kind,#a97a24) 80%,transparent);border-radius:5px;background:color-mix(in srgb,var(--pp-kind,#a97a24) 32%,transparent);color:inherit;font:inherit;font-family:var(--dsw-font-family,inherit);font-size:var(--dsh-content-font-size,14px);font-style:normal;font-weight:400;line-height:1.32;vertical-align:middle;white-space:normal;user-select:none;-webkit-user-select:none;cursor:pointer}' +

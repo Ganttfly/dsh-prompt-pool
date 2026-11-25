@@ -22,6 +22,9 @@ All notable changes to this project are documented here. The format follows
 - Block annotation now picks its kind up front: the picker bar carries the seven kind chips, starts on
   the kind last used there (initially **Note**), remembers the switch, and stamps every note added in
   that batch with it.
+- A newly added annotation is revealed without leaving transcript order: the list scrolls it into view,
+  gives the row an amber inset accent and a **Just added** label for a few seconds, then returns it to the
+  normal row. The order itself never changes, so the marker rather than the position points at the new note.
 - Prompts carry an optional intent badge again: **Decision**, **Question**, **Opinion**, **Idea**,
   **Supplement**, **To-do** or **Inspiration**. The editor shows the seven chips, the chosen mark leads
   the row title in its own hue, and a prompt without a title reads **Untitled**.

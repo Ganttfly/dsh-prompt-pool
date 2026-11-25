@@ -118,6 +118,9 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   remains the exact-phrase path.
 - **Edit in the list** — on the **Annotations** page, click a note's body to edit its kind and text in
   place. The quoted passage is read-only; review mode keeps its checkbox and routing flow.
+- **Find the newest note** — a newly added annotation scrolls into view and is tinted amber with a
+  **Just added** label for a few seconds. The list stays in transcript order, so the marker, not the
+  position, points at the new note.
 - **Composer panel** — a brand row with the pool mark and name, search, the current workspace's prompt
   list, per-row **Insert**, **+**, duplicate and delete, and the shared send queue with collapse, clear and send.
   Clicking a row's title opens the editor; the type badge leads the title.
