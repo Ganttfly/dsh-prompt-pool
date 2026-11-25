@@ -112,7 +112,6 @@ window.__ModuleLoader__.load({
       'mention.timeout': '读取超时：宿主没有响应（可能没有活跃会话）',
       'row.insert': '插入',
       'row.select': '加入待发送',
-      'row.more': '更多操作',
       'row.duplicate': '复制',
       'page.title': '提示池',
       'tab.description': '暂存、编辑、编排你的提示词，按住顺序一次性释放',
@@ -330,7 +329,6 @@ window.__ModuleLoader__.load({
       'note.composeHint': '把选中的批注汇总后插入输入框',
       'note.composeStoreHint': '把选中的批注存成一条提示词',
       'note.insert': '插入',
-      'note.more': '更多操作',
       'note.locate': '定位',
       'note.locateFailed': '这条批注暂时找不到原文（回复可能被折叠或改写了）。',
       'note.deleteConfirm': '删除这条批注？',
@@ -420,7 +418,6 @@ window.__ModuleLoader__.load({
       'mention.timeout': 'Timed out: the host did not answer (no live session?)',
       'row.insert': 'Insert',
       'row.select': 'Add to the send queue',
-      'row.more': 'More actions',
       'row.duplicate': 'Duplicate',
       'page.title': 'Prompt pool',
       'tab.description': 'Stage, edit and arrange prompts, then release them in order',
@@ -638,7 +635,6 @@ window.__ModuleLoader__.load({
       'note.composeHint': 'Summarize the selected annotations into one draft',
       'note.composeStoreHint': 'Save the selected annotations as one prompt',
       'note.insert': 'Insert',
-      'note.more': 'More actions',
       'note.locate': 'Locate',
       'note.locateFailed': 'This note cannot find its passage right now (the reply may be folded or rewritten).',
       'note.deleteConfirm': 'Delete this annotation?',
@@ -2706,14 +2702,9 @@ window.__ModuleLoader__.load({
             translate('row.insert'),
           ),
           h(RowActionIcon, { name: 'plus', label: translate('row.select'), onClick: () => onQueue(item) }),
-          h(MenuHost, {
-            label: translate('row.more'),
-            items: [
-              { id: 'edit', label: translate('row.edit'), icon: 'edit', onSelect: () => onStartEdit(item) },
-              { id: 'copy', label: translate('row.duplicate'), icon: 'copy', onSelect: () => poolActions.duplicateItem(item.id) },
-              { id: 'delete', label: translate('row.delete'), icon: 'trash', danger: true, onSelect: () => onDelete(item) },
-            ],
-          }),
+          h(RowActionIcon, { name: 'edit', label: translate('row.edit'), onClick: () => onStartEdit(item) }),
+          h(RowActionIcon, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
+          h(RowActionIcon, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => onDelete(item) }),
         ),
       );
     }
@@ -3734,135 +3725,6 @@ window.__ModuleLoader__.load({
           },
         },
         icon(name),
-      );
-    }
-
-    /**
-     * Fixed positioning is relative to the viewport unless an ancestor creates a
-     * containing block (transform, filter, will-change, contain...). The host's
-     * composer seat uses will-change: transform, so menu coordinates must be
-     * expressed relative to that ancestor instead of the viewport.
-     */
-    function fixedMenuOrigin(node) {
-      let el = node && node.parentElement;
-      while (el && el !== document.documentElement) {
-        const cs = window.getComputedStyle(el);
-        const willChange = cs.willChange || '';
-        if (
-          cs.transform !== 'none' ||
-          cs.perspective !== 'none' ||
-          cs.filter !== 'none' ||
-          (cs.backdropFilter && cs.backdropFilter !== 'none') ||
-          willChange.indexOf('transform') >= 0 ||
-          willChange.indexOf('filter') >= 0 ||
-          willChange.indexOf('perspective') >= 0 ||
-          /paint|layout|strict|content/.test(cs.contain || '')
-        ) {
-          const rect = el.getBoundingClientRect();
-          // A transformed ancestor's containing block is its padding box.
-          return { left: rect.left + el.clientLeft, top: rect.top + el.clientTop };
-        }
-        el = el.parentElement;
-      }
-      return { left: 0, top: 0 };
-    }
-
-    /**
-     * A small overflow menu anchored to its trigger. It renders in the tree but
-     * uses fixed positioning so list scrolling does not clip it.
-     */
-    function MenuHost(props) {
-      const [open, setOpen] = useState(false);
-      const [pos, setPos] = useState(null);
-      const hostRef = useRef(null);
-      const buttonRef = useRef(null);
-      const menuRef = useRef(null);
-      const items = Array.isArray(props.items) ? props.items : [];
-      const close = () => { setOpen(false); setPos(null); };
-      useEffect(() => {
-        if (!open || typeof document === 'undefined') return undefined;
-        const place = () => {
-          const node = buttonRef.current;
-          if (!node || !node.getBoundingClientRect) return;
-          const rect = node.getBoundingClientRect();
-          const width = 176;
-          const height = Math.max(36, items.length * 32 + 8);
-          const origin = fixedMenuOrigin(node);
-          let left = rect.right - width;
-          if (left < 8) left = 8;
-          if (typeof window !== 'undefined' && left + width > window.innerWidth - 8) left = Math.max(8, window.innerWidth - width - 8);
-          let top = rect.bottom + 4;
-          if (typeof window !== 'undefined' && top + height > window.innerHeight - 8) {
-            top = Math.max(8, rect.top - height - 4);
-          }
-          setPos({ left: left - origin.left, top: top - origin.top, width });
-        };
-        place();
-        const onDown = (event) => {
-          const target = event.target;
-          if (menuRef.current && menuRef.current.contains(target)) return;
-          if (hostRef.current && hostRef.current.contains(target)) return;
-          close();
-        };
-        const onKey = (event) => {
-          if (event.key === 'Escape') close();
-        };
-        document.addEventListener('pointerdown', onDown, true);
-        document.addEventListener('keydown', onKey, true);
-        window.addEventListener('resize', close);
-        window.addEventListener('scroll', close, true);
-        return () => {
-          document.removeEventListener('pointerdown', onDown, true);
-          document.removeEventListener('keydown', onKey, true);
-          window.removeEventListener('resize', close);
-          window.removeEventListener('scroll', close, true);
-        };
-      }, [open, items.length]);
-      return h(
-        'span',
-        { className: 'pp-menu-host' + (props.className ? ' ' + props.className : ''), ref: hostRef },
-        h(
-          'button',
-          {
-            ref: buttonRef,
-            type: 'button',
-            className: props.buttonClassName || 'pp-row-action pp-row-more',
-            title: props.label,
-            'aria-label': props.label,
-            'aria-haspopup': 'menu',
-            'aria-expanded': open ? 'true' : 'false',
-            onMouseDown: (event) => event.preventDefault(),
-            onClick: (event) => {
-              event.stopPropagation();
-              if (open) close();
-              else setOpen(true);
-            },
-          },
-          icon(props.iconName || 'more'),
-        ),
-        open && pos
-          ? h(
-              'div',
-              { className: 'pp-menu', role: 'menu', ref: menuRef, style: { left: pos.left + 'px', top: pos.top + 'px', width: pos.width + 'px' } },
-              items.map((item) => h(
-                'button',
-                {
-                  key: item.id,
-                  type: 'button',
-                  role: 'menuitem',
-                  className: 'pp-menu-item',
-                  'data-danger': item.danger === true ? 'true' : 'false',
-                  onClick: (event) => {
-                    event.stopPropagation();
-                    close();
-                    item.onSelect();
-                  },
-                },
-                item.icon ? h('span', { className: 'pp-menu-icon', 'aria-hidden': true }, icon(item.icon)) : null,
-                h('span', null, item.label),
-              )),
-            )
-          : null,
       );
     }
 
@@ -8051,13 +7913,8 @@ window.__ModuleLoader__.load({
                       h('span', { className: 'pp-btn-icon', 'aria-hidden': true }, icon('insert')),
                       translate('note.insert'),
                     ),
-                    h(MenuHost, {
-                      label: translate('note.more'),
-                      items: [
-                        { id: 'store', label: translate('note.store'), icon: 'store', onSelect: () => openPrompt({ kind: 'note', note }) },
-                        { id: 'delete', label: translate('note.delete'), icon: 'trash', danger: true, onSelect: (event) => openNoteConfirm(() => notesActions.remove(note.id), event) },
-                      ],
-                    }),
+                    h(RowActionIcon, { name: 'store', label: translate('note.store'), onClick: () => openPrompt({ kind: 'note', note }) }),
+                    h(RowActionIcon, { name: 'trash', label: translate('note.delete'), danger: true, onClick: (event) => openNoteConfirm(() => notesActions.remove(note.id), event) }),
                   ),
             );
           }),
@@ -10095,20 +9952,11 @@ window.__ModuleLoader__.load({
       '.pp-page-head .pp-prompt-bar{margin:0 -12px;padding:0 12px}' +
       '.pp-prompt-bar .pp-tabscroll{flex:0 1 auto;min-width:0;margin:0;padding:0}' +
       '.pp-prompt-bar .pp-global-bar{margin:0}' +
-      // Row actions: one visible verb, one queue verb, and everything else in a
-      // fixed-position menu so it can escape the list's scroll clip.
+      // Row actions stay visible: insert, queue, then edit / copy / delete as icons.
       '.pp-row-insert{display:inline-flex;align-items:center;gap:4px;height:24px;flex:none;padding:0 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-accent);font:inherit;font-size:11.5px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer}' +
       '.pp-row-insert:hover{background:color-mix(in srgb,var(--pp-accent) 9%,transparent)}' +
       '.pp-row-insert:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
       '.pp-row-insert svg{width:14px;height:14px}' +
-      '.pp-menu-host{position:relative;display:inline-flex;flex:none}' +
-      '.pp-menu{position:fixed;z-index:80;box-sizing:border-box;padding:4px;border:1px solid var(--pp-line);border-radius:10px;background:var(--pp-surface-2);box-shadow:0 12px 32px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);color:var(--pp-ink)}' +
-      '.pp-menu-item{display:flex;align-items:center;gap:8px;width:100%;height:30px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer;white-space:nowrap}' +
-      '.pp-menu-item:hover,.pp-menu-item:focus-visible{background:var(--pp-hover);outline:none}' +
-      '.pp-menu-item[data-danger="true"]{color:var(--pp-danger)}' +
-      '.pp-menu-item[data-danger="true"]:hover,.pp-menu-item[data-danger="true"]:focus-visible{background:var(--pp-danger-soft)}' +
-      '.pp-menu-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:none;color:currentColor}' +
-      '.pp-menu-icon svg{width:14px;height:14px}' +
       // Settings is a destination, not a dialog tab strip: it gets an explicit
       // way back to the pool and two sections only.
       '.pp-set-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}' +
@@ -10117,9 +9965,9 @@ window.__ModuleLoader__.load({
       '.pp-set-back:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
       '.pp-set-back svg{width:14px;height:14px}' +
       '.pp-set-heading{flex:1;min-width:0}' +
-      // The reading column is capped at 760px and centered; the scrollbar stays
-      // at the panel edge, so wide hosts do not push rows against a wall.
-      '.pp-page .pp-page-foot{width:min(760px,calc(100% - 20px));margin-left:auto;margin-right:auto;box-shadow:none}' +
+      // The page uses the full width of its host: rows, footer and queue share
+      // the same 12px gutter as the header instead of a fixed reading column.
+      '.pp-page .pp-page-foot{width:calc(100% - 24px);box-sizing:border-box;margin-left:auto;margin-right:auto;box-shadow:none}' +
       '.pp-page-item{min-height:44px;box-sizing:border-box;padding:5px 8px;border-radius:8px}' +
       '.pp-title{font-size:13px;font-weight:600;line-height:1.35}' +
       '.pp-icon svg,.pp-row-action svg{width:16px;height:16px}' +
@@ -10159,7 +10007,7 @@ window.__ModuleLoader__.load({
       '.pp-set-btn[data-active="true"]{border-color:var(--pp-accent);color:var(--pp-accent)}' +
       '.pp-set-btn-icon{display:inline-flex;align-items:center}' +
       '.pp-btn-icon{display:inline-flex;align-items:center;flex:none}.pp-btn-icon svg{width:14px;height:14px}' +
-      '.pp-list{overflow-y:auto;padding:6px max(8px,calc((100% - 760px) / 2)) 20px;flex:1;min-height:0}' +
+      '.pp-list{overflow-y:auto;padding:6px 12px 20px;flex:1;min-height:0}' +
       '.pp-page{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-base);color:var(--pp-ink);font-size:13px;line-height:1.5}' +
       '.pp-page-head{display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0;padding:8px 12px 6px;border-bottom:1px solid var(--pp-line);flex-wrap:nowrap}' +
       '.pp-page-tabs{display:flex;align-items:center;min-width:0}' +
@@ -10211,7 +10059,7 @@ window.__ModuleLoader__.load({
       '.pp-set-card .pp-set-row{padding:3px 0}' +
       '.pp-set-card .pp-set-hint{padding-left:0;margin:2px 0 8px}' +
       '.pp-set-item + .pp-set-item{margin-top:8px}' +
-      '.pp-page-body{flex:1;min-height:0;overflow-y:auto;padding:6px max(8px,calc((100% - 760px) / 2)) 20px}' +
+      '.pp-page-body{flex:1;min-height:0;overflow-y:auto;padding:6px 12px 20px}' +
       '.pp-ws{display:flex;flex-direction:column;gap:8px;min-width:0}' +
       '.pp-ws-rail{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}' +
       '.pp-ws-tab{display:inline-flex;align-items:center;gap:5px;max-width:100%;min-width:0;padding:3px 9px;border:1px solid var(--pp-line);border-radius:999px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:12px;line-height:18px;cursor:pointer}' +
@@ -10220,7 +10068,7 @@ window.__ModuleLoader__.load({
       '.pp-ws-name{min-width:0;max-width:168px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-ws-count{flex:none;font-size:10px;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
       '.pp-ws-body{min-width:0}' +
-      '.pp-page-foot{display:flex;flex-direction:column;gap:8px;margin:8px 10px 10px;padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08);max-height:min(640px,66vh);overflow:hidden}' +
+      '.pp-page-foot{display:flex;flex-direction:column;gap:8px;margin:8px 10px 10px;padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-queue-bg);box-shadow:0 1px 3px rgba(0,0,0,.08);max-height:min(640px,66vh);overflow:hidden;box-sizing:border-box}' +
       '.pp-tray-foot{gap:0}' +
       '.pp-tray-foot .pp-tray{margin-top:8px}' +
       '.pp-page-foot.pp-tray-foot .pp-foot-head{margin:0 -12px 0}' +
@@ -10265,9 +10113,8 @@ window.__ModuleLoader__.load({
       '.pp-queue-strip .pp-hint{font-size:11px;color:var(--pp-ink-2);margin-left:2px}' +
       '.pp-queue-send{flex:none;height:24px;padding:0 10px;border-radius:6px;font-size:11px}' +
       '.pp-queue-strip svg{width:14px;height:14px}' +
-      // The tray and the reading column share the same 760px measure, independent of
-      // which dock wrapper the tray is rendered in.
-      '.pp-queue-strip{width:min(760px,calc(100% - 20px));margin:0 auto 10px;box-sizing:border-box}' +
+      // The tray uses the page gutter, independent of which dock wrapper renders it.
+      '.pp-queue-strip{width:calc(100% - 24px);margin:0 auto 10px;box-sizing:border-box}' +
       '.pp-page-item{padding:10px 12px;border-radius:10px;border:1px solid transparent}' +
       '.pp-page-item:hover{background:var(--pp-surface);border-color:var(--pp-line)}' +
       '.pp-page-item .pp-actions{opacity:.35}' +

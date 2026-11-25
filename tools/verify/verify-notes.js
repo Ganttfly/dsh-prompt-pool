@@ -240,13 +240,11 @@ else {
       else console.log('[ok] the annotation header no longer exposes summary review');
 
       // Promote one note through the explicit save step.
-      const storeMenu = findAll(notesView() || [], (node) => typeof node.type === 'function'
-        && node.type.name === 'MenuHost' && Array.isArray(node.props && node.props.items)
-        && node.props.items.some((item) => item.id === 'store'))[0];
-      const storeLink = storeMenu && storeMenu.props.items.find((item) => item.id === 'store');
+      const storeLink = findAll(notesView() || [], (node) => typeof node.type === 'function'
+        && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'store')[0];
       if (!storeLink) fail('the row store control is missing');
       else {
-        storeLink.onSelect();
+        storeLink.props.onClick({ stopPropagation: () => {} });
         const draft = window.__dshPromptPoolNoteSaveV1 ? window.__dshPromptPoolNoteSaveV1.get() : null;
         if (!draft || draft.open !== true || !Array.isArray(draft.choices) || draft.choices.length === 0) fail('the save step did not open');
         else {
@@ -275,13 +273,12 @@ else {
       if (composeStore) fail('the old header store-as-prompt control is still present');
       else console.log('[ok] the annotation header has no bulk store or review actions');
 
-      const deleteMenu = findAll(notesView() || [], (node) => typeof node.type === 'function'
-        && node.type.name === 'MenuHost' && Array.isArray(node.props && node.props.items)
-        && node.props.items.some((item) => item.id === 'delete'))[0];
-      const deleteLink = deleteMenu && deleteMenu.props.items.find((item) => item.id === 'delete');
+      const deleteLink = findAll(notesView() || [], (node) => typeof node.type === 'function'
+        && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'trash'
+        && node.props.label === 'note.delete')[0];
       if (!deleteLink) fail('the row delete control is missing');
       else {
-        deleteLink.onSelect();
+        deleteLink.props.onClick({ stopPropagation: () => {} });
         const asking = window.__dshPromptPoolNoteConfirmV1 ? window.__dshPromptPoolNoteConfirmV1.get() : null;
         if (!asking || asking.open !== true) fail('deleting did not ask first');
         else if (typeof asking.onConfirm !== 'function') fail('the delete confirmation has no action');

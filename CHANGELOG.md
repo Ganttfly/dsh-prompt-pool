@@ -26,6 +26,10 @@ All notable changes to this project are documented here. The format follows
   directly instead of hiding them behind a `⋯` menu. The panel adds a brand row with the pool mark and
   name, and pin / close moved into it. The annotation context line is gone: the page lists notes without a
   count banner, and the bottom bar's **Summarize** is the only entry to the review card.
+- Page and panel lists now use the full width of their host instead of a centered 760px reading column;
+  rows, footer and send queue share the same 12px gutter as the header.
+- Prompt rows expose edit, duplicate and delete as separate icons, and annotation rows expose save and
+  delete, instead of hiding them behind a `⋯` menu.
 - The composer pool menus match the width of the trigger bar. Hover and open states follow each side's
   identity: annotations use the amber note wash and ink, prompts keep the blue accent, and the same
   treatment applies to the menu rows, marks and count pills. The stale **Save draft** entry is now

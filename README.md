@@ -23,8 +23,8 @@ quoted draft. Annotations stay with their own session and never leak into anothe
 ![Prompt pool panel in Prompts mode: current workspace items and the send queue](docs/images/panel.png)
 
 The composer panel has two modes: **Annotations** for the current session and **Prompts** for the
-current workspace. Prompt rows offer **Insert**, **+** (add to the send queue) and **⋯** (edit / duplicate /
-delete); the shared send queue sits at the bottom. Switching modes never changes the row styling. The
+current workspace. Prompt rows offer **Insert**, **+** (add to the send queue), and separate edit, duplicate
+and delete icons; the shared send queue sits at the bottom. Switching modes never changes the row styling. The
 panel opens with a brand row — the pool mark, its name, pin and close — and the row beside search carries
 help, **Save current input** and **Settings** directly. The composer trigger is a split bar: the brand cap
 opens the panel; the **Annotations** menu reviews the session's annotations or opens the annotations view;
@@ -83,7 +83,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
   losing the point in a separate scratchpad; click the badge to edit. **Annotations** page always
   exists: **Locate** scrolls to the passage, **Insert** writes one note into the composer, and
-  **⋯ → Save as prompt** opens a confirmation step for the title, body, images and target group.
+  the **Save as prompt** icon opens a confirmation step for the title, body, images and target group.
   The page's bottom bar shows the selected count and **Summarize**; it opens the review card, which sits
   at the bottom like the send queue, collapses to a strip, and can be resized by dragging its top edge
   (double-click to reset). Rows gain checkboxes, immediate execution and to-do routing; Locate stays,
@@ -97,7 +97,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   Saved notes keep a green marker; notes are stored per session, survive reloads, and are not shown in
   another session.
 - **Composer panel** — a brand row with the pool mark and name, search, the current workspace's prompt
-  list, per-row **Insert**, **+** and **⋯**, and the shared send queue with collapse, clear and send.
+  list, per-row **Insert**, **+**, edit, duplicate and delete, and the shared send queue with collapse, clear and send.
   Help, **Save current input** and **Settings** sit beside search. Its two modes are **Annotations**
   (current session) and **Prompts** (current workspace); the panel never shows the shared pool.
   A new prompt is not counted until it is saved. Drag its top edge
@@ -157,7 +157,7 @@ does not turn it on.
 4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 100
    full-width or 200 half-width characters, and the badge appears right after the passage. The pool's
    **Annotations** page collects the notes; **Locate** scrolls to a passage, **Insert** writes one note
-   into the composer, and **⋯ → Save as prompt** files one note into a group. Select notes and choose
+   into the composer, and the **Save as prompt** icon files one note into a group. Select notes and choose
    **Summarize** in the bottom bar to open the review card; check and route the notes in the rows, then use
    Save as prompt or Send in the status bar. Annotations do not enter the send queue.
 5. Add prompts to the send queue with **+**, reorder them in the queue, then send them one by one or switch
