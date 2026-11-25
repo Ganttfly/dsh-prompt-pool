@@ -252,6 +252,7 @@ for (const [slotName, props, label] of [
           (node) => typeof node.type === 'function' && node.type.name === 'MentionField',
         );
         if (!bodyMention) failures.push('the prompt textarea is not inside the body card');
+        else if (bodyMention.props.maxLength !== 2000) failures.push('the prompt body is not capped at 2,000 characters');
         const bodyPicker = nodes(bodyCard, []).find(
           (node) => typeof node.type === 'function' && node.type.name === 'ImagePicker',
         );
@@ -269,6 +270,11 @@ for (const [slotName, props, label] of [
         if (nodes(editMeta, []).some(
           (node) => typeof node.type === 'function' && (node.type.name === 'ImagePicker' || node.type.name === 'ImageStrip'),
         )) failures.push('the prompt meta row still carries the image controls');
+        const count = nodes(editMeta, []).find(
+          (node) => node.props && String(node.props.className || '').split(' ').indexOf('pp-edit-count') >= 0,
+        );
+        if (!count) failures.push('the prompt meta row has no length counter');
+        else if (!/ \/ 2000$/.test((count.children || []).join(''))) failures.push('the prompt length counter does not use the 2,000 cap');
         const hint = nodes(editMeta, []).find(
           (node) => node.type === 'span'
             && String(node.props && node.props.className || '').split(' ').indexOf('pp-edit-hint') >= 0,

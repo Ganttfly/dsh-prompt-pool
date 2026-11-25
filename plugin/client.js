@@ -186,7 +186,7 @@ window.__ModuleLoader__.load({
       'editor.unsavedStay': '继续编辑',
       'editor.unsavedDiscard': '不保存',
       'editor.unsavedSave': '保存并切换',
-      'row.lengthHint': '不限长度，支持 @ 引用文件',
+      'row.lengthHint': '最多 2,000 字符，支持 @ 引用文件',
       'row.titlePlaceholder': '标题（可留空）',
       'row.bodyPlaceholder': '提示词内容',
       'row.type': '类型',
@@ -531,7 +531,7 @@ window.__ModuleLoader__.load({
       'editor.unsavedStay': 'Keep editing',
       'editor.unsavedDiscard': 'Discard',
       'editor.unsavedSave': 'Save and switch',
-      'row.lengthHint': 'No length limit; use @ to reference files',
+      'row.lengthHint': 'Up to 2,000 characters; use @ to reference files',
       'row.titlePlaceholder': 'Title (optional)',
       'row.bodyPlaceholder': 'Prompt text',
       'row.type': 'Type',
@@ -1342,6 +1342,12 @@ window.__ModuleLoader__.load({
       if (tab === 'nested:workspace') return workspaceGroup || BUILTIN_GROUP.note;
       return familyOf(tab) ? tab : BUILTIN_GROUP.note;
     }
+
+    /**
+     * Prompt bodies are reusable instructions, not documents: 2,000 characters
+     * leaves room for a detailed brief while stopping a pasted essay.
+     */
+    const PROMPT_BODY_MAX = 2000;
 
     /**
      * Prompt intents: the glyph names the kind of instruction, and the hue is
@@ -2858,7 +2864,14 @@ window.__ModuleLoader__.load({
               rows: 4,
               autoFocus: true,
               sessionId,
-              onChange: (event) => setEditing({ ...editing, body: event.target.value }),
+              maxLength: PROMPT_BODY_MAX,
+              onChange: (event) => {
+                const value = String(event.target.value || '');
+                setEditing({
+                  ...editing,
+                  body: value.length > PROMPT_BODY_MAX ? value.slice(0, PROMPT_BODY_MAX) : value,
+                });
+              },
               onPasteImages,
               onKeyDown: (event) => {
                 if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
@@ -2883,6 +2896,15 @@ window.__ModuleLoader__.load({
             'div',
             { className: 'pp-edit-meta' },
             h('span', { className: 'pp-edit-hint' }, translate('row.lengthHint')),
+            h(
+              'span',
+              {
+                className: 'pp-edit-count',
+                'data-near': editing.body.length >= PROMPT_BODY_MAX * 0.9 ? 'true' : undefined,
+                'data-full': editing.body.length >= PROMPT_BODY_MAX ? 'true' : undefined,
+              },
+              `${editing.body.length} / ${PROMPT_BODY_MAX}`,
+            ),
           ),
           h(
             'div',
@@ -3920,9 +3942,11 @@ window.__ModuleLoader__.load({
 
     // ------------------------------------------------------------ sidebar icon
     // The same pool mark, reduced to a 24-unit grid. Bubbles and the eye are
-    // dropped below 22px where they turn into specks; the ring and the fish
-    // silhouette carry the mark at tab / trigger sizes.
+    // dropped below 22px where they turn into specks. Below 22px the fish also
+    // switches to a shorter body with a broad fan tail: the master's thin fork
+    // fills in at 16px, and simply lengthening it turns into a spike.
     const POOL_ICON_BODY = 'M10.4 0C9.4 -2.6 7.6 -4.7 5.3 -5.9C1.6 -7.7 -3.2 -7.2 -6.4 -4.7C-7.8 -3.6 -8.8 -2.2 -9.4 -0.6L-14.2 -5.0L-12.1 0L-14.2 5.0L-9.4 0.6C-8.8 2.2 -7.8 3.6 -6.4 4.7C-3.2 7.2 1.6 7.7 5.3 5.9C7.6 4.7 9.4 2.6 10.4 0Z';
+    const POOL_ICON_BODY_MICRO = 'M9.8 0C8.8 -2.7 6.8 -4.8 4.2 -5.6C0.8 -6.5 -2.8 -5.4 -5.6 -3.2L-10.8 -6.2L-9.0 0L-10.8 6.2L-5.6 3.2C-2.8 5.4 0.8 6.5 4.2 5.6C6.8 4.8 8.8 2.7 9.8 0Z';
     const POOL_ICON_EYE = 'M4.4 -3.5a1.3 1.3 0 1 0 0 2.6a1.3 1.3 0 1 0 0-2.6Z';
     const POOL_ICON_FIN = 'M1.4 -5.8C1.9 -8.4 -0.6 -9.7 -3.8 -8.8C-2.3 -8.0 -1.1 -7.0 -0.4 -5.6Z';
 
@@ -3954,7 +3978,7 @@ window.__ModuleLoader__.load({
           'g',
           { transform: 'translate(12.2 12.8) rotate(-15) scale(' + fishScale + ')' },
           h('path', {
-            d: compact ? POOL_ICON_BODY : POOL_ICON_BODY + POOL_ICON_EYE,
+            d: compact ? POOL_ICON_BODY_MICRO : POOL_ICON_BODY + POOL_ICON_EYE,
             fill: 'currentColor',
             fillRule: 'evenodd',
           }),
@@ -6025,6 +6049,7 @@ window.__ModuleLoader__.load({
           value: props.value,
           placeholder: props.placeholder,
           rows: props.rows || 5,
+          maxLength: props.maxLength,
           autoFocus: props.autoFocus === true,
           onChange: (event) => {
             props.onChange(event);
@@ -11208,6 +11233,9 @@ window.__ModuleLoader__.load({
       '.pp-edit-actions .pp-primary{height:28px;padding:0 14px;border-radius:7px}' +
       '.pp-edit[data-domain="annotations"] .pp-primary{border-color:var(--pp-note-accent);background:var(--pp-note-accent)}' +
       '.pp-edit-hint{margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px}' +
+      '.pp-edit-count{flex:none;color:var(--pp-ink-2);font-size:11px;font-variant-numeric:tabular-nums}' +
+      '.pp-edit-count[data-near="true"]{color:var(--pp-note-ink)}' +
+      '.pp-edit-count[data-full="true"]{color:var(--pp-danger)}' +
       '.pp-mention{position:relative;flex:1;display:flex}' +
         '.pp-mention-menu{position:absolute;z-index:6;top:100%;left:0;right:0;margin-top:2px;max-height:180px;overflow:auto;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface);box-shadow:0 8px 24px rgba(0,0,0,.14)}' +
         '.pp-mention-note{padding:8px 10px;font-size:11px;color:var(--pp-ink-2)}' +

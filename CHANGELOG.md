@@ -41,8 +41,8 @@ All notable changes to this project are documented here. The format follows
   and paste handling, while the prompt editor puts the group selector in the action row. A
   selected prompt kind carries a small × and clicking the chip clears the type. Switching to another
   annotation or prompt while the editor has unsaved edits now asks first: keep editing, discard, or save
-  and switch. The prompt editor also states that prompt text has no length limit and that `@` references
-  files, so its missing quota hint is not mistaken for an oversight.
+  and switch. The prompt editor caps its body at 2,000 characters, shows a live count and turns the count
+  amber near the cap, while `@` still references files.
 - The send queue starts collapsed as a one-line strip in both the page and the panel; opening it is a
   choice and the state persists.
 - The empty prompt panel now points at **+ Prompt** and **Save current input** instead of the old Save draft
