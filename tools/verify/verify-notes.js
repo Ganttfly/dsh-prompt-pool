@@ -456,13 +456,13 @@ else {
   if (chipRule[1].indexOf('font:inherit') < 0) fail('the badge does not inherit the conversation font');
   if (chipRule[1].indexOf('font-family:var(--dsw-font-family,inherit)') < 0) fail('the badge does not use the host text font family');
   if (chipRule[1].indexOf('font-size:11px') >= 0) fail('the badge still carries a fixed 11px font');
-  if (chipRule[1].indexOf('background:color-mix(in srgb,var(--pp-kind,#a97a24) 20%,transparent)') < 0) fail('the badge background is not deepened by its kind color');
-  if (chipRule[1].indexOf('border:1px dashed color-mix(in srgb,var(--pp-kind,#a97a24) 62%,transparent)') < 0) fail('the badge border does not use the kind color');
+  if (chipRule[1].indexOf('background:color-mix(in srgb,var(--pp-kind,#a97a24) 32%,transparent)') < 0) fail('the badge background is not deepened by its kind color');
+  if (chipRule[1].indexOf('border:1px dashed color-mix(in srgb,var(--pp-kind,#a97a24) 80%,transparent)') < 0) fail('the badge border does not use the kind color');
   if (chipRule[1].indexOf('max-width:100%') < 0 || chipRule[1].indexOf('white-space:normal') < 0) fail('a long badge cannot wrap inside the column');
 }
 const underlineRule = /::highlight\(prompt-pool-note-comment\)\{([^}]*)\}/.exec(source);
 if (!underlineRule) fail('the comment highlight rule is missing');
-else if (underlineRule[1].indexOf('text-decoration-thickness:2px') < 0 || underlineRule[1].indexOf('#6b7c90') < 0) {
+else if (underlineRule[1].indexOf('text-decoration-thickness:2px') < 0 || underlineRule[1].indexOf('#5b8fc9') < 0) {
   fail('the comment underline is not the 2px comment hue');
 } else console.log('[ok] the badge wash and the highlighted underline share the kind hue');
 const inlineIconRule = /\.pp-note-inline-icon svg\{([^}]*)\}/.exec(source);
