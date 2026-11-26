@@ -8263,6 +8263,9 @@ window.__ModuleLoader__.load({
         }
         setEditing({ id: note.id, anchor: null, body: note.body });
         setBody(note.body);
+        // The bubble opens on the annotation's own kind, so its chips, its
+        // underline and the inline mark all start from the same value.
+        setKind(noteKind(note.kind).id);
         setImages(normalizeImages(note.images));
         setMissing(!range);
         if (range) {
