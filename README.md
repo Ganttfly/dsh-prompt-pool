@@ -117,8 +117,9 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   in an assistant reply draws an amber outline and a `Paragraph · 42 chars` label. Click to add an
   annotation and open its editor in a bubble beside the block: the pick keeps running, the right
   sidebar keeps its current state, and the annotation list is not pulled into edit mode. The bubble
-  carries the seven kind chips and the text box; saving commits it, and closing it without text or
-  images discards the pick instead of leaving an empty badge. Clicking a block that already has a
+  carries the seven kind chips and the text box; saving commits it even when the body is empty (the
+  badge then shows only its kind mark), and closing it without text, images or a save discards the
+  pick instead of leaving an empty badge. Clicking a block that already has a
   block-level note opens that note's bubble instead of stacking a duplicate. The bottom bar only
   reports `N added` and offers **Done**; Esc or a click outside the conversation leaves the mode.
   Only assistant replies are accepted; your own messages and image-only or empty blocks are

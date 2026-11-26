@@ -13,7 +13,8 @@ All notable changes to this project are documented here. The format follows
   headings, quotes, code blocks and table cells get an amber outline plus a size label. Each click adds an
   annotation and opens its editor in a bubble beside the block, so the pick never ends and the right
   sidebar is left exactly as it was: the bubble carries the seven kind chips and the text box, saving
-  commits it, and an unwritten pick is discarded instead of leaving an empty badge. Clicking a block that
+  commits it even with an empty body (a glyph-only badge), and an unwritten pick is discarded instead
+  of leaving an empty badge. Clicking a block that
   already carries an annotation opens that annotation's bubble. The bottom bar only reports **N added**
   and offers **Done**; Esc or a click outside the conversation exits. Only the eligible block under the
   pointer gets the pick cursor; ineligible blocks keep the normal pointer and show neither outline nor label.

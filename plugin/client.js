@@ -7781,9 +7781,9 @@ window.__ModuleLoader__.load({
          * the type and the text, so the sidebar can stay exactly as it is, and
          * picking stays on so the next block is one click away.
          */
-        const editNote = (id) => {
+        const editNote = (id, fresh) => {
           if (!id) return;
-          noteFocus.set({ id, token: Date.now(), edit: true });
+          noteFocus.set({ id, token: Date.now(), edit: true, fresh: fresh === true });
         };
         const onDown = (event) => {
           // The bubble is the editor now: its clicks belong to the editor, not
@@ -7840,7 +7840,7 @@ window.__ModuleLoader__.load({
             updatedAt: now,
           });
           setCount((value) => value + 1);
-          editNote(id);
+          editNote(id, true);
         };
         const onClick = (event) => {
           if (Date.now() > suppressClickUntil) return;
@@ -7954,6 +7954,9 @@ window.__ModuleLoader__.load({
       imagesRef.current = images;
       const saveRef = useRef(null);
       const cancelRef = useRef(null);
+      // The annotation this pick just created, if any. Closing its bubble
+      // without saving discards it; an explicit save keeps it even when empty.
+      const freshIdRef = useRef('');
       const commitEditing = () => {
         if (!editingRef.current) return;
         if (String(bodyRef.current || '').trim() || imagesRef.current.length > 0) saveRef.current();
@@ -8231,6 +8234,9 @@ window.__ModuleLoader__.load({
         // that is on the way instead of reloading the saved copy.
         if (wantsEditor && editingRef.current && editingRef.current.id === note.id) return;
         commitEditing();
+        // Only a picker-created note is provisional; notes that already existed
+        // keep their empty badge when the bubble closes.
+        freshIdRef.current = wantsEditor && focus.fresh === true ? note.id : '';
         const root = noteChatRoot(sessionId);
         const range = root ? resolveNoteRange(note, root) : null;
       // 定位 means locate: scroll the passage into view (editing is explicit).
@@ -8294,12 +8300,16 @@ window.__ModuleLoader__.load({
 
       const cancelEditing = () => {
         const current = editing;
+        const freshId = freshIdRef.current;
+        freshIdRef.current = '';
         if (current && current.id) {
           const note = notesRef.current.find((entry) => entry.id === current.id);
-          // A picked passage that never received text or images is not an
-          // annotation: closing its bubble discards it instead of leaving an
-          // empty badge in the transcript.
-          if (note && !String(note.body || '').trim() && normalizeImages(note.images).length === 0) {
+          // A picked passage that never received text, images or an explicit
+          // save is not an annotation: closing its bubble discards it instead
+          // of leaving an empty badge in the transcript.
+          if (freshId === current.id && note
+            && !String(note.body || '').trim()
+            && normalizeImages(note.images).length === 0) {
             notesActions.remove(current.id);
           }
         }
@@ -8314,10 +8324,11 @@ window.__ModuleLoader__.load({
         if (!editing) return;
         const value = clampNoteBody(body.trim());
         const keptImages = normalizeImages(images);
+        freshIdRef.current = '';
         if (editing.id) {
-          const note = notesRef.current.find((entry) => entry.id === editing.id);
-          if (note && !value && keptImages.length === 0) notesActions.remove(editing.id);
-          else notesActions.patch(editing.id, { body: value, kind, images: keptImages });
+          // An empty save is a glyph-only annotation, not a cancel: the pick
+          // stays in the list and the badge carries its kind mark alone.
+          notesActions.patch(editing.id, { body: value, kind, images: keptImages });
         } else if (editing.anchor) {
           notesActions.add({
             id: uid(),

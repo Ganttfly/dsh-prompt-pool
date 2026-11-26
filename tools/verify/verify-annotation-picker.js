@@ -56,8 +56,8 @@ if (!blockNoteAtSource) {
 const pickerStart = source.indexOf('function NotePicker()');
 check(source.includes('const existing = blockNoteAt(notes.get().items, pick.sessionId, anchor);'), 'the picker checks for an existing block annotation');
 check(source.includes('editNote(existing.id);'), 'an existing block annotation opens its bubble');
-check(source.includes('editNote(id);'), 'a new block annotation opens its bubble');
-check(source.includes('noteFocus.set({ id, token: Date.now(), edit: true });'), 'the bubble opens through the shared focus channel');
+check(source.includes('editNote(id, true);'), 'a new block annotation opens its bubble');
+check(source.includes('noteFocus.set({ id, token: Date.now(), edit: true, fresh: fresh === true });'), 'the bubble opens through the shared focus channel');
 check(!source.includes('noteEditRequest'), 'the picker no longer asks the notes list to edit');
 check(!source.includes('revealNote('), 'the picker no longer hands the row to the sidebar');
 check(source.includes("if (closestOf(event.target, '.pp-note-layer')) return;"), 'a click inside the bubble keeps picking');
@@ -65,6 +65,8 @@ check(!source.includes('note.pick.undo'), 'the picker bar carries no undo');
 check(!source.includes('pp-pick-kind'), 'the picker bar carries no kind chips');
 check(source.includes('const commitEditing = () => {'), 'switching bubbles commits the previous one');
 check(source.includes('notesActions.remove(current.id);'), 'an unwritten pick is discarded when its bubble closes');
+check(source.includes('notesActions.patch(editing.id, { body: value, kind, images: keptImages });'), 'saving the bubble patches even when it is empty');
+check(!source.includes('if (note && !value && keptImages.length === 0) notesActions.remove(editing.id);'), 'an explicit save of an empty bubble keeps a glyph-only annotation');
 check(source.includes("if (pick.active) poolActions.setSetting('pickKind', entry.id);"), 'a kind chosen in the bubble becomes the next default');
 check(
   pickerStart >= 0
