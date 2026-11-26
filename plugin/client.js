@@ -1647,8 +1647,8 @@ window.__ModuleLoader__.load({
         text: translate('note.deleteHint'),
         cancelText: translate('note.cancel'),
         confirmText: translate('note.delete'),
-        onCancel: closeNoteConfirm,
-        onConfirm: runNoteConfirm,
+        onCancel: typeof props.onCancel === 'function' ? props.onCancel : closeNoteConfirm,
+        onConfirm: typeof props.onConfirm === 'function' ? props.onConfirm : runNoteConfirm,
         style,
       });
     }
@@ -8175,7 +8175,7 @@ window.__ModuleLoader__.load({
         if ((!prompt.open && !confirm.open) || typeof document === 'undefined') return undefined;
         const onDown = (event) => {
           const element = event.target instanceof Element ? event.target : null;
-          if (element && element.closest && element.closest('.pp-note-prompt')) return;
+          if (element && element.closest && element.closest('.pp-note-prompt, .pp-modal')) return;
           closeNotePrompt();
           closeNoteConfirm();
         };
@@ -8564,6 +8564,7 @@ window.__ModuleLoader__.load({
       const [editKind, setEditKind] = useState(NOTE_KIND_DEFAULT);
       const [editImages, setEditImages] = useState([]);
       const [pendingSwitch, setPendingSwitch] = useState(null);
+      const [pendingDelete, setPendingDelete] = useState('');
       const immediateFor = (note) => noteReviewImmediate(reviewState, note);
       const { preview, openImage, closeImage } = useImagePreview();
       const picked = notesForSelection(list, sessionId, selection);
@@ -9097,7 +9098,7 @@ window.__ModuleLoader__.load({
                       translate('note.insert'),
                     ),
                     h(RowActionIcon, { name: 'store', label: translate('note.store'), onClick: () => openPrompt({ kind: 'note', note }) }),
-                    h(RowActionIcon, { name: 'trash', label: translate('note.delete'), danger: true, onClick: (event) => openNoteConfirm(() => notesActions.remove(note.id), event) }),
+                    h(RowActionIcon, { name: 'trash', label: translate('note.delete'), danger: true, onClick: () => setPendingDelete(note.id) }),
                   ),
             );
           }),
@@ -9108,6 +9109,16 @@ window.__ModuleLoader__.load({
             ? h(EmptyState, { key: 'empty', iconName: 'annotation', className: 'pp-notes-empty', text: translate('note.empty') })
             : null,
         h(ImageLightbox, { key: 'lightbox', preview, onClose: closeImage }),
+        pendingDelete
+          ? h(NoteDeleteConfirm, {
+              key: 'delete',
+              onCancel: () => setPendingDelete(''),
+              onConfirm: () => {
+                notesActions.remove(pendingDelete);
+                setPendingDelete('');
+              },
+            })
+          : null,
         pendingSwitch && list.some((entry) => entry.id === pendingSwitch.id)
           ? h(UnsavedSwitchDialog, {
               onCancel: () => settleSwitch('stay'),

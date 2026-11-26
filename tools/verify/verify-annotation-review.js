@@ -212,21 +212,13 @@ const check = (ok, label) => {
     && node.props && node.props.name === 'trash' && node.props.label === 'note.delete');
   check(Boolean(idleTrash), 'the idle annotation row has a delete action');
   if (idleTrash) {
-    const surfaceRect = { left: 100, top: 50, width: 900, height: 700 };
-    const surface = { getBoundingClientRect: () => surfaceRect };
-    idleTrash.props.onClick({
-      stopPropagation: () => {},
-      currentTarget: {
-        closest: (selector) => (selector === '.pp-page, .pp-panel' ? surface : null),
-        getBoundingClientRect: () => surfaceRect,
-      },
-    });
-    const confirm = global.window.__dshPromptPoolNoteConfirmV1;
-    const state = confirm ? confirm.get() : null;
-    check(Boolean(state) && state.open && Boolean(state.surfaceRect)
-      && state.surfaceRect.left === 100 && state.surfaceRect.width === 900,
-    'the note delete confirmation uses the shared modal over its surface');
-    if (confirm) confirm.set({ open: false, surfaceRect: null, onConfirm: null, token: 0 });
+    idleTrash.props.onClick({ stopPropagation: () => {} });
+    const asking = nodes(renderNotes(tree)).find((node) => typeof node.type === 'function'
+      && node.type.name === 'NoteDeleteConfirm');
+    check(Boolean(asking) && typeof asking.props.onConfirm === 'function',
+      'the note delete confirmation is mounted inside the annotation surface');
+    if (asking) asking.props.onCancel();
+    renderNotes(tree);
   }
   const stripButton = findStrip(tree);
   if (stripButton) stripButton.props.onClick();

@@ -37,6 +37,9 @@ All notable changes to this project are documented here. The format follows
   blocks in the same reply still each get their own note.
 - Prompt rows no longer carry a separate edit icon: clicking the title opens the editor, while duplicate
   and delete stay as row actions. The type badge sits before the title instead of replacing the first line.
+- The annotation delete confirmation now renders inside the page or panel that opened it. Pressing
+  **Delete** removes that one note and leaves the surface open; the same guard keeps the inline annotation
+  bubble's confirmation from dismissing itself on the button press.
 - The annotation and prompt editors now share one card: the same 28px title row, 22px kind chips, 90px
   body, 28px meta row and 28px action row, with each domain keeping its amber or blue identity. The
   annotation quote moves into the title row and its locate/row actions hide while editing. Both editors

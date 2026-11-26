@@ -443,17 +443,34 @@ else {
       if (!deleteLink) fail('the row delete control is missing');
       else {
         deleteLink.props.onClick({ stopPropagation: () => {} });
-        const asking = window.__dshPromptPoolNoteConfirmV1 ? window.__dshPromptPoolNoteConfirmV1.get() : null;
-        if (!asking || asking.open !== true) fail('deleting did not ask first');
-        else if (typeof asking.onConfirm !== 'function') fail('the delete confirmation has no action');
+        const asking = findAll(notesView() || [], (node) => typeof node.type === 'function'
+          && node.type.name === 'NoteDeleteConfirm')[0];
+        if (!asking) fail('deleting did not ask first inside the annotation surface');
+        else if (typeof asking.props.onConfirm !== 'function') fail('the delete confirmation has no action');
         else {
-          asking.onConfirm();
-          const left = window.__dshPromptPoolNotesV1.get().items;
-          if (left.length !== 1) fail(`delete left ${left.length} note(s)`);
-          else if (left[0].id !== 'n1') fail('delete removed the wrong note');
-          if (!notesSaved() || notesSaved().items.length !== 1) fail('delete was not persisted');
-          else console.log('[ok] annotations can be deleted from the pool tab');
+          asking.props.onCancel();
+          if (window.__dshPromptPoolNotesV1.get().items.length !== 2) fail('cancel removed a note');
+          deleteLink.props.onClick({ stopPropagation: () => {} });
+          const again = findAll(notesView() || [], (node) => typeof node.type === 'function'
+            && node.type.name === 'NoteDeleteConfirm')[0];
+          if (!again) fail('the delete confirmation did not reopen');
+          else {
+            again.props.onConfirm();
+            const left = window.__dshPromptPoolNotesV1.get().items;
+            if (left.length !== 1) fail(`delete left ${left.length} note(s)`);
+            else if (left[0].id !== 'n1') fail('delete removed the wrong note');
+            if (!notesSaved() || notesSaved().items.length !== 1) fail('delete was not persisted');
+            else console.log('[ok] annotations delete after an in-surface confirmation');
+          }
         }
+      }
+
+      // Clicks inside the confirmation are not "outside" for the layer that
+      // closes the bubble: the Delete button must still run its action.
+      if (source.indexOf(".closest('.pp-note-prompt, .pp-modal')") < 0) {
+        fail('the annotation outside-click guard still closes the delete dialog');
+      } else {
+        console.log('[ok] the delete dialog is shielded from the outside-click guard');
       }
 
       // Review replaces the per-row Outbox queue: annotations never leave the list here.
