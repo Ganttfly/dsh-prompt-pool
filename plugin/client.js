@@ -38,6 +38,10 @@ window.__ModuleLoader__.load({
     const PLUGIN_REPO = 'https://github.com/Ganttfly/dsh-prompt-pool';
     /** The sidebar service, kept so the page can correct a restored tab title. */
     let sidebarService = null;
+    /** The native right sidebar, once it mounts; null on hosts without one. */
+    let rightSidebarFace = null;
+    /** True once our page kind is registered, so openTab has somewhere to land. */
+    let nativeTabReady = false;
     const IMAGE_DB = 'dsh-prompt-pool-images.v1';
     const IMAGE_STORE = 'images';
     const MAX_IMAGES = 6;
@@ -347,6 +351,7 @@ window.__ModuleLoader__.load({
       'note.summary.done': '已生成草稿',
       'note.summary.failed': '无法写入输入框，请稍后再试。',
       'note.menu.view': '查看批注',
+      'menu.panel': '在面板中打开',
       'prompt.menu.save': '保存当前输入',
       'prompt.menu.new': '新建提示词',
       'prompt.menu.view': '查看提示词',
@@ -692,6 +697,7 @@ window.__ModuleLoader__.load({
       'note.summary.done': 'Draft generated',
       'note.summary.failed': 'Could not write to the composer. Try again later.',
       'note.menu.view': 'View annotations',
+      'menu.panel': 'Open in panel',
       'prompt.menu.save': 'Save current input',
       'prompt.menu.new': 'New prompt',
       'prompt.menu.view': 'View prompts',
@@ -2116,6 +2122,53 @@ window.__ModuleLoader__.load({
       if (!window[PAGE_TAB_SINGLETON]) window[PAGE_TAB_SINGLETON] = createStore(initial);
       return window[PAGE_TAB_SINGLETON];
     })();
+
+    /**
+     * What the opener asked the sidebar page for: a destination, a new draft,
+     * or nothing but the page itself. A store rather than props because the
+     * page is often already mounted when the trigger asks again; `seq` lets the
+     * page act on one ask exactly once.
+     */
+    const pageIntent = (() => {
+      const initial = { scope: '', create: false, seq: 0 };
+      if (typeof window === 'undefined') return createStore(initial);
+      if (!window.__dshPromptPoolPageIntentV1) window.__dshPromptPoolPageIntentV1 = createStore(initial);
+      return window.__dshPromptPoolPageIntentV1;
+    })();
+
+    function usePageIntent() {
+      return useSyncExternalStore(pageIntent.subscribe, pageIntent.get, pageIntent.get);
+    }
+
+    /** The ask the page already acted on; a remount must not replay it. */
+    let pageIntentHandled = 0;
+
+    /** The right sidebar, once it exists and our page is registered with it. */
+    function rightSidebar() {
+      const face = rightSidebarFace || serviceOf(pluginCtx, 'sidebarRight');
+      return nativeTabReady && face && typeof face.openTab === 'function' ? face : null;
+    }
+
+    /**
+     * Open the pool on the right sidebar. An empty scope leaves the page where
+     * it was; otherwise the page switches to that destination. Returns false
+     * on a host without a right sidebar so the caller can fall back to the
+     * composer panel.
+     */
+    function openPageView(scope, create) {
+      const sidebar = rightSidebar();
+      if (!sidebar) return false;
+      const seq = (pageIntent.get().seq || 0) + 1;
+      pageIntent.set({ scope: scope || '', create: create === true, seq });
+      try {
+        sidebar.openTab(NATIVE_TAB_KIND, {});
+        return true;
+      } catch (_error) {
+        /* a host that refuses the tab falls back to the composer panel */
+        pageIntent.set({ scope: '', create: false, seq: seq + 1 });
+        return false;
+      }
+    }
 
     /**
      * Live workspace directory: derived (never persisted) and published by
@@ -3580,11 +3633,30 @@ window.__ModuleLoader__.load({
         setDomainMenu(which);
       };
 
-      const openPanelView = (scopeName, create) => {
+      /**
+       * The trigger and the composer menus share one entry: the right sidebar
+       * page when the host has one, the composer panel otherwise. The panel
+       * stays reachable from the menus on a sidebar host, as the comparison
+       * surface while the sidebar takes over.
+       */
+      const openPoolView = (scopeName, create) => {
         setDomainMenu(null);
+        if (openPageView(scopeName, create === true)) return;
         ui.set({ open: true });
         try {
           bridge.request({ type: 'open-view', scope: scopeName, create: create === true });
+        } catch (_error) {
+          /* the panel will report an unavailable workspace if needed */
+        }
+      };
+
+      const openComposerPanel = (scopeName) => {
+        setDomainMenu(null);
+        setCaptureOpen(false);
+        setSummaryOpen(false);
+        ui.set({ open: true });
+        try {
+          bridge.request({ type: 'open-view', scope: scopeName, create: false });
         } catch (_error) {
           /* the panel will report an unavailable workspace if needed */
         }
@@ -3712,6 +3784,10 @@ window.__ModuleLoader__.load({
                 setDomainMenu(null);
                 setCaptureOpen(false);
                 setSummaryOpen(false);
+                setNotice(null);
+                // The brand opens the workbench; on a sidebar host that is the
+                // right-sidebar page, and the composer panel is the fallback.
+                if (openPageView('', false)) return;
                 ui.set({ open: !ui.get().open });
               },
             },
@@ -3804,10 +3880,21 @@ window.__ModuleLoader__.load({
                       type: 'button',
                       role: 'menuitem',
                       className: 'pp-trigger-menu-item',
-                      onClick: () => openPanelView('notes', false),
+                      onClick: () => openPoolView('notes', false),
                     },
                     h('span', { className: 'pp-trigger-menu-mark' }, icon('annotation')),
                     h('span', { className: 'pp-trigger-menu-label' }, translate('note.menu.view'))),
+                    rightSidebar()
+                      ? h('button', {
+                          key: 'panel',
+                          type: 'button',
+                          role: 'menuitem',
+                          className: 'pp-trigger-menu-item',
+                          onClick: () => openComposerPanel('notes'),
+                        },
+                        h('span', { className: 'pp-trigger-menu-mark' }, icon('chevronUp')),
+                        h('span', { className: 'pp-trigger-menu-label' }, translate('menu.panel')))
+                      : null,
                   ]
                 : [
                     h('button', {
@@ -3824,7 +3911,7 @@ window.__ModuleLoader__.load({
                       type: 'button',
                       role: 'menuitem',
                       className: 'pp-trigger-menu-item',
-                      onClick: () => openPanelView('workspace', true),
+                      onClick: () => openPoolView('workspace', true),
                     },
                     h('span', { className: 'pp-trigger-menu-mark' }, icon('plus')),
                     h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.new'))),
@@ -3833,10 +3920,21 @@ window.__ModuleLoader__.load({
                       type: 'button',
                       role: 'menuitem',
                       className: 'pp-trigger-menu-item',
-                      onClick: () => openPanelView('workspace', false),
+                      onClick: () => openPoolView('workspace', false),
                     },
                     h('span', { className: 'pp-trigger-menu-mark' }, icon('prompt')),
                     h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.view'))),
+                    rightSidebar()
+                      ? h('button', {
+                          key: 'panel',
+                          type: 'button',
+                          role: 'menuitem',
+                          className: 'pp-trigger-menu-item',
+                          onClick: () => openComposerPanel('workspace'),
+                        },
+                        h('span', { className: 'pp-trigger-menu-mark' }, icon('chevronUp')),
+                        h('span', { className: 'pp-trigger-menu-label' }, translate('menu.panel')))
+                      : null,
                   ],
             )
           : null,
@@ -5190,15 +5288,18 @@ window.__ModuleLoader__.load({
       };
 
       /** The active scope decides the new item's classification. */
-      const create = () => {
+      const create = (targetScope) => {
         // One editor at a time: a second draft would leave the first one
         // unsaved and counted again.
         if (editing) return;
-        if (scope === 'workspace' && !workspaceGroup) {
+        // The trigger can ask for a draft before the scope switch has rendered,
+        // so the ask names its own destination.
+        const activeScope = targetScope === 'workspace' || targetScope === 'global' ? targetScope : scope;
+        if (activeScope === 'workspace' && !workspaceGroup) {
           flash({ kind: 'error', text: translate('status.noWorkspace') });
           return;
         }
-        const group = scope === 'workspace'
+        const group = activeScope === 'workspace'
           ? workspaceGroup
           : groupForTab(activeGlobalTab, '');
         setQuery('');
@@ -5214,6 +5315,22 @@ window.__ModuleLoader__.load({
         });
         setEditing({ id: item.id, group, title: '', body: '', type: '', images: [], isNew: true });
       };
+
+      // An opener outside the page names a destination (and sometimes a new
+      // draft) before calling; act on that ask once, when the page can. The
+      // marker lives outside the hook cells so a remount cannot replay an ask
+      // that would otherwise reopen a draft every time the tab comes back.
+      const pageIntentState = usePageIntent();
+      useEffect(() => {
+        if (!pageIntentState || !pageIntentState.seq || pageIntentState.seq === pageIntentHandled) return;
+        pageIntentHandled = pageIntentState.seq;
+        const target = pageIntentState.scope;
+        if (target === 'notes' || target === 'workspace' || target === 'global') changeScope(target);
+        if (pageIntentState.create) create(target);
+        // Keep the seq (it is the ask's identity) but drop the payload, so a
+        // later remount or plugin reload finds nothing left to replay.
+        pageIntent.set({ scope: '', create: false, seq: pageIntentState.seq });
+      }, [pageIntentState]);
 
       /** Opening another row must not silently drop the current editor. */
       const requestStart = (item) => {
@@ -7738,7 +7855,8 @@ window.__ModuleLoader__.load({
         /**
          * Open the annotation in the list and leave picking mode. A picker
          * started on the annotations page edits in place when that list is
-         * visible; otherwise the panel is opened on its annotations tab.
+         * visible; otherwise the sidebar page is opened on annotations, and a
+         * host without one falls back to the composer panel.
          */
         const revealNote = (id) => {
           if (!id) return;
@@ -7746,7 +7864,8 @@ window.__ModuleLoader__.load({
             && Array.from(document.querySelectorAll('.pp-page .pp-notes')).some((node) => (
               typeof node.getClientRects === 'function' && node.getClientRects().length > 0
             ));
-          const surface = pick.source === 'page' && pageListVisible ? 'page' : 'panel';
+          const onPage = pick.source === 'page' && pageListVisible;
+          const surface = onPage || openPageView('notes', false) ? 'page' : 'panel';
           if (surface === 'panel') {
             ui.set({ open: true });
             try {
@@ -11818,6 +11937,11 @@ window.__ModuleLoader__.load({
         bindOptional(['sessions'], (target) => {
           sessionsFace = serviceOf(target, 'sessions');
         });
+        // The right sidebar owns the page tab strip; the trigger opens our page
+        // through it instead of the composer panel when it is present.
+        bindOptional(['sidebarRight'], (target) => {
+          rightSidebarFace = serviceOf(target, 'sidebarRight');
+        });
         // Right-click on selected conversation text: the host asks plugins in
         // registration order and the first surface that opens wins. Only the
         // context-menu trigger is claimed, so the built-in Quote action keeps the
@@ -11958,6 +12082,8 @@ window.__ModuleLoader__.load({
                 icon: () => h(PromptPoolIcon, { size: 17 }),
               }],
             }));
+            // Only from here on does openTab have a page to land on.
+            nativeTabReady = true;
             keep(ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register(
               { name: 'sidebar.right.pane.tab', key: NATIVE_TAB_ID },
               PromptPoolSidebarTab,

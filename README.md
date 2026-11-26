@@ -18,7 +18,8 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 reply; the original wording stays attached, so the context is easy to follow and no key point slips away.
 Or choose **+ Annotate** in the page header and click any assistant block: an amber outline marks the
 paragraph, list item, heading, quote, code block or table cell before the note lands. The new note opens
-in the annotation list editor; if that list is not visible, the panel opens on **Annotations** first.
+in the annotation list editor; if that list is not visible, the annotations list opens first — in the right
+sidebar when the host has one, otherwise in the panel on **Annotations**.
 Clicking a block that already carries a note opens that note for editing instead of adding another. The
 **Annotations** page collects the notes for that session — locate a passage, insert one note, or save it as a prompt.
 Click a note's body to edit its kind and text while the quote stays read-only; each kind keeps its own
@@ -35,8 +36,10 @@ Idea, Supplement, To-do or Inspiration — which leads the title with its own hu
 as a collapsed strip and expands when opened. Switching modes never changes the row styling. The
 panel opens with a brand row — the pool mark, its name, pin and close — and the row beside search carries
 help, **Save current input** and **Settings** directly. The composer trigger is a split bar: the brand cap
-opens the panel; the **Annotations** menu reviews the session's annotations or opens the annotations view;
-the **Prompts** menu saves the current draft, creates a prompt, or opens the prompts view.
+opens the right sidebar page, leaving its destination alone; the **Annotations** menu reviews the session's
+annotations, opens the annotations view, or opens the panel on Annotations; the **Prompts** menu saves the
+current draft, creates a prompt, opens the prompts view, or opens the panel on Prompts. On hosts without a
+right sidebar the cap and both menus open the panel instead.
 
 ![The prompt pool as a full page in the right sidebar](docs/images/sidebar.png)
 
@@ -113,7 +116,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   over an eligible block: hovering a paragraph, list item, heading, quote, code block or table cell
   in an assistant reply draws an amber outline and a `Paragraph · 42 chars` label. Click to add an
   empty annotation: its editor opens in the list and the pick ends; if the list is not visible, the
-  panel opens on **Annotations** first. Clicking a block that already has a block-level note opens
+  annotations list opens first — in the right sidebar when the host has one, otherwise in the panel on
+  **Annotations**. Clicking a block that already has a block-level note opens
   that note for editing instead of stacking a duplicate. The bottom bar carries the seven kind chips, **View
   annotations** and **Done**; Esc or a click outside the conversation leaves the mode.
   Only assistant replies are accepted; your own messages and image-only or empty blocks are

@@ -31,6 +31,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The composer trigger's brand cap now opens the right sidebar page instead of the composer panel,
+  leaving the page's current destination alone and keeping the conversation uncovered; the panel stays
+  one click away as **Open in panel** in the Annotations and Prompts menus, and is still what the cap
+  and those menus fall back to on hosts without a right sidebar. The Annotations menu's view entry and
+  point-and-click annotation picking reach the page the same way, so the list no longer opens in the
+  panel on hosts that have a sidebar.
 - The pool mark is redrawn as a queue: three uneven prompt bars, the middle one selected in signal
   green and followed by a chevron, in the composer trigger and the panel's brand row. The mark is
   bars-only at every size, so the 12–20px places (menus, sidebar title) keep their shape instead of
