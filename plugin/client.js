@@ -351,7 +351,6 @@ window.__ModuleLoader__.load({
       'note.summary.done': '已生成草稿',
       'note.summary.failed': '无法写入输入框，请稍后再试。',
       'note.menu.view': '查看批注',
-      'menu.panel': '在面板中打开',
       'prompt.menu.save': '保存当前输入',
       'prompt.menu.new': '新建提示词',
       'prompt.menu.view': '查看提示词',
@@ -697,7 +696,6 @@ window.__ModuleLoader__.load({
       'note.summary.done': 'Draft generated',
       'note.summary.failed': 'Could not write to the composer. Try again later.',
       'note.menu.view': 'View annotations',
-      'menu.panel': 'Open in panel',
       'prompt.menu.save': 'Save current input',
       'prompt.menu.new': 'New prompt',
       'prompt.menu.view': 'View prompts',
@@ -3635,9 +3633,8 @@ window.__ModuleLoader__.load({
 
       /**
        * The trigger and the composer menus share one entry: the right sidebar
-       * page when the host has one, the composer panel otherwise. The panel
-       * stays reachable from the menus on a sidebar host, as the comparison
-       * surface while the sidebar takes over.
+       * page when the host has one, the composer panel otherwise. The panel is
+       * the fallback surface, not a destination of its own.
        */
       const openPoolView = (scopeName, create) => {
         setDomainMenu(null);
@@ -3645,18 +3642,6 @@ window.__ModuleLoader__.load({
         ui.set({ open: true });
         try {
           bridge.request({ type: 'open-view', scope: scopeName, create: create === true });
-        } catch (_error) {
-          /* the panel will report an unavailable workspace if needed */
-        }
-      };
-
-      const openComposerPanel = (scopeName) => {
-        setDomainMenu(null);
-        setCaptureOpen(false);
-        setSummaryOpen(false);
-        ui.set({ open: true });
-        try {
-          bridge.request({ type: 'open-view', scope: scopeName, create: false });
         } catch (_error) {
           /* the panel will report an unavailable workspace if needed */
         }
@@ -3884,17 +3869,6 @@ window.__ModuleLoader__.load({
                     },
                     h('span', { className: 'pp-trigger-menu-mark' }, icon('annotation')),
                     h('span', { className: 'pp-trigger-menu-label' }, translate('note.menu.view'))),
-                    rightSidebar()
-                      ? h('button', {
-                          key: 'panel',
-                          type: 'button',
-                          role: 'menuitem',
-                          className: 'pp-trigger-menu-item',
-                          onClick: () => openComposerPanel('notes'),
-                        },
-                        h('span', { className: 'pp-trigger-menu-mark' }, icon('chevronUp')),
-                        h('span', { className: 'pp-trigger-menu-label' }, translate('menu.panel')))
-                      : null,
                   ]
                 : [
                     h('button', {
@@ -3924,17 +3898,6 @@ window.__ModuleLoader__.load({
                     },
                     h('span', { className: 'pp-trigger-menu-mark' }, icon('prompt')),
                     h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.view'))),
-                    rightSidebar()
-                      ? h('button', {
-                          key: 'panel',
-                          type: 'button',
-                          role: 'menuitem',
-                          className: 'pp-trigger-menu-item',
-                          onClick: () => openComposerPanel('workspace'),
-                        },
-                        h('span', { className: 'pp-trigger-menu-mark' }, icon('chevronUp')),
-                        h('span', { className: 'pp-trigger-menu-label' }, translate('menu.panel')))
-                      : null,
                   ],
             )
           : null,

@@ -13,7 +13,7 @@ The pool keeps the draft, the next action and the exact wording next to the conv
 ![Prompt pool panel in Prompts mode: current workspace items and the send queue](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/panel.png)
 
 - Segmented composer trigger beside the send controls: the brand segment opens the right sidebar page, and
-  separate **Annotations** / **Prompts** menus lead to the review card, the full page, or **Open in panel**
+  separate **Annotations** / **Prompts** menus lead to the review card and the full page
 - Starter prompts follow the host language; Settings can reset them in the current interface language, keeping edits as ordinary items
 - Panel scoped to **Annotations** (current session) and **Prompts** (current workspace), with a brand row,
   search, **Insert / + / ⋯** row actions and a shared send queue that only appears in Prompts mode

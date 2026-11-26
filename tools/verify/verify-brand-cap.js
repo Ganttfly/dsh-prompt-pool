@@ -1,6 +1,6 @@
 // Proves the composer trigger's brand cap opens the right-sidebar page when the
-// host has one: the cap lands on the page, the domain menus keep the panel one
-// item away, and a host without a sidebar still falls back to the panel.
+// host has one: the cap lands on the page, the domain menus lead to the page and
+// offer no panel entry, and a host without a sidebar still falls back to the panel.
 const fs = require('fs');
 const path = require('path');
 
@@ -150,20 +150,23 @@ if (sidebarTrigger) {
     check(ask && ask.scope === '' && ask.create === false, 'the cap changed the page destination');
   }
 
-  // The Prompts menu keeps the page entry and the panel entry apart.
-  const renderMenu = () => {
+  // The domain menus lead to the page and offer no panel entry of their own.
+  const renderMenu = (domain) => {
     const tree2 = sidebar.render(sidebarTrigger);
-    const prompts = nodes(tree2, []).find((node) => node.type === 'button' && node.props && node.props['data-domain'] === 'prompts');
-    check(Boolean(prompts), 'the prompts menu button is missing');
-    if (prompts) prompts.props.onClick();
+    const button = nodes(tree2, []).find((node) => node.type === 'button' && node.props && node.props['data-domain'] === domain);
+    check(Boolean(button), `the ${domain} menu button is missing`);
+    if (button) button.props.onClick();
     return nodes(sidebar.render(sidebarTrigger), []);
   };
-  const menuNodes = renderMenu();
-  const menuLabels = menuNodes
+  const menuLabels = (domain) => renderMenu(domain)
     .filter((node) => node.props && String(node.props.className || '').indexOf('pp-trigger-menu-item') >= 0)
     .map((node) => JSON.stringify(node.children));
-  check(menuLabels.some((label) => label.indexOf('prompt.menu.view') >= 0), 'the prompts view entry is missing');
-  check(menuLabels.some((label) => label.indexOf('menu.panel') >= 0), 'the open-in-panel entry is missing on a sidebar host');
+  const promptsLabels = menuLabels('prompts');
+  check(promptsLabels.some((label) => label.indexOf('prompt.menu.view') >= 0), 'the prompts view entry is missing');
+  check(!promptsLabels.some((label) => label.indexOf('menu.panel') >= 0), 'the prompts menu still offers an open-in-panel entry');
+  const notesLabels = menuLabels('annotations');
+  check(!notesLabels.some((label) => label.indexOf('menu.panel') >= 0), 'the annotations menu still offers an open-in-panel entry');
+  const menuNodes = renderMenu('prompts');
   const viewEntry = menuNodes.find((node) => node.type === 'button' && hasClass(node, 'pp-trigger-menu-item')
     && JSON.stringify(node.children).indexOf('prompt.menu.view') >= 0);
   if (viewEntry) {
@@ -171,14 +174,6 @@ if (sidebarTrigger) {
     check(sidebar.openTabCalls.length === 2, 'the prompts view entry did not open the page tab');
     const ask = sidebar.win.__dshPromptPoolPageIntentV1.get();
     check(ask.scope === 'workspace' && ask.create === false, `the prompts view entry asked for ${ask.scope}/${ask.create}`);
-  }
-  const panelEntry = menuNodes.find((node) => node.type === 'button' && hasClass(node, 'pp-trigger-menu-item')
-    && JSON.stringify(node.children).indexOf('menu.panel') >= 0);
-  check(Boolean(panelEntry), 'the open-in-panel entry is not a menu item');
-  if (panelEntry) {
-    const before = sidebar.openTabCalls.length;
-    panelEntry.props.onClick();
-    check(sidebar.openTabCalls.length === before, 'the open-in-panel entry opened the page tab too');
   }
 }
 
@@ -207,6 +202,6 @@ if (bareTrigger) {
 
 for (const failure of failures) console.error('[fail]', failure);
 console.log(failures.length === 0
-  ? '[ok] the brand cap opens the page, the panel stays in the menus, and a bare host keeps the panel'
+  ? '[ok] the brand cap opens the page, the menus lead to it, and a bare host keeps the panel'
   : `[fail] ${failures.length} check(s)`);
 if (failures.length > 0) process.exitCode = 1;

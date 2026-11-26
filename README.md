@@ -37,9 +37,9 @@ as a collapsed strip and expands when opened. Switching modes never changes the 
 panel opens with a brand row — the pool mark, its name, pin and close — and the row beside search carries
 help, **Save current input** and **Settings** directly. The composer trigger is a split bar: the brand cap
 opens the right sidebar page, leaving its destination alone; the **Annotations** menu reviews the session's
-annotations, opens the annotations view, or opens the panel on Annotations; the **Prompts** menu saves the
-current draft, creates a prompt, opens the prompts view, or opens the panel on Prompts. On hosts without a
-right sidebar the cap and both menus open the panel instead.
+annotations and opens the annotations view; the **Prompts** menu saves the current draft, creates a prompt
+and opens the prompts view. Neither menu offers a separate way into the panel. On hosts without a right
+sidebar the cap and both menus open the panel instead.
 
 ![The prompt pool as a full page in the right sidebar](docs/images/sidebar.png)
 
