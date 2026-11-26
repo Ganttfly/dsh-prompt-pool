@@ -76,6 +76,8 @@ check(
 );
 
 check(source.includes("const NOTE_CHIP_VERSION = '7';"), 'inline chips are rebuilt at version 7');
+check(source.includes('const pending = editingRef.current && editingRef.current.id === note.id ? kindRef.current : note.kind;'), 'the open bubble repaints its badge with the pending kind');
+check(source.includes('const meta = noteKind(pending);'), 'the badge mark follows the pending kind');
 check(source.includes("text.setAttribute('data-text', shown)"), 'the inline chip keeps its text out of textContent');
 check(!/text\.textContent\s*=\s*shown/.test(source), 'the inline chip no longer writes textContent');
 check(source.includes('.pp-note-inline-text::before{content:attr(data-text)}'), 'the inline chip draws its label from data-text');

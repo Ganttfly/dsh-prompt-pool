@@ -7952,6 +7952,10 @@ window.__ModuleLoader__.load({
       bodyRef.current = body;
       const imagesRef = useRef([]);
       imagesRef.current = images;
+      // The badge of the open bubble follows its pending kind, like its
+      // underline does, so switching the kind repaints the mark at once.
+      const kindRef = useRef(kind);
+      kindRef.current = kind;
       const saveRef = useRef(null);
       const cancelRef = useRef(null);
       // The annotation this pick just created, if any. Closing its bubble
@@ -8071,7 +8075,8 @@ window.__ModuleLoader__.load({
           if (!wanted.has(chip.getAttribute('data-pp-inline'))) chip.remove();
         }
         for (const note of wanted.values()) {
-          const meta = noteKind(note.kind);
+          const pending = editingRef.current && editingRef.current.id === note.id ? kindRef.current : note.kind;
+          const meta = noteKind(pending);
           const shown = noteBodyText(note.body);
           const existing = root.querySelector('[data-pp-inline="' + note.id + '"]');
           if (existing) {
@@ -8170,6 +8175,12 @@ window.__ModuleLoader__.load({
       useEffect(() => {
         syncRef.current();
       }, [notesState.items, sessionId]);
+
+      // A kind switched in the open bubble repaints that badge immediately;
+      // closing the bubble without saving puts the stored kind back.
+      useEffect(() => {
+        syncRef.current();
+      }, [editing, kind]);
 
       useEffect(() => {
         if (!draft.anchor || (draft.sessionId && draft.sessionId !== sessionId)) return;
@@ -8283,6 +8294,9 @@ window.__ModuleLoader__.load({
       const openNote = (id) => {
         const note = notesRef.current.find((entry) => entry.id === id);
         if (!note) return;
+        if (editingRef.current && editingRef.current.id === id) return;
+        commitEditing();
+        freshIdRef.current = '';
         setEditing({ id, anchor: null, body: note.body });
         setBody(note.body);
         setKind(noteKind(note.kind).id);
