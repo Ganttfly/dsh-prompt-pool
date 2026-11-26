@@ -11,17 +11,19 @@ All notable changes to this project are documented here. The format follows
 - Point-and-click annotation. **+ Annotate** in the page header and **+ Annotate** in the composer's
   Annotations menu start a block picker: only assistant replies are eligible, and paragraphs, list items,
   headings, quotes, code blocks and table cells get an amber outline plus a size label. Each click adds an
-  empty annotation and opens it in the annotation list editor, opening the panel on **Annotations**
-  when that list is not already visible, and ends the pick. The bottom bar carries the seven kind
-  chips, **View annotations** and **Done**, and Esc or a click outside the conversation exits. Only the eligible block under the pointer
-  gets the pick cursor; ineligible blocks keep the normal pointer and show neither outline nor label.
+  annotation and opens its editor in a bubble beside the block, so the pick never ends and the right
+  sidebar is left exactly as it was: the bubble carries the seven kind chips and the text box, saving
+  commits it, and an unwritten pick is discarded instead of leaving an empty badge. Clicking a block that
+  already carries an annotation opens that annotation's bubble. The bottom bar only reports **N added**
+  and offers **Done**; Esc or a click outside the conversation exits. Only the eligible block under the
+  pointer gets the pick cursor; ineligible blocks keep the normal pointer and show neither outline nor label.
   The picker stays inside the conversation body, so the composer and turn rail keep their normal cursor
   and click behavior.
 - Annotation bodies are editable on the **Annotations** page: click a row's body to change its kind and
   text inline. The quoted passage stays read-only, the row's leading mark follows the kind picked in the
   editor before saving, and review mode keeps its checkbox and routing flow.
-- Block annotation now picks its kind up front: the picker bar carries the seven kind chips, starts on
-  the kind last used there (initially **Note**), remembers the switch, and stamps the note with it.
+- Consecutive annotations keep their kind: the kind chosen in an annotation bubble becomes the next
+  pick's default, and the picker starts on the kind last used there (initially **Note**).
 - A newly added annotation is revealed without leaving transcript order: the list scrolls it into view,
   gives the row an amber inset accent and a **Just added** label for a few seconds, then returns it to the
   normal row. The order itself never changes, so the marker rather than the position points at the new note.
@@ -35,17 +37,17 @@ All notable changes to this project are documented here. The format follows
   leaving the page's current destination alone and keeping the conversation uncovered. The Annotations
   and Prompts menus lead to the page too, and no longer offer a separate way into the panel. The panel
   remains the fallback surface: on hosts without a right sidebar the cap and those menus still open it.
-  Point-and-click annotation picking reaches the page the same way, so the list no longer opens in the
-  panel on hosts that have a sidebar.
+- Picking an annotation no longer opens the right sidebar. The editor appears in a bubble next to the
+  block, so a pick neither expands the sidebar nor jumps its list into edit mode, and a host without a
+  sidebar picks with the same gesture.
 - The pool mark is redrawn as a queue: three uneven prompt bars, the middle one selected in signal
   green and followed by a chevron, in the composer trigger and the panel's brand row. The mark is
   bars-only at every size, so the 12–20px places (menus, sidebar title) keep their shape instead of
   falling back to a second, smaller drawing; the plugin icon carries the same mark with no tile and
   follows the light and dark scheme.
 - The block picker opens existing block annotations instead of stacking duplicates: clicking a paragraph
-  that already carries a block-level note opens that note in the list editor without touching it or
-  showing a notice (the panel opens on **Annotations** when that list is not visible), while different
-  blocks in the same reply still each get their own note.
+  that already carries a block-level note opens that note's bubble without touching it or showing a
+  notice, while different blocks in the same reply still each get their own note.
 - Prompt rows no longer carry a separate edit icon: clicking the title opens the editor, while duplicate
   and delete stay as row actions. The type badge sits before the title instead of replacing the first line.
 - The annotation delete confirmation now renders inside the page or panel that opened it. Pressing

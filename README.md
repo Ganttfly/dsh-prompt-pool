@@ -17,10 +17,10 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 **Annotate while you read.** Select a passage and add a note right where it belongs, without leaving the
 reply; the original wording stays attached, so the context is easy to follow and no key point slips away.
 Or choose **+ Annotate** in the page header and click any assistant block: an amber outline marks the
-paragraph, list item, heading, quote, code block or table cell before the note lands. The new note opens
-in the annotation list editor; if that list is not visible, the annotations list opens first — in the right
-sidebar when the host has one, otherwise in the panel on **Annotations**.
-Clicking a block that already carries a note opens that note for editing instead of adding another. The
+paragraph, list item, heading, quote, code block or table cell before the note lands. The note's editor
+opens in a bubble beside the block and the pick stays active, so the next paragraph takes one click too;
+the right sidebar keeps whatever state it had.
+Clicking a block that already carries a note opens that note's bubble instead of adding another. The
 **Annotations** page collects the notes for that session — locate a passage, insert one note, or save it as a prompt.
 Click a note's body to edit its kind and text while the quote stays read-only; each kind keeps its own
 vivid color on the badge, the inline chip and the quoted underline. Select notes and choose **Summarize**
@@ -92,7 +92,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   right after the passage with a matching underline. Each kind has its own vivid color, shared by the
   badge, the inline chip and the underline. Picking a kind preselects it in the bubble; without a pick
   new notes start as **Agree**. The block picker starts on the kind last used there (initially
-  **Note**), and its seven kind chips sit in the bottom bar. Add images from the bubble or the page
+  **Note**), and the kind chosen in a bubble becomes the default for the next pick. Add images from the bubble or the page
   editor, or paste them into either body, and the thumbnails stay with the annotation. The badge follows
   the conversation's text size, so it grows with the reading font instead of staying small.
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
@@ -115,11 +115,12 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   composer's **Annotations** menu starts with **+ Annotate**. The pointer turns into a picker only
   over an eligible block: hovering a paragraph, list item, heading, quote, code block or table cell
   in an assistant reply draws an amber outline and a `Paragraph · 42 chars` label. Click to add an
-  empty annotation: its editor opens in the list and the pick ends; if the list is not visible, the
-  annotations list opens first — in the right sidebar when the host has one, otherwise in the panel on
-  **Annotations**. Clicking a block that already has a block-level note opens
-  that note for editing instead of stacking a duplicate. The bottom bar carries the seven kind chips, **View
-  annotations** and **Done**; Esc or a click outside the conversation leaves the mode.
+  annotation and open its editor in a bubble beside the block: the pick keeps running, the right
+  sidebar keeps its current state, and the annotation list is not pulled into edit mode. The bubble
+  carries the seven kind chips and the text box; saving commits it, and closing it without text or
+  images discards the pick instead of leaving an empty badge. Clicking a block that already has a
+  block-level note opens that note's bubble instead of stacking a duplicate. The bottom bar only
+  reports `N added` and offers **Done**; Esc or a click outside the conversation leaves the mode.
   Only assistant replies are accepted; your own messages and image-only or empty blocks are
   refused, and ineligible blocks keep the normal pointer and show no outline or label. The picker
   only covers the conversation body, so the composer, turn rail and the rest of the app stay
@@ -198,8 +199,8 @@ does not turn it on.
 4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 500
    full-width or 1,000 half-width characters, and the badge appears right after the passage. The **Annotate**
    button in the page header (or **+ Annotate** in the composer menu) starts the block picker instead: move
-   over an assistant paragraph and click once; its editor opens in the list, and the panel opens on
-   **Annotations** first if the list is not visible. Esc leaves before you pick. The pool's
+   over an assistant paragraph and click once; its editor opens in a bubble beside the block and the pick
+   keeps running, so clicking the next paragraph adds the next note. Esc leaves before you pick. The pool's
    **Annotations** page
    collects the notes; **Locate** scrolls to a passage, **Insert** writes one note into the composer, and the
    **Save as prompt** icon files one note into a group. Click a note's body to edit its kind and text in place;

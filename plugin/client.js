@@ -266,10 +266,8 @@ window.__ModuleLoader__.load({
       'menu.copyFailed': '复制失败：请按 {shortcut}',
       'note.add': '+ 批注',
       'note.pick.page': '批注',
-      'note.pick.hint': '移到助手回复的段落上点击添加；Esc 退出',
-      'note.pick.kind': '批注类型',
+      'note.pick.hint': '移到段落上点击标注，类型和内容写在气泡里；Esc 退出',
       'note.pick.count': '已添加 {n} 条',
-      'note.pick.undo': '撤销上一条',
       'note.pick.done': '完成',
       'note.pick.anchorFailed': '无法定位这个段落，请换一段试试。',
       'note.pick.meta': '{kind} · {n} 字',
@@ -611,10 +609,8 @@ window.__ModuleLoader__.load({
       'menu.copyFailed': 'Copy failed: press {shortcut}',
       'note.add': '+ Annotate',
       'note.pick.page': 'Annotate',
-      'note.pick.hint': 'Move over a paragraph in the assistant reply and click; Esc to exit',
-      'note.pick.kind': 'Annotation type',
+      'note.pick.hint': 'Move over a paragraph, click to annotate; type and text live in the bubble. Esc to exit',
       'note.pick.count': '{n} added',
-      'note.pick.undo': 'Undo last',
       'note.pick.done': 'Done',
       'note.pick.anchorFailed': 'Could not anchor this block. Try another one.',
       'note.pick.meta': '{kind} · {n} chars',
@@ -5513,7 +5509,6 @@ window.__ModuleLoader__.load({
               ? h(NotesView, {
                   notes: notesList,
                   sessionId: activeSessionId,
-                  surface: 'page',
                   reviewMode: reviewOpen && reviewProcessing,
                   onCompose: composeSessionNotes,
                   onInsertNote: insertNote,
@@ -6469,8 +6464,6 @@ window.__ModuleLoader__.load({
      * transcript order. The record ages out; the list reads it on mount too.
      */
     const NOTE_FRESH_MS = 3200;
-    /** How long a picker request may wait for its surface to mount. */
-    const NOTE_EDIT_REQUEST_MS = 6000;
     const noteFresh = (() => {
       const empty = { id: '', sessionId: '', token: 0, at: 0 };
       if (typeof window === 'undefined') return createStore(empty);
@@ -6671,36 +6664,6 @@ window.__ModuleLoader__.load({
     })();
 
     /**
-     * A picker request to open one annotation in its inline list editor. Both the
-     * page and the panel mount NotesView, so the request names its surface; only
-     * that copy consumes it. The request expires so a closed surface cannot open
-     * a stale editor much later.
-     */
-    const noteEditRequest = (() => {
-      const empty = { id: '', sessionId: '', surface: '', token: 0, at: 0 };
-      if (typeof window === 'undefined') return createStore(empty);
-      if (!window.__dshPromptPoolNoteEditRequestV1) window.__dshPromptPoolNoteEditRequestV1 = createStore(empty);
-      return window.__dshPromptPoolNoteEditRequestV1;
-    })();
-    const noteEditRequestActions = {
-      request(id, sessionId, surface) {
-        if (typeof id !== 'string' || !id || typeof sessionId !== 'string' || !sessionId) return;
-        const target = surface === 'page' ? 'page' : 'panel';
-        noteEditRequest.set({
-          id,
-          sessionId,
-          surface: target,
-          token: (noteEditRequest.get().token || 0) + 1,
-          at: Date.now(),
-        });
-      },
-      clear(token) {
-        if (!token || noteEditRequest.get().token !== token) return;
-        noteEditRequest.set({ id: '', sessionId: '', surface: '', token: 0, at: 0 });
-      },
-    };
-
-    /**
      * Notes unchecked from the bulk draft/save actions. Keeping the excluded
      * ids instead of the picked ones means a new note starts selected, and a
      * session switch starts from "everything selected" without stale picks.
@@ -6829,7 +6792,6 @@ window.__ModuleLoader__.load({
     const useChatView = () => useSyncExternalStore(chatView.subscribe, chatView.get, chatView.get);
     const useNoteDraft = () => useSyncExternalStore(noteDraft.subscribe, noteDraft.get, noteDraft.get);
     const useNoteFocus = () => useSyncExternalStore(noteFocus.subscribe, noteFocus.get, noteFocus.get);
-    const useNoteEditRequest = () => useSyncExternalStore(noteEditRequest.subscribe, noteEditRequest.get, noteEditRequest.get);
     const useNotePrompt = () => useSyncExternalStore(notePrompt.subscribe, notePrompt.get, notePrompt.get);
     const useNoteConfirm = () => useSyncExternalStore(noteConfirm.subscribe, noteConfirm.get, noteConfirm.get);
     const useNoteStatus = () => useSyncExternalStore(noteStatus.subscribe, noteStatus.get, noteStatus.get);
@@ -7698,9 +7660,10 @@ window.__ModuleLoader__.load({
 
     /**
      * The hover picker. It reads the live transcript, keeps its highlight on a
-     * semantic block, and adds an empty annotation when the block is clicked.
-     * The new annotation, or the one already on that block, opens in the list
-     * editor and picking ends so the editor can take focus.
+     * semantic block, and puts the annotation editor right on that block: the
+     * click adds the annotation and opens its bubble, so the type and the text
+     * are chosen where the passage is. Picking stays on, so the next block is
+     * one click away; only Escape or Done leaves it.
      */
     function NotePicker() {
       const pick = useNotePick();
@@ -7712,12 +7675,10 @@ window.__ModuleLoader__.load({
       const boxRef = useRef(null);
       const labelRef = useRef(null);
       const barRef = useRef(null);
-      const lastIdRef = useRef('');
 
       useEffect(() => {
         if (!pick.active || !pick.sessionId) return undefined;
         setCount(0);
-        lastIdRef.current = '';
         const html = document.documentElement;
         html.classList.add('pp-pick-cursor');
         const box = boxRef.current;
@@ -7816,31 +7777,18 @@ window.__ModuleLoader__.load({
           return root && root.contains(flow) ? flow : null;
         };
         /**
-         * Open the annotation in the list and leave picking mode. A picker
-         * started on the annotations page edits in place when that list is
-         * visible; otherwise the sidebar page is opened on annotations, and a
-         * host without one falls back to the composer panel.
+         * Open the annotation's editor on the passage itself. The bubble owns
+         * the type and the text, so the sidebar can stay exactly as it is, and
+         * picking stays on so the next block is one click away.
          */
-        const revealNote = (id) => {
+        const editNote = (id) => {
           if (!id) return;
-          const pageListVisible = typeof document !== 'undefined'
-            && Array.from(document.querySelectorAll('.pp-page .pp-notes')).some((node) => (
-              typeof node.getClientRects === 'function' && node.getClientRects().length > 0
-            ));
-          const onPage = pick.source === 'page' && pageListVisible;
-          const surface = onPage || openPageView('notes', false) ? 'page' : 'panel';
-          if (surface === 'panel') {
-            ui.set({ open: true });
-            try {
-              bridge.request({ type: 'open-view', scope: 'notes', create: false });
-            } catch (_error) {
-              /* the panel reports an unavailable workspace if needed */
-            }
-          }
-          noteEditRequestActions.request(id, pick.sessionId, surface);
-          notePickActions.stop();
+          noteFocus.set({ id, token: Date.now(), edit: true });
         };
         const onDown = (event) => {
+          // The bubble is the editor now: its clicks belong to the editor, not
+          // to the picker, and must never end picking or be cancelled here.
+          if (closestOf(event.target, '.pp-note-layer')) return;
           const flow = flowFor(event.target);
           if (event.button === 2) {
             if (!flow) {
@@ -7859,10 +7807,6 @@ window.__ModuleLoader__.load({
             notePickActions.stop();
             return;
           }
-          if (closestOf(event.target, '.pp-note-layer')) {
-            notePickActions.stop();
-            return;
-          }
           event.preventDefault();
           event.stopPropagation();
           event.stopImmediatePropagation();
@@ -7876,7 +7820,7 @@ window.__ModuleLoader__.load({
           }
           const existing = blockNoteAt(notes.get().items, pick.sessionId, anchor);
           if (existing) {
-            revealNote(existing.id);
+            editNote(existing.id);
             return;
           }
           const id = uid();
@@ -7895,9 +7839,8 @@ window.__ModuleLoader__.load({
             createdAt: now,
             updatedAt: now,
           });
-          lastIdRef.current = id;
           setCount((value) => value + 1);
-          revealNote(id);
+          editNote(id);
         };
         const onClick = (event) => {
           if (Date.now() > suppressClickUntil) return;
@@ -7950,22 +7893,6 @@ window.__ModuleLoader__.load({
       }, [pick.active, pick.sessionId, pick.token]);
 
       if (!pick.active) return null;
-      const undo = () => {
-        const id = lastIdRef.current;
-        if (!id) return;
-        notesActions.remove(id);
-        lastIdRef.current = '';
-        setCount((value) => Math.max(0, value - 1));
-      };
-      const viewAll = () => {
-        ui.set({ open: true });
-        try {
-          bridge.request({ type: 'open-view', scope: 'notes', create: false });
-        } catch (_error) {
-          /* the panel reports an unavailable workspace if needed */
-        }
-        notePickActions.stop();
-      };
       return h(
         React.Fragment,
         null,
@@ -7977,29 +7904,6 @@ window.__ModuleLoader__.load({
           h('span', { className: 'pp-pick-text' }, count > 0
             ? translate('note.pick.count', { n: count })
             : translate('note.pick.hint')),
-          h(
-            'span',
-            { key: 'pick-kinds', className: 'pp-pick-kinds', role: 'group', 'aria-label': translate('note.pick.kind') },
-            NOTE_KINDS.map((kind) => h(
-              'button',
-              {
-                key: kind.id,
-                type: 'button',
-                className: 'pp-pick-kind',
-                'data-active': pickKind === kind.id ? 'true' : 'false',
-                style: { '--pp-kind': kind.color },
-                title: translate(kind.label),
-                'aria-label': translate(kind.label),
-                'aria-pressed': pickKind === kind.id ? 'true' : 'false',
-                onClick: () => poolActions.setSetting('pickKind', kind.id),
-              },
-              icon(kind.icon),
-            )),
-          ),
-          count > 0
-            ? h('button', { type: 'button', className: 'pp-pick-btn', onClick: undo }, translate('note.pick.undo'))
-            : null,
-          h('button', { type: 'button', className: 'pp-pick-btn', onClick: viewAll }, translate('note.menu.view')),
           h('button', { type: 'button', className: 'pp-pick-btn pp-pick-primary', onClick: () => notePickActions.stop() }, translate('note.pick.done')),
         ),
       );
@@ -8015,6 +7919,7 @@ window.__ModuleLoader__.load({
       const savePrompt = useNoteSave();
       const confirm = useNoteConfirm();
       const pool = usePoolState();
+      const pick = useNotePick();
       const [editing, setEditing] = useState(null);
       const [body, setBody] = useState('');
       const [kind, setKind] = useState(NOTE_KIND_DEFAULT);
@@ -8038,6 +7943,22 @@ window.__ModuleLoader__.load({
       const highlightOn = !pool.settings || pool.settings.notesHighlight !== false;
       const highlightRef = useRef(highlightOn);
       highlightRef.current = highlightOn;
+      // A pick may open a second bubble while the first one is still open; the
+      // first one is committed through the latest render's save/cancel so no
+      // keystroke is lost and no empty annotation is left behind.
+      const editingRef = useRef(null);
+      editingRef.current = editing;
+      const bodyRef = useRef('');
+      bodyRef.current = body;
+      const imagesRef = useRef([]);
+      imagesRef.current = images;
+      const saveRef = useRef(null);
+      const cancelRef = useRef(null);
+      const commitEditing = () => {
+        if (!editingRef.current) return;
+        if (String(bodyRef.current || '').trim() || imagesRef.current.length > 0) saveRef.current();
+        else cancelRef.current();
+      };
 
       /**
        * The last visible character of a passage. Trailing whitespace in the
@@ -8249,6 +8170,7 @@ window.__ModuleLoader__.load({
 
       useEffect(() => {
         if (!draft.anchor || (draft.sessionId && draft.sessionId !== sessionId)) return;
+        commitEditing();
         setEditing({ id: '', anchor: draft.anchor, body: '' });
         setBody('');
         setKind(NOTE_KIND_IDS.indexOf(draft.kind) >= 0 ? draft.kind : NOTE_KIND_DEFAULT);
@@ -8305,6 +8227,10 @@ window.__ModuleLoader__.load({
         const wantsEditor = focus.edit === true;
         noteFocus.set({ id: '', token: 0, edit: false });
         if (!note) return;
+        // Clicking the passage that is already being written keeps the text
+        // that is on the way instead of reloading the saved copy.
+        if (wantsEditor && editingRef.current && editingRef.current.id === note.id) return;
+        commitEditing();
         const root = noteChatRoot(sessionId);
         const range = root ? resolveNoteRange(note, root) : null;
       // 定位 means locate: scroll the passage into view (editing is explicit).
@@ -8367,6 +8293,16 @@ window.__ModuleLoader__.load({
       };
 
       const cancelEditing = () => {
+        const current = editing;
+        if (current && current.id) {
+          const note = notesRef.current.find((entry) => entry.id === current.id);
+          // A picked passage that never received text or images is not an
+          // annotation: closing its bubble discards it instead of leaving an
+          // empty badge in the transcript.
+          if (note && !String(note.body || '').trim() && normalizeImages(note.images).length === 0) {
+            notesActions.remove(current.id);
+          }
+        }
         setEditing(null);
         setBody('');
         setImages([]);
@@ -8379,7 +8315,9 @@ window.__ModuleLoader__.load({
         const value = clampNoteBody(body.trim());
         const keptImages = normalizeImages(images);
         if (editing.id) {
-          notesActions.patch(editing.id, { body: value, kind, images: keptImages });
+          const note = notesRef.current.find((entry) => entry.id === editing.id);
+          if (note && !value && keptImages.length === 0) notesActions.remove(editing.id);
+          else notesActions.patch(editing.id, { body: value, kind, images: keptImages });
         } else if (editing.anchor) {
           notesActions.add({
             id: uid(),
@@ -8404,6 +8342,8 @@ window.__ModuleLoader__.load({
         setImages([]);
         setAnchorPoint(null);
       };
+      saveRef.current = save;
+      cancelRef.current = cancelEditing;
 
       const removeEditing = () => {
         if (!editing || !editing.id) return;
@@ -8571,7 +8511,13 @@ window.__ModuleLoader__.load({
                     'data-kind': entry.id,
                     'data-active': kind === entry.id ? 'true' : 'false',
                     style: { '--pp-kind': entry.color },
-                    onClick: () => setKind(entry.id),
+                    onClick: () => {
+                      setKind(entry.id);
+                      // While picking, the type chosen here is the one the next
+                      // passage starts with, so a run of the same kind stays one
+                      // click per passage.
+                      if (pick.active) poolActions.setSetting('pickKind', entry.id);
+                    },
                   },
                   h('span', { className: 'pp-note-kind-icon', 'aria-hidden': true }, icon(entry.icon)),
                   translate(entry.label),
@@ -8662,8 +8608,6 @@ window.__ModuleLoader__.load({
       const selection = useNoteSelection();
       const reviewState = useNoteReview();
       const fresh = useNoteFresh();
-      const editRequest = useNoteEditRequest();
-      const surface = props.surface === 'page' ? 'page' : 'panel';
       const reviewMode = props.reviewMode === true;
       const freshRows = useRef(new Map());
       const [editId, setEditId] = useState('');
@@ -8675,13 +8619,7 @@ window.__ModuleLoader__.load({
       const immediateFor = (note) => noteReviewImmediate(reviewState, note);
       const { preview, openImage, closeImage } = useImagePreview();
       const picked = notesForSelection(list, sessionId, selection);
-      // An annotation opened by the picker must stay visible even when the
-      // current search would otherwise filter it out of the list.
-      const requestedId = editRequest.id && editRequest.sessionId === sessionId && editRequest.surface === surface
-        ? editRequest.id
-        : '';
       const matches = (note) => note.id === editId
-        || note.id === requestedId
         || !filter
         || String(note.quote || '').toLowerCase().indexOf(filter) >= 0
         || String(note.body || '').toLowerCase().indexOf(filter) >= 0
@@ -8762,39 +8700,6 @@ window.__ModuleLoader__.load({
         }
         beginEdit(note);
       };
-
-      /** Scroll a row into view after its editor has replaced the compact row. */
-      const revealRow = (id) => {
-        if (!id) return;
-        const scroll = () => {
-          const row = freshRows.current.get(id);
-          if (row && typeof row.scrollIntoView === 'function') {
-            row.scrollIntoView({ block: 'center', behavior: 'smooth' });
-          }
-        };
-        if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
-          window.requestAnimationFrame(() => window.requestAnimationFrame(scroll));
-        } else {
-          scroll();
-        }
-      };
-
-      // The block picker opens its annotation here. The request names this
-      // surface, so a page and a panel mounted together cannot both start an
-      // editor for the same click.
-      useEffect(() => {
-        if (!editRequest.id || !editRequest.token) return;
-        if (editRequest.sessionId !== sessionId || editRequest.surface !== surface) return;
-        if (Date.now() - editRequest.at > NOTE_EDIT_REQUEST_MS) {
-          noteEditRequestActions.clear(editRequest.token);
-          return;
-        }
-        const note = list.find((entry) => entry.id === editRequest.id);
-        if (!note) return;
-        noteEditRequestActions.clear(editRequest.token);
-        if (editId !== note.id) requestBeginEdit(note);
-        revealRow(note.id);
-      }, [editRequest.token, editRequest.id, editRequest.sessionId, editRequest.surface, editRequest.at, sessionId, surface, list, editId]);
 
       const settleSwitch = (action) => {
         const target = pendingSwitch;
@@ -10950,7 +10855,6 @@ window.__ModuleLoader__.load({
               ? h(NotesView, {
                   notes: notesList,
                   sessionId: notesSessionId,
-                  surface: 'panel',
                   reviewMode: reviewOpen && reviewProcessing,
                   onCompose: composeSessionNotes,
                   onInsertNote: insertNoteText,
@@ -11837,16 +11741,11 @@ window.__ModuleLoader__.load({
       '.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-note-ink-2);cursor:pointer}.pp-note-icon:hover{background:var(--pp-note-hover);color:var(--pp-note-ink)}.pp-note-icon.pp-note-link-danger:hover{color:var(--pp-note-danger)}.pp-note-ask{display:inline-flex;align-items:center;gap:4px;color:var(--pp-note-ink-2);font-size:11px;white-space:nowrap}' +
       'html.pp-pick-cursor .pp-pick-hover,html.pp-pick-cursor .pp-pick-hover *{cursor:url("data:image/svg+xml,%3Csvg%20xmlns=\'http://www.w3.org/2000/svg\'%20width=\'24\'%20height=\'24\'%20viewBox=\'0%200%2024%2024\'%3E%3Cpath%20d=\'M5%203.5h7.5v2H7v6H5z\'%20fill=\'%23d9a441\'%20stroke=\'%23fff\'%20stroke-width=\'1\'/%3E%3Cpath%20d=\'M12%2011v9M7.5%2015.5h9\'%20stroke=\'%23d9a441\'%20stroke-width=\'2\'%20stroke-linecap=\'round\'/%3E%3C/svg%3E") 5 4,crosshair!important}' +
       'html.pp-pick-cursor .pp-pick-bar,html.pp-pick-cursor .pp-pick-bar *{cursor:default!important}' +
-      'html.pp-pick-cursor .pp-pick-btn,html.pp-pick-cursor .pp-pick-kind{cursor:pointer!important}' +
+      'html.pp-pick-cursor .pp-pick-btn{cursor:pointer!important}' +
       '.pp-pick-box{position:fixed;z-index:1;display:none;box-sizing:border-box;border:1.5px solid rgba(217,164,65,.92);border-radius:4px;background:rgba(217,164,65,.09);box-shadow:0 0 0 1px rgba(255,255,255,.35) inset;pointer-events:none}' +
       '.pp-pick-label{position:fixed;z-index:3;display:none;max-width:272px;box-sizing:border-box;padding:2px 6px;border-radius:5px;background:var(--pp-note-accent);color:#fff;font:inherit;font-size:11px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.16)}' +
       '.pp-pick-bar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:4;display:flex;align-items:center;gap:6px;max-width:calc(100vw - 24px);box-sizing:border-box;padding:7px 8px 7px 12px;border:1px solid var(--pp-note-line);border-radius:10px;background:var(--pp-note-surface);box-shadow:0 12px 32px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);color:var(--pp-note-ink);font:inherit;font-size:11px;line-height:1.4;pointer-events:auto;cursor:default}' +
       '.pp-pick-bar .pp-pick-text{flex:1 1 90px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-note-ink-2)}' +
-      '.pp-pick-kinds{display:inline-flex;align-items:center;gap:2px;flex:none}' +
-      '.pp-pick-kind{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:color-mix(in srgb,var(--pp-kind) 76%,var(--pp-note-ink))}' +
-      '.pp-pick-kind svg{width:13px;height:13px;stroke-width:2.1}' +
-      '.pp-pick-kind:hover{background:color-mix(in srgb,var(--pp-kind) 12%,transparent)}' +
-      '.pp-pick-kind[data-active="true"]{border-color:color-mix(in srgb,var(--pp-kind) 52%,transparent);background:color-mix(in srgb,var(--pp-kind) 16%,transparent);color:color-mix(in srgb,var(--pp-kind) 82%,var(--pp-note-ink))}' +
       '.pp-pick-btn{height:24px;padding:0 9px;border:1px solid var(--pp-note-line);border-radius:7px;background:transparent;color:var(--pp-note-ink);font:inherit;font-size:11px;white-space:nowrap;cursor:pointer}' +
       '.pp-pick-btn:hover{background:var(--pp-note-hover)}' +
       '.pp-pick-btn.pp-pick-primary{border-color:transparent;background:var(--pp-note-accent);color:#fff}' +
