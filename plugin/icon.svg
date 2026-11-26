@@ -1,8 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Prompt Pool">
-  <rect x="4" y="4" width="56" height="56" rx="14" fill="#2b6cb0"/>
-  <g transform="translate(3.25 0.75) scale(2.5)" fill="none" stroke="#ffffff" stroke-width="1.44" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M8 4.5h8.2a3.3 3.3 0 0 1 3.3 3.3v8.2"/>
-    <rect x="3.5" y="7.5" width="13" height="13" rx="2.4"/>
-    <path d="M6.75 12h6.4M6.75 15.5h4.4"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="title desc">
+  <title id="title">提示池 Prompt Pool</title>
+  <desc id="desc">三条提示条排成队列，中间一条信号绿被选中，右侧一个 chevron 指向下一格；没有底板，颜色随深浅色模式切换。</desc>
+  <style>
+    .bar { fill: #16211F; opacity: 0.42; }
+    .sel { fill: #D8F36A; stroke: #16211F; stroke-width: 1.6; }
+    .arrow { fill: none; stroke: #16211F; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    @media (prefers-color-scheme: dark) {
+      .bar { fill: #F4EBDD; opacity: 0.55; }
+      .arrow { stroke: #F4EBDD; }
+    }
+  </style>
+  <rect class="bar" x="5.6" y="8.8" width="33.07" height="7.47" rx="3.73"/>
+  <rect class="sel" x="5.6" y="26.93" width="41.07" height="7.47" rx="3.73"/>
+  <rect class="bar" x="5.6" y="45.07" width="22.4" height="7.47" rx="3.73"/>
+  <path class="arrow" d="M53.2 27.9L57.4 30.67L53.2 33.44"/>
 </svg>

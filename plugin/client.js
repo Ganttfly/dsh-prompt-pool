@@ -3715,7 +3715,7 @@ window.__ModuleLoader__.load({
                 ui.set({ open: !ui.get().open });
               },
             },
-            h('span', { className: 'pp-trigger-brand', 'aria-hidden': true }, h(PromptPoolIcon, { size: 16 })),
+            h('span', { className: 'pp-trigger-brand', 'aria-hidden': true }, h(PromptPoolBrandMark, { size: 20 })),
             h('span', { className: 'pp-trigger-label' }, label),
           ),
           h(
@@ -3938,21 +3938,11 @@ window.__ModuleLoader__.load({
     }
 
     // ------------------------------------------------------------ sidebar icon
-    // The same pool mark, reduced to a 24-unit grid. Bubbles and the eye are
-    // dropped below 22px where they turn into specks. Below 22px the fish also
-    // switches to a shorter body with a broad fan tail: the master's thin fork
-    // fills in at 16px, and simply lengthening it turns into a spike.
-    const POOL_ICON_BODY = 'M10.4 0C9.4 -2.6 7.6 -4.7 5.3 -5.9C1.6 -7.7 -3.2 -7.2 -6.4 -4.7C-7.8 -3.6 -8.8 -2.2 -9.4 -0.6L-14.2 -5.0L-12.1 0L-14.2 5.0L-9.4 0.6C-8.8 2.2 -7.8 3.6 -6.4 4.7C-3.2 7.2 1.6 7.7 5.3 5.9C7.6 4.7 9.4 2.6 10.4 0Z';
-    const POOL_ICON_BODY_MICRO = 'M9.8 0C8.8 -2.7 6.8 -4.8 4.2 -5.6C0.8 -6.5 -2.8 -5.4 -5.6 -3.2L-10.8 -6.2L-9.0 0L-10.8 6.2L-5.6 3.2C-2.8 5.4 0.8 6.5 4.2 5.6C6.8 4.8 8.8 2.7 9.8 0Z';
-    const POOL_ICON_EYE = 'M4.4 -3.5a1.3 1.3 0 1 0 0 2.6a1.3 1.3 0 1 0 0-2.6Z';
-    const POOL_ICON_FIN = 'M1.4 -5.8C1.9 -8.4 -0.6 -9.7 -3.8 -8.8C-2.3 -8.0 -1.1 -7.0 -0.4 -5.6Z';
-
+    // Queue Mark on a 24-unit grid: three unequal prompt bars, the middle one
+    // longest and selected. The mark is bars-only at every size; an arrow
+    // collapses into a fast-forward glyph in menus and sidebars.
     function PromptPoolIcon(props) {
       const size = typeof props.size === 'number' && props.size > 0 ? props.size : 18;
-      const micro = size <= 14;
-      const compact = size < 22;
-      const ringWidth = micro ? 2 : compact ? 1.75 : 1.6;
-      const fishScale = micro ? 0.48 : compact ? 0.44 : 0.394;
       return h(
         'svg',
         {
@@ -3963,24 +3953,59 @@ window.__ModuleLoader__.load({
           'aria-hidden': true,
           style: { display: 'block' },
         },
-        h('circle', {
-          cx: 12,
-          cy: 12,
-          r: 9.4,
+        h('rect', { x: 5, y: 5.2, width: 9.2, height: 3, rx: 1.5 }),
+        h('rect', { x: 5, y: 10.5, width: 12.2, height: 3, rx: 1.5 }),
+        h('rect', { x: 5, y: 15.8, width: 7.6, height: 3, rx: 1.5 }),
+      );
+    }
+
+    // Brand mark for the panel header and trigger: three unequal prompt bars
+    // with no tile. The unselected rows are muted rules; the selected row is
+    // slightly longer, signal green, and is followed by a single chevron. Drops
+    // the arrow tail on purpose: at 44px a tail plus a filled head reads as a
+    // play key, while a bare chevron stays a quiet "next / forward" mark. Equal
+    // heights keep the three rows reading as one queue; the longer selected bar
+    // and a hairline outline carry the focus instead of two heavy black blocks.
+    function PromptPoolBrandMark(props) {
+      const size = typeof props.size === 'number' && props.size > 0 ? props.size : 44;
+      const compact = size <= 24;
+      const rowOpacity = compact ? 0.62 : 0.42;
+      const rowHeight = compact ? 2.9 : 2.8;
+      const selectedStroke = compact ? 0.85 : 0.55;
+      const arrowStroke = compact ? 1.6 : 0.9;
+      const bars = [
+        { y: 3.3, width: 12.4, height: rowHeight },
+        { y: 10.1, width: 15.4, height: rowHeight, selected: true },
+        { y: 16.9, width: 8.4, height: rowHeight },
+      ];
+      return h(
+        'svg',
+        { width: size, height: size, viewBox: '0 0 24 24', 'aria-hidden': true, style: { display: 'block' } },
+        bars.map((bar, index) =>
+          h('rect', {
+            key: 'bar-' + index,
+            x: 2.1,
+            y: bar.y,
+            width: bar.width,
+            height: bar.height,
+            rx: bar.height / 2,
+            fill: bar.selected ? '#D8F36A' : 'currentColor',
+            opacity: bar.selected ? 1 : rowOpacity,
+            stroke: bar.selected ? '#16211F' : 'none',
+            strokeWidth: bar.selected ? selectedStroke : 0,
+          }),
+        ),
+        h('path', {
+          // One chevron at every size, no tail. It is a direction mark rather
+          // than a literal "send" glyph; the selected green row above it does
+          // the work of saying which item is current.
+          d: compact ? 'M20 9.8L22 11.5L20 13.2' : 'M19.95 10.46L21.53 11.5L19.95 12.54',
           fill: 'none',
           stroke: 'currentColor',
-          strokeWidth: ringWidth,
+          strokeWidth: arrowStroke,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
         }),
-        h(
-          'g',
-          { transform: 'translate(12.2 12.8) rotate(-15) scale(' + fishScale + ')' },
-          h('path', {
-            d: compact ? POOL_ICON_BODY_MICRO : POOL_ICON_BODY + POOL_ICON_EYE,
-            fill: 'currentColor',
-            fillRule: 'evenodd',
-          }),
-          h('path', { d: POOL_ICON_FIN, fill: 'currentColor' }),
-        ),
       );
     }
 
@@ -10715,7 +10740,7 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'pp-panel-brand' },
-            h('span', { className: 'pp-panel-brand-mark', 'aria-hidden': true }, h(PromptPoolIcon, { size: 16 })),
+            h('span', { className: 'pp-panel-brand-mark', 'aria-hidden': true }, h(PromptPoolBrandMark, { size: 44 })),
             h('span', { className: 'pp-panel-brand-name' }, translate('panel.title')),
             h('span', { className: 'pp-grow' }),
             h(IconButton, {
@@ -10993,8 +11018,8 @@ window.__ModuleLoader__.load({
       '.pp-trigger-bar{display:inline-flex;align-items:center;height:28px;flex:none;border:1px solid color-mix(in srgb,var(--pp-accent) 20%,var(--pp-line));border-radius:9px;background:var(--pp-surface);box-shadow:0 1px 2px rgba(0,0,0,.05);overflow:hidden}' +
       '.pp-trigger-bar .pp-trigger{height:26px;border:0;border-radius:0;padding:0 7px;gap:4px;font-weight:600;color:var(--pp-accent);background:color-mix(in srgb,var(--pp-accent) 7%,transparent)}' +
       '.pp-trigger-label{display:none}' +
-      '.pp-trigger-brand{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:none;border-radius:4px;background:transparent;color:var(--pp-accent)}' +
-      '.pp-trigger-brand svg{width:16px;height:16px}' +
+      '.pp-trigger-brand{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:none;color:var(--pp-ink);background:transparent}' +
+      '.pp-trigger-brand svg{width:20px;height:20px}' +
       '.pp-trigger-bar .pp-trigger:hover{background:color-mix(in srgb,var(--pp-accent) 12%,transparent)}' +
       '.pp-trigger-bar .pp-trigger[data-open="true"]{background:color-mix(in srgb,var(--pp-accent) 15%,transparent)}' +
       '.pp-trigger-action{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 6px;border:0;border-left:1px solid color-mix(in srgb,var(--pp-accent) 14%,var(--pp-line));border-radius:0;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;line-height:1;cursor:pointer;white-space:nowrap;transition:background .14s ease,color .14s ease}' +
@@ -11224,9 +11249,9 @@ window.__ModuleLoader__.load({
       '.pp-page-tabs .pp-scope-bar{flex:none}' +
       '.pp-scope-note{margin-left:auto;min-width:0;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px;line-height:1.3;letter-spacing:.01em}' +
       '.pp-panel-head{flex-direction:column;align-items:stretch;gap:0;padding:0}' +
-      '.pp-panel-brand{display:flex;align-items:center;gap:7px;min-width:0;padding:1px 12px 5px}' +
-      '.pp-panel-brand-mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;border-radius:7px;background:color-mix(in srgb,var(--pp-accent) 9%,transparent);color:var(--pp-accent)}' +
-      '.pp-panel-brand-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;letter-spacing:.01em}' +
+      '.pp-panel-brand{display:flex;align-items:center;gap:6px;min-width:0;padding:3px 12px 7px}' +
+      '.pp-panel-brand-mark{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;color:var(--pp-ink);background:transparent}' +
+      '.pp-panel-brand-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:600;letter-spacing:.01em}' +
       '.pp-panel-headline{display:flex;align-items:center;gap:8px;min-width:0;padding:0 12px 6px;border-bottom:1px solid var(--pp-line);background:transparent}' +
       '.pp-panel-slogan{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px}' +
       '.pp-panel-tools{display:flex;align-items:center;gap:6px;padding:6px 12px}' +

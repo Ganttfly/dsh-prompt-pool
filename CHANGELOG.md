@@ -31,6 +31,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The pool mark is redrawn as a queue: three uneven prompt bars, the middle one selected in signal
+  green and followed by a chevron, in the composer trigger and the panel's brand row. The mark is
+  bars-only at every size, so the 12–20px places (menus, sidebar title) keep their shape instead of
+  falling back to a second, smaller drawing; the plugin icon carries the same mark with no tile and
+  follows the light and dark scheme.
 - The block picker opens existing block annotations instead of stacking duplicates: clicking a paragraph
   that already carries a block-level note opens that note in the list editor without touching it or
   showing a notice (the panel opens on **Annotations** when that list is not visible), while different
