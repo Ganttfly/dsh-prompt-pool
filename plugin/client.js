@@ -3080,17 +3080,7 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-row-actions' },
-          h(
-            'button',
-            {
-              type: 'button',
-              className: 'pp-row-insert',
-              title: translate('row.insert'),
-              onClick: (event) => { event.stopPropagation(); onInsert(item); },
-            },
-            h('span', { className: 'pp-btn-icon', 'aria-hidden': true }, icon('insert')),
-            translate('row.insert'),
-          ),
+          h(RowActionIcon, { name: 'insert', label: translate('row.insert'), onClick: () => onInsert(item) }),
           h(RowActionIcon, { name: 'plus', label: translate('row.select'), onClick: () => onQueue(item) }),
           h(RowActionIcon, { name: 'copy', label: translate('row.duplicate'), onClick: () => poolActions.duplicateItem(item.id) }),
           h(RowActionIcon, { name: 'trash', label: translate('row.delete'), danger: true, onClick: () => onDelete(item) }),
@@ -9381,17 +9371,7 @@ window.__ModuleLoader__.load({
                 : h(
                     'div',
                     { className: 'pp-row-actions' },
-                    h(
-                      'button',
-                      {
-                        type: 'button',
-                        className: 'pp-row-insert',
-                        title: translate('note.insert'),
-                        onClick: (event) => { event.stopPropagation(); insertNote(note); },
-                      },
-                      h('span', { className: 'pp-btn-icon', 'aria-hidden': true }, icon('insert')),
-                      translate('note.insert'),
-                    ),
+                    h(RowActionIcon, { name: 'insert', label: translate('note.insert'), onClick: () => insertNote(note) }),
                     h(RowActionIcon, { name: 'store', label: translate('note.store'), onClick: () => openPrompt({ kind: 'note', note }) }),
                     h(RowActionIcon, { name: 'trash', label: translate('note.delete'), danger: true, onClick: () => setPendingDelete(note.id) }),
                   ),
@@ -11481,11 +11461,6 @@ window.__ModuleLoader__.load({
       '.pp-page-head .pp-prompt-bar{margin:0 -12px;padding:0 12px}' +
       '.pp-prompt-bar .pp-tabscroll{flex:0 1 auto;min-width:0;margin:0;padding:0}' +
       '.pp-prompt-bar .pp-global-bar{margin:0}' +
-      // Row actions stay visible: insert, queue, then edit / copy / delete as icons.
-      '.pp-row-insert{display:inline-flex;align-items:center;gap:4px;height:24px;flex:none;padding:0 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--pp-accent);font:inherit;font-size:11.5px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer}' +
-      '.pp-row-insert:hover{background:color-mix(in srgb,var(--pp-accent) 9%,transparent)}' +
-      '.pp-row-insert:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
-      '.pp-row-insert svg{width:14px;height:14px}' +
       // Settings is a destination, not a dialog tab strip: it gets an explicit
       // way back to the pool and two sections only.
       '.pp-set-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}' +

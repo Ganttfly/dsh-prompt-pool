@@ -41,6 +41,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Row actions read as one set: **Insert** is a 24px icon like queue, copy, store and delete, named by its
+  tooltip instead of an accent-coloured text button sitting among three quiet icons. The two lists lose
+  the odd one out and each row gets about 24px back; nothing about what the actions do changed.
 - The review prompt now opens with its response contract written one instruction per line: answer every
   annotation by kind and keep its ID; respond only, and never modify files or run tasks, unless the item
   carries an 【立即实施…】 marker; when executing, finish that item's answer first, then do exactly what the

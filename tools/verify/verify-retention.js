@@ -106,8 +106,8 @@ const nodes = (node, out) => {
   return out;
 };
 
-const findInsert = (tree) => nodes(tree, []).find((node) => node.type === 'button'
-  && String(node.props && node.props.className || '').indexOf('pp-row-insert') >= 0);
+const findInsert = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function'
+  && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'insert');
 const findQueue = (tree) => nodes(tree, []).find((node) => typeof node.type === 'function'
   && node.type.name === 'RowActionIcon' && node.props && node.props.name === 'plus');
 const findUndo = (tree) => nodes(tree, []).find(
