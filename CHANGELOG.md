@@ -34,6 +34,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- An annotation no longer explains itself in a browser tooltip: hovering the badge holds no native `title`,
+  because the words are the annotation and the bubble says the rest. Clicking the annotated words now opens
+  that annotation's bubble, the same as clicking its badge — the click is mapped back through the caret
+  point, so the highlight needs no wrapper element and the reply's own text keeps its selection and links.
+  A 200 ms grace lets a double-click select words first, and while the picker runs it keeps its own clicks.
 - Both halves of the help card now open with the complaints they answer — a long reply that is hard to read
   with questions, decisions and ideas scattered over it; ideas with nowhere to go, instructions retyped every
   time, multi-step runs that need lining up — and only then say what the feature does and how to get there:

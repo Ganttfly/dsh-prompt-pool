@@ -676,6 +676,19 @@ if (!freshRule || freshRule[1].indexOf('box-shadow:inset 3px 0 0 var(--pp-note-a
 } else if (!/\.pp-notes-fresh\{/.test(source)) fail('the just-added label has no style');
 else console.log('[ok] the newly added annotation gets a temporary accent and label');
 
+// The annotated words are a click target too, and neither the badge nor the
+// passage answers with a browser tooltip any more.
+if (source.indexOf("chip.setAttribute('title'") >= 0) fail('the badge still carries a native tooltip');
+else if (source.indexOf("chip.setAttribute('aria-label', chipLabel)") < 0) fail('the badge lost its accessible name');
+else console.log('[ok] the badge is clickable without a native tooltip');
+if (source.indexOf('document.caretPositionFromPoint') < 0 || source.indexOf('document.caretRangeFromPoint') < 0) {
+  fail('a click on the annotated words cannot be mapped back to its note');
+} else if (source.indexOf('spot.range.comparePoint(caret.node, caret.offset) === 0') < 0) {
+  fail('the passage click does not test whether the caret is inside the note');
+} else if (source.indexOf('spotsRef.current = items.filter((item) => item.id)') < 0) {
+  fail('only saved notes are exposed to the passage click');
+} else console.log('[ok] clicking the annotated words opens its bubble');
+
 for (const failure of failures) console.error('[fail]', failure);
 console.log(failures.length === 0 ? '[ok] annotations live in the prompt pool' : `[fail] ${failures.length} check(s)`);
 if (failures.length > 0) process.exitCode = 1;

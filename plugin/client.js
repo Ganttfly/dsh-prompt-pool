@@ -8029,7 +8029,6 @@ window.__ModuleLoader__.load({
           chip.setAttribute('role', 'button');
           chip.setAttribute('tabindex', '0');
           const chipLabel = shown ? `${translate(meta.label)}：${shown}` : translate(meta.label);
-          chip.setAttribute('title', chipLabel);
           chip.setAttribute('aria-label', chipLabel);
           const icon = document.createElement('span');
           icon.className = 'pp-note-inline-icon';
@@ -8104,6 +8103,10 @@ window.__ModuleLoader__.load({
       const syncRef = useRef(syncChips);
       syncRef.current = syncChips;
       const chipResetRef = useRef('');
+      // The painted passages, kept for the click that has to find its note: the
+      // highlight sits over ordinary text, so only the caret point can say which
+      // annotation a click on the words belongs to.
+      const spotsRef = useRef([]);
 
       const measure = useCallback(() => {
         const list = notesRef.current;
@@ -8114,6 +8117,7 @@ window.__ModuleLoader__.load({
         // its passage until Save.
         if (!root || !noteHighlightActive(list.length, draftNote)) {
           applyNoteHighlights([]);
+          spotsRef.current = [];
           return;
         }
         const items = [];
@@ -8139,6 +8143,9 @@ window.__ModuleLoader__.load({
         }
         if (highlightRef.current) applyNoteHighlights(items);
         else applyNoteHighlights([]);
+        // Saved notes only: a draft without an id opens through its own anchor,
+        // and an empty id would make the click map hit the wrong entry.
+        spotsRef.current = items.filter((item) => item.id);
       }, [sessionId]);
 
       useEffect(() => {
@@ -8322,6 +8329,65 @@ window.__ModuleLoader__.load({
           setAnchorPoint(null);
         }
       };
+
+      /**
+       * The annotated words open the bubble too. The highlight is painted over
+       * the host's own text, so the click is mapped back through the caret point;
+       * the 200 ms grace lets a double-click select words instead of opening.
+       */
+      const openNoteRef = useRef(openNote);
+      openNoteRef.current = openNote;
+      const pickRef = useRef(pick.active);
+      pickRef.current = pick.active;
+      useEffect(() => {
+        if (typeof document === 'undefined') return undefined;
+        const caretAt = (x, y) => {
+          if (typeof document.caretPositionFromPoint === 'function') {
+            const spot = document.caretPositionFromPoint(x, y);
+            return spot && spot.offsetNode ? { node: spot.offsetNode, offset: spot.offset } : null;
+          }
+          if (typeof document.caretRangeFromPoint === 'function') {
+            const range = document.caretRangeFromPoint(x, y);
+            return range ? { node: range.startContainer, offset: range.startOffset } : null;
+          }
+          return null;
+        };
+        let timer = 0;
+        const onClick = (event) => {
+          if (event.defaultPrevented || event.button !== 0) return;
+          if (pickRef.current) return;
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          if (target.closest('.pp-note-inline, .pp-note-layer, .pp-root, a, button, input, textarea, select, [contenteditable="true"]')) return;
+          if (timer) window.clearTimeout(timer);
+          const x = event.clientX;
+          const y = event.clientY;
+          timer = window.setTimeout(() => {
+            timer = 0;
+            const selection = window.getSelection();
+            if (selection && !selection.isCollapsed && String(selection).trim()) return;
+            const caret = caretAt(x, y);
+            if (!caret) return;
+            for (const spot of spotsRef.current) {
+              let inside = false;
+              try {
+                inside = spot.range.comparePoint(caret.node, caret.offset) === 0;
+              } catch (_error) {
+                inside = false;
+              }
+              if (inside) {
+                openNoteRef.current(spot.id);
+                return;
+              }
+            }
+          }, 200);
+        };
+        document.addEventListener('click', onClick);
+        return () => {
+          if (timer) window.clearTimeout(timer);
+          document.removeEventListener('click', onClick);
+        };
+      }, []);
 
       const cancelEditing = () => {
         const current = editing;
