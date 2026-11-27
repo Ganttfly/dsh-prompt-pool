@@ -4065,11 +4065,11 @@ window.__ModuleLoader__.load({
     }
 
     // ------------------------------------------------------------ sidebar icon
-    // The same Queue Mark on a tile: a host tab strip and a menu list draw an
-    // icon in the current text colour, which turns three bars into a black
-    // smudge there. The tile carries the signal green instead, so the mark
-    // stays recognisable at 14px in either theme and cannot be mistaken for a
-    // generic list glyph next to the label.
+    // Three bars with the selected row in signal green: a host tab strip and a
+    // menu list draw an icon in the current text colour, so a bare mark turns
+    // into a black smudge there. The outer rows stay muted ink (they follow the
+    // theme), the middle row keeps the brand green with a hairline outline so it
+    // reads at 14px in either theme and cannot be mistaken for a list glyph.
     function PromptPoolIcon(props) {
       const size = typeof props.size === 'number' && props.size > 0 ? props.size : 18;
       return h(
@@ -4081,10 +4081,18 @@ window.__ModuleLoader__.load({
           'aria-hidden': true,
           style: { display: 'block' },
         },
-        h('rect', { x: 0.5, y: 0.5, width: 23, height: 23, rx: 6, fill: '#D8F36A' }),
-        h('rect', { x: 5.4, y: 5.8, width: 9.2, height: 2.8, rx: 1.4, fill: '#16211F', opacity: 0.82 }),
-        h('rect', { x: 5.4, y: 10.6, width: 12.2, height: 2.8, rx: 1.4, fill: '#16211F' }),
-        h('rect', { x: 5.4, y: 15.4, width: 7.6, height: 2.8, rx: 1.4, fill: '#16211F', opacity: 0.82 }),
+        h('rect', { x: 5.2, y: 4.7, width: 9.4, height: 2.9, rx: 1.45, fill: 'currentColor', opacity: 0.52 }),
+        h('rect', {
+          x: 5.2,
+          y: 10.55,
+          width: 13.4,
+          height: 2.9,
+          rx: 1.45,
+          fill: '#D8F36A',
+          stroke: '#16211F',
+          strokeWidth: 0.9,
+        }),
+        h('rect', { x: 5.2, y: 16.4, width: 7.8, height: 2.9, rx: 1.45, fill: 'currentColor', opacity: 0.52 }),
       );
     }
 
