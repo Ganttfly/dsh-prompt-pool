@@ -46,8 +46,9 @@ All notable changes to this project are documented here. The format follows
   switches to **Prompts** and its own editor opens with the draft already written — the same 【原文】 /
   【批注】 two-line body, no title (one annotation or a reviewed batch), and the images carried over. The review
   card's **Save as prompt** takes the same route: the batch arrives as an untitled draft, written in the same
-  block shape because a stored prompt is read again later, while the sent review keeps its numbered
-  groups and rules. Saving the draft still moves the parked to-dos and clears that review. The sheet stays
+  block shape because a stored prompt is read again later. The review prompt that is sent reads the same
+  way: each item keeps its ID on the first line, then 【原文】 and 【批注】, with the per-kind rules and the
+  immediate-execution markers unchanged. Saving the draft still moves the parked to-dos and clears that review. The sheet stays
   as the fallback (composer-panel hosts, a session without a workspace, or a draft the page is already
   holding, so neither draft is lost). Saving applies the same keep-or-remove rule as before: the annotation
   is marked as filed, or retired when **Keep annotations** is off; cancelling the draft deletes the empty

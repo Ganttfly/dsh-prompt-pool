@@ -715,11 +715,15 @@ else if (blockBody.indexOf("return parts.join('\\n') + end;") < 0) {
   fail('the numbered batch does not indent the note line');
 } else console.log('[ok] one annotation files as 原文 / 批注');
 
-// A reviewed batch filed as a prompt reads the same way, while the sent
-// contract keeps its numbered groups.
+// A reviewed batch filed as a prompt reads the same way, and the prompt it
+// sends keeps each ID on the block's first line.
 if (source.indexOf('const text = composeNotesReply(chosen);') < 0) {
   fail('a filed review keeps the sending contract');
-} else console.log('[ok] a filed review reads as 原文 / 批注 too');
+} else if (source.indexOf('const block = composeNoteBlock(note, 80);') < 0) {
+  fail('the sent review still writes a quote-and-body line');
+} else if (source.indexOf('lines.push(prefix + block.replace(/\\n/g, \'\\n\' + \' \'.repeat(prefix.length)));') < 0) {
+  fail('the sent review does not indent the note under its ID');
+} else console.log('[ok] a filed review and a sent review read as 原文 / 批注');
 
 if (source.indexOf('const text = single ? composeNotePrompt(single) : composeNotesReply(notes);') < 0) {
   fail('saving an annotation as a prompt does not use the two-part text');

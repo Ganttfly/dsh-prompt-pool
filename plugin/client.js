@@ -6898,15 +6898,6 @@ window.__ModuleLoader__.load({
       return text.length > max ? text.slice(0, max) + '…' : text;
     }
 
-    /** The reply a session's annotations produce: numbered, each with its quote. */
-    /** One note as a prompt line, without a number (single-note drafts). */
-    function composeNoteLine(note) {
-      const kind = noteKind(note.kind);
-      const label = translate(kind.label);
-      const body = String(note.body || '').replace(/\s+/g, ' ').trim();
-      return `【${label}】「${noteQuoteText(note.quote)}」${body ? '：' + body : ''}`;
-    }
-
     /** The fixed opener each kind of note gets inside a prompt sentence. */
     const NOTE_PROMPT_LEADS = {
       agree: 'note.prompt.lead.agree',
@@ -7037,13 +7028,17 @@ window.__ModuleLoader__.load({
         lines.push(`【${translate(kind.label)}】`);
         lines.push(translate(REVIEW_GROUP_PROMPTS[kind.id]));
         group.forEach((note, index) => {
-          const quote = noteQuoteText(note.quote, 80);
-          const body = String(note.body || '').replace(/\s+/g, ' ').trim();
+          const head = `${kind.prefix}${index + 1}.`;
           const markerKey = REVIEW_IMMEDIATE_MARKERS[kind.id];
           const mark = immediate.has(note.id) && markerKey
             ? ' ' + translate(markerKey)
             : '';
-          lines.push(`${kind.prefix}${index + 1}.${mark} 「${quote}」${body ? '：' + body : ''}`);
+          // The item keeps its ID for the response, but reads in the same
+          // 【原文】/【批注】 block a filed prompt uses; the note's own line is
+          // indented under the ID so the block stays one unit.
+          const prefix = `${head}${mark} `;
+          const block = composeNoteBlock(note, 80);
+          lines.push(prefix + block.replace(/\n/g, '\n' + ' '.repeat(prefix.length)));
           if (note.context && note.context.trim()) {
             lines.push('  ' + translate(
               note.contextKind === 'question' ? 'note.review.contextQuestion' : 'note.review.context',
