@@ -4616,9 +4616,9 @@ window.__ModuleLoader__.load({
     ];
     const PANEL_SCOPE_ENTRIES = PAGE_SCOPE_ENTRIES.slice(0, 2);
     const PAGE_SCOPE_HINTS = {
-      notes: { text: 'scope.hint.notes', title: 'scope.hint.notes.title' },
-      prompts: { text: 'scope.hint.prompts', title: 'scope.hint.prompts.title' },
-      global: { text: 'scope.hint.global', title: 'scope.hint.global.title' },
+      notes: { label: 'scope.notes', text: 'scope.hint.notes', title: 'scope.hint.notes.title' },
+      prompts: { label: 'scope.prompts', text: 'scope.hint.prompts', title: 'scope.hint.prompts.title' },
+      global: { label: 'scope.global', text: 'scope.hint.global', title: 'scope.hint.global.title' },
     };
 
     function ScopeBar(props) {
@@ -5419,8 +5419,11 @@ window.__ModuleLoader__.load({
             }),
             h('span', {
               className: 'pp-scope-note',
+              'data-scope': activeMode,
               title: translate(PAGE_SCOPE_HINTS[activeMode].title),
-            }, translate(PAGE_SCOPE_HINTS[activeMode].text)),
+            },
+              h('span', { className: 'pp-scope-note-subject' }, translate(PAGE_SCOPE_HINTS[activeMode].label)),
+              h('span', { className: 'pp-scope-note-scope' }, translate(PAGE_SCOPE_HINTS[activeMode].text))),
           ),
           scope === 'global'
             ? h(
@@ -11423,7 +11426,17 @@ window.__ModuleLoader__.load({
       '.pp-page-head{display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0;padding:8px 12px 6px;border-bottom:1px solid var(--pp-line);flex-wrap:nowrap}' +
       '.pp-page-tabs{display:flex;align-items:center;gap:12px;min-width:0}' +
       '.pp-page-tabs .pp-scope-bar{flex:none}' +
-      '.pp-scope-note{margin-left:auto;min-width:0;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pp-ink-2);font-size:11px;line-height:1.3;letter-spacing:.01em}' +
+      // The scope note is still pushed to the right, but it now says whose it
+      // is and wears a frame tinted by the tab it belongs to, so the eye can
+      // tie it back to the active tab across the empty middle of the row.
+      '.pp-scope-note{margin-left:auto;display:inline-flex;align-items:baseline;min-width:0;max-width:62%;height:22px;padding:0 9px;border:1px solid var(--pp-line);border-radius:999px;background:transparent;color:var(--pp-ink-2);font-size:11px;line-height:20px;letter-spacing:.01em;white-space:nowrap;overflow:hidden}' +
+      '.pp-scope-note-subject{flex:none;color:var(--pp-ink-2);opacity:.85}' +
+      '.pp-scope-note-scope{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600}' +
+      '.pp-scope-note-subject + .pp-scope-note-scope::before{content:"·";margin:0 5px;font-weight:400;opacity:.55}' +
+      '.pp-scope-note[data-scope="notes"]{border-color:var(--pp-annotation-line);background:var(--pp-note-wash);color:var(--pp-note-ink)}' +
+      '.pp-scope-note[data-scope="notes"] .pp-scope-note-scope{color:var(--pp-note-ink)}' +
+      '.pp-scope-note[data-scope="prompts"],.pp-scope-note[data-scope="global"]{border-color:var(--pp-accent-line);background:color-mix(in srgb,var(--pp-accent) 6%,transparent);color:var(--pp-accent)}' +
+      '.pp-scope-note[data-scope="prompts"] .pp-scope-note-scope,.pp-scope-note[data-scope="global"] .pp-scope-note-scope{color:var(--pp-accent)}' +
       '.pp-panel-head{flex-direction:column;align-items:stretch;gap:0;padding:0}' +
       '.pp-panel-brand{display:flex;align-items:center;gap:6px;min-width:0;padding:3px 12px 7px}' +
       '.pp-panel-brand-mark{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;color:var(--pp-ink);background:transparent}' +

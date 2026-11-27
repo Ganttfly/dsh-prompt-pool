@@ -41,6 +41,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The scope hint at the end of the destination row says whose scope it is: it now reads **Prompts · This
+  workspace only** instead of a bare phrase floating at the right edge, and the pill it sits in takes its
+  border and tint from the active destination — amber for **Annotations**, blue for **Prompts** and
+  **Shared** — so it ties back to the tab the eye already read. The subject stays in secondary ink and the
+  scope phrase is bold, so the line answers "whose" before "how far", and the full explanation is still one
+  hover away.
 - **Locate** wears a map pin and says **Locate the passage**: the viewfinder corners it drew said
   screenshot or full screen, while the pin is the shape that already means "that spot" — which is what
   the action does, scrolling the transcript back to the annotated words. The pin's centre is filled
