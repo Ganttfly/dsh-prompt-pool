@@ -34,6 +34,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The help card's annotation half now opens with the reader's own complaint — a long reply is hard to read,
+  and the questions, decisions and ideas you raise are scattered across it — before it says what the feature
+  does (annotate in place, fold the marks into one prompt) and how to get there (select words and
+  right-click **Select to annotate**, or press **Continuous** and keep clicking what to annotate).
 - The page header's two primary buttons are lettered, not drawn: the plus glyph is gone from both, so they
   read **Continuous** (连续批注) on the Annotations page and **Add prompt** (添加提示词) on the Prompts
   page instead of "+ Continuous" and "+ Prompt". The plus said what the word already says, and the icon

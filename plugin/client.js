@@ -130,8 +130,8 @@ window.__ModuleLoader__.load({
       'help.title': '提示池怎么用',
       'help.intro': '先标问题，再一次发出；指令存一次，随时复用。',
       'help.notesTitle': '批注',
-      'help.notesWhy': '长回复里多处要改、要问，逐条回复太费事。',
-      'help.notesBody': '选中文字右键「划词批注」\n或点「连续批注」，逐段连点\n气泡里选类型、写内容；Esc 退出\n「汇总批注」把标注合成一条指令',
+      'help.notesWhy': '大段会话内容阅读太费劲？\n疑问、决策、思路等散落各处不好整理？',
+      'help.notesBody': '直接在会话中添加批注，一键汇总成提示词，让交互更高效。\n你可以选中文字后右键「划词批注」，或点「连续批注」启动自动识别功能后，连续点击选中内容为其添加批注。',
       'help.promptsTitle': '提示词',
       'help.promptsWhy': '反复写的指令，每次重敲还容易走样。',
       'help.promptsBody': '存进「提示词」或「共享池」，分好作用域\n「插入」直接放进输入框\n「＋」加入共享队列，按顺序送进输入框',
@@ -480,8 +480,8 @@ window.__ModuleLoader__.load({
       'help.title': 'How the prompt pool works',
       'help.intro': 'Mark what needs work, send once; save an instruction once and reuse it.',
       'help.notesTitle': 'Annotations',
-      'help.notesWhy': 'Many fixes or questions in a long reply? Answering them one by one is slow.',
-      'help.notesBody': 'Right-click a selection to annotate\nOr click “Continuous” for blocks\nPick a type, write; Esc stops\n“Summarize” makes one instruction',
+      'help.notesWhy': 'A long reply hard to read?\nQuestions, decisions and ideas scattered all over?',
+      'help.notesBody': 'Annotate in the conversation and fold the marks into one prompt; it keeps the exchange moving.\nSelect the words and right-click “Select to annotate”, or click “Continuous” to start picking, then keep clicking the content you want annotated.',
       'help.promptsTitle': 'Prompts',
       'help.promptsWhy': 'Retyping a recurring instruction is slow and the wording drifts.',
       'help.promptsBody': 'Save in Prompts or Shared, by scope\n“Insert” puts one in the composer\n“+” queues it; sent in order',
@@ -11190,7 +11190,7 @@ window.__ModuleLoader__.load({
       '.pp-help-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-help-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:none;border-radius:6px;background:color-mix(in srgb,var(--pp-accent) 9%,transparent);color:var(--pp-accent)}' +
       '.pp-help-icon svg{width:14px;height:14px}' +
-      '.pp-help-why{font-size:11.5px;line-height:1.6;color:var(--pp-ink);margin:0}' +
+      '.pp-help-why{font-size:11.5px;line-height:1.6;color:var(--pp-ink);margin:0;white-space:pre-line}' +
       '.pp-help-body{font-size:11.5px;line-height:1.6;color:var(--pp-ink-2);white-space:pre-line;margin:0;padding-top:7px;border-top:1px dashed var(--pp-line)}' +
       '.pp-help-card .pp-modal-actions{margin-top:2px}' +
       // The page header stacks two rows: the three destinations, then the
