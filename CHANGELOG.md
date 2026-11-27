@@ -45,6 +45,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Annotations answer to their own retention switches. **Settings → Annotations** now holds three:
+  keep an annotation after it is inserted into the composer (on by default), after a summary sends it
+  away (off by default, matching the old behaviour), and after it is filed as a prompt. When a switch is
+  off, the inserted or sent marks leave the list and the toast says so with an **Undo** that puts them
+  back; keeping the sent ones also leaves the checked set and the review card untouched.
 - A collapsed family no longer merges its groups into one anonymous list: the family tab stays on the strip
   and its groups appear as chips on a quieter track underneath (**All groups**, then each group with its
   count). A chip narrows the list to that group, **All groups** widens it back, and a new item made while a

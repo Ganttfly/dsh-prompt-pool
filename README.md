@@ -177,7 +177,9 @@ the conversation, so the agent gets a precise instruction and you do not lose th
 - **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
   can reset the built-in set in the current interface language. Edited built-ins can be kept as
   ordinary items; custom items and the queue are left alone.
-- **Settings** — a destination with two sections. **Annotations** holds annotation retention;
+- **Settings** — a destination with two sections. **Annotations** holds three retention switches: an
+  annotation stays after it is inserted into the composer, after a summary carries it away, and after it is
+  filed as a prompt. Insertion keeps the mark by default; sending a summary removes the sent ones by default.
   **Prompts** holds the two post-use retention switches, the built-in prompt reset, and the shared pool's
   group order/display (including whether the **All** tab shows). Settings opens on Annotations.
   Workspaces no longer have their own settings page; save and capture destinations are the current

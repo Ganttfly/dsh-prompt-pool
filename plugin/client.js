@@ -144,6 +144,10 @@ window.__ModuleLoader__.load({
       'settings.open': '提示池设置',
       'settings.tab.notes': '批注',
       'settings.notesIntro': '批注和当前会话绑定，存进提示池的提示词不再跟会话走。',
+      'settings.notesKeepInsert': '插入输入框后，仍旧保留',
+      'settings.notesKeepInsertHint': '关闭后，插入成功的批注会从列表移除；批注高亮和正文里的标记随之消失。',
+      'settings.notesKeepReview': '汇总发送后，仍旧保留',
+      'settings.notesKeepReviewHint': '关闭后，一键汇总发出的批注会从列表移除；整理卡里「停放」到提示词的待办不受影响。',
       'settings.notesKeepStore': '存为提示词后，仍旧保留',
       'settings.notesKeepStoreHint': '关闭后，存成提示词成功的批注会从列表移除。保存步骤不会把会话、原文节点和上下文带进提示词。',
       'settings.table': '全局共享池的分组',
@@ -403,6 +407,7 @@ window.__ModuleLoader__.load({
       'note.prompt.lead.supplement': '补充：',
       'note.prompt.lead.todo': '待办：',
       'note.inserted': '已插入输入框',
+      'note.insertedAndRemoved': '已插入输入框，并从列表移出',
       'note.insertFailed': '输入框暂不可用，稍后再试',
       'note.quoteMissing': '这条批注暂时找不到原文位置（回复可能被折叠或改写了）。',
       'note.kind.comment': '意见',
@@ -508,6 +513,10 @@ window.__ModuleLoader__.load({
       'settings.open': 'Prompt pool settings',
       'settings.tab.notes': 'Annotations',
       'settings.notesIntro': 'Annotations are tied to the session; a prompt filed into the pool is not.',
+      'settings.notesKeepInsert': 'Keep annotations after inserting one into the composer',
+      'settings.notesKeepInsertHint': 'Turned off, an inserted annotation leaves the list with its highlight and its mark in the passage.',
+      'settings.notesKeepReview': 'Keep annotations after a summary is sent',
+      'settings.notesKeepReviewHint': 'Turned off, a sent summary takes its annotations out of the list. To-dos parked into a prompt by the review card stay put.',
       'settings.notesKeepStore': 'Keep annotations after saving as a prompt',
       'settings.notesKeepStoreHint': 'Turned off, annotations leave the list once saved as a prompt. The save step does not copy the session, source node or context into the prompt.',
       'settings.table': 'Groups in the global shared pool',
@@ -766,6 +775,7 @@ window.__ModuleLoader__.load({
       'note.prompt.lead.supplement': 'Adding: ',
       'note.prompt.lead.todo': 'To do: ',
       'note.inserted': 'Inserted into the composer',
+      'note.insertedAndRemoved': 'Inserted, and removed from the list',
       'note.insertFailed': 'The composer is not available; try again',
       'note.quoteMissing': 'This note cannot find its text right now (the reply may be folded or rewritten).',
       'note.kind.comment': 'Note',
@@ -2277,6 +2287,12 @@ window.__ModuleLoader__.load({
         notesHighlight: settings.notesHighlight !== false,
         // Annotations survive Store unless the user opts out.
         noteKeepAfterStore: settings.noteKeepAfterStore !== false,
+        // Same question for the two other ways a mark is used up: inserting it
+        // into the composer, and sending the summarised batch. Insertion keeps
+        // them by default; a sent summary has always taken its marks with it,
+        // so keeping those is the opt-in.
+        noteKeepAfterInsert: settings.noteKeepAfterInsert !== false,
+        noteKeepAfterReview: settings.noteKeepAfterReview === true,
         // The kind the block picker stamps on a new annotation; the picker bar
         // lets the user change it, and the choice carries over next time.
         pickKind: typeof settings.pickKind === 'string' ? settings.pickKind : 'comment',
@@ -3812,7 +3828,7 @@ window.__ModuleLoader__.load({
         setCaptureOpen(false);
         setDomainMenu(null);
         setNotice(null);
-        setKeepNotes(normalizeSettings(pool.settings).noteKeepAfterStore !== false);
+        setKeepNotes(normalizeSettings(pool.settings).noteKeepAfterReview === true);
         setAllowImmediate(false);
         setSummaryError('');
         setSummaryOpen(true);
@@ -5879,6 +5895,10 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'pp-set-group pp-set-card', style: { display: section === 'notes' ? '' : 'none' } },
           h('div', { className: 'pp-hint' }, translate('settings.notesIntro')),
+          check('noteKeepAfterInsert', 'settings.notesKeepInsert', 'settings.notesKeepInsertHint'),
+          h('div', { className: 'pp-set-divider' }),
+          check('noteKeepAfterReview', 'settings.notesKeepReview', 'settings.notesKeepReviewHint'),
+          h('div', { className: 'pp-set-divider' }),
           check('noteKeepAfterStore', 'settings.notesKeepStore', 'settings.notesKeepStoreHint'),
         ),
         h(
@@ -6662,6 +6682,16 @@ window.__ModuleLoader__.load({
           return items.length === state.items.length ? null : { ...state, items };
         });
       },
+      /** Put removed notes back, without marking them as newly added. */
+      restore(notes) {
+        const back = (Array.isArray(notes) ? notes : []).filter((note) => note && note.id);
+        if (back.length === 0) return;
+        mutateNotes((state) => {
+          const known = new Set(state.items.map((note) => note.id));
+          const add = back.filter((note) => !known.has(note.id));
+          return add.length === 0 ? null : { ...state, items: [...state.items, ...add] };
+        });
+      },
       clearSession(sessionId) {
         mutateNotes((state) => {
           const items = state.items.filter((note) => note.sessionId !== sessionId);
@@ -6744,10 +6774,13 @@ window.__ModuleLoader__.load({
       if (document.querySelector('style[data-pp-toast]')) return;
       const style = document.createElement('style');
       style.setAttribute('data-pp-toast', '');
-      style.textContent = '.pp-toast{position:fixed;left:50%;bottom:30px;z-index:2147483000;max-width:min(520px,calc(100vw - 32px));padding:7px 13px;border-radius:8px;background:rgba(24,24,26,.94);color:#fff;font-size:12px;line-height:1.5;box-shadow:0 12px 30px rgba(0,0,0,.28);opacity:0;transform:translate(-50%,8px);transition:opacity .16s ease,transform .16s ease;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-toast[data-show="true"]{opacity:1;transform:translate(-50%,0)}.pp-toast[data-kind="error"]{background:rgba(160,38,38,.95)}';
+      style.textContent = '.pp-toast{position:fixed;left:50%;bottom:30px;z-index:2147483000;max-width:min(520px,calc(100vw - 32px));padding:7px 13px;border-radius:8px;background:rgba(24,24,26,.94);color:#fff;font-size:12px;line-height:1.5;box-shadow:0 12px 30px rgba(0,0,0,.28);opacity:0;transform:translate(-50%,8px);transition:opacity .16s ease,transform .16s ease;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-toast[data-show="true"]{opacity:1;transform:translate(-50%,0)}.pp-toast[data-kind="error"]{background:rgba(160,38,38,.95)}.pp-toast[data-action="true"]{pointer-events:auto}.pp-toast-action{margin-left:9px;padding:0;border:0;background:none;color:#d8f36a;font:inherit;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px}.pp-toast-action:hover{color:#eaffa8}';
       document.head.appendChild(style);
     }
-    function showToast(text, kind) {
+    function hideToast() {
+      if (toastNode) toastNode.removeAttribute('data-show');
+    }
+    function showToast(text, kind, undo) {
       if (typeof document === 'undefined' || !text) return;
       ensureToastStyle();
       if (!toastNode) {
@@ -6756,13 +6789,32 @@ window.__ModuleLoader__.load({
         toastNode.setAttribute('role', 'status');
         document.body.appendChild(toastNode);
       }
-      toastNode.textContent = text;
+      toastNode.textContent = '';
+      toastNode.appendChild(document.createTextNode(text));
+      // An undo rides on the toast itself: the list it restores is often the
+      // surface that just lost the row, so an inline status would be gone too.
+      if (typeof undo === 'function') {
+        const action = document.createElement('button');
+        action.type = 'button';
+        action.className = 'pp-toast-action';
+        action.textContent = translate('status.undo');
+        action.addEventListener('click', () => {
+          hideToast();
+          undo();
+        });
+        toastNode.appendChild(action);
+        toastNode.setAttribute('data-action', 'true');
+      } else {
+        toastNode.removeAttribute('data-action');
+      }
       toastNode.setAttribute('data-kind', kind === 'error' ? 'error' : 'ok');
       toastNode.setAttribute('data-show', 'true');
       window.clearTimeout(toastTimer);
+      // An undo needs long enough to be read and hit; a plain confirmation does not.
+      const dwell = typeof undo === 'function' ? 6500 : kind === 'error' ? 5000 : 2300;
       toastTimer = window.setTimeout(() => {
         if (toastNode) toastNode.removeAttribute('data-show');
-      }, 2300);
+      }, dwell);
     }
 
     /** The session whose transcript is on screen; published by the notes layer. */
@@ -7124,7 +7176,7 @@ window.__ModuleLoader__.load({
       return { sent, parked, immediateIds };
     }
 
-    /** Record the batch and remove its processed notes. */
+    /** Record the batch, then take its processed notes out unless they are kept. */
     function commitReviewBatch(review) {
       const now = Date.now();
       const record = batchesActions.add({
@@ -7141,9 +7193,14 @@ window.__ModuleLoader__.load({
         queuedAt: now,
         state: 'queued',
       });
-      notesActions.removeMany(review.noteIds);
-      deselectNotes(review.sessionId, review.noteIds);
-      resetNoteReview(review.sessionId, review.noteIds);
+      // A sent summary has always taken its marks with it; keeping them is the
+      // opt-in, so the batch log records what was sent either way.
+      const keep = normalizeSettings(pool.get().settings).noteKeepAfterReview === true;
+      if (!keep) {
+        notesActions.removeMany(review.noteIds);
+        deselectNotes(review.sessionId, review.noteIds);
+        resetNoteReview(review.sessionId, review.noteIds);
+      }
       return record;
     }
 
@@ -8949,7 +9006,17 @@ window.__ModuleLoader__.load({
         }
       }, [fresh.id, fresh.token, sessionId]);
 
-      const flash = (text, kind) => showToast(text, kind);
+      const flash = (text, kind, undo) => showToast(text, kind, undo);
+      const keepInserted = normalizeSettings(props.settings).noteKeepAfterInsert !== false;
+      /** An inserted mark leaves the list unless the user keeps them; Undo puts it back. */
+      const retireInserted = (used) => {
+        if (keepInserted) return 0;
+        const gone = (Array.isArray(used) ? used : []).filter((note) => note && note.id);
+        if (gone.length === 0) return 0;
+        notesActions.removeMany(gone.map((note) => note.id));
+        flash(translate('note.insertedAndRemoved'), 'info', () => notesActions.restore(gone));
+        return gone.length;
+      };
 
       const closeEdit = () => {
         setEditId('');
@@ -9030,7 +9097,11 @@ window.__ModuleLoader__.load({
         } catch (_error) {
           ok = false;
         }
-        flash(ok ? translate('note.inserted') : translate('note.insertFailed'), ok ? 'ok' : 'error');
+        if (!ok) {
+          flash(translate('note.insertFailed'), 'error');
+          return;
+        }
+        if (retireInserted(picked) === 0) flash(translate('note.inserted'), 'ok');
       };
 
       const labelOfGroup = (group) => {
@@ -9163,7 +9234,11 @@ window.__ModuleLoader__.load({
         } catch (_error) {
           ok = false;
         }
-        flash(ok ? translate('note.inserted') : translate('note.insertFailed'), ok ? 'ok' : 'error');
+        if (!ok) {
+          flash(translate('note.insertFailed'), 'error');
+          return;
+        }
+        if (retireInserted([note]) === 0) flash(translate('note.inserted'), 'ok');
       };
 
       return h(
