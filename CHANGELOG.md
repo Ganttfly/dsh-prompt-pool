@@ -34,6 +34,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Filing an annotation as a prompt no longer opens a save sheet: when the sidebar page exists, the pool
+  switches to **Prompts** and its own editor opens with the draft already written — the same 【原文】 /
+  【批注】 body, an empty title for one annotation, and the images carried over. The sheet stays as the
+  fallback (composer-panel hosts, or a session without a workspace). Saving the draft applies the same
+  keep-or-remove rule as before: the annotation is marked as filed, or retired when **Keep annotations**
+  is off; cancelling the draft deletes the empty prompt and leaves the annotation untouched. If another
+  prompt is already being edited, the ask is refused with a notice instead of dropping that draft.
 - One annotation filed as a prompt now arrives ready to paste: the title stays empty, and the body is the
   passage under 【原文】 followed by what was written on it under 【批注】, each on its own line. The kind
   stays on the annotation itself — the two labels already separate the evidence from the instruction — and

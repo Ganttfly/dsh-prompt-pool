@@ -707,6 +707,21 @@ if (source.indexOf('const text = single ? composeNotePrompt(single) : composeNot
   fail('saving one annotation still prefills a title');
 } else console.log('[ok] saving one annotation leaves its title empty');
 
+// Filing hands the draft to the pool page when the sidebar is there: the page
+// opens its own editor on it, and saving there retires the annotation by the
+// same keep-or-remove rule the sheet uses.
+if (source.indexOf("openPageView('workspace', true, {") < 0) {
+  fail('filing an annotation does not open the pool page');
+} else if (source.indexOf('noteIds: notes.map((note) => note.id),') < 0) {
+  fail('the page draft does not carry the annotation ids');
+} else if (source.indexOf("const source = editing.source && typeof editing.source === 'object' ? editing.source : null;") < 0) {
+  fail('the page editor forgets which annotation opened it');
+} else if (source.indexOf('if (!keep) notesActions.removeMany(noteIds);') < 0) {
+  fail('the page editor does not retire the filed annotation');
+} else if (source.indexOf('create(target, pageIntentState.draft)') < 0) {
+  fail('the page does not take the draft carried by the ask');
+} else console.log('[ok] filing opens the page with the draft in place');
+
 for (const failure of failures) console.error('[fail]', failure);
 console.log(failures.length === 0 ? '[ok] annotations live in the prompt pool' : `[fail] ${failures.length} check(s)`);
 if (failures.length > 0) process.exitCode = 1;

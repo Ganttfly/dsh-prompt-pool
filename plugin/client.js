@@ -140,6 +140,7 @@ window.__ModuleLoader__.load({
       'status.noWorkspace': '当前会话还没有工作区，无法新建工作区提示词。',
       'status.releaseSent': '已交给输入框，按顺序排队中',
       'status.savedToPool': '已保存',
+      'status.finishEditFirst': '先保存或取消正在编辑的那条提示词，再存这一条。',
       'settings.nav': '提示池',
       'settings.open': '提示池设置',
       'settings.tab.notes': '批注',
@@ -492,6 +493,7 @@ window.__ModuleLoader__.load({
       'status.noWorkspace': 'This session has no workspace yet, so a workspace prompt cannot be created.',
       'status.releaseSent': 'Handed to the composer; queuing in order',
       'status.savedToPool': 'Saved',
+      'status.finishEditFirst': 'Save or cancel the prompt you are editing before filing this one.',
       'settings.nav': 'Prompt pool',
       'settings.open': 'Prompt pool settings',
       'settings.tab.notes': 'Annotations',
@@ -2143,7 +2145,7 @@ window.__ModuleLoader__.load({
      * page act on one ask exactly once.
      */
     const pageIntent = (() => {
-      const initial = { scope: '', create: false, seq: 0 };
+      const initial = { scope: '', create: false, seq: 0, draft: null };
       if (typeof window === 'undefined') return createStore(initial);
       if (!window.__dshPromptPoolPageIntentV1) window.__dshPromptPoolPageIntentV1 = createStore(initial);
       return window.__dshPromptPoolPageIntentV1;
@@ -2164,21 +2166,27 @@ window.__ModuleLoader__.load({
 
     /**
      * Open the pool on the right sidebar. An empty scope leaves the page where
-     * it was; otherwise the page switches to that destination. Returns false
-     * on a host without a right sidebar so the caller can fall back to the
-     * composer panel.
+     * it was; otherwise the page switches to that destination. A draft gives the
+     * add-prompt step its content (an annotation filed as a prompt arrives
+     * written). Returns false on a host without a right sidebar so the caller
+     * can fall back to the composer panel.
      */
-    function openPageView(scope, create) {
+    function openPageView(scope, create, draft) {
       const sidebar = rightSidebar();
       if (!sidebar) return false;
       const seq = (pageIntent.get().seq || 0) + 1;
-      pageIntent.set({ scope: scope || '', create: create === true, seq });
+      pageIntent.set({
+        scope: scope || '',
+        create: create === true,
+        seq,
+        draft: draft && typeof draft === 'object' ? draft : null,
+      });
       try {
         sidebar.openTab(NATIVE_TAB_KIND, {});
         return true;
       } catch (_error) {
         /* a host that refuses the tab falls back to the composer panel */
-        pageIntent.set({ scope: '', create: false, seq: seq + 1 });
+        pageIntent.set({ scope: '', create: false, seq: seq + 1, draft: null });
         return false;
       }
     }
@@ -2783,6 +2791,18 @@ window.__ModuleLoader__.load({
           type: normalizePromptType(editing.type),
           images: editing.images || [],
         });
+        // A draft opened from an annotation carries that annotation along: on
+        // save it is either marked as filed or retired, by the same rule the
+        // composer's save sheet uses. A cancelled draft leaves it untouched.
+        const source = editing.source && typeof editing.source === 'object' ? editing.source : null;
+        const noteIds = source && Array.isArray(source.noteIds) ? source.noteIds.filter((id) => typeof id === 'string' && id) : [];
+        if (noteIds.length > 0) {
+          const keep = normalizeSettings(pool.get().settings).noteKeepAfterStore !== false;
+          if (!keep) notesActions.removeMany(noteIds);
+          else if (source.markStored === true) {
+            for (const id of noteIds) notesActions.patch(id, { promotedGroup: editing.group, promotedAt: Date.now() });
+          }
+        }
         setEditing(null);
         flash({ kind: 'ok', text: translate('status.savedToPool') });
         return true;
@@ -5261,8 +5281,12 @@ window.__ModuleLoader__.load({
         else flash({ kind: 'ok', text: translate('status.queued') });
       };
 
-      /** The active scope decides the new item's classification. */
-      const create = (targetScope) => {
+      /**
+       * The active scope decides the new item's classification. A seed lets an
+       * opener hand the draft over already written (an annotation filed as a
+       * prompt); `source` rides along so saving can retire that annotation.
+       */
+      const create = (targetScope, seed) => {
         // One editor at a time: a second draft would leave the first one
         // unsaved and counted again.
         if (editing) return;
@@ -5273,6 +5297,7 @@ window.__ModuleLoader__.load({
           flash({ kind: 'error', text: translate('status.noWorkspace') });
           return;
         }
+        const draft = seed && typeof seed === 'object' ? seed : null;
         const group = activeScope === 'workspace'
           ? workspaceGroup
           : groupForTab(activeGlobalTab, '');
@@ -5280,14 +5305,23 @@ window.__ModuleLoader__.load({
         const item = poolActions.add({
           id: uid(),
           group,
-          title: '',
-          body: '',
+          title: draft && typeof draft.title === 'string' ? draft.title : '',
+          body: draft && typeof draft.body === 'string' ? draft.body : '',
           type: '',
-          images: [],
+          images: normalizeImages(draft && draft.images),
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        setEditing({ id: item.id, group, title: '', body: '', type: '', images: [], isNew: true });
+        setEditing({
+          id: item.id,
+          group,
+          title: item.title,
+          body: item.body,
+          type: '',
+          images: normalizeImages(item.images),
+          isNew: true,
+          source: draft && draft.source && typeof draft.source === 'object' ? draft.source : null,
+        });
       };
 
       // An opener outside the page names a destination (and sometimes a new
@@ -5300,10 +5334,13 @@ window.__ModuleLoader__.load({
         pageIntentHandled = pageIntentState.seq;
         const target = pageIntentState.scope;
         if (target === 'notes' || target === 'workspace' || target === 'global') changeScope(target);
-        if (pageIntentState.create) create(target);
+        if (pageIntentState.create) {
+          if (editing) flash({ kind: 'error', text: translate('status.finishEditFirst') });
+          else create(target, pageIntentState.draft);
+        }
         // Keep the seq (it is the ask's identity) but drop the payload, so a
         // later remount or plugin reload finds nothing left to replay.
-        pageIntent.set({ scope: '', create: false, seq: pageIntentState.seq });
+        pageIntent.set({ scope: '', create: false, seq: pageIntentState.seq, draft: null });
       }, [pageIntentState]);
 
       /** Opening another row must not silently drop the current editor. */
@@ -8925,13 +8962,31 @@ window.__ModuleLoader__.load({
         }
         const single = target && target.kind === 'note' && target.note ? target.note : null;
         const text = single ? composeNotePrompt(single) : composeNotesReply(notes);
+        // Filing is an add-to-the-pool act, so on a host with the sidebar page
+        // it lands there: the page's own editor opens with the draft already
+        // written, instead of stacking a sheet over the annotations. The sheet
+        // remains the fallback (composer panel hosts, no workspace).
+        const filed = currentWorkspaceId
+          ? openPageView('workspace', true, {
+            // One annotation is filed without a title: 【原文】 and 【批注】 already
+            // say what the two parts are, and a blank title keeps the prompt
+            // pasteable as it stands. A batch still needs a title to be found
+            // again in the pool.
+            title: single ? '' : draftTitle(text),
+            body: text,
+            images: imagesForNotes(notes),
+            // The annotation retires when the page saves the draft, by the same
+            // rule the sheet uses; cancelling the draft leaves it in place.
+            source: {
+              noteIds: notes.map((note) => note.id),
+              markStored: single !== null,
+            },
+          })
+          : false;
+        if (filed) return;
         openNoteSave({
           noteIds: notes.map((note) => note.id),
           markStored: single !== null,
-          // One annotation is filed without a title: 【原文】 and 【批注】 already
-          // say what the two parts are, and a blank title keeps the prompt
-          // pasteable as it stands. A batch still needs a title to be found
-          // again in the pool.
           title: single ? '' : draftTitle(text),
           body: text,
           images: imagesForNotes(notes),
