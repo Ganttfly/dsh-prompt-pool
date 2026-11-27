@@ -210,7 +210,8 @@ does not turn it on.
    **Save as prompt** icon hands that note to the pool's editor (the sidebar switches to **Prompts**
    with the body already written, so only the group and any edits are left). Click a note's body to edit its kind and text in place;
    the quote is read-only. Select notes and choose **Summarize** in the bottom bar to open the review card;
-   check and route the notes in the rows, then use Save as prompt or Send in the status bar. Annotations do
+   check and route the notes in the rows, then use Save as prompt or Send in the status bar — Save as prompt
+   opens the reviewed text in the pool's editor, so the batch is filed like any other prompt. Annotations do
    not enter the send queue.
 5. Add prompts to the send queue with **+**; click the collapsed queue strip to open it, reorder the
    prompts, then send them one by one or switch to **Merge** for a preview.

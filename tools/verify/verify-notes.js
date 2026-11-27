@@ -722,6 +722,18 @@ if (source.indexOf("openPageView('workspace', true, {") < 0) {
   fail('the page does not take the draft carried by the ask');
 } else console.log('[ok] filing opens the page with the draft in place');
 
+// A reviewed batch takes the same route, and neither path fights a draft the
+// page is already holding: it falls back to the sheet, so nothing is lost.
+if (source.indexOf('currentWorkspaceId && !pageDraftOpen') < 0) {
+  fail('filing ignores a page that is already editing');
+} else if (source.indexOf('pageDraftOpen = editing !== null;') < 0) {
+  fail('the page does not publish whether a draft is open');
+} else if (source.indexOf("source: { noteIds: review.noteIds, markStored: false, onSaved: done },") < 0) {
+  fail('the review card does not hand its text to the page');
+} else if (source.indexOf("if (source && typeof source.onSaved === 'function') {") < 0) {
+  fail('the page editor drops the review hand-off');
+} else console.log('[ok] a review and a note both file through the page');
+
 for (const failure of failures) console.error('[fail]', failure);
 console.log(failures.length === 0 ? '[ok] annotations live in the prompt pool' : `[fail] ${failures.length} check(s)`);
 if (failures.length > 0) process.exitCode = 1;

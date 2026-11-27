@@ -2158,6 +2158,9 @@ window.__ModuleLoader__.load({
     /** The ask the page already acted on; a remount must not replay it. */
     let pageIntentHandled = 0;
 
+    /** Whether the page currently has a prompt editor open (a second ask waits). */
+    let pageDraftOpen = false;
+
     /** The right sidebar, once it exists and our page is registered with it. */
     function rightSidebar() {
       const face = rightSidebarFace || serviceOf(pluginCtx, 'sidebarRight');
@@ -2801,6 +2804,14 @@ window.__ModuleLoader__.load({
           if (!keep) notesActions.removeMany(noteIds);
           else if (source.markStored === true) {
             for (const id of noteIds) notesActions.patch(id, { promotedGroup: editing.group, promotedAt: Date.now() });
+          }
+        }
+        // A review that handed its text over still has its own bookkeeping.
+        if (source && typeof source.onSaved === 'function') {
+          try {
+            source.onSaved();
+          } catch (_error) {
+            /* A cleanup failure must not undo the saved prompt. */
           }
         }
         setEditing(null);
@@ -4887,6 +4898,8 @@ window.__ModuleLoader__.load({
       useEffect(() => () => window.clearTimeout(statusTimer.current), []);
       const { editing, setEditing, startEdit, save, cancelEdit, pasteImages } = usePoolEditor(flash);
       const { trayEditing, setTrayEditing, saveTrayEdit, pasteTrayImages } = useTrayEditor(flash);
+      // Openers outside the page ask whether a draft can take their content.
+      pageDraftOpen = editing !== null;
       const countedItems = countPoolItems(state.items, editing);
       const sharedItems = countedItems.filter((item) => {
         const family = familyOf(groupOf(item));
@@ -5208,6 +5221,22 @@ window.__ModuleLoader__.load({
         setReviewOpen(false);
         setReviewProcessing(false);
         setReviewVersion((value) => value + 1);
+        // The reviewed text is already a prompt, so it takes the same route as a
+        // single annotation: the page's editor when it can take it, the sheet
+        // otherwise (no sidebar, no workspace, or a draft already open there).
+        const done = () => {
+          moveReviewTodos({ parkedIds: review.parkedIds });
+          resetNoteReview(activeSessionId, review.noteIds);
+        };
+        const filed = currentWorkspaceId && !pageDraftOpen
+          ? openPageView('workspace', true, {
+            title: draftTitle(review.text),
+            body: review.text,
+            images: review.images,
+            source: { noteIds: review.noteIds, markStored: false, onSaved: done },
+          })
+          : false;
+        if (filed) return { ok: true };
         openNoteSave({
           noteIds: review.noteIds,
           markStored: false,
@@ -5216,10 +5245,7 @@ window.__ModuleLoader__.load({
           images: review.images,
           choices: ordered,
           defaultGroup: preferred,
-          onSaved: () => {
-            moveReviewTodos({ parkedIds: review.parkedIds });
-            resetNoteReview(activeSessionId, review.noteIds);
-          },
+          onSaved: done,
         });
         return { ok: true };
       };
@@ -8965,8 +8991,9 @@ window.__ModuleLoader__.load({
         // Filing is an add-to-the-pool act, so on a host with the sidebar page
         // it lands there: the page's own editor opens with the draft already
         // written, instead of stacking a sheet over the annotations. The sheet
-        // remains the fallback (composer panel hosts, no workspace).
-        const filed = currentWorkspaceId
+        // remains the fallback (composer panel hosts, no workspace, or a draft
+        // the page is already holding).
+        const filed = currentWorkspaceId && !pageDraftOpen
           ? openPageView('workspace', true, {
             // One annotation is filed without a title: 【原文】 and 【批注】 already
             // say what the two parts are, and a blank title keeps the prompt
