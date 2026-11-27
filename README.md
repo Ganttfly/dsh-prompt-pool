@@ -15,7 +15,7 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 ![Annotate passages inline and review them on the pool's Annotations page](docs/images/annotations-overview.png)
 
 **Annotate while you read, two ways.** Right-click a selection and choose **Select to annotate** for a
-note pinned to those exact words, or choose **+ Continuous** and click any assistant block: an amber
+note pinned to those exact words, or choose **Continuous** and click any assistant block: an amber
 outline marks the paragraph, list item, heading, quote, code block or table cell before the note lands,
 and the pick stays active so the next block takes one click too. The original wording stays attached,
 so the context is easy to follow and no key point slips away. The note's editor opens in a bubble
@@ -112,7 +112,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   Saved notes keep a green marker; notes are stored per session, survive reloads, and are not shown in
   another session.
 - **Point at a block** — the **Annotations** page header carries a **Continuous** button, and the
-  composer's **Annotations** menu starts with **+ Continuous**. The pointer turns into a picker only
+  composer's **Annotations** menu starts with **Continuous**. The pointer turns into a picker only
   over an eligible block: hovering a paragraph, list item, heading, quote, code block or table cell
   in an assistant reply draws an amber outline and a `Paragraph · 42 chars` label. Click to add an
   annotation and open its editor in a bubble beside the block: the pick keeps running, the right

@@ -19,7 +19,7 @@ The pool keeps the draft, the next action and the exact wording next to the conv
   search, **Insert / + / ⋯** row actions and a shared send queue that only appears in Prompts mode
 - Right-click on selected conversation text to copy it or save it into a group (the last destination leads the menu)
 - Annotate while you read, two ways: right-click a selection and pick a kind (**Select to annotate**) to keep
-  notes on the exact passage, or start **+ Continuous** and click block after block (new notes default to Agree);
+  notes on the exact passage, or start **Continuous** and click block after block (new notes default to Agree);
   both open the editor bubble in place, keep images with the note, and collect them in the current-session page;
   **Summarize** at the bottom turns the selected notes into one numbered instruction in the amber review card,
   not the prompt queue
