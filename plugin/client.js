@@ -79,7 +79,7 @@ window.__ModuleLoader__.load({
     const ZH = {
       'button.label': '提示池',
       'tip.pool': '打开提示池，开启与AI高效协作模式',
-      'tip.notes': '连续批注：在大段会话中随手提问题、定决策，一键汇总成提示词',
+      'tip.notes': '在大段会话中随手提问题、定决策，一键汇总成提示词',
       'tip.noteCount': '此会话已标注{n}条批注',
       'tip.prompts': '随时记录需求、灵感和指令；提前编排多步骤指令队列，一键发送。',
       'panel.title': '提示池',
@@ -428,7 +428,7 @@ window.__ModuleLoader__.load({
     const EN = {
       'button.label': 'Prompt pool',
       'tip.pool': 'Open the prompt pool and work with the model in flow',
-      'tip.notes': 'Continuous annotations: ask and decide while reading a long reply; fold it into one prompt',
+      'tip.notes': 'Ask and decide while reading a long reply; fold it into one prompt',
       'tip.noteCount': '{n} annotations in this session',
       'tip.prompts': 'Keep needs, ideas and instructions; queue multi-step prompts and send them in one go',
       'panel.title': 'Prompt pool',
