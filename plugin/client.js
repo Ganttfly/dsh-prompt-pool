@@ -127,7 +127,7 @@ window.__ModuleLoader__.load({
       'page.noMatch': '没有匹配的条目。',
       'help.open': '使用说明',
       'help.title': '提示池怎么用',
-      'help.intro': '先标问题，再一次发出；指令存一次，随时复用。',
+      'help.intro': '提示池专注于提升与AI的交互体验，\n帮你抓住会话中的关键点，为下一次对话高效组织提示词。',
       'help.notesTitle': '批注',
       'help.notesWhy': '大段会话内容阅读太费劲？\n疑问、决策、思路等散落各处不好整理？',
       'help.notesBody': '直接在会话中添加批注，一键汇总成提示词，让交互更高效。\n你可以选中文字后右键「划词批注」，或点「连续批注」启动自动识别功能后，连续点击选中内容为其添加批注。',
@@ -488,7 +488,7 @@ window.__ModuleLoader__.load({
       'page.noMatch': 'No matching item.',
       'help.open': 'How it works',
       'help.title': 'How the prompt pool works',
-      'help.intro': 'Mark what needs work, send once; save an instruction once and reuse it.',
+      'help.intro': 'The prompt pool exists for better exchanges with the model:\ncatch what matters in a conversation, and have the next prompt ready.',
       'help.notesTitle': 'Annotations',
       'help.notesWhy': 'A long reply hard to read?\nQuestions, decisions and ideas scattered all over?',
       'help.notesBody': 'Annotate in the conversation and fold the marks into one prompt; it keeps the exchange moving.\nSelect the words and right-click “Select to annotate”, or click “Continuous” to start picking, then keep clicking the content you want annotated.',
@@ -11381,7 +11381,7 @@ window.__ModuleLoader__.load({
       '.pp-help-card{max-width:540px;gap:12px}' +
       '.pp-help{display:flex;flex-direction:column;gap:10px}' +
       '.pp-help-title{font-size:15px;font-weight:600;line-height:1.35}' +
-      '.pp-help-intro{font-size:12px;line-height:1.65;color:var(--pp-ink-2)}' +
+      '.pp-help-intro{font-size:12px;line-height:1.65;color:var(--pp-ink-2);white-space:pre-line}' +
       '.pp-help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}' +
       '.pp-help-col{display:flex;flex-direction:column;gap:6px;padding:10px 11px;border:1px solid var(--pp-line);border-radius:10px;background:color-mix(in srgb,var(--pp-surface) 65%,transparent)}' +
       '.pp-help-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +

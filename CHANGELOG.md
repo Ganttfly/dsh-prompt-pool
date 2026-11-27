@@ -45,6 +45,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The help card opens with what the pool is for instead of a slogan: it now says the pool is built for
+  better exchanges with the model — catch what matters in a conversation, and have the next prompt ready —
+  in two lines that break at the comma, so the promise reads before the two halves explain it.
 - The scope hint at the end of the destination row says whose scope it is: it now reads **Prompts · This
   workspace only** instead of a bare phrase floating at the right edge, and the pill it sits in takes its
   border and tint from the active destination — amber for **Annotations**, blue for **Prompts** and
