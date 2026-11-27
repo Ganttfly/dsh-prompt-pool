@@ -78,6 +78,7 @@ window.__ModuleLoader__.load({
     // ---------------------------------------------------------------- locale
     const ZH = {
       'button.label': '提示池',
+      'button.open': '打开提示池',
       'panel.title': '提示池',
       'panel.close': '关闭',
       'panel.capture': '保存当前输入',
@@ -421,6 +422,7 @@ window.__ModuleLoader__.load({
 
     const EN = {
       'button.label': 'Prompt pool',
+      'button.open': 'Open the prompt pool',
       'panel.title': 'Prompt pool',
       'panel.close': 'Close',
       'panel.capture': 'Save current input',
@@ -3576,6 +3578,8 @@ window.__ModuleLoader__.load({
       const barRef = useRef(null);
       const noticeTimer = useRef(0);
       const label = translate('button.label');
+      // The cap reads as the pool's name; its tooltip names the action.
+      const openLabel = translate('button.open');
 
       useEffect(() => () => {
         if (noticeTimer.current) clearTimeout(noticeTimer.current);
@@ -3755,7 +3759,7 @@ window.__ModuleLoader__.load({
               className: 'pp-btn pp-trigger',
               'data-open': view.open ? 'true' : 'false',
               disabled: release.active,
-              title: label,
+              title: openLabel,
               'aria-label': label,
               'aria-haspopup': 'dialog',
               'aria-expanded': view.open ? 'true' : 'false',

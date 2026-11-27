@@ -210,7 +210,8 @@ walkTree(triggerEntry.component({}), (node) => triggerNodes.push(node));
 const trigger = triggerNodes.find((node) => node.type === 'button' && hasClass(node, 'pp-trigger'));
 const triggerBrand = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-trigger-brand'));
 const triggerLabel = Boolean(trigger && triggerBrand
-  && (trigger.props['aria-label'] === 'button.label' || trigger.props.title === 'button.label'));
+  && trigger.props['aria-label'] === 'button.label'
+  && trigger.props.title === 'button.open');
 const triggerBadge = triggerNodes.some((node) => node.type === 'span' && hasClass(node, 'pp-badge'));
 const triggerCount = triggerNodes.find((node) => node.type === 'span' && hasClass(node, 'pp-trigger-count'));
 const hasAnnotationCount = triggerCount && triggerCount.children[0] === '1';
