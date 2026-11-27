@@ -341,6 +341,7 @@ window.__ModuleLoader__.load({
       'note.review.stale': '批注已变更，点「刷新」更新提示词。',
       'note.review.nothingSelected': '还没有勾选批注；在上方列表勾选后再生成提示词。',
       'note.review.selectAll': '全选',
+      'note.review.cancel': '取消',
       'note.review.clearAll': '清空选择',
       'note.review.select': '选择此批注',
       'note.review.parkAction': '存入提示池',
@@ -702,6 +703,7 @@ window.__ModuleLoader__.load({
       'note.review.stale': 'Annotations changed; press Refresh to update the prompt.',
       'note.review.nothingSelected': 'No annotations checked; check some rows above to generate a prompt.',
       'note.review.selectAll': 'Select all',
+      'note.review.cancel': 'Cancel',
       'note.review.clearAll': 'Clear',
       'note.review.select': 'Select this annotation',
       'note.review.parkAction': 'Save to prompt pool',
@@ -9540,6 +9542,15 @@ window.__ModuleLoader__.load({
                         onClick: props.onClearSelection,
                       }, translate('note.review.clearAll')),
                     ),
+                    // Leaving the summary touches nothing: the card closes and
+                    // the checkboxes go back to being plain rows.
+                    h('button', {
+                      key: 'cancel',
+                      type: 'button',
+                      className: 'pp-note-link pp-review-select-link pp-review-cancel',
+                      disabled: busy,
+                      onClick: () => { if (!busy) props.onClose(); },
+                    }, translate('note.review.cancel')),
                     sentNotes.length > 0
                       ? h('button', {
                           key: 'save',
@@ -11909,6 +11920,8 @@ window.__ModuleLoader__.load({
       '.pp-review-dock .pp-review-secondary:hover{border-color:color-mix(in srgb,var(--pp-summary-accent) 35%,var(--pp-line-2))}' +
       '.pp-review-dock .pp-review-select-link{color:var(--pp-summary-accent);text-decoration-color:color-mix(in srgb,var(--pp-summary-accent) 45%,transparent)}' +
       '.pp-review-dock .pp-review-select-link:hover{color:var(--pp-ink);text-decoration-color:currentColor}' +
+      '.pp-review-dock .pp-review-cancel{color:var(--pp-ink-2);margin-left:2px}' +
+      '.pp-review-dock .pp-review-cancel:hover{color:var(--pp-ink)}' +
       '.pp-review-dock .pp-review-refresh{color:var(--pp-summary-accent)}' +
       '.pp-review-dock .pp-review-stale{color:var(--pp-summary-accent)}' +
       '.pp-review-dock .pp-review-grip:hover .pp-grip-bar,.pp-review-dock .pp-review-grip:active .pp-grip-bar{background:var(--pp-summary-accent)}' +

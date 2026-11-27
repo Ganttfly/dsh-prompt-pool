@@ -111,7 +111,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   while Insert / Save as prompt / Delete hide. The card is the prompt composer: preview and edit the
   prompt, use the Refresh link, then Save as prompt or Send from the status bar. The prompt keeps each ID
   (Agree-1, Question-2, …) and then reads as 【原文】 / 【批注】 blocks with the kind's fixed words, so a sent
-  review and a filed prompt share one shape. Select all / Clear sit
+  review and a filed prompt share one shape. Select all / Clear and **Cancel** sit
   in the same status bar, so the list has no banner above it. Short quotes get an optional
   complete-sentence/question line in the prompt only (never in the annotation list), and it is omitted
   when incomplete or redundant. The review card uses the annotation amber; the prompt destinations and

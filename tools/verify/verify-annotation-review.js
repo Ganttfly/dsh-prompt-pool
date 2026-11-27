@@ -329,6 +329,24 @@ const check = (ok, label) => {
   notesTree = renderNotes(tree);
   check(reviewChecks(notesTree).length === 4, 'pressing Summarize enters summary mode');
 
+  // Cancel leaves summary mode and collapses the card without touching a note.
+  cardTree = renderCard(tree);
+  const cancel = byText(cardTree, 'note.review.cancel');
+  check(Boolean(cancel), 'summary mode offers a way out');
+  if (cancel) cancel.props.onClick();
+  tree = renderPanel();
+  notesTree = renderNotes(tree);
+  check(reviewChecks(notesTree).length === 0, 'cancelling leaves summary mode');
+  check(Boolean(findStrip(tree)), 'cancelling collapses the card');
+  check(notesStore().get().items.length === 4 && inserted.length === 0 && poolStore().get().tray.length === 0,
+    'cancelling leaves every note and queue alone');
+  const again = byText(tree, 'note.review.open');
+  check(Boolean(again), 'the strip offers Summarize again');
+  if (again) again.props.onClick();
+  tree = renderPanel();
+  notesTree = renderNotes(tree);
+  check(reviewChecks(notesTree).length === 4, 'summarize starts again after cancelling');
+
   const grip = nodes(tree).find((node) => String(node.props && node.props.className || '').indexOf('pp-review-grip') >= 0);
   check(Boolean(grip), 'the review card has a height grip');
   if (grip) {
