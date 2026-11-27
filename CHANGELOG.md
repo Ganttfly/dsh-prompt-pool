@@ -41,6 +41,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The **Settings** glyph is a real cog again: the two sliders it wore read as a mixer beside the help
+  question mark, and a gear is the shape that needs no tooltip to be recognised.
 - Row actions read as one set: **Insert** is a 24px icon like queue, copy, store and delete, named by its
   tooltip instead of an accent-coloured text button sitting among three quiet icons. The two lists lose
   the odd one out and each row gets about 24px back; nothing about what the actions do changed.

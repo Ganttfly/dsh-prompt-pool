@@ -3479,10 +3479,11 @@ window.__ModuleLoader__.load({
             h('circle', { cx: 8.5, cy: 9, r: 1.5 }),
             h('path', { d: 'M4.5 17l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5' }));
         case 'gear':
+          // A real cog: one closed outline with eight teeth and a round hub. The
+          // two sliders it replaced read as a mixer, not settings.
           return h('svg', base,
-            h('path', { d: 'M4 7h8M16 7h4M4 17h4M12 17h8' }),
-            h('circle', { cx: 14, cy: 7, r: 2 }),
-            h('circle', { cx: 10, cy: 17, r: 2 }));
+            h('path', { d: 'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z' }),
+            h('circle', { cx: 12, cy: 12, r: 3.1 }));
         case 'store':
           return h('svg', base,
             h('path', { d: 'M5 4h9l5 5v11H5z' }),
