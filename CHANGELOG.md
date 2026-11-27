@@ -34,6 +34,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The page header's two primary buttons are lettered, not drawn: the plus glyph is gone from both, so they
+  read **Continuous** (连续批注) on the Annotations page and **Add prompt** (添加提示词) on the Prompts
+  page instead of "+ Continuous" and "+ Prompt". The plus said what the word already says, and the icon
+  competed with the label for the little space a header button has.
 - The action that copies the composer text into the pool is called **Save draft** (保存草稿) again — in the
   composer's Prompts menu and on the page header's icon — after a stretch as *Save current input*. The name
   now matches what it produces: a pool draft, which the save step then files under a group. It still copies;

@@ -223,7 +223,7 @@ window.__ModuleLoader__.load({
       'row.familyWorkspace': '工作区分组',
       'tab.familyBuiltin': '内置分组',
       'row.classification': '分组',
-      'page.new': '提示词',
+      'page.new': '添加提示词',
 
       'row.noCategory': '未分组',
       'tray.title': '待发送队列',
@@ -573,7 +573,7 @@ window.__ModuleLoader__.load({
       'row.familyWorkspace': 'Workspace groups',
       'tab.familyBuiltin': 'Built-in groups',
       'row.classification': 'Group',
-      'page.new': 'Prompt',
+      'page.new': 'Add prompt',
 
       'row.noCategory': 'Ungrouped',
       'tray.title': 'Send queue',
@@ -5425,11 +5425,8 @@ window.__ModuleLoader__.load({
                     setSettingsOpen(false);
                     notePickActions.start(activeSessionId, 'page');
                   },
-                },
-                  h('span', { className: 'pp-btn-icon' }, icon('plus')),
-                  translate('note.pick.page'))
+                }, translate('note.pick.page'))
               : h('button', { type: 'button', className: 'pp-primary pp-new-prompt', onClick: create },
-                  h('span', { className: 'pp-btn-icon' }, icon('plus')),
                   translate('page.new')),
             h('button', {
               type: 'button',
@@ -10810,8 +10807,7 @@ window.__ModuleLoader__.load({
             scope === 'notes'
               ? null
               : h('button', { type: 'button', className: 'pp-primary pp-new-prompt', onClick: newItem },
-                  h('span', { className: 'pp-btn-icon' }, icon('plus')),
-                  translate('page.new')),
+                translate('page.new')),
             h('button', {
               type: 'button',
               className: 'pp-icon pp-menu-trigger',
