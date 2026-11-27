@@ -8,7 +8,7 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- Point-and-click annotation. **+ Annotate** in the page header and **+ Annotate** in the composer's
+- Point-and-click annotation. **+ Continuous** in the page header and **+ Continuous** in the composer's
   Annotations menu start a block picker: only assistant replies are eligible, and paragraphs, list items,
   headings, quotes, code blocks and table cells get an amber outline plus a size label. Each click adds an
   annotation and opens its editor in a bubble beside the block, so the pick never ends and the right
@@ -34,6 +34,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The two ways into an annotation now name themselves: **+ Select to annotate** on a selection's right-click
+  menu, and **+ Continuous** on the page header and in the composer's Annotations menu. Both end in the same
+  bubble with the same seven kinds; the names say where the note lands — on the words you selected, or on the
+  block you clicked while the pick keeps running. The pick bar, the page's picker button and the help card
+  use the same pair.
 - The **How the prompt pool works** card now leads with the problem each half solves — many remarks in a
   long reply, retyping a recurring instruction — and lists the matching steps underneath: mark in place
   and fold the marks into one instruction, or save once and insert or queue it.

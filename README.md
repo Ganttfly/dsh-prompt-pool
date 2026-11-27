@@ -14,12 +14,12 @@ It sits in two places: a trigger beside the composer, and a page in the right si
 
 ![Annotate passages inline and review them on the pool's Annotations page](docs/images/annotations-overview.png)
 
-**Annotate while you read.** Select a passage and add a note right where it belongs, without leaving the
-reply; the original wording stays attached, so the context is easy to follow and no key point slips away.
-Or choose **+ Annotate** in the page header and click any assistant block: an amber outline marks the
-paragraph, list item, heading, quote, code block or table cell before the note lands. The note's editor
-opens in a bubble beside the block and the pick stays active, so the next paragraph takes one click too;
-the right sidebar keeps whatever state it had.
+**Annotate while you read, two ways.** Right-click a selection and choose **Select to annotate** for a
+note pinned to those exact words, or choose **+ Continuous** and click any assistant block: an amber
+outline marks the paragraph, list item, heading, quote, code block or table cell before the note lands,
+and the pick stays active so the next block takes one click too. The original wording stays attached,
+so the context is easy to follow and no key point slips away. The note's editor opens in a bubble
+beside the block; the right sidebar keeps whatever state it had.
 Clicking a block that already carries a note opens that note's bubble instead of adding another. The
 **Annotations** page collects the notes for that session — locate a passage, insert one note, or save it as a prompt.
 Click a note's body to edit its kind and text while the quote stays read-only; each kind keeps its own
@@ -86,7 +86,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   prompt and its image attachments before handing one numbered message to the session queue; the images
   are shown as thumbnails outside the editable text and travel as attachments. There is no second subset
   selection. Annotations are reviewed and sent from the Annotations page instead.
-- **Annotate while you read** — select a passage in an assistant reply and right-click **Annotate**:
+- **Annotate while you read** — select a passage in an assistant reply and right-click **Select to annotate**:
   pick a kind from its submenu (note / question / agree / disagree / idea / additional info / to-do), type up to 500
   full-width or 1,000 half-width characters (or leave it empty for a glyph-only badge), and the badge lands
   right after the passage with a matching underline. Each kind has its own vivid color, shared by the
@@ -111,8 +111,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   and single annotations have no direct-send control.
   Saved notes keep a green marker; notes are stored per session, survive reloads, and are not shown in
   another session.
-- **Point at a block** — the **Annotations** page header carries an **Annotate** button, and the
-  composer's **Annotations** menu starts with **+ Annotate**. The pointer turns into a picker only
+- **Point at a block** — the **Annotations** page header carries a **Continuous** button, and the
+  composer's **Annotations** menu starts with **+ Continuous**. The pointer turns into a picker only
   over an eligible block: hovering a paragraph, list item, heading, quote, code block or table cell
   in an assistant reply draws an amber outline and a `Paragraph · 42 chars` label. Click to add an
   annotation and open its editor in a bubble beside the block: the pick keeps running, the right

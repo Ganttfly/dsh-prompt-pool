@@ -237,8 +237,8 @@ else {
 }
 
 const noAnchorMenu = renderMenu(menuEntry, '没有锚点的文字');
-if (!rowsOf(noAnchorMenu).some((row) => labelOf(row) === 'note.add')) fail('the +批注 row disappears without a captured anchor');
-else console.log('[ok] the +批注 row stays visible without a captured anchor');
+if (!rowsOf(noAnchorMenu).some((row) => labelOf(row) === 'note.addSel')) fail('the +划词批注 row disappears without a captured anchor');
+else console.log('[ok] the +划词批注 row stays visible without a captured anchor');
 
 const custom = rows.find((row) => labelOf(row) === '分组甲');
 if (custom) {  custom.props.onClick();
@@ -295,7 +295,7 @@ global.document = {
   querySelectorAll: () => [],
 };
 const anchorMenu = renderMenu(menuEntry, selectionText);
-const noteRow = rowsOf(anchorMenu).find((row) => labelOf(row) === 'note.add');
+const noteRow = rowsOf(anchorMenu).find((row) => labelOf(row) === 'note.addSel');
 if (!noteRow) fail('the Annotate row is missing for an assistant selection');
 else {
   noteRow.props.onClick();
@@ -344,7 +344,7 @@ const reloaded = boot();
 const reloadedMenu = findMenu(reloaded);
 if (!reloadedMenu) fail('the menu was not registered after a reload');
 else {
-  const reloadedRows = openGroups(reloadedMenu, '第二段文字').rows.filter((row) => labelOf(row) !== 'menu.copy' && labelOf(row) !== 'menu.pool' && labelOf(row) !== 'note.add');
+  const reloadedRows = openGroups(reloadedMenu, '第二段文字').rows.filter((row) => labelOf(row) !== 'menu.copy' && labelOf(row) !== 'menu.pool' && labelOf(row) !== 'note.addSel');
   if (reloadedRows.length === 0) fail('the reloaded menu rendered no rows');
   else {
     if (labelOf(reloadedRows[0]) !== '分组甲') fail(`the remembered group did not lead the reloaded menu: ${labelOf(reloadedRows[0])}`);
