@@ -41,6 +41,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The review prompt now opens with its response contract written one instruction per line: answer every
+  annotation by kind and keep its ID; respond only, and never modify files or run tasks, unless the item
+  carries an 【立即实施…】 marker; when executing, finish that item's answer first, then do exactly what the
+  annotation asks and report the result, and hold the work with a stated reason whenever a condition is
+  unmet or anything else blocks it; when a quote is only an option or an incomplete fragment, read it
+  against the full text of the previous reply, and ask instead of guessing if it still does not settle;
+  and answer the annotations themselves — brief, well ordered and easy to follow.
 - The pool's tab icon sits on a signal-green tile instead of being painted in the current text colour: a
   tab strip and a menu list draw an icon in the host's ink, which turned the bare queue mark into three
   black bars that read as a generic list glyph beside the label. The header's **Save draft** action also
