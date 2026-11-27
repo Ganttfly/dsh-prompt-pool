@@ -34,6 +34,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Both ways of filing a prompt now say **Add prompt** (添加提示词): the selection menu's **+ Prompt**
+  row drops its plus and the composer's Prompts menu renames **New prompt** to match, so the row reads
+  the same whichever surface you start from. The row still opens the save step; the prompt is created
+  there, not by the menu.
 - The composer's **Annotations** and **Prompts** menus open as plain text lists: the
   **提示池 · 批注** / **提示池 · 提示词** header row is gone, since the trigger above already names the
   domain, and the rows no longer carry leading glyphs — the three annotation rows repeated one and the same
