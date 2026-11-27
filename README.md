@@ -98,7 +98,10 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
   losing the point in a separate scratchpad; click the badge to edit. **Annotations** page always
   exists: **Locate** scrolls to the passage, **Insert** writes one note into the composer, and
-  the **Save as prompt** icon opens a confirmation step for the title, body, images and target group.
+  the **Save as prompt** icon opens that note in the pool's own editor: the sidebar switches to
+  **Prompts** with the body written, so only the group and any last edits are left. A host with no
+  sidebar (the composer panel) still gets the standalone confirmation step for title, body, images
+  and target group.
   The page's bottom bar shows the selected count and **Summarize**; it opens the review card, which sits
   at the bottom like the send queue, collapses to a strip, and can be resized by dragging its top edge
   (double-click to reset). Rows gain checkboxes, immediate execution and to-do routing; Locate stays,
@@ -204,7 +207,8 @@ does not turn it on.
    keeps running, so clicking the next paragraph adds the next note. Esc leaves before you pick. The pool's
    **Annotations** page
    collects the notes; **Locate** scrolls to a passage, **Insert** writes one note into the composer, and the
-   **Save as prompt** icon files one note into a group. Click a note's body to edit its kind and text in place;
+   **Save as prompt** icon hands that note to the pool's editor (the sidebar switches to **Prompts**
+   with the body already written, so only the group and any edits are left). Click a note's body to edit its kind and text in place;
    the quote is read-only. Select notes and choose **Summarize** in the bottom bar to open the review card;
    check and route the notes in the rows, then use Save as prompt or Send in the status bar. Annotations do
    not enter the send queue.

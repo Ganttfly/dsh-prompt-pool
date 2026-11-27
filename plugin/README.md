@@ -25,10 +25,12 @@ The pool keeps the draft, the next action and the exact wording next to the conv
   not the prompt queue
 - Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback) with
   **Annotations** and **Prompts** (**Current workspace** / **Global shared pool**); the page header carries help,
-  **Save current input** and **Settings**, and the page opens on Annotations
+  **Save draft** and **Settings**, and the page opens on Annotations
 - Single prompt type per item (decision / question / opinion / idea / supplement / to-do / inspiration), seeded
   from the annotation kind and editable in the save step
-- A save step for title, body, images, type and destination, with a reminder that the conversation context is not kept
+- A save step for title, body, images, type and destination, with a reminder that the conversation context is not kept:
+  the pool page opens its own editor for an annotation, and hosts without a sidebar (composer panel) get the
+  standalone sheet
 - Global shared pool keeps the built-in, custom and display-mode group tabs; workspace prompts use type filters
 - Settings is a separate destination with **Annotations** (retention) and **Prompts** (group order/display,
   built-in reset, post-insert/queue retention, plugin info) sections
