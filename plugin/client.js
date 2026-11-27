@@ -143,7 +143,7 @@ window.__ModuleLoader__.load({
       'settings.nav': '提示池',
       'settings.open': '提示池设置',
       'settings.tab.notes': '批注',
-      'settings.notesIntro': '批注和当前会话绑定。\n在正文中添加的批注同时也会出现在提示池的【批注】页面，可以存为提示词、直接插入输入框，或点「汇总批注」生成预览提示词后发送到会话队列。',
+      'settings.notesIntro': '批注和当前会话绑定，存进提示池的提示词不再跟会话走。',
       'settings.notesKeepStore': '存为提示词后，仍旧保留',
       'settings.notesKeepStoreHint': '关闭后，存成提示词成功的批注会从列表移除。保存步骤不会把会话、原文节点和上下文带进提示词。',
       'settings.table': '全局共享池的分组',
@@ -161,7 +161,7 @@ window.__ModuleLoader__.load({
       'settings.mode.hidden': '隐藏',
       'settings.tab.prompts': '提示词',
       'settings.back': '返回提示池',
-      'settings.keep': '用过之后，条目留在池子里吗',
+      'settings.keep': '用过之后',
       'settings.keepInsert': '插入输入框后，仍旧保留在池子中',
       'settings.keepInsertHint': '关闭后，插入成功的条目会从池子移出；提示条上的「撤销」可以恢复。',
       'settings.keepQueue': '加入待发送队列后，仍旧保留在池子中',
@@ -504,7 +504,7 @@ window.__ModuleLoader__.load({
       'settings.nav': 'Prompt pool',
       'settings.open': 'Prompt pool settings',
       'settings.tab.notes': 'Annotations',
-      'settings.notesIntro': 'Annotations are bound to the current session.\nAnnotations added in the transcript also appear in the prompt pool\'s Annotations tab; they can be saved as a prompt, inserted into the composer, or reviewed and sent to the session queue.',
+      'settings.notesIntro': 'Annotations are tied to the session; a prompt filed into the pool is not.',
       'settings.notesKeepStore': 'Keep annotations after saving as a prompt',
       'settings.notesKeepStoreHint': 'Turned off, annotations leave the list once saved as a prompt. The save step does not copy the session, source node or context into the prompt.',
       'settings.table': 'Groups in the global shared pool',
@@ -522,7 +522,7 @@ window.__ModuleLoader__.load({
       'settings.mode.hidden': 'Hidden',
       'settings.tab.prompts': 'Prompts',
       'settings.back': 'Back to prompt pool',
-      'settings.keep': 'What happens to an item once it is used',
+      'settings.keep': 'After use',
       'settings.keepInsert': 'Keep it in the pool after inserting it into the composer',
       'settings.keepInsertHint': 'Turned off, an inserted item leaves the pool; the toast offers an undo.',
       'settings.keepQueue': 'Keep it in the pool after adding it to the send queue',
@@ -5694,7 +5694,7 @@ window.__ModuleLoader__.load({
       const state = usePoolState();
       const settings = normalizeSettings(state.settings);
       const [section, setSection] = useState('notes');
-      const [tabBarRef, tabIndicator] = useTabIndicator(section, 'ink');
+      const [tabBarRef, tabIndicator] = useTabIndicator(section, section === 'notes' ? 'notes' : 'accent');
       const [seedKeepEdited, setSeedKeepEdited] = useState(true);
       const [seedConfirm, setSeedConfirm] = useState(false);
       const [seedStatus, setSeedStatus] = useState('');
@@ -5741,17 +5741,18 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-set-head' },
-          props.onBack
-            ? h(
-                'button',
-                { type: 'button', className: 'pp-set-back', onClick: props.onBack },
-                h('span', { className: 'pp-btn-icon', 'aria-hidden': true }, icon('back')),
-                translate('settings.back'),
-              )
-            : null,
           h(
             'div',
             { className: 'pp-set-heading' },
+            // The way back reads as a caption for the title, not a peer of it.
+            props.onBack
+              ? h(
+                  'button',
+                  { type: 'button', className: 'pp-set-back', onClick: props.onBack },
+                  h('span', { className: 'pp-btn-icon', 'aria-hidden': true }, icon('back')),
+                  translate('settings.back'),
+                )
+              : null,
             h('div', { className: 'pp-set-title' }, translate('settings.title')),
             h('div', { className: 'pp-hint' }, translate('settings.desc')),
           ),
@@ -5783,6 +5784,7 @@ window.__ModuleLoader__.load({
               'aria-selected': section === 'notes' ? 'true' : 'false',
               tabIndex: section === 'notes' ? 0 : -1,
               'data-active': section === 'notes' ? 'true' : 'false',
+              'data-scope': 'notes',
               onClick: () => setSection('notes'),
             },
             h('span', { className: 'pp-tab-icon', 'aria-hidden': true }, icon('annotation')),
@@ -5797,6 +5799,7 @@ window.__ModuleLoader__.load({
               'aria-selected': section === 'prompts' ? 'true' : 'false',
               tabIndex: section === 'prompts' ? 0 : -1,
               'data-active': section === 'prompts' ? 'true' : 'false',
+              'data-scope': 'prompts',
               onClick: () => setSection('prompts'),
             },
             h('span', { className: 'pp-tab-icon', 'aria-hidden': true }, icon('prompt')),
@@ -5806,7 +5809,7 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-set-group pp-set-card', style: { display: section === 'notes' ? '' : 'none' } },
-          h('div', { className: 'pp-hint pp-set-intro' }, translate('settings.notesIntro')),
+          h('div', { className: 'pp-hint' }, translate('settings.notesIntro')),
           check('noteKeepAfterStore', 'settings.notesKeepStore', 'settings.notesKeepStoreHint'),
         ),
         h(
@@ -5935,18 +5938,17 @@ window.__ModuleLoader__.load({
             ),
           ),
         ),
-        // Always visible, whichever tab is open: who made this and what it needs.
+        // Always visible, whichever tab is open. The header above already says
+        // what this plugin is and does, so the card carries only the credits.
         h(
           'div',
           { className: 'pp-set-group pp-set-card pp-about' },
-          h('div', { className: 'pp-set-label' }, translate('settings.about')),
           h(
             'div',
-            { className: 'pp-about-name' },
-            translate('settings.title'),
+            { className: 'pp-set-label' },
+            translate('settings.about'),
             h('span', { className: 'pp-about-version' }, 'v' + PLUGIN_VERSION),
           ),
-          h('div', { className: 'pp-hint pp-about-desc' }, translate('tab.description')),
           h(
             'div',
             { className: 'pp-about-row' },
@@ -11335,7 +11337,6 @@ window.__ModuleLoader__.load({
       // pre-measurement fallback and steps aside once the rule has a position.
       '.pp-tab-indicator{position:absolute;z-index:1;height:3px;border-radius:999px;background:var(--pp-accent);pointer-events:none;transition:left .2s cubic-bezier(.2,.7,.2,1),width .2s cubic-bezier(.2,.7,.2,1)}' +
       '.pp-tab-indicator[data-tone="notes"]{background:var(--pp-note-line)}' +
-      '.pp-tab-indicator[data-tone="ink"]{background:color-mix(in srgb,var(--pp-ink) 40%,transparent)}' +
       '.pp-scope-bar[data-indicator="true"] .pp-tab[data-active="true"]{border-bottom-color:transparent}' +
       // The group tabs stay on one line: the viewport scrolls sideways, the row
       // keeps its natural width, and the masks fade only the side that hides tabs.
@@ -11361,12 +11362,14 @@ window.__ModuleLoader__.load({
       // The track already groups the tabs; the block separators would dangle at
       // the end of a wrapped row, so they are dropped inside it.
       '.pp-global-bar .pp-tab-sep{display:none}' +
-      // Settings tabs use the same sliding rule in a neutral ink tone, so the
-      // page and its settings dialog share one underline behaviour.
+      // Settings tabs borrow the page's two destination themes, so the amber
+      // and the prompt blue mean the same thing in both places.
       '.pp-set-tabs{position:relative;gap:0}' +
       '.pp-set-tabs .pp-tab{height:28px;padding:0 4px;margin-right:20px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent}' +
       '.pp-set-tabs .pp-tab:hover{background:transparent;color:var(--pp-ink)}' +
-      '.pp-set-tabs .pp-tab[data-active="true"]{background:transparent;border-bottom-color:color-mix(in srgb,var(--pp-ink) 40%,transparent);color:var(--pp-ink);font-weight:600}' +
+      '.pp-set-tabs .pp-tab[data-active="true"]{background:transparent;color:var(--pp-ink);font-weight:600}' +
+      '.pp-set-tabs .pp-tab[data-scope="notes"][data-active="true"]{border-bottom-color:var(--pp-note-line);color:var(--pp-note-ink)}' +
+      '.pp-set-tabs .pp-tab[data-scope="prompts"][data-active="true"]{border-bottom-color:var(--pp-accent);color:var(--pp-accent)}' +
       '.pp-set-tabs[data-indicator="true"] .pp-tab[data-active="true"]{border-bottom-color:transparent}' +
       '.pp-select{height:26px;min-width:170px;max-width:100%;padding:0 8px;border:1px solid var(--pp-line);border-radius:7px;background:var(--pp-surface);color:var(--pp-ink);font:inherit;font-size:12px}' +
       // Settings replaces the whole pool surface: the header, context row and group
@@ -11408,23 +11411,20 @@ window.__ModuleLoader__.load({
       '.pp-prompt-bar .pp-tabscroll{flex:0 1 auto;min-width:0;margin:0;padding:0}' +
       '.pp-prompt-bar .pp-global-bar{margin:0}' +
       // Settings is a destination, not a dialog tab strip: it gets an explicit
-      // way back to the pool and two sections only.
-      '.pp-set-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}' +
-      '.pp-set-back{display:inline-flex;align-items:center;gap:4px;height:26px;flex:none;margin-top:-2px;padding:0 8px;border:1px solid var(--pp-line);border-radius:7px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11.5px;cursor:pointer}' +
-      '.pp-set-back:hover{background:var(--pp-hover);color:var(--pp-ink)}' +
-      '.pp-set-back:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
-      '.pp-set-back svg{width:14px;height:14px}' +
-      '.pp-set-heading{flex:1;min-width:0}' +
+      // way back to the pool, set above the title like a breadcrumb, and two
+      // sections only.
+      '.pp-set-head{display:block;margin-bottom:14px}' +
+      '.pp-set-back{display:inline-flex;align-items:center;gap:3px;margin:0 0 5px;padding:0;border:0;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11.5px;line-height:1.3;cursor:pointer}' +
+      '.pp-set-back:hover{color:var(--pp-ink);text-decoration:underline;text-underline-offset:2px}' +
+      '.pp-set-back:focus-visible{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:2px;border-radius:4px}' +
+      '.pp-set-back svg{width:13px;height:13px}' +
+      '.pp-set-heading{min-width:0}' +
       // The page uses the full width of its host: rows, footer and queue share
       // the same 12px gutter as the header instead of a fixed reading column.
       '.pp-page .pp-page-foot{width:calc(100% - 24px);box-sizing:border-box;margin-left:auto;margin-right:auto;box-shadow:none}' +
       '.pp-page-item{min-height:44px;box-sizing:border-box;padding:5px 8px;border-radius:8px}' +
       '.pp-title{font-size:13px;font-weight:600;line-height:1.35}' +
       '.pp-icon svg,.pp-row-action svg{width:16px;height:16px}' +
-      '.pp-set-intro{white-space:pre-line}' +
-      '.pp-set-radios{display:flex;flex-direction:column;gap:4px;padding:2px 0 4px}' +
-      '.pp-set-radio-row{display:flex;align-items:center;gap:10px}' +
-      '.pp-set-radio{display:inline-flex;align-items:center;gap:6px;cursor:pointer}' +
       '.pp-tab-addwrap{display:inline-flex;align-items:center}' +
       '.pp-tab-sep{flex:none;width:1px;height:14px;margin:0 6px;background:color-mix(in srgb,var(--pp-ink-2) 40%,transparent)}' +
       // A closable group tab is one button plus a sibling close button, laid
@@ -11505,17 +11505,10 @@ window.__ModuleLoader__.load({
         '.pp-set-td-order{display:flex;justify-content:center;gap:4px}' +
         '.pp-set-divider{height:1px;background:var(--pp-line-2);margin:14px 0 12px}' +
       '.pp-about{margin-top:14px}' +
-      '.pp-about-name{display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:600;color:var(--pp-ink)}' +
-      '.pp-about-version{font-size:11px;font-weight:400;color:var(--pp-ink-2);font-variant-numeric:tabular-nums}' +
-      '.pp-about-desc{margin:4px 0 8px}' +
+      '.pp-about-version{margin-left:6px;font-size:11px;font-weight:400;color:var(--pp-ink-2);font-variant-numeric:tabular-nums}' +
       '.pp-about-row{display:flex;gap:10px;padding:2px 0;font-size:12px;color:var(--pp-ink);min-width:0}' +
       '.pp-about-key{flex:none;width:60px;color:var(--pp-ink-2)}' +
       '.pp-about-row a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-        '.pp-set-ws{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;min-width:0}' +
-        '.pp-set-ws input{margin:0;accent-color:var(--pp-accent);cursor:pointer}' +
-        '.pp-set-ws-name{font-size:12px;color:var(--pp-ink);white-space:nowrap}' +
-        '.pp-set-ws-tag{margin-left:6px;padding:0 5px;border-radius:5px;background:var(--pp-accent-soft);color:var(--pp-accent);font-size:10px}' +
-        '.pp-set-ws-path{margin-left:auto;color:var(--pp-ink-2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px}' +
         '.pp-set-label{font-size:12px;color:var(--pp-ink-2);margin:2px 0 4px}' +
         '.pp-set-note{margin-right:auto;padding:0;line-height:1.4}' +
         '.pp-set-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px}' +

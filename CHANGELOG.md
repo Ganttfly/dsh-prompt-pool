@@ -45,6 +45,18 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The settings page reads as one page with two sections instead of two dialogs: **Back to prompt pool**
+  is now a borderless caption above the title (it used to sit beside it as a peer), its tabs wear the
+  destination they switch to — amber for **Annotations**, blue for **Prompts** — instead of a neutral ink
+  rule, and the annotations note is one line about what leaves the session instead of a paragraph repeating
+  the tour. The **After use** card drops its question from the heading, since the two switches under it
+  already answer it.
+- The plugin card no longer introduces the plugin a second time: the header directly above already names it
+  and says what it does, so the card now carries only the credits — author and repository — with the
+  version beside its heading.
+- Dead settings styles are gone: the radio-group, workspace-row and intro rules outlived their controls by
+  several releases and are deleted, and the plugin card's name/description rules go with the elements they
+  styled.
 - The help card opens with what the pool is for instead of a slogan: it now says the pool is built for
   better exchanges with the model — catch what matters in a conversation, and have the next prompt ready —
   in two lines that break at the comma, so the promise reads before the two halves explain it.

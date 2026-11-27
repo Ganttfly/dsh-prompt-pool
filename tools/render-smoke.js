@@ -231,15 +231,17 @@ const menuDomainTheme = triggerCSS.indexOf('.pp-trigger-menu[data-domain="annota
 console.log(`[check] trigger menu width=${menuMatchesBar} domainTheme=${menuDomainTheme}`);
 if (!menuMatchesBar || !menuDomainTheme) process.exitCode = 1;
 
-// The global pool's group tabs are one neutral segmented control and the
-// settings tabs are neutral underlines; only the scope bar tints its active tab.
+// The global pool's group tabs are one neutral segmented control; the settings
+// tabs are the page's two destination underlines in miniature.
 const tabCSS = source.slice(source.indexOf("'.pp-tab{"), source.indexOf("'.pp-select{"));
 const segmentedTabs = tabCSS.includes('.pp-global-bar{display:inline-flex')
   && tabCSS.includes('.pp-global-bar .pp-tab[data-active="true"]{background:var(--dsw-alias-bg-base,var(--pp-surface))')
   && !/\.pp-global-bar[^{]*\{[^}]*(--pp-global|#0f766e)/.test(tabCSS);
-const underlinedTabs = tabCSS.includes('.pp-set-tabs .pp-tab[data-active="true"]{background:transparent;border-bottom-color:color-mix(in srgb,var(--pp-ink) 40%,transparent)')
+const underlinedTabs = tabCSS.includes('.pp-set-tabs .pp-tab[data-active="true"]{background:transparent;color:var(--pp-ink);font-weight:600}')
+  && tabCSS.includes('.pp-set-tabs .pp-tab[data-scope="notes"][data-active="true"]{border-bottom-color:var(--pp-note-line);color:var(--pp-note-ink)}')
+  && tabCSS.includes('.pp-set-tabs .pp-tab[data-scope="prompts"][data-active="true"]{border-bottom-color:var(--pp-accent);color:var(--pp-accent)}')
   && !/\.pp-tab\[data-group=/.test(tabCSS);
-console.log(`[check] tabs: segmented global=${segmentedTabs} underlined settings=${underlinedTabs}`);
+console.log(`[check] tabs: segmented global=${segmentedTabs} destination settings=${underlinedTabs}`);
 if (!segmentedTabs || !underlinedTabs) process.exitCode = 1;
 
 // The settings page names the plugin and its author.
@@ -253,6 +255,8 @@ const settingsTabsPlain = settingsTabs.length === 2 && settingsTabBar && setting
 console.log(`[check] settings tabs are plain underlines (${settingsTabs.length},bar=${settingsTabBar})=${settingsTabsPlain}`);
 if (!settingsTabsPlain) process.exitCode = 1;
 const aboutName = settingsNodes.some((node) => node.props && String(node.props.className || '').indexOf('pp-about-name') >= 0);
+const aboutDesc = settingsNodes.some((node) => node.props && String(node.props.className || '').indexOf('pp-about-desc') >= 0);
+const aboutVersion = settingsNodes.some((node) => String(node.props && node.props.className || '').indexOf('pp-about-version') >= 0);
 const settingsText = [];
 const collectText = (node) => {
   if (!node || typeof node !== 'object') return;
@@ -269,5 +273,5 @@ const aboutAuthor = settingsText.indexOf('GanttShen') >= 0;
 const aboutRepo = settingsNodes.some(
   (node) => node.type === 'a' && node.props && String(node.props.href || '').indexOf('github.com/') >= 0,
 );
-console.log(`[check] settings about name=${aboutName} author=${aboutAuthor} repo=${aboutRepo}`);
-if (!aboutName || !aboutAuthor || !aboutRepo) process.exitCode = 1;
+console.log(`[check] settings about name=${aboutName} desc=${aboutDesc} version=${aboutVersion} author=${aboutAuthor} repo=${aboutRepo}`);
+if (aboutName || aboutDesc || !aboutVersion || !aboutAuthor || !aboutRepo) process.exitCode = 1;
