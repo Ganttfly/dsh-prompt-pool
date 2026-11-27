@@ -35,7 +35,7 @@ the title opens the editor. Each prompt can carry an optional intent badge — D
 Idea, Supplement, To-do or Inspiration — which leads the title with its own hue. The shared send queue starts
 as a collapsed strip and expands when opened. Switching modes never changes the row styling. The
 panel opens with a brand row — the pool mark, its name, pin and close — and the row beside search carries
-help, **Save current input** and **Settings** directly. The composer trigger is a split bar: the brand cap
+help, **Save draft** and **Settings** directly. The composer trigger is a split bar: the brand cap
 opens the right sidebar page, leaving its destination alone; the **Annotations** menu reviews the session's
 annotations and opens the annotations view; the **Prompts** menu saves the current draft, creates a prompt
 and opens the prompts view. Neither menu offers a separate way into the panel. On hosts without a right
@@ -45,7 +45,7 @@ sidebar the cap and both menus open the panel instead.
 
 The sidebar is the full workbench with three destinations. **Annotations** lists the session's notes;
 **Prompts** holds the current workspace's prompts; **Shared** holds the cross-workspace pool. The page
-header stacks the destinations above the search field and the header actions (help, **Save current input**,
+header stacks the destinations above the search field and the header actions (help, **Save draft**,
 **Settings**); a one-line hint at the right edge of the destination row names the current scope. **Shared**
 puts its built-in and custom group tabs between the two. Select notes and choose
 **Summarize** in the bottom bar to open the review card; workspace prompts go straight to the list. Saving a note as a prompt opens a confirmation step where the
@@ -140,7 +140,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   Both editors measure the body in display cells, capped at 500 full-width or 1,000 half-width
   characters, and show a live count; prompt text also accepts `@` to reference a file. Switching to
   another item with unsaved edits first asks whether to keep editing, discard, or save and switch.
-  Help, **Save current input** and **Settings** sit beside search. Its two modes are **Annotations**
+  Help, **Save draft** and **Settings** sit beside search. Its two modes are **Annotations**
   (current session) and **Prompts** (current workspace); the panel never shows the shared pool.
   A new prompt is not counted until it is saved. Drag its top edge
   to change the height, or its left edge to change the width; pin it to keep it open over the conversation.
@@ -192,7 +192,7 @@ does not turn it on.
 ## Usage
 
 1. Click **提示池 / Prompt pool** beside the composer (or open the sidebar page).
-2. Click **Save current input** in the page or panel header (the icon beside help). It copies the composer
+2. Click **Save draft** in the page or panel header (the icon beside help). It copies the composer
    content — text and image attachments — into the pool. A small popup offers the current workspace and the
    shared-pool groups, and the toast names the destination. The composer keeps its text.
 3. Select text in a conversation and right-click: the menu offers **Copy** and **Add to the prompt

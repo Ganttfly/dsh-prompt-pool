@@ -34,6 +34,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The action that copies the composer text into the pool is called **Save draft** (保存草稿) again — in the
+  composer's Prompts menu and on the page header's icon — after a stretch as *Save current input*. The name
+  now matches what it produces: a pool draft, which the save step then files under a group. It still copies;
+  the composer keeps its text.
 - Both ways of filing a prompt now say **Add prompt** (添加提示词): the selection menu's **+ Prompt**
   row drops its plus and the composer's Prompts menu renames **New prompt** to match, so the row reads
   the same whichever surface you start from. The row still opens the save step; the prompt is created
