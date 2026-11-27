@@ -34,6 +34,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The composer's **Annotations** and **Prompts** menus open as plain text lists: the
+  **提示池 · 批注** / **提示池 · 提示词** header row is gone, since the trigger above already names the
+  domain, and the rows no longer carry leading glyphs — the three annotation rows repeated one and the same
+  mark. The summarize row now reads **Summarize in one click** (一键汇总) and keeps its count badge; its
+  hover text still spells out the rules the generated prompt carries.
 - The two ways into an annotation now name themselves: **Select to annotate** on a selection's right-click
   menu, and **Continuous** on the page header and in the composer's Annotations menu. Both end in the same
   bubble with the same seven kinds; the names say where the note lands — on the words you selected, or on the

@@ -354,6 +354,7 @@ window.__ModuleLoader__.load({
       'note.summary.working': '正在生成…',
       'note.summary.done': '已生成草稿',
       'note.summary.failed': '无法写入输入框，请稍后再试。',
+      'note.menu.summary': '一键汇总',
       'note.menu.view': '查看批注',
       'prompt.menu.save': '保存当前输入',
       'prompt.menu.new': '新建提示词',
@@ -703,6 +704,7 @@ window.__ModuleLoader__.load({
       'note.summary.working': 'Generating…',
       'note.summary.done': 'Draft generated',
       'note.summary.failed': 'Could not write to the composer. Try again later.',
+      'note.menu.summary': 'Summarize in one click',
       'note.menu.view': 'View annotations',
       'prompt.menu.save': 'Save current input',
       'prompt.menu.new': 'New prompt',
@@ -3841,7 +3843,6 @@ window.__ModuleLoader__.load({
                 role: 'menu',
                 'aria-label': label + ' · ' + translate(domainMenu === 'annotations' ? 'scope.notes' : 'scope.prompts'),
               },
-              h('div', { className: 'pp-trigger-menu-title' }, label + ' · ' + translate(domainMenu === 'annotations' ? 'scope.notes' : 'scope.prompts')),
               domainMenu === 'annotations'
                 ? [
                     h('button', {
@@ -3854,7 +3855,6 @@ window.__ModuleLoader__.load({
                         notePickActions.start(sessionId);
                       },
                     },
-                    h('span', { className: 'pp-trigger-menu-mark' }, icon('annotation')),
                     h('span', { className: 'pp-trigger-menu-label' }, translate('note.addPick'))),
                     h('button', {
                       key: 'summary',
@@ -3869,8 +3869,7 @@ window.__ModuleLoader__.load({
                         openSummary();
                       },
                     },
-                    h('span', { className: 'pp-trigger-menu-mark' }, icon('annotation')),
-                    h('span', { className: 'pp-trigger-menu-label' }, translate('note.summary.title')),
+                    h('span', { className: 'pp-trigger-menu-label' }, translate('note.menu.summary')),
                     notes.length > 0 ? h('span', { className: 'pp-trigger-menu-count' }, String(notes.length)) : null),
                     h('button', {
                       key: 'view',
@@ -3879,7 +3878,6 @@ window.__ModuleLoader__.load({
                       className: 'pp-trigger-menu-item',
                       onClick: () => openPoolView('notes', false),
                     },
-                    h('span', { className: 'pp-trigger-menu-mark' }, icon('annotation')),
                     h('span', { className: 'pp-trigger-menu-label' }, translate('note.menu.view'))),
                   ]
                 : [
@@ -3890,7 +3888,6 @@ window.__ModuleLoader__.load({
                       className: 'pp-trigger-menu-item',
                       onClick: () => { void openCaptureMenu(); },
                     },
-                    h('span', { className: 'pp-trigger-menu-mark' }, icon('capture')),
                     h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.save'))),
                     h('button', {
                       key: 'new',
@@ -3899,7 +3896,6 @@ window.__ModuleLoader__.load({
                       className: 'pp-trigger-menu-item',
                       onClick: () => openPoolView('workspace', true),
                     },
-                    h('span', { className: 'pp-trigger-menu-mark' }, icon('plus')),
                     h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.new'))),
                     h('button', {
                       key: 'view',
@@ -3908,7 +3904,6 @@ window.__ModuleLoader__.load({
                       className: 'pp-trigger-menu-item',
                       onClick: () => openPoolView('workspace', false),
                     },
-                    h('span', { className: 'pp-trigger-menu-mark' }, icon('prompt')),
                     h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.view'))),
                   ],
             )
@@ -11081,10 +11076,7 @@ window.__ModuleLoader__.load({
       '.pp-trigger-menu-item{display:flex;align-items:center;gap:7px;width:100%;min-height:32px;box-sizing:border-box;padding:3px 7px;border:0;border-radius:8px;background:transparent;color:var(--pp-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;transition:background .14s ease,color .14s ease}' +
       '.pp-trigger-menu-item:hover:not([disabled]),.pp-trigger-menu-item:focus-visible:not([disabled]){background:var(--pp-menu-soft);color:var(--pp-menu-ink)}' +
       '.pp-trigger-menu-item:focus-visible{outline:2px solid var(--pp-menu-line);outline-offset:-2px}' +
-      '.pp-trigger-menu-item:hover .pp-trigger-menu-mark,.pp-trigger-menu-item:focus-visible .pp-trigger-menu-mark{background:color-mix(in srgb,var(--pp-menu-tint) 15%,transparent);color:var(--pp-menu-ink)}' +
       '.pp-trigger-menu-item[disabled]{opacity:.45;cursor:not-allowed}' +
-      '.pp-trigger-menu-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;height:20px;border-radius:6px;background:color-mix(in srgb,var(--pp-menu-tint) 8%,transparent);color:var(--pp-ink-2);transition:background .14s ease,color .14s ease}' +
-      '.pp-trigger-menu-mark svg{width:14px;height:14px}' +
       '.pp-trigger-menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-trigger-menu-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--pp-menu-tint) 14%,transparent);color:var(--pp-menu-ink);font-size:10px;font-weight:600;line-height:18px;font-variant-numeric:tabular-nums;text-align:center}' +
       '.pp-trigger-notice{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;max-width:min(300px,calc(100vw - 16px));padding:6px 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface-2);color:var(--pp-ink-2);box-shadow:0 8px 24px rgba(0,0,0,.16);font-size:11px;line-height:1.4;pointer-events:none}' +
