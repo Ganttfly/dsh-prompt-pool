@@ -52,8 +52,10 @@ All notable changes to this project are documented here. The format follows
   against the full text of the previous reply, and ask instead of guessing if it still does not settle;
   and answer the annotations themselves — brief, well ordered and easy to follow.
 - The pool's tab icon keeps the queue mark but gives its selected row the signal green (with a hairline
-  outline) while the other two rows stay muted ink: a tab strip and a menu list draw an icon in the host's
-  ink, which turned the bare mark into three black bars that read as a generic list glyph beside the label.
+  outline) while the other two rows stay muted ink, and it now carries the brand's chevron on the right:
+  a tab strip draws an icon in the host's ink, which turned the bare mark into three black bars that read
+  as a generic list glyph beside the label, so the mark wears the same direction arrow as the composer's
+  cap and the tab, the guide entry and the tools list all show one shape.
   The header's **Save draft** action also trades its bookmark for an arrow dropping into an open tray, and
   takes the accent colour, because it is the one header control that writes to the pool while help and
   settings only open a surface.

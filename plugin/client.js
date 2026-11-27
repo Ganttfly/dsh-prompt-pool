@@ -5741,7 +5741,9 @@ window.__ModuleLoader__.load({
       return h(
         'span',
         { style: { display: 'inline-flex', alignItems: 'center', gap: '5px' } },
-        h(PromptPoolIcon, { size: 14 }),
+        // The tab wears the brand mark, chevron included, not the three-bar
+        // stamp: at 14px the bars alone read as a generic list glyph.
+        h(PromptPoolBrandMark, { size: 15 }),
         translate('page.title'),
       );
     }
@@ -12190,7 +12192,7 @@ window.__ModuleLoader__.load({
             id: SIDEBAR_TAB_ID,
             title: () => translate('page.title'),
             description: () => translate('tab.description'),
-            icon: (size) => h(PromptPoolIcon, { size }),
+            icon: (size) => h(PromptPoolBrandMark, { size }),
             order: 80,
             single: true,
             component: (props) => h(PromptPoolPage, props),
@@ -12231,7 +12233,7 @@ window.__ModuleLoader__.load({
                 order: 80,
                 title: () => translate('page.title'),
                 description: () => translate('tab.description'),
-                icon: () => h(PromptPoolIcon, { size: 17 }),
+                icon: () => h(PromptPoolBrandMark, { size: 17 }),
               }],
             }));
             // Only from here on does openTab have a page to land on.
