@@ -125,11 +125,13 @@ window.__ModuleLoader__.load({
       'page.noMatch': '没有匹配的条目。',
       'help.open': '使用说明',
       'help.title': '提示池怎么用',
-      'help.intro': '批注留在对话里，提示词留在库里，要发的先进队列。',
+      'help.intro': '先标问题，再一次发出；指令存一次，随时复用。',
       'help.notesTitle': '批注',
-      'help.notesBody': '选中回复里的一句话，右键「批注」\n在段落旁的气泡里选类型、写内容\n接着点下一段就能连续标，Esc 退出\n底部「汇总批注」合成一条指令',
+      'help.notesWhy': '长回复里多处要改、要问，逐条回复太费事。',
+      'help.notesBody': '选中回复里的一句话，右键「批注」\n气泡里选类型、写内容\n点下一段继续标，Esc 退出\n「汇总批注」把标注合成一条指令',
       'help.promptsTitle': '提示词',
-      'help.promptsBody': '把常用指令存进库里\n「提示词」跟工作区走，「共享池」跨工作区\n「插入」放进输入框\n「＋」加入共享队列，按顺序送进输入框',
+      'help.promptsWhy': '反复写的指令，每次重敲还容易走样。',
+      'help.promptsBody': '存进「提示词」或「共享池」，分好作用域\n「插入」直接放进输入框\n「＋」加入共享队列，按顺序送进输入框',
       'help.close': '知道了',
       'status.noComposer': '没有可用的输入框：请先打开一个对话页签',
       'status.noWorkspace': '当前会话还没有工作区，无法新建工作区提示词。',
@@ -469,11 +471,13 @@ window.__ModuleLoader__.load({
       'page.noMatch': 'No matching item.',
       'help.open': 'How it works',
       'help.title': 'How the prompt pool works',
-      'help.intro': 'Annotations stay in the conversation, prompts stay in the library, and anything to send waits in the queue.',
+      'help.intro': 'Mark what needs work, send once; save an instruction once and reuse it.',
       'help.notesTitle': 'Annotations',
-      'help.notesBody': 'Select a sentence, right-click “Annotate”\nPick a type and write in the bubble beside it\nClick the next paragraph to keep going; Esc stops\n“Summarize” joins them into one instruction',
+      'help.notesWhy': 'Many fixes or questions in a long reply? Answering them one by one is slow.',
+      'help.notesBody': 'Select a sentence, then “Annotate”\nPick a type and write in the bubble\nKeep clicking blocks; Esc stops\n“Summarize” makes one instruction',
       'help.promptsTitle': 'Prompts',
-      'help.promptsBody': 'Keep reusable instructions in the library\nPrompts stay in the workspace; Shared spans all\n“Insert” drops one into the composer\n“+” adds it to the shared queue, sent in order',
+      'help.promptsWhy': 'Retyping a recurring instruction is slow and the wording drifts.',
+      'help.promptsBody': 'Save in Prompts or Shared, by scope\n“Insert” puts one in the composer\n“+” queues it; sent in order',
       'help.close': 'Got it',
       'status.noComposer': 'No composer available: open a conversation tab first',
       'status.noWorkspace': 'This session has no workspace yet, so a workspace prompt cannot be created.',
@@ -1705,10 +1709,11 @@ window.__ModuleLoader__.load({
 
     /** Two-column orientation card, opened from the header's question mark. */
     function HelpDialog(props) {
-      const column = (iconName, title, body) => h(
+      const column = (iconName, title, why, body) => h(
         'section',
         { className: 'pp-help-col' },
         h('div', { className: 'pp-help-head' }, h('span', { className: 'pp-help-icon' }, icon(iconName)), title),
+        h('p', { className: 'pp-help-why' }, why),
         h('p', { className: 'pp-help-body' }, body),
       );
       return h(
@@ -1727,8 +1732,8 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'pp-help-grid' },
-            column('annotation', translate('help.notesTitle'), translate('help.notesBody')),
-            column('prompt', translate('help.promptsTitle'), translate('help.promptsBody')),
+            column('annotation', translate('help.notesTitle'), translate('help.notesWhy'), translate('help.notesBody')),
+            column('prompt', translate('help.promptsTitle'), translate('help.promptsWhy'), translate('help.promptsBody')),
           ),
         ),
       );
@@ -11186,7 +11191,8 @@ window.__ModuleLoader__.load({
       '.pp-help-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-help-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:none;border-radius:6px;background:color-mix(in srgb,var(--pp-accent) 9%,transparent);color:var(--pp-accent)}' +
       '.pp-help-icon svg{width:14px;height:14px}' +
-      '.pp-help-body{font-size:11.5px;line-height:1.6;color:var(--pp-ink-2);white-space:pre-line}' +
+      '.pp-help-why{font-size:11.5px;line-height:1.6;color:var(--pp-ink);margin:0}' +
+      '.pp-help-body{font-size:11.5px;line-height:1.6;color:var(--pp-ink-2);white-space:pre-line;margin:0;padding-top:7px;border-top:1px dashed var(--pp-line)}' +
       '.pp-help-card .pp-modal-actions{margin-top:2px}' +
       // The page header stacks two rows: the three destinations, then the
       // search field with the contextual tools.
