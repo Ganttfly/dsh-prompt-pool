@@ -34,20 +34,20 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
-- One annotation filed as a prompt now arrives ready to paste: the title stays empty, and the body is one
-  sentence — 【原文】passage；【批注】what was written。 Each kind opens that annotation with its own fixed
-  words (同意：/ 不同意：/ 疑问：/ 意见：/ 思路：/ 补充：/ 待办：), so the sentence says how the passage should
+- One annotation filed as a prompt now arrives ready to paste: the title stays empty, and the body is two
+  lines — 【原文】passage, then 【批注】what was written. Each kind opens that annotation with its own fixed
+  words (同意：/ 不同意：/ 疑问：/ 意见：/ 思路：/ 补充：/ 待办：), so the block says how the passage should
   be read even after the kind label is gone, and an annotation without text still reads as its kind alone.
-  Trailing full stops are dropped before the two halves are joined, so the line never doubles one; a
-  question or exclamation keeps its own mark and ends the sentence instead of taking a full stop. A batch of
-  annotations keeps its generated title, since that prompt has to be found again in
-  the pool — and the same sentence is what **Insert** writes into the composer, shortened to an 80-character
+  Trailing full stops are dropped before the parts are joined, so the block never doubles one; a question
+  or exclamation keeps its own mark and ends the block instead of taking a full stop. A batch of annotations
+  keeps its generated title, since that prompt has to be found again in
+  the pool — and the same block is what **Insert** writes into the composer, shortened to an 80-character
   preview of the passage.
 - Filing an annotation as a prompt no longer opens a save sheet: when the sidebar page exists, the pool
-  switches to **Prompts** and its own editor opens with the draft already written — the same 【原文】；
-  【批注】 body, an empty title for one annotation, and the images carried over. The review card's
+  switches to **Prompts** and its own editor opens with the draft already written — the same 【原文】 /
+  【批注】 two-line body, an empty title for one annotation, and the images carried over. The review card's
   **Save as prompt** takes the same route: the batch arrives as a titled draft, written in the same
-  sentence shape because a stored prompt is read again later, while the sent review keeps its numbered
+  block shape because a stored prompt is read again later, while the sent review keeps its numbered
   groups and rules. Saving the draft still moves the parked to-dos and clears that review. The sheet stays
   as the fallback (composer-panel hosts, a session without a workspace, or a draft the page is already
   holding, so neither draft is lost). Saving applies the same keep-or-remove rule as before: the annotation

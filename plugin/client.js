@@ -391,7 +391,6 @@ window.__ModuleLoader__.load({
       'note.composeStored': '已存成提示词到 {group}',
       'note.prompt.quote': '【原文】',
       'note.prompt.body': '【批注】',
-      'note.prompt.sep': '；',
       'note.prompt.end': '。',
       'note.prompt.lead.agree': '同意：',
       'note.prompt.lead.disagree': '不同意：',
@@ -753,7 +752,6 @@ window.__ModuleLoader__.load({
       'note.composeStored': 'Saved as a prompt in {group}',
       'note.prompt.quote': '【Original】',
       'note.prompt.body': '【Annotation】',
-      'note.prompt.sep': '; ',
       'note.prompt.end': '.',
       'note.prompt.lead.agree': 'Agreed: ',
       'note.prompt.lead.disagree': 'Disagree: ',
@@ -6934,10 +6932,11 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * One annotation as a prompt sentence: 【原文】passage；【批注】what was said。
-     * The kind now lives inside the sentence as its fixed opener, because the
-     * 【kind】 label that used to carry it is gone from the prompt. `limit`
-     * truncates the passage for inline insertion; a filed prompt keeps it whole.
+     * One annotation as a prompt block: 【原文】passage on the first line,
+     * 【批注】what was said on the next. The kind opens the annotation with its
+     * fixed words, because the 【kind】 label that used to carry it is gone from
+     * the prompt. `limit` truncates the passage for inline insertion; a filed
+     * prompt keeps it whole.
      */
     function composeNoteBlock(note, limit) {
       const kind = noteKind(note.kind);
@@ -6949,7 +6948,7 @@ window.__ModuleLoader__.load({
       parts.push(translate('note.prompt.body') + spoken);
       // A question or an exclamation already ends the sentence.
       const end = /[！!？?]$/u.test(spoken) ? '' : translate('note.prompt.end');
-      return parts.join(translate('note.prompt.sep')) + end;
+      return parts.join('\n') + end;
     }
 
     /** Inline lines stay short: the passage is a reminder, not the whole reply. */
@@ -6967,12 +6966,12 @@ window.__ModuleLoader__.load({
       return composeNoteBlock(note, 0);
     }
 
-    /** The reply a session's annotations produce: numbered, each with its quote. */
+    /** The reply a session's annotations produce: numbered blocks, quote then note. */
     function composeNotesReply(list) {
       return list
         .slice()
         .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt))
-        .map((note, index) => `${index + 1}. ${composeNotePrompt(note)}`)
+        .map((note, index) => `${index + 1}. ${composeNotePrompt(note).replace(/\n/g, '\n   ')}`)
         .join('\n');
     }
 

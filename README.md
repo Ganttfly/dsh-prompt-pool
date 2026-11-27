@@ -98,13 +98,13 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
   losing the point in a separate scratchpad; click the badge to edit. **Annotations** page always
   exists: **Locate** scrolls to the passage, **Insert** writes one note into the composer in one fixed
-  sentence — 【Original】the words; 【Annotation】<kind>: what you wrote. — where the kind's own words open
-  the annotation (Agree, Disagree, Question, Note, Idea, Additional info, To do), and an empty body keeps
-  the kind word alone; the **Save as prompt** icon opens that note in the pool's own editor: the sidebar
-  switches to **Prompts** with the body written, so only the group and any last edits are left. The review
-  card's saved prompt uses the same sentence, one line per note plus a generated title. A host with no
-  sidebar (the composer panel) still gets the standalone confirmation step for title, body, images
-  and target group.
+  block — 【Original】the words on one line, 【Annotation】<kind>: what you wrote on the next — where the kind's
+  own words open the annotation (Agree, Disagree, Question, Note, Idea, Additional info, To do), and an empty
+  body keeps the kind word alone; the **Save as prompt** icon opens that note in the pool's own editor: the
+  sidebar switches to **Prompts** with the body written, so only the group and any last edits are left. The
+  review card's saved prompt uses the same block, one numbered note per entry (its second line indented)
+  plus a generated title. A host with no sidebar (the composer panel) still gets the standalone confirmation
+  step for title, body, images and target group.
   The page's bottom bar shows the selected count and **Summarize**; it opens the review card, which sits
   at the bottom like the send queue, collapses to a strip, and can be resized by dragging its top edge
   (double-click to reset). Rows gain checkboxes, immediate execution and to-do routing; Locate stays,
