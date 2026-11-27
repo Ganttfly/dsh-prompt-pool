@@ -8,56 +8,39 @@ A prompt staging pool for DeepSeek Harness. Keep a half-written prompt out of th
 ready, line up the prompts you want to run next, and annotate a long reply without losing the sentence you
 mean.
 
-It sits in two places: a trigger beside the composer, and a page in the right sidebar.
+It sits in two places: a split trigger beside the composer, and a page in the right sidebar with three
+destinations — **Annotations**, **Prompts** and **Shared**.
 
 ## Screenshots
 
-![Annotate passages inline and review them on the pool's Annotations page](docs/images/annotations-overview.png)
+![Annotating a reply, then reviewing the checked notes in the pool's Annotations page](docs/images/annotations-review.png)
 
-**Annotate while you read, two ways.** Right-click a selection and choose **Select to annotate** for a
-note pinned to those exact words, or choose **Continuous** and click any assistant block: an amber
-outline marks the paragraph, list item, heading, quote, code block or table cell before the note lands,
-and the pick stays active so the next block takes one click too. The original wording stays attached,
-so the context is easy to follow and no key point slips away. The note's editor opens in a bubble
-beside the block; the right sidebar keeps whatever state it had.
-Clicking a block that already carries a note opens that note's bubble instead of adding another. The
-**Annotations** page collects the notes for that session — locate a passage, insert one note, or save it as a prompt.
-Click a note's body to edit its kind and text while the quote stays read-only; each kind keeps its own
-vivid color on the badge, the inline chip and the quoted underline. Select notes and choose **Summarize**
-at the bottom to merge them into one quoted draft. Annotations stay with their own session
-and never leak into another conversation.
+**Read, mark it, then send one instruction.** Right-click a selection and pick **Select to annotate** to pin
+a note to those exact words, or pick **Continuous** and click assistant blocks one after another: an amber
+outline and a `Paragraph · 42 chars` label mark the block before the note lands, and the pick keeps running,
+so the next block is one click away. The **Annotations** page lists the session's notes in transcript order —
+locate a passage, insert one note, edit a note in place, file it as a prompt. Select notes and choose
+**Summarize in one click** to open the **Prompt preview** card: checked rows, immediate execution and to-do
+routing, an editable prompt built from every annotation, and **Cancel** / **Save as prompt** / **Send** in
+its status bar.
 
-![Prompt pool panel in Prompts mode: current workspace items and the send queue](docs/images/panel.png)
+![The Prompts destination: the current workspace's prompts and the send queue](docs/images/prompts-send-queue.png)
 
-The composer panel has two modes: **Annotations** for the current session and **Prompts** for the
-current workspace. Prompt rows offer **Insert**, **+** (add to the send queue), duplicate and delete; clicking
-the title opens the editor. Each prompt can carry an optional intent badge — Decision, Question, Opinion,
-Idea, Supplement, To-do or Inspiration — which leads the title with its own hue. The shared send queue starts
-as a collapsed strip and expands when opened. Switching modes never changes the row styling. The
-panel opens with a brand row — the pool mark, its name, pin and close — and the row beside search carries
-help and **Settings** directly. The composer trigger is a split bar: the brand cap
-opens the right sidebar page, leaving its destination alone; the **Annotations** menu reviews the session's
-annotations and opens the annotations view; the **Prompts** menu saves the current draft, creates a prompt
-and opens the prompts view. Neither menu offers a separate way into the panel. On hosts without a right
-sidebar the cap and both menus open the panel instead.
+**Prompts belong to the current workspace, and the queue is where they line up.** Each row leads with its
+optional type badge — Decision, Question, Opinion, Idea, Supplement, To-do or Inspiration — and carries
+insert, queue, duplicate and delete; clicking the title opens the editor. The **send queue** holds prompts
+only, starts as a one-line strip, and its header switches between **one by one** and **merge**. A queued row
+wears the mark of what it is — a prompt's own type, the review glyph for a summarized batch, an annotation's
+kind — instead of repeating the word.
 
-![The prompt pool as a full page in the right sidebar](docs/images/sidebar.png)
+![The Shared destination: the cross-workspace pool and its groups](docs/images/shared-pool.png)
 
-The sidebar is the full workbench with three destinations. **Annotations** lists the session's notes;
-**Prompts** holds the current workspace's prompts; **Shared** holds the cross-workspace pool. The page
-header stacks the destinations above the search field and the header actions (help, **Settings**); a
-one-line hint at the right edge of the destination row names the current scope. **Shared**
-puts its built-in and custom group tabs between the two. Select notes and choose
-**Summarize** in the bottom bar to open the review card; workspace prompts go straight to the list. Saving a note as a prompt opens a confirmation step where the
-title, body, images and target group are edited in one card, with the image thumbnails sitting inside the
-body field like the composer's own attachments and a reminder that the conversation context is not carried
-over.
-
-![Prompt pool settings: post-use retention, built-in reset, group display, and the plugin info card](docs/images/settings.png)
-
-Settings is a destination with two sections. **Annotations** controls whether notes stay after generating
-a draft or saving as a prompt. **Prompts** holds the shared-pool group order and display, the built-in prompt
-reset, the post-use retention switches and the plugin info card.
+**Shared** is the cross-workspace pool: frequent / notes / templates built in, plus your own groups. A family
+can be expanded, folded into a single tab, or hidden; folded, its groups stay as chips with their counts, and
+the family tab itself means the whole family. A list that mixes groups ends each row with its group name.
+The header row above spells out the scope of the destination in view — **Prompts · This workspace only**,
+**Annotations · This session only**, **Shared · Shared across workspaces** — in the amber or blue of the tab
+it describes.
 
 ## Why a prompt pool?
 
@@ -75,122 +58,107 @@ the conversation, so the agent gets a precise instruction and you do not lose th
 
 ## Features
 
-- **Staging instead of sending** — save a draft into the pool; nothing runs until you release it.
-- **Ordered release** — queue items in the order you want, then send them one by one; each submission
-  waits for the composer to be accepted before the next starts. On hosts that expose the conversation
-  queue, items go straight into the queue without touching the composer; otherwise the composer path
-  is used. While a release runs, both views show progress and a Stop control; the queue is locked
-  until it finishes. The **Send queue** holds prompts only: it appears on the page's **Prompts** and
-  **Shared** destinations and in the panel's **Prompts** mode; **Annotations** hides it. Its header
-  switches between **one by one** and **merge**, and merge previews every queued
-  prompt and its image attachments before handing one numbered message to the session queue; the images
-  are shown as thumbnails outside the editable text and travel as attachments. There is no second subset
-  selection. Annotations are reviewed and sent from the Annotations page instead. A row wears the type
-  mark its prompt was filed under — a summary wears the review mark, an annotation its own kind — rather
-  than a word saying where it came from. With nothing queued the card stays as a one-line strip instead
-  of disappearing, so the bottom of the list does not move under the pointer.
-- **Annotate while you read** — select a passage in an assistant reply and right-click **Select to annotate**:
-  pick a kind from its submenu (note / question / agree / disagree / idea / additional info / to-do), type up to 500
-  full-width or 1,000 half-width characters (or leave it empty for a glyph-only badge), and the badge lands
-  right after the passage with a matching underline. Each kind has its own vivid color, shared by the
-  badge, the inline chip and the underline. Picking a kind preselects it in the bubble; without a pick
-  new notes start as **Agree**. The block picker starts on the kind last used there (initially
-  **Note**), and the kind chosen in a bubble becomes the default for the next pick. Add images from the bubble or the page
-  editor, or paste them into either body, and the thumbnails stay with the annotation. The badge follows
-  the conversation's text size, so it grows with the reading font instead of staying small.
-  The note stays on the exact wording, so you can keep reading and come back to the context instead of
-  losing the point in a separate scratchpad; click the badge to edit. **Annotations** page always
-  exists: **Locate the passage** scrolls back to the words, **Insert into the composer** writes one note in one fixed
-  block — 【Original】the words on one line, 【Annotation】<kind>: what you wrote on the next — where the kind's
-  own words open the annotation (Agree, Disagree, Question, Note, Idea, Additional info, To do), and an empty
-  body keeps the kind word alone; the **Save as prompt** icon opens that note in the pool's own editor: the
-  sidebar switches to **Prompts** with the body written and the prompt's type already set to the one that
-  answers the annotation's kind (an agreement files as a decision, a disagreement or a comment as an opinion),
-  so only the group and any last edits are left. The
-  review card's saved prompt uses the same block, one numbered note per entry (its second line indented),
-  and it too keeps the title blank and takes a type only when every checked note shares one kind. A host with
-  no sidebar (the composer panel) still gets the standalone
-  confirmation step for title, body, images and target group, and it files the same type.
-  The page's bottom bar shows the selected count and **Summarize**; it opens the review card, which sits
-  at the bottom like the send queue, collapses to a strip, and can be resized by dragging its top edge
-  (double-click to reset). Rows gain checkboxes, immediate execution and to-do routing; Locate the passage stays,
-  while Insert / Save as prompt / Delete hide. The card is the prompt composer: preview and edit the
-  prompt, use the Refresh link, then Save as prompt or Send from the status bar. The prompt keeps each ID
-  (Agree-1, Question-2, …) and then reads as 【原文】 / 【批注】 blocks with the kind's fixed words, so a sent
-  review and a filed prompt share one shape. The header splits by purpose: the chips and the selection
-  tools (**Select all** / **Clear**) stay together on the left and appear only when they can act, while
-  **Cancel**, **Save as prompt** and **Send** stand alone on the right. The list has no banner above it.
-  Short quotes get an optional
-  complete-sentence/question line in the prompt only (never in the annotation list), and it is omitted
-  when incomplete or redundant. The review card uses the annotation amber; the prompt destinations and
-  the send queue share the prompt blue. Annotations never enter the send queue,
-  and single annotations have no direct-send control.
-  Saved notes keep a green marker; notes are stored per session, survive reloads, and are not shown in
-  another session.
-- **Point at a block** — the **Annotations** page header carries a **Continuous** button, and the
-  composer's **Annotations** menu starts with **Continuous**. The pointer turns into a picker only
-  over an eligible block: hovering a paragraph, list item, heading, quote, code block or table cell
-  in an assistant reply draws an amber outline and a `Paragraph · 42 chars` label. Click to add an
-  annotation and open its editor in a bubble beside the block: the pick keeps running, the right
-  sidebar keeps its current state, and the annotation list is not pulled into edit mode. The bubble
-  carries the seven kind chips and the text box; saving commits it even when the body is empty (the
-  badge then shows only its kind mark), and closing it without text, images or a save discards the
-  pick instead of leaving an empty badge. Clicking a block that already has a
-  block-level note opens that note's bubble instead of stacking a duplicate. The bottom bar only
-  reports `N added` and offers **Done**; Esc or a click outside the conversation leaves the mode.
-  Only assistant replies are accepted; your own messages and image-only or empty blocks are
-  refused, and ineligible blocks keep the normal pointer and show no outline or label. The picker
-  only covers the conversation body, so the composer, turn rail and the rest of the app stay
-  clickable. The block's text becomes the quote, so **Locate the passage** still works. Right-click selection
-  remains the exact-phrase path.
-- **Edit in the list** — on the **Annotations** page, click a note's body to edit its kind and text in
-  place. The quoted passage is read-only; review mode keeps its checkbox and routing flow.
-- **Find the newest note** — a newly added annotation scrolls into view and is tinted amber with a
-  **Just added** label for a few seconds. The list stays in transcript order, so the marker, not the
-  position, points at the new note.
-- **Composer panel** — a brand row with the pool mark and name, search, the current workspace's prompt
-  list, per-row **Insert**, **+**, duplicate and delete, and the shared send queue with collapse, clear and send.
-  Clicking a row's title opens the editor; the type badge leads the title. Both editors share one card —
-  title, kind chips, body, meta row and action row — so an annotation and a prompt keep the same rhythm.
-  The add-image action is a plus at the bottom-left inside the body field, matching the composer.
-  Both editors measure the body in display cells, capped at 500 full-width or 1,000 half-width
-  characters, and show a live count; prompt text also accepts `@` to reference a file. Switching to
-  another item with unsaved edits first asks whether to keep editing, discard, or save and switch.
-  Help and **Settings** sit beside search. Its two modes are **Annotations**
-  (current session) and **Prompts** (current workspace); the panel never shows the shared pool.
-  A new prompt is not counted until it is saved. Drag its top edge
-  to change the height, or its left edge to change the width; pin it to keep it open over the conversation.
-- **Sidebar page** — the full workbench over the same data, with three destinations: **Annotations**,
-  **Prompts** for the current workspace, and **Shared** for the cross-workspace pool; it opens on
-  annotations. Workspace prompts go straight to the list; **Shared** keeps the group tabs for the built-in
-  and custom groups on a context row below the destinations. Prompt rows show their optional type badge, and
-  the send queue starts as a collapsed strip.
-- **Save step** — saving a note as a prompt no longer writes immediately. It opens a confirmation with the
-  title, body, images and destination group, plus a reminder that the conversation context is not carried
-  over. The source session, node and quote are not stored on the prompt.
-- **Right-click to save** — select text in a reply or in one of your own messages, then right-click: the
-  menu offers **Copy** and **Add to the prompt pool**, whose submenu lists the groups currently on show;
-  picking one stores the selection as a new item there. The group used last time leads the submenu;
-  Shift+F10 opens the same menu, and a right-click without a selection keeps the browser menu.
-- **Groups** — the shared pool keeps frequent / notes / templates built in, plus your own categories;
-  each workspace has its own prompt pool instead of a global workspace group. Each family can be expanded,
-  folded into a single tab, or hidden; a folded family still lists its groups as chips on a row underneath
-  (each group with its count), and a chip narrows the list to that group. The family tab itself means the
-  whole family, so picking the active chip again — or the family tab — goes back to it. Rows in a
-  mixed list carry their group name at the end of the row. The **All** tab can be hidden too.
-- **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
-  can reset the built-in set in the current interface language. Edited built-ins can be kept as
-  ordinary items; custom items and the queue are left alone.
-- **Settings** — a destination with two sections. **Annotations** holds three retention switches: an
-  annotation stays after it is inserted into the composer, after a summary carries it away, and after it is
-  filed as a prompt. Insertion keeps the mark by default; sending a summary removes the sent ones by default.
-  **Prompts** holds the two post-use retention switches, the built-in prompt reset, and the shared pool's
-  group order/display (including whether the **All** tab shows). Settings opens on Annotations.
-  Workspaces no longer have their own settings page; save and capture destinations are the current
-  workspace plus the shared pool.
-- **Guarded destructive actions** — deleting an item, clearing the queue and removing a queued entry all
-  ask first; deletes and clears can be undone from the toast.
-- **Chinese and English** — every label follows the harness language, including the sidebar tab name.
+- **Staging instead of sending** — a draft parked in the pool stays inert; nothing reaches the agent until
+  you release it. **Save draft** lives in the composer's **Prompts** menu: it copies the composer's text and
+  images into the current workspace or a shared group (a small picker offers both) and leaves the composer
+  text in place. The page header carries no copy action of its own, so the command sits beside the text it
+  copies.
+- **The send queue** — prompts only, and only where prompts live: the **Prompts** and **Shared**
+  destinations and the panel's **Prompts** mode. **+** on a row adds it; the header switches between
+  **one by one** and **merge**, and rows can be moved up or down, edited, duplicated or removed. Sending
+  one by one writes each prompt to the host's session queue and waits for the previous one to be accepted;
+  on a host without that queue it types into the composer instead. **Merge** previews every queued prompt
+  in order, with its images as thumbnails, and sends them as one message. A release shows progress and a
+  **Stop** control, and the queue is locked until it finishes. Empty, the card collapses to a dashed
+  one-line strip — **Empty — use the ＋ control on a prompt row** — so the bottom of the list never shifts
+  under the pointer.
+- **Annotate while you read** — select a passage in an assistant reply and right-click **Select to
+  annotate**, then pick a kind from the submenu: note, question, agree, disagree, idea, additional info or
+  to-do. Write up to 500 full-width or 1,000 half-width characters, or leave the body empty for a
+  glyph-only badge. The badge lands right after the passage with a matching underline, and each kind keeps
+  its own vivid color across the badge, the inline chip and the underline. Click the badge — or the
+  annotated words themselves — to reopen its bubble. Images can be added from the bubble or pasted in.
+- **Point at a block** — **Continuous** in the page header, or the first row of the composer's
+  **Annotations** menu, starts a block picker. Only assistant replies are eligible: a paragraph, list item,
+  heading, quote, code block or table cell draws an amber outline and a size label under the pointer, and a
+  click adds a note and opens its editor bubble beside the block. The pick never ends, the right sidebar
+  keeps its state, and the annotation list is not pulled into edit mode. Saving commits even an empty body;
+  closing an untouched bubble discards the pick instead of leaving an empty badge. Clicking a block that
+  already has a note opens that note. The bottom bar only reports `N added` and offers **Done**; Esc or a
+  click outside the conversation leaves the mode. Your own messages, image-only and empty blocks are
+  refused, and the picker stays inside the conversation, so the composer and turn rail still work.
+- **Consecutive notes keep their kind** — a kind picked in a bubble becomes the default for the next pick,
+  and the picker starts on the kind last used on that page (initially **Note**). A right-click annotation
+  with no pick made starts as **Agree**.
+- **The Annotations page** — the session's notes in transcript order. **Locate the passage** wears a map pin
+  and scrolls the transcript back to the words; **Insert into the composer** writes one note in one fixed
+  block — 【Original】the words, then 【Annotation】<kind>: what you wrote; the **Save as prompt** icon hands
+  the note to the pool's editor. Click a note's body to change its kind and text in place, while the quoted
+  passage stays read-only. A newly added note scrolls into view and wears an amber **Just added** marker for
+  a few seconds; saved notes keep a green marker. Notes belong to their session, survive reloads, and never
+  appear in another conversation.
+- **Prompt preview** — **Summarize in one click** in the bottom bar opens the review card, which sits at the
+  bottom like the send queue, collapses to a strip and can be resized by dragging its top edge (double-click
+  to reset). Rows gain checkboxes, immediate execution and to-do routing; **Locate the passage** stays, while
+  insert / save / delete hide. The card is the prompt composer: it builds one numbered block per checked
+  annotation (its ID kept as `Agree-1`, `Question-2`, …), previews and edits the result, and **Refresh**
+  rebuilds it. The prompt opens with the response contract, one instruction per line: answer every
+  annotation by kind and keep its ID; respond only, never touch files or tasks, unless the item carries an
+  【Execute now…】 marker; when executing, finish that item's answer first, then do exactly what was asked
+  and report; ask instead of guessing when a quote is only an option or an incomplete fragment. The header
+  splits by purpose — chips and **Select all** / **Clear** on the left, shown only when they can act;
+  **Cancel**, **Save as prompt** and **Send** on the right. Cancel leaves summary mode, collapses the card
+  and changes nothing else. Annotations never enter the send queue, and no single note has a send button.
+- **Filing a note as a prompt** — with a sidebar page present, the pool switches to **Prompts** and opens its
+  own editor with the draft written: a two-line 【原文】 / 【批注】 body, a blank title, the type that answers
+  the note's kind (an agreement files as a decision, a disagreement or a comment as an opinion, the rest by
+  name) and the note's images carried over. A reviewed batch arrives the same way — untitled, one numbered
+  block per note, typed only when every checked note shares one kind. The standalone save sheet remains the
+  fallback: composer-panel hosts, a session without a workspace, or a draft the page is already holding.
+  Source session, node and quote are never stored on the prompt.
+- **Composer panel** — a brand row with the pool mark, its name, pin and close; search, the current
+  workspace's prompts, per-row **Insert**, **+**, duplicate and delete, and the shared send queue. It opens
+  in **Annotations** mode; **Prompts** mode is where prompts and the queue live. Both editors share one card
+  — title row, kind chips, body, meta row, action row — so a note and a prompt keep the same rhythm; the
+  add-image plus sits inside the body field, the body is measured in display cells with a live count, and
+  `@` references files. Switching items with unsaved edits asks whether to keep editing, discard or save and
+  switch. Drag the top edge for height, the left edge for width; pinning keeps it open over the
+  conversation. Help and **Settings** sit beside search.
+- **Sidebar page** — the full workbench over the same data, with **Annotations**, **Prompts** (current
+  workspace only) and **Shared** (built in and custom groups) as destinations, opening on annotations.
+  Shared group tabs sit on a row of their own between the destinations and the search field, and the page
+  uses the full width of its host.
+- **Composer trigger** — a split bar. The brand cap opens the sidebar page and leaves its destination alone;
+  the **Annotations** menu offers **Continuous**, **Summarize in one click** (with the session's count) and
+  the annotations view; the **Prompts** menu offers **Save draft**, **Add prompt** and the prompts view. Each
+  tray row wears its own mark — a pointer, a funnel, the annotation bubble, a tray, a boxed plus, the prompt
+  chevron — and the two menus draw in their own accent. On hosts without a right sidebar the cap and both
+  menus open the panel instead.
+- **Right-click to save** — select text in a reply or in one of your own messages, then right-click: the menu
+  offers **Copy** and **Add to the prompt pool**, whose submenu lists the groups on show. Picking one stores
+  the selection there; the group used last time leads the submenu. Shift+F10 opens the same menu, and a
+  right-click without a selection keeps the browser's own.
+- **Groups** — the shared pool keeps frequent / notes / templates built in, plus your own categories; each
+  workspace has its own prompt pool instead of a global workspace group. A family can be expanded, folded
+  into a single tab, or hidden, and each family states its three choices on its own row. Folded, its groups
+  appear as chips with their counts on a quieter track underneath; a chip narrows the list to that group and
+  new items land in it, and clicking the active chip again — or the family tab — widens the list back. A
+  family with one group shows no chips. The **All** tab can be hidden too.
+- **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts can
+  reset the built-in set in the current interface language: edited built-ins are kept as ordinary items when
+  the box is ticked, custom items and the queue are left alone, and the button's hover text names the
+  language it will reset into.
+- **Settings** — one destination page with two sections, opening on **Annotations**. **Annotations** holds
+  the three retention switches — keep a note after it is inserted into the composer (on by default), after a
+  summary sends it away (off by default), and after it is filed as a prompt; when a switch is off the marks
+  leave the list and the toast offers **Undo**. **Prompts** holds the post-insert and post-queue retention,
+  the built-in reset, and the shared pool's group order and display. The plugin card carries only the
+  credits — author and repository — with the version beside its heading. Workspaces no longer have their own
+  settings page: save and capture destinations are the current workspace plus the shared pool.
+- **Guarded destructive actions** — deleting an item, clearing the queue and removing a queued entry all ask
+  first; deletes and clears can be undone from the toast.
+- **Chinese and English** — every label follows the harness language, including the sidebar tab name, and
+  the two languages differ only in wording, never in layout.
 
 ## Install
 
@@ -212,30 +180,22 @@ does not turn it on.
 
 ## Usage
 
-1. Click **提示池 / Prompt pool** beside the composer (or open the sidebar page).
-2. Open the composer's **Prompts** menu (the right half of the split bar) and pick **Save draft**. It
-   copies the composer content — text and image attachments — into the pool. A small popup offers the
-   current workspace and the shared-pool groups, and the toast names the destination. The composer keeps
-   its text.
-3. Select text in a conversation and right-click: the menu offers **Copy** and **Add to the prompt
-   pool**; open the submenu and pick the current workspace or a shared-pool group.
-4. To comment on specific passages instead, right-click **Annotate**: pick a kind, type up to 500
-   full-width or 1,000 half-width characters, and the badge appears right after the passage. The **Annotate**
-   button in the page header (or **+ Annotate** in the composer menu) starts the block picker instead: move
-   over an assistant paragraph and click once; its editor opens in a bubble beside the block and the pick
-   keeps running, so clicking the next paragraph adds the next note. Esc leaves before you pick. The pool's
-   **Annotations** page
-   collects the notes; **Locate the passage** scrolls back to the words, **Insert** writes one note into the composer, and the
-   **Save as prompt** icon hands that note to the pool's editor (the sidebar switches to **Prompts**
-   with the body already written, so only the group and any edits are left). Click a note's body to edit its kind and text in place;
-   the quote is read-only. Select notes and choose **Summarize** in the bottom bar to open the review card;
-   check and route the notes in the rows, then use Save as prompt or Send in the status bar — Save as prompt
-   opens the reviewed text in the pool's editor, so the batch is filed like any other prompt. Annotations do
-   not enter the send queue.
-5. Add prompts to the send queue with **+**; click the collapsed queue strip to open it, reorder the
-   prompts, then send them one by one or switch to **Merge** for a preview.
-6. Sequential sends are written into the composer and submitted in turn; merged sends become one
-   message after confirmation.
+1. Click the **Prompt pool** trigger beside the composer, or open the sidebar page.
+2. Open the trigger's **Prompts** menu and pick **Save draft**: a small popup offers the current workspace
+   and the shared-pool groups, and the toast names the destination. The composer keeps its text.
+3. To keep a passage instead, select it in a conversation and right-click **Add to the prompt pool**, then
+   pick a group.
+4. To comment on what you read, right-click a selection and choose **Select to annotate** — or start
+   **Continuous** from the page header and click block after block. Pick a kind, write your note, save. The
+   **Annotations** page collects them: **Locate the passage** scrolls back to the words, **Insert** writes
+   one note into the composer, the **Save as prompt** icon opens it as a draft, and clicking a body edits it
+   in place. Select notes and choose **Summarize in one click**; check, route and execute what applies in
+   the card, edit the prompt if needed, then **Save as prompt** or **Send**. **Cancel** backs out with
+   nothing changed.
+5. Press **+** on a prompt row to queue it; click the collapsed queue strip to open it, reorder with the
+   arrows, then **Send** one by one or switch to **Merge** for a preview.
+6. One by one submits each prompt in turn; merge sends them as a single message. Both can be stopped while
+   they run, and everything not yet sent stays in the queue.
 
 ## Compatibility
 
@@ -272,11 +232,11 @@ Clearing them removes the pool for good.
 - **Right-clicking a selection replaces the browser's own menu.** The menu carries Copy itself, but the
   browser's Search / Translate / Inspect rows are not available from it.
 - **Annotation cards follow the rendered text.** A note on a folded or unmounted reply keeps its row in
-  the pool's Annotations tab, but has no card, pin or highlight until that text is rendered again; the
-  composed reply still uses it.
-- **A card can cover the lines below its passage.** It hangs right after the end of the passage, so a
-  note on a short line may overlap the following lines to its right; the Annotations tab always keeps
-  the full list.
+  the pool's Annotations page, but has no badge or highlight until that text is rendered again; locating,
+  inserting and filing still work.
+- **A bubble can cover the lines below its passage.** It hangs right after the end of the passage, so a
+  note on a short line may overlap the following lines to its right; the Annotations page always keeps the
+  full list.
 - **A capture does not clear the composer.** It copies; use the editor's own clear to remove the text.
 
 ## Development

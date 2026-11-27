@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+_No unreleased changes._
+
+## [2.2.0] — 2026-11-27
+
+Version 2.2.0 is the first 2.x release on npm: **1.5.0**, **2.0.0** and **2.1.0** were developed
+locally but never published, so an upgrade from 1.4.1 lands straight here — the sections below record
+what changed on the way.
+
 ### Added
 
 - Filing an annotation as a prompt picks its type for you: the prompt opens with the type that answers the
@@ -91,9 +99,11 @@ All notable changes to this project are documented here. The format follows
 - Dead settings styles are gone: the radio-group, workspace-row and intro rules outlived their controls by
   several releases and are deleted, and the plugin card's name/description rules go with the elements they
   styled.
-- The help card opens with what the pool is for instead of a slogan: it now says the pool is built for
-  better exchanges with the model — catch what matters in a conversation, and have the next prompt ready —
-  in two lines that break at the comma, so the promise reads before the two halves explain it.
+- The help card opens with the problem each half answers instead of a slogan: a long reply scattered with
+  questions, decisions and ideas, and ideas with nowhere to go — instructions retyped every time and
+  multi-step runs that need lining up. It then says what the feature does and how to get there — annotate in
+  place and fold the marks into one prompt, or keep prompts to send now and queue steps in order — in two
+  lines that break at the comma, so the promise reads before the halves explain it.
 - The scope hint at the end of the destination row says whose scope it is: it now reads **Prompts · This
   workspace only** instead of a bare phrase floating at the right edge, and the pill it sits in takes its
   border and tint from the active destination — amber for **Annotations**, blue for **Prompts** and
@@ -107,10 +117,12 @@ All notable changes to this project are documented here. The format follows
 - **Save as prompt** in an annotation row wears the prompt chevron plus a plus: the chevron is the mark
   the **Prompts** tab already carries, so the action says "start a prompt from this" instead of drawing a
   sheet with a fold — that outline read as "new document" and its inner plus closed up at 16px.
-- **Save draft** now lives only in the composer's **Prompts** menu: the icon beside **Settings** is gone
-  from the page and panel headers, so that row is navigation only and the action sits beside the text it
-  copies. The menu item opens the same destination chooser, still copies rather than clears the composer,
-  and the empty pool hint points at it.
+- The action that copies the composer text into the pool is called **Save draft** (保存草稿) again, after a
+  stretch as *Save current input*, and it lives only in the composer's **Prompts** menu: the icon beside
+  **Settings** is gone from the page and panel headers, so that row is navigation only and the action sits
+  beside the text it copies. The name now matches what it produces — a pool draft, which the save step
+  then files under a group. The menu item opens the same destination chooser, still copies rather than
+  clears the composer, and the empty pool hint points at it.
 - The **Settings** glyph is a real cog again: the two sliders it wore read as a mixer beside the help
   question mark, and a gear is the shape that needs no tooltip to be recognised.
 - Row actions read as one set: **Insert** is a 24px icon like queue, copy, store and delete, named by its
@@ -154,35 +166,23 @@ All notable changes to this project are documented here. The format follows
   that annotation's bubble, the same as clicking its badge — the click is mapped back through the caret
   point, so the highlight needs no wrapper element and the reply's own text keeps its selection and links.
   A 200 ms grace lets a double-click select words first, and while the picker runs it keeps its own clicks.
-- Both halves of the help card now open with the complaints they answer — a long reply that is hard to read
-  with questions, decisions and ideas scattered over it; ideas with nowhere to go, instructions retyped every
-  time, multi-step runs that need lining up — and only then say what the feature does and how to get there:
-  annotate in place and fold the marks into one prompt, or keep prompts to send now and queue steps in order.
 - The page header's two primary buttons are lettered, not drawn: the plus glyph is gone from both, so they
   read **Continuous** (连续批注) on the Annotations page and **Add prompt** (添加提示词) on the Prompts
   page instead of "+ Continuous" and "+ Prompt". The plus said what the word already says, and the icon
   competed with the label for the little space a header button has.
-- The action that copies the composer text into the pool is called **Save draft** (保存草稿) again — in the
-  composer's Prompts menu and on the page header's icon — after a stretch as *Save current input*. The name
-  now matches what it produces: a pool draft, which the save step then files under a group. It still copies;
-  the composer keeps its text.
 - Both ways of filing a prompt now say **Add prompt** (添加提示词): the selection menu's **+ Prompt**
   row drops its plus and the composer's Prompts menu renames **New prompt** to match, so the row reads
   the same whichever surface you start from. The row still opens the save step; the prompt is created
   there, not by the menu.
-- The composer's **Annotations** and **Prompts** menus open as plain text lists: the
-  **提示池 · 批注** / **提示池 · 提示词** header row is gone, since the trigger above already names the
-  domain, and the rows no longer carry leading glyphs — the three annotation rows repeated one and the same
-  mark. The summarize row now reads **Summarize in one click** (一键汇总) and keeps its count badge; its
+- The composer's **Annotations** and **Prompts** menus drop the
+  **提示池 · 批注** / **提示池 · 提示词** header row, since the trigger above already names the
+  domain. The summarize row now reads **Summarize in one click** (一键汇总) and keeps its count badge; its
   hover text still spells out the rules the generated prompt carries.
 - The two ways into an annotation now name themselves: **Select to annotate** on a selection's right-click
   menu, and **Continuous** on the page header and in the composer's Annotations menu. Both end in the same
   bubble with the same seven kinds; the names say where the note lands — on the words you selected, or on the
   block you clicked while the pick keeps running. The pick bar, the page's picker button and the help card
   use the same pair.
-- The **How the prompt pool works** card now leads with the problem each half solves — many remarks in a
-  long reply, retyping a recurring instruction — and lists the matching steps underneath: mark in place
-  and fold the marks into one instruction, or save once and insert or queue it.
 - Hovering a control now explains what pressing it produces instead of repeating its label: the cap says
   the pool is the in-flow way to work with the model, **Annotations** says it is for raising questions and
   settling decisions across a long reply and folding them into one prompt, its count badge names the
@@ -224,8 +224,6 @@ All notable changes to this project are documented here. The format follows
   keeps its fixed rows.
 - The send queue starts collapsed as a one-line strip in both the page and the panel; opening it is a
   choice and the state persists.
-- The empty prompt panel now points at **+ Prompt** and **Save current input** instead of the old Save draft
-  button.
 - The sidebar page now has three destinations: **Annotations**, **Prompts** (current workspace only) and
   **Shared** (the built-in and custom groups), instead of nesting a workspace / shared switch under
   **Prompts**. Shared group tabs sit on their own context row; workspace prompts go straight to the list,
@@ -237,18 +235,11 @@ All notable changes to this project are documented here. The format follows
   explanation on hover.
 - Underline tabs gained more breathing room: page destinations and panel modes now use a 20px gap,
   matching the settings tabs.
-- The page and panel headers now expose **How it works**, **Save current input** and **Settings**
-  directly instead of hiding them behind a `⋯` menu. The panel adds a brand row with the pool mark and
-  name, and pin / close moved into it. The annotation context line is gone: the page lists notes without a
-  count banner, and the bottom bar's **Summarize** is the only entry to the review card.
 - Page and panel lists now use the full width of their host instead of a centered 760px reading column;
   rows, footer and send queue share the same 12px gutter as the header.
-- Prompt rows expose duplicate and delete as separate icons, and annotation rows expose save and
-  delete, instead of hiding them behind a `⋯` menu. Prompt rows are edited from the title.
 - The composer pool menus match the width of the trigger bar. Hover and open states follow each side's
   identity: annotations use the amber note wash and ink, prompts keep the blue accent, and the same
-  treatment applies to the menu rows, marks and count pills. The stale **Save draft** entry is now
-  **Save current input**.
+  treatment applies to the menu rows, marks and count pills.
 - Every icon now comes from one 24px grid with a 1.8px stroke and a 12 / 14 / 16 / 20px size ladder.
   Annotation kinds use distinct shapes instead of emoji, and inline chips, queue controls and header tools
   share the same outline set.
@@ -260,7 +251,7 @@ All notable changes to this project are documented here. The format follows
 - Inline annotation chips no longer write their label into the conversation text, so a block quote never
   picks up chip text; older chips are rebuilt once (version 7).
 
-## [2.1.0] — 2026-11-24
+## 2.1.0 — 2026-11-24
 
 ### Changed
 
@@ -320,7 +311,7 @@ All notable changes to this project are documented here. The format follows
 - The **+ Prompt** button vertically centers its plus icon and label instead of sitting them on the text
   baseline.
 
-## [Unreleased]
+## 2.0.0 — 2026-11-19
 
 ### Added
 
@@ -458,7 +449,7 @@ All notable changes to this project are documented here. The format follows
   padding instead of an element nested inside another button, and the close chip keeps its native
   Enter / Space behavior.
 
-## [1.5.0] — 2026-11-16
+## 1.5.0 — 2026-11-16
 
 ### Added
 
@@ -714,7 +705,8 @@ First public release.
 - Empty queue card keeps its hint instead of being clipped by the panel's flex shrink.
 - Sidebar tab name is refreshed after a language switch and after a restored layout.
 
-[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/Ganttfly/dsh-prompt-pool/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v2.2.0
 [1.4.1]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.4.1
 [1.4.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.4.0
 [1.3.0]: https://github.com/Ganttfly/dsh-prompt-pool/releases/tag/v1.3.0

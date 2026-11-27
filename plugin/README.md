@@ -8,35 +8,39 @@ order, and annotate a long reply without losing the sentence you mean. Nothing r
 Agent work breaks between messages: a half-written prompt, a sequence to run, a passage to comment on.
 The pool keeps the draft, the next action and the exact wording next to the conversation.
 
-![Annotating a passage inline and reviewing the notes in the pool](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/annotations-overview.png)
+![Annotating a reply, then reviewing the checked notes in the pool's Annotations page](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/annotations-review.png)
 
-![Prompt pool panel in Prompts mode: current workspace items and the send queue](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/panel.png)
+![The Prompts destination: the current workspace's prompts and the send queue](https://raw.githubusercontent.com/Ganttfly/dsh-prompt-pool/main/docs/images/prompts-send-queue.png)
 
-- Segmented composer trigger beside the send controls: the brand segment opens the right sidebar page, and
-  separate **Annotations** / **Prompts** menus lead to the review card and the full page
-- Starter prompts follow the host language; Settings can reset them in the current interface language, keeping edits as ordinary items
-- Panel scoped to **Annotations** (current session) and **Prompts** (current workspace), with a brand row,
-  search, **Insert / + / ⋯** row actions and a shared send queue that only appears in Prompts mode
-- Right-click on selected conversation text to copy it or save it into a group (the last destination leads the menu)
-- Annotate while you read, two ways: right-click a selection and pick a kind (**Select to annotate**) to keep
-  notes on the exact passage, or start **Continuous** and click block after block (new notes default to Agree);
-  both open the editor bubble in place, keep images with the note, and collect them in the current-session page;
-  **Summarize** at the bottom turns the selected notes into one numbered instruction in the amber review card,
-  not the prompt queue
-- Full-height page in the right sidebar (native tab on DSH 0.2+, `dsh-better-sidebar` fallback) with
-  **Annotations** and **Prompts** (**Current workspace** / **Global shared pool**); the page header carries help,
-  **Save draft** and **Settings**, and the page opens on Annotations
-- Single prompt type per item (decision / question / opinion / idea / supplement / to-do / inspiration), seeded
-  from the annotation kind and editable in the save step
-- A save step for title, body, images, type and destination, with a reminder that the conversation context is not kept:
-  the pool page opens its own editor for an annotation, and hosts without a sidebar (composer panel) get the
-  standalone sheet
-- Global shared pool keeps the built-in, custom and display-mode group tabs; workspace prompts use type filters
-- Settings is a separate destination with **Annotations** (retention) and **Prompts** (group order/display,
-  built-in reset, post-insert/queue retention, plugin info) sections
-- A release shows progress and can be stopped; the unsent queue stays
-- Merging opens a preview of every queued prompt, in order, and sends them as one message
-- Confirmations for destructive actions, with undo on deletes and clears
+- Three destinations in the right sidebar page — **Annotations** (this session), **Prompts** (this
+  workspace only) and **Shared** (across workspaces) — with a scope hint on the destination row and the
+  page opening on annotations
+- Segmented trigger beside the composer: the brand cap opens the page, the **Annotations** and **Prompts**
+  menus lead to it too, and a host without a sidebar gets the composer panel instead
+- Annotate while you read, two ways: right-click **Select to annotate** for the exact words, or
+  **Continuous** to click block after block with the pick never ending; both open the editor bubble in
+  place, keep images with the note, and default the next note to the kind you just used
+- Notes live on the **Annotations** page: locate the passage, insert one into the composer, edit its kind
+  and text in place, or file it as a prompt; a new note is revealed with a **Just added** marker
+- **Summarize in one click** folds the checked notes into one numbered prompt in the **Prompt preview**
+  card — immediate execution and to-do routing per row, an editable prompt with a per-kind response
+  contract, then **Cancel** / **Save as prompt** / **Send**
+- Filing a note as a prompt opens the pool's own editor with the 【Original】 / 【Annotation】 body, a blank
+  title, the type that answers the note's kind and its images; the standalone save sheet stays the
+  fallback for hosts without a sidebar
+- Prompts carry one optional type (decision / question / opinion / idea / supplement / to-do /
+  inspiration) shown as a badge before the title
+- Send queue for prompts only: **+** adds, rows move, edit, duplicate or remove, the header switches
+  between **one by one** and **merge**, a release shows progress and Stop, and an empty queue stays as a
+  one-line strip instead of vanishing
+- Shared pool keeps the built-in and custom groups; a family can be expanded, folded into one tab with its
+  groups as chips, or hidden, and mixed lists name each row's group
+- Starter prompts follow the host language; Settings can reset them in the current interface language,
+  keeping edited built-ins as ordinary items
+- Settings is one page with **Annotations** (three retention switches, each with Undo) and **Prompts**
+  (post-use retention, built-in reset, group order and display) sections
+- Right-click on selected conversation text to copy it or save it into a group (the last destination leads
+  the menu), and confirmations with undo for deletes and clears
 
 Requires DSH >= 0.2.0-rc.1 (verified on 0.2.2-rc.1). This is a **bundle**: install the package, then
 enable it in Settings → Plugins.
