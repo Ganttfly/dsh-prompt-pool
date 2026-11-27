@@ -3498,7 +3498,13 @@ window.__ModuleLoader__.load({
             h('path', { d: 'M5 4h9l5 5v11H5z' }),
             h('path', { d: 'M14 4v5h5M9 13h6M12 10v6' }));
         case 'capture':
-          return h('svg', base, h('path', { d: 'M6.5 4h11v16.5L12 16.5l-5.5 4V4z' }));
+          // Filing a draft: an arrow dropping into an open tray. A bookmark
+          // outline read as a navigation pin next to the help and settings
+          // glyphs, and it said nothing about where the text goes.
+          return h('svg', base,
+            h('path', { d: 'M4 14.4h4.1l1.2 2.1h5.4l1.2-2.1H20' }),
+            h('path', { d: 'M4 14.4v4.1A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-4.1' }),
+            h('path', { d: 'M12 4.2v8.2M8.8 9.4 12 12.6l3.2-3.2' }));
         case 'review':
           return h('svg', base,
             h('path', { d: 'M4 7h7M4 12h7M4 17h7' }),
@@ -4059,9 +4065,11 @@ window.__ModuleLoader__.load({
     }
 
     // ------------------------------------------------------------ sidebar icon
-    // Queue Mark on a 24-unit grid: three unequal prompt bars, the middle one
-    // longest and selected. The mark is bars-only at every size; an arrow
-    // collapses into a fast-forward glyph in menus and sidebars.
+    // The same Queue Mark on a tile: a host tab strip and a menu list draw an
+    // icon in the current text colour, which turns three bars into a black
+    // smudge there. The tile carries the signal green instead, so the mark
+    // stays recognisable at 14px in either theme and cannot be mistaken for a
+    // generic list glyph next to the label.
     function PromptPoolIcon(props) {
       const size = typeof props.size === 'number' && props.size > 0 ? props.size : 18;
       return h(
@@ -4070,13 +4078,13 @@ window.__ModuleLoader__.load({
           width: size,
           height: size,
           viewBox: '0 0 24 24',
-          fill: 'currentColor',
           'aria-hidden': true,
           style: { display: 'block' },
         },
-        h('rect', { x: 5, y: 5.2, width: 9.2, height: 3, rx: 1.5 }),
-        h('rect', { x: 5, y: 10.5, width: 12.2, height: 3, rx: 1.5 }),
-        h('rect', { x: 5, y: 15.8, width: 7.6, height: 3, rx: 1.5 }),
+        h('rect', { x: 0.5, y: 0.5, width: 23, height: 23, rx: 6, fill: '#D8F36A' }),
+        h('rect', { x: 5.4, y: 5.8, width: 9.2, height: 2.8, rx: 1.4, fill: '#16211F', opacity: 0.82 }),
+        h('rect', { x: 5.4, y: 10.6, width: 12.2, height: 2.8, rx: 1.4, fill: '#16211F' }),
+        h('rect', { x: 5.4, y: 15.4, width: 7.6, height: 2.8, rx: 1.4, fill: '#16211F', opacity: 0.82 }),
       );
     }
 
@@ -5523,7 +5531,7 @@ window.__ModuleLoader__.load({
             }, icon('help')),
             h('button', {
               type: 'button',
-              className: 'pp-icon pp-menu-trigger',
+              className: 'pp-icon pp-menu-trigger pp-icon-save',
               title: translate('panel.capture'),
               'aria-label': translate('panel.capture'),
               onClick: openCapture,
@@ -11070,7 +11078,7 @@ window.__ModuleLoader__.load({
             }, icon('help')),
             h('button', {
               type: 'button',
-              className: 'pp-icon pp-menu-trigger',
+              className: 'pp-icon pp-menu-trigger pp-icon-save',
               title: translate('panel.capture'),
               'aria-label': translate('panel.capture'),
               onClick: openCapture,
@@ -11455,6 +11463,10 @@ window.__ModuleLoader__.load({
       '.pp-page-head .pp-scope-bar .pp-tab,.pp-panel-headline .pp-scope-bar .pp-tab{height:30px}' +
       '.pp-new-prompt{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
       '.pp-menu-trigger{width:26px;height:26px;border-radius:7px}' +
+      // Filing a draft is the one header action that writes to the pool, so it
+      // keeps the accent colour while help and settings stay muted.
+      '.pp-head-tools .pp-icon-save{color:var(--pp-accent)}' +
+      '.pp-head-tools .pp-icon-save:hover{background:var(--pp-accent-soft);color:var(--pp-accent)}' +
       // The shared pool gets one context row between the destinations and the
       // search field for its group tabs; workspace prompts go straight to the list.
       '.pp-prompt-bar{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-bottom:1px solid var(--pp-line);font-size:11.5px;color:var(--pp-ink-2)}' +
