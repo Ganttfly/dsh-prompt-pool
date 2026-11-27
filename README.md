@@ -171,7 +171,9 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   Shift+F10 opens the same menu, and a right-click without a selection keeps the browser menu.
 - **Groups** — the shared pool keeps frequent / notes / templates built in, plus your own categories;
   each workspace has its own prompt pool instead of a global workspace group. Each family can be expanded,
-  folded into a single tab, or hidden; the **All** tab can be hidden too.
+  folded into a single tab, or hidden; a folded family still lists its groups as chips on a row underneath
+  (**All groups**, then each group with its count), and a chip narrows the list to that group. Rows in a
+  mixed list carry their group name at the end of the row. The **All** tab can be hidden too.
 - **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
   can reset the built-in set in the current interface language. Edited built-ins can be kept as
   ordinary items; custom items and the queue are left alone.

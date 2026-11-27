@@ -222,6 +222,9 @@ window.__ModuleLoader__.load({
       'row.familyCustom': '自定义',
       'row.familyWorkspace': '工作区分组',
       'tab.familyBuiltin': '内置分组',
+      // Chips under a folded family tab: the whole family, then each group.
+      'tab.familyAll': '全部组',
+      'tab.familyGroups': '分组',
       'row.classification': '分组',
       'page.new': '添加提示词',
 
@@ -583,6 +586,8 @@ window.__ModuleLoader__.load({
       'row.familyCustom': 'Custom',
       'row.familyWorkspace': 'Workspace groups',
       'tab.familyBuiltin': 'Built-in groups',
+      'tab.familyAll': 'All groups',
+      'tab.familyGroups': 'Groups',
       'row.classification': 'Group',
       'page.new': 'Add prompt',
 
@@ -1374,9 +1379,19 @@ window.__ModuleLoader__.load({
     }
 
     /** The group a new item gets from the tab that created it. */
-    function groupForTab(tab, workspaceGroup) {
+    function groupForTab(tab, workspaceGroup, picked) {
       if (tab === 'nested:workspace') return workspaceGroup || BUILTIN_GROUP.note;
-      return familyOf(tab) ? tab : BUILTIN_GROUP.note;
+      if (familyOf(tab)) return tab;
+      // A folded family keeps its groups as chips under the strip, so the new
+      // item follows the chip the user is looking at; with no chip picked it
+      // lands in the family's first group rather than in a different family.
+      const family = foldedFamilyOf(tab);
+      if (family && familyOf(picked) === family) return picked;
+      if (family) {
+        const first = familyChips(family, pool.get().categories)[0];
+        if (first) return first.id;
+      }
+      return BUILTIN_GROUP.note;
     }
 
     /**
@@ -1481,20 +1496,8 @@ window.__ModuleLoader__.load({
     function buildTabs(categories, workspaces, settings, currentWorkspaceId) {
       const flags = normalizeSettings(settings);
       const blocks = {
-        builtin: displayBlock(
-          'builtin',
-          [
-            { id: BUILTIN_GROUP.oftenuse, label: translate('tab.oftenuse'), group: 'builtin' },
-            { id: BUILTIN_GROUP.note, label: translate('tab.note'), group: 'builtin' },
-            { id: BUILTIN_GROUP.template, label: translate('tab.template'), group: 'builtin' },
-          ],
-          settings,
-        ),
-        custom: displayBlock(
-          'custom',
-          categories.map((category) => ({ id: 'custom:' + category.id, label: category.name, category: true, group: 'custom' })),
-          settings,
-        ),
+        builtin: displayBlock('builtin', familyChips('builtin'), settings),
+        custom: displayBlock('custom', familyChips('custom', categories), settings),
       };
       const rest = flags.order;
       // 全部 anchors the row unless the user hid it; the chosen block leads the rest.
@@ -2376,6 +2379,32 @@ window.__ModuleLoader__.load({
       return list;
     }
 
+    /** The family a folded tab stands for; '' for every other tab id. */
+    function foldedFamilyOf(tab) {
+      const value = String(tab || '');
+      return value.indexOf('nested:') === 0 ? value.slice(7) : '';
+    }
+
+    /** One family's groups, as tabs when expanded and as chips when folded. */
+    function familyChips(family, categories) {
+      if (family === 'builtin') {
+        return [
+          { id: BUILTIN_GROUP.oftenuse, label: translate('tab.oftenuse'), group: 'builtin' },
+          { id: BUILTIN_GROUP.note, label: translate('tab.note'), group: 'builtin' },
+          { id: BUILTIN_GROUP.template, label: translate('tab.template'), group: 'builtin' },
+        ];
+      }
+      if (family === 'custom') {
+        return (categories || []).map((category) => ({
+          id: 'custom:' + category.id,
+          label: category.name,
+          category: true,
+          group: 'custom',
+        }));
+      }
+      return [];
+    }
+
     /** One family's tab block: hidden / one folded tab / one tab per group. */
     function displayBlock(family, groups, settings) {
       const mode = normalizeSettings(settings).display[family];
@@ -3075,6 +3104,9 @@ window.__ModuleLoader__.load({
           item.body.trim() === (item.title || '').trim() ? null : h('div', { className: 'pp-body' }, item.body),
           h(ImageStrip, { images: item.images, compact: true, onOpen: onOpenImage }),
         ),
+        // A list that mixes groups (the All tab, or a folded family) says which
+        // group each row came from; a single group's list does not need it.
+        showTag ? h('span', { className: 'pp-tag' }, clipLabel(groupLabelOf(item, categories, workspaces))) : null,
         h(
           'div',
           { className: 'pp-row-actions' },
@@ -4806,6 +4838,8 @@ window.__ModuleLoader__.load({
             );
 
       // Three blocks: custom categories, built-in views, then workspaces.
+      // A chip row under a folded tab leaves the strip to own the add button.
+      const showAdd = props.showAdd !== false;
       const nodes = [];
       let previousGroup = null;
       let addPlaced = false;
@@ -4816,12 +4850,12 @@ window.__ModuleLoader__.load({
         previousGroup = tab.group;
         nodes.push(renderTab(tab));
         const next = tabs[index + 1];
-        if (!addPlaced && tab.group === 'custom' && (!next || next.group !== 'custom')) {
+        if (showAdd && !addPlaced && tab.group === 'custom' && (!next || next.group !== 'custom')) {
           addPlaced = true;
           nodes.push(h('span', { key: 'add-custom', className: 'pp-tab-addwrap' }, renderAdd()));
         }
       });
-      if (!addPlaced) nodes.push(h('span', { key: 'add-custom', className: 'pp-tab-addwrap' }, renderAdd()));
+      if (showAdd && !addPlaced) nodes.push(h('span', { key: 'add-custom', className: 'pp-tab-addwrap' }, renderAdd()));
       return h(React.Fragment, null, nodes);
     }
 
@@ -4917,6 +4951,9 @@ window.__ModuleLoader__.load({
       const [pendingDelete, setPendingDelete] = useState(null);
       const [pendingRemove, setPendingRemove] = useState(null);
       const [pendingStart, setPendingStart] = useState(null);
+      // Which group of a folded family the list is showing; '' keeps the whole
+      // family in one view. Chips under the strip set it.
+      const [familyPick, setFamilyPick] = useState('');
       const [status, setStatus] = useState(null);
       const { preview, openImage, closeImage } = useImagePreview();
       const statusTimer = useRef(0);
@@ -4943,6 +4980,11 @@ window.__ModuleLoader__.load({
         setTab(fallbackTabFor(tabs));
       }, [tabs, tab]);
       const activeGlobalTab = globalTabs.some((entry) => entry.id === tab) ? tab : (globalTabs.find((entry) => entry.id === 'all') || globalTabs[0] || { id: 'all' }).id;
+      // A folded family keeps one tab in the strip and its groups as chips under
+      // it, so the chips are reachable without expanding the strip again.
+      const foldedFamily = foldedFamilyOf(activeGlobalTab);
+      const familyGroups = foldedFamily ? familyChips(foldedFamily, state.categories) : [];
+      const familyPickId = familyOf(familyPick) === foldedFamily ? familyPick : '';
       const changeScope = (next) => {
         setScope(next);
         setSettingsOpen(false);
@@ -5047,6 +5089,8 @@ window.__ModuleLoader__.load({
         if (!target || target.indexOf('custom:') !== 0) return;
         poolActions.removeCategory(target.slice(7));
         if (tab === target) setTab(fallbackTabFor(tabs.filter((entry) => entry.id !== target)));
+        // A chip must not keep pointing at a group that no longer exists.
+        if (familyPick === target) setFamilyPick('');
       };
 
       const items = useMemo(() => {
@@ -5055,12 +5099,15 @@ window.__ModuleLoader__.load({
           ? state.items.filter((item) => groupOf(item) === workspaceGroup)
           : state.items.filter((item) => {
               const family = familyOf(groupOf(item));
-              return (family === 'builtin' || family === 'custom') && matchesTab(item, activeGlobalTab);
+              if (family !== 'builtin' && family !== 'custom') return false;
+              // A picked chip narrows the folded family to that one group.
+              if (familyPickId) return groupOf(item) === familyPickId;
+              return matchesTab(item, activeGlobalTab);
             });
         const needle = query.trim().toLowerCase();
         if (!needle) return base;
         return base.filter((item) => (item.title + '\n' + item.body).toLowerCase().indexOf(needle) >= 0);
-      }, [state.items, scope, workspaceGroup, activeGlobalTab, query]);
+      }, [state.items, scope, workspaceGroup, activeGlobalTab, familyPickId, query]);
 
       const goConversation = () => {
         try {
@@ -5305,7 +5352,7 @@ window.__ModuleLoader__.load({
         const seededType = normalizePromptType(draft && draft.type);
         const group = activeScope === 'workspace'
           ? workspaceGroup
-          : groupForTab(activeGlobalTab, '');
+          : groupForTab(activeGlobalTab, '', familyPickId);
         setQuery('');
         const item = poolActions.add({
           id: uid(),
@@ -5387,7 +5434,7 @@ window.__ModuleLoader__.load({
         workspaces: workspaceList,
         sessionId: activeSessionId,
         editStyle: { margin: '6px 0' },
-        showTag: scope === 'global' && activeGlobalTab === 'all',
+        showTag: scope === 'global' && (activeGlobalTab === 'all' || (Boolean(foldedFamily) && !familyPickId)),
         onInsert: (entry) => sendToComposer(
           { type: 'insert', text: entry.body, images: normalizeImages(entry.images) },
           entry.body.trim() ? translate('status.inserted') : translate('image.inserted'),
@@ -5452,6 +5499,28 @@ window.__ModuleLoader__.load({
                       onDelete: (id) => setPendingCategory(id),
                     }),
                   ),
+                ),
+              )
+            : null,
+          scope === 'global' && foldedFamily && familyGroups.length > 1
+            ? h(
+                'div',
+                // A folded family keeps its groups one click away instead of
+                // mixing them into one list: the strip folds, the chips do not.
+                { className: 'pp-group-bar', onKeyDown: focusTabByKey },
+                h(
+                  'span',
+                  { className: 'pp-group-track', role: 'tablist', 'aria-label': translate('tab.familyGroups') },
+                  h(TabBar, {
+                    tabs: [{ id: 'nested:' + foldedFamily, label: translate('tab.familyAll'), group: foldedFamily }, ...familyGroups],
+                    counts: tabCounts,
+                    active: familyPickId || 'nested:' + foldedFamily,
+                    showAdd: false,
+                    ...tabHandlers((next) => {
+                      setFamilyPick(next === 'nested:' + foldedFamily ? '' : next);
+                    }, familyPickId || 'nested:' + foldedFamily, ''),
+                    onDelete: (id) => setPendingCategory(id),
+                  }),
                 ),
               )
             : null,
@@ -11417,6 +11486,19 @@ window.__ModuleLoader__.load({
       '.pp-page-head .pp-prompt-bar{margin:0 -12px;padding:0 12px}' +
       '.pp-prompt-bar .pp-tabscroll{flex:0 1 auto;min-width:0;margin:0;padding:0}' +
       '.pp-prompt-bar .pp-global-bar{margin:0}' +
+      // A folded family drops one level: the strip keeps the family tab, and its
+      // groups ride underneath as small chips on a quieter track of their own, so
+      // the strip still reads as the top level.
+      '.pp-group-bar{display:flex;align-items:center;flex-wrap:nowrap;gap:2px;height:32px;margin:0 -12px;padding:0 12px;border-bottom:1px solid var(--pp-line);overflow-x:auto;scrollbar-width:none}' +
+      '.pp-group-bar::-webkit-scrollbar{display:none}' +
+      '.pp-group-track{display:inline-flex;flex-wrap:nowrap;align-items:center;gap:2px;padding:2px;border-radius:8px;background:color-mix(in srgb,var(--pp-ink) 4.5%,transparent)}' +
+      '.pp-group-bar .pp-tabcell{flex:none}' +
+      '.pp-group-bar .pp-tab{height:22px;padding:0 8px;border:0;border-radius:6px;font-size:11.5px;color:var(--pp-ink-2)}' +
+      '.pp-group-bar .pp-tab:hover:not([data-active="true"]){background:color-mix(in srgb,var(--pp-ink) 6%,transparent);color:var(--pp-ink)}' +
+      '.pp-group-bar .pp-tab[data-active="true"]{background:var(--dsw-alias-bg-base,var(--pp-surface));color:var(--pp-ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.07)}' +
+      '.pp-group-bar .pp-tab-count{background:color-mix(in srgb,currentColor 10%,transparent)}' +
+      '.pp-group-bar .pp-tab-x{width:16px;height:16px;margin-left:-2px;font-size:11px}' +
+      '.pp-group-bar .pp-tab-input{height:22px;font-size:11.5px}' +
       // Settings is a destination, not a dialog tab strip: it gets an explicit
       // way back to the pool, set above the title like a breadcrumb, and two
       // sections only.

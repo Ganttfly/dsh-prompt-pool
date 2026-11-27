@@ -24,11 +24,14 @@ const BUILTIN_GROUP = { oftenuse: 'builtin:oftenuse', note: 'builtin:note', temp
 ${grab('familyOf')}
 ${grab('groupOf')}
 ${grab('withGroup')}
+${grab('foldedFamilyOf')}
+${grab('familyChips')}
 ${grab('groupForTab')}
 ${grab('matchesTab')}
-return { familyOf, groupOf, withGroup, groupForTab, matchesTab };
+return { familyOf, groupOf, withGroup, foldedFamilyOf, familyChips, groupForTab, matchesTab };
 `;
-const api = new Function(impl)();
+const store = { categories: [{ id: 'c1', name: 'One' }, { id: 'c2', name: 'Two' }], settings: {} };
+const api = new Function('pool', 'translate', impl)({ get: () => store }, (key) => key);
 
 let failures = 0;
 const check = (label, actual, expected) => {
@@ -61,6 +64,20 @@ check('from template tab', api.groupForTab('builtin:template', ''), 'builtin:tem
 check('from category tab', api.groupForTab('custom:c1', ''), 'custom:c1');
 check('from workspace tab', api.groupForTab('nested:workspace', 'workspace:w1'), 'workspace:w1');
 check('from all falls back to note', api.groupForTab('all', ''), 'builtin:note');
+// A folded family keeps its groups as chips, so the pick decides where a new
+// item lands instead of the whole family collapsing onto the note group.
+check('from folded custom with a chip', api.groupForTab('nested:custom', '', 'custom:c2'), 'custom:c2');
+check('from folded custom with no chip', api.groupForTab('nested:custom', ''), 'custom:c1');
+check('a chip of another family is ignored', api.groupForTab('nested:custom', '', 'builtin:template'), 'custom:c1');
+check('from folded builtin', api.groupForTab('nested:builtin', ''), 'builtin:oftenuse');
+
+// 4. The folded tab names its family, and family chips are the same groups.
+check('folded custom family', api.foldedFamilyOf('nested:custom'), 'custom');
+check('folded builtin family', api.foldedFamilyOf('nested:builtin'), 'builtin');
+check('a plain tab is not folded', api.foldedFamilyOf('custom:c1'), '');
+check('builtin chips', api.familyChips('builtin').map((chip) => chip.id), ['builtin:oftenuse', 'builtin:note', 'builtin:template']);
+check('custom chips', api.familyChips('custom', store.categories).map((chip) => chip.id), ['custom:c1', 'custom:c2']);
+check('unknown family has no chips', api.familyChips('workspace'), []);
 
 // 4. Family derivation.
 check('family builtin', api.familyOf('builtin:note'), 'builtin');

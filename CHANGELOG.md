@@ -45,6 +45,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- A collapsed family no longer merges its groups into one anonymous list: the family tab stays on the strip
+  and its groups appear as chips on a quieter track underneath (**All groups**, then each group with its
+  count). A chip narrows the list to that group, **All groups** widens it back, and a new item made while a
+  chip is picked lands in that chip's group instead of falling into the notes group. A family with a single
+  group shows no chips row.
+- A list that mixes groups says which group each row came from: the **All** tab and a collapsed family's
+  unpicked view end each row with its group name. The tag had been dropped when the row's type badge moved
+  into the title line, leaving the flag passed but unused.
 - The group settings no longer need a header row: each family states its own three choices on its row as
   segments — **Expanded** / **Collapsed** / **Hidden** — so the dots under a name explain themselves
   without a trip up to a column label, and the arrows keep their place at the row's end. The hint above now
