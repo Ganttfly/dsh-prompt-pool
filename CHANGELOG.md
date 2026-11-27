@@ -41,6 +41,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- **Save draft** now lives only in the composer's **Prompts** menu: the icon beside **Settings** is gone
+  from the page and panel headers, so that row is navigation only and the action sits beside the text it
+  copies. The menu item opens the same destination chooser, still copies rather than clears the composer,
+  and the empty pool hint points at it.
 - The **Settings** glyph is a real cog again: the two sliders it wore read as a mixer beside the help
   question mark, and a gear is the shape that needs no tooltip to be recognised.
 - Row actions read as one set: **Insert** is a 24px icon like queue, copy, store and delete, named by its
@@ -58,9 +62,6 @@ All notable changes to this project are documented here. The format follows
   a tab strip draws an icon in the host's ink, which turned the bare mark into three black bars that read
   as a generic list glyph beside the label, so the mark wears the same direction arrow as the composer's
   cap and the tab, the guide entry and the tools list all show one shape.
-  The header's **Save draft** action also trades its bookmark for an arrow dropping into an open tray —
-  the shape carries it, so it keeps the plain icon ink like help and settings instead of a lone blue
-  control in the same row.
 - One annotation filed as a prompt now arrives ready to paste: the title stays empty, and the body is two
   lines — 【原文】passage, then 【批注】what was written. Each kind opens that annotation with its own fixed
   words (同意：/ 不同意：/ 疑问：/ 意见：/ 思路：/ 补充：/ 待办：), so the block says how the passage should

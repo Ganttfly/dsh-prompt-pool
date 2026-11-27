@@ -198,10 +198,9 @@ const panelQueueStrip = panelNodes.some((node) => hasClass(node, 'pp-queue-strip
 const panelQueueToggle = panelNodes.some((node) => node.type === 'button' && hasClass(node, 'pp-queue-toggle'));
 const panelBrand = panelNodes.some((node) => hasClass(node, 'pp-panel-brand'))
   && panelNodes.some((node) => hasClass(node, 'pp-panel-brand-name'));
-const panelCapture = panelNodes.some((node) => node.type === 'button' && node.props && node.props.title === 'panel.capture');
 const panelSettings = panelNodes.some((node) => node.type === 'button' && node.props && node.props.title === 'settings.open');
-console.log(`[check] panel header brand=${panelBrand} search=${panelSearch} close=${panelClose} grip=${panelGrip} queueStrip=${panelQueueStrip} queueToggle=${panelQueueToggle} capture=${panelCapture} settings=${panelSettings} page-item rows=${panelRows}`);
-if (!panelBrand || !panelSearch || !panelClose || !panelGrip || !panelQueueStrip || panelQueueToggle || !panelCapture || !panelSettings || panelRows === 0) process.exitCode = 1;
+console.log(`[check] panel header brand=${panelBrand} search=${panelSearch} close=${panelClose} grip=${panelGrip} queueStrip=${panelQueueStrip} queueToggle=${panelQueueToggle} settings=${panelSettings} page-item rows=${panelRows}`);
+if (!panelBrand || !panelSearch || !panelClose || !panelGrip || !panelQueueStrip || panelQueueToggle || !panelSettings || panelRows === 0) process.exitCode = 1;
 
 // The composer trigger names itself and no longer carries a queue badge.
 const triggerEntry = registrations.find((entry) => entry.slot === 'conversation.input.right');

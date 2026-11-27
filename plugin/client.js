@@ -84,12 +84,11 @@ window.__ModuleLoader__.load({
       'tip.prompts': '随时记录需求、灵感和指令；提前编排多步骤指令队列，一键发送。',
       'panel.title': '提示池',
       'panel.close': '关闭',
-      'panel.capture': '保存草稿',
       'panel.resize': '拖动调整高度，双击还原',
       'panel.resizeWidth': '拖动调整宽度，双击还原',
       'panel.pin': '钉住面板',
       'panel.unpin': '取消钉住',
-      'panel.empty': '池子是空的。点「添加提示词」新建，或点「保存草稿」收下输入框内容。',
+      'panel.empty': '池子是空的。点「添加提示词」新建，或在输入栏「提示池」菜单里点「保存草稿」收下输入框内容。',
       'panel.emptyTab': '这一栏还没有内容。',
       'page.emptyTab': '这里还没有提示词。',
       'tab.all': '全部',
@@ -446,12 +445,11 @@ window.__ModuleLoader__.load({
       'tip.prompts': 'Keep needs, ideas and instructions; queue multi-step prompts and send them in one go',
       'panel.title': 'Prompt pool',
       'panel.close': 'Close',
-      'panel.capture': 'Save draft',
       'panel.resize': 'Drag to resize, double-click to reset',
       'panel.resizeWidth': 'Drag to resize the width, double-click to reset',
       'panel.pin': 'Pin the panel',
       'panel.unpin': 'Unpin the panel',
-      'panel.empty': 'The pool is empty. Press Add prompt to create one, or Save draft to keep the composer text.',
+      'panel.empty': 'The pool is empty. Press Add prompt to create one, or pick Save draft in the composer\'s pool menu.',
       'panel.emptyTab': 'Nothing in this tab yet.',
       'page.emptyTab': 'No prompts here yet.',
       'tab.all': 'All',
@@ -4883,7 +4881,6 @@ window.__ModuleLoader__.load({
       const tabs = [{ id: 'notes', label: translate('note.title'), group: 'notes' }, ...baseTabs];
       const globalTabs = tabs.filter((entry) => entry.id === 'all' || entry.group === 'builtin' || entry.group === 'custom');
       const workspaceGroup = currentWorkspaceId ? 'workspace:' + currentWorkspaceId : '';
-      const captureGroups = captureChoices(state.categories, workspaceList, currentWorkspaceId, state.settings);
       const [tab, setPageTab] = useState(() => {
         const stored = pageTabState.get().id;
         return stored && tabs.some((entry) => entry.id === stored) ? stored : fallbackTabFor(tabs);
@@ -4911,7 +4908,6 @@ window.__ModuleLoader__.load({
       const [pendingDelete, setPendingDelete] = useState(null);
       const [pendingRemove, setPendingRemove] = useState(null);
       const [pendingStart, setPendingStart] = useState(null);
-      const [captureOpen, setCaptureOpen] = useState(false);
       const [status, setStatus] = useState(null);
       const { preview, openImage, closeImage } = useImagePreview();
       const statusTimer = useRef(0);
@@ -5088,29 +5084,6 @@ window.__ModuleLoader__.load({
         flash({ kind: 'error', text });
       };
 
-      /** Ask the panel whether the composer has content before opening the chooser. */
-      const openCapture = () => {
-        let result;
-        try {
-          result = bridge.request({ type: 'capture-check' });
-        } catch (error) {
-          result = { ok: false, reason: String((error && error.message) || error) };
-        }
-        Promise.resolve(result).then(
-          (value) => {
-            if (value && value.ok) {
-              if (value.ready) {
-                setCaptureOpen(true);
-              } else {
-                flash({ kind: 'error', text: translate('status.nothing') });
-              }
-              return;
-            }
-            flash({ kind: 'error', text: translate('status.noComposer') });
-          },
-          () => flash({ kind: 'error', text: translate('status.noComposer') }),
-        );
-      };
 
 
       /** The page has no composer, so the mounted panel inserts the reply. */
@@ -5274,39 +5247,6 @@ window.__ModuleLoader__.load({
           onSaved: done,
         });
         return { ok: true };
-      };
-
-      /** The page cannot read the composer, so the mounted panel performs it. */
-      const captureDraft = (group) => {
-        let result;
-        try {
-          result = bridge.request({ type: 'capture', group });
-        } catch (error) {
-          result = { ok: false, reason: String((error && error.message) || error) };
-        }
-        Promise.resolve(result).then(
-          (value) => {
-            if (value && value.ok) {
-              const skipped = Number(value.skipped) || 0;
-              const label = typeof value.label === 'string' ? value.label : '';
-              flash(skipped > 0
-                ? {
-                    kind: 'info',
-                    text: label
-                      ? translate('status.savedPartialTo', { group: label, n: skipped })
-                      : translate('status.savedPartial', { n: skipped }),
-                  }
-                : {
-                    kind: 'ok',
-                    text: label ? translate('status.savedTo', { group: label }) : translate('status.saved'),
-                  });
-              return;
-            }
-            const reason = value && value.reason;
-            flash({ kind: 'error', text: translate(reason === 'empty' ? 'status.nothing' : 'status.noComposer') });
-          },
-          () => flash({ kind: 'error', text: translate('status.noComposer') }),
-        );
       };
 
       /** The confirmed delete: drop the item, then offer the same undo as the panel. */
@@ -5531,13 +5471,6 @@ window.__ModuleLoader__.load({
             h('button', {
               type: 'button',
               className: 'pp-icon pp-menu-trigger',
-              title: translate('panel.capture'),
-              'aria-label': translate('panel.capture'),
-              onClick: openCapture,
-            }, icon('capture')),
-            h('button', {
-              type: 'button',
-              className: 'pp-icon pp-menu-trigger',
               title: translate('settings.open'),
               'aria-label': translate('settings.open'),
               onClick: () => { setReviewOpen(false); setSettingsOpen(!settingsOpen); },
@@ -5588,16 +5521,6 @@ window.__ModuleLoader__.load({
                 poolActions.removeTray(pendingRemove.key);
                 setPendingRemove(null);
               },
-            })
-          : null,
-        captureOpen
-          ? h(CaptureMenu, {
-              groups: captureGroups,
-              onPick: (group) => {
-                setCaptureOpen(false);
-                captureDraft(group);
-              },
-              onCancel: () => setCaptureOpen(false),
             })
           : null,
         helpOpen ? h(HelpDialog, { onClose: () => setHelpOpen(false) }) : null,
@@ -10159,7 +10082,6 @@ window.__ModuleLoader__.load({
       const [confirmClear, setConfirmClear] = useState(false);
       const [pendingDelete, setPendingDelete] = useState(null);
       const [pendingRemove, setPendingRemove] = useState(null);
-      const [captureOpen, setCaptureOpen] = useState(false);
       const [status, setStatus] = useState(null);
       const [busy, setBusy] = useState(false);
       const { preview, openImage, closeImage } = useImagePreview();
@@ -10317,7 +10239,7 @@ window.__ModuleLoader__.load({
       useEffect(() => {
         if (!view.open || preview) return undefined;
         const onKey = (event) => {
-          if (event.key !== 'Escape' || captureOpen) return;
+          if (event.key !== 'Escape') return;
           if (editing) {
             setEditing(null);
           } else {
@@ -10328,7 +10250,7 @@ window.__ModuleLoader__.load({
         };
         window.addEventListener('keydown', onKey, true);
         return () => window.removeEventListener('keydown', onKey, true);
-      }, [view.open, editing, preview, captureOpen]);
+      }, [view.open, editing, preview]);
 
       const items = useMemo(() => {
         if (scope === 'notes') return [];
@@ -10411,14 +10333,6 @@ window.__ModuleLoader__.load({
         }
       };
 
-      /** Only open the destination chooser when the composer has something. */
-      const openCapture = () => {
-        if (!draftRef.current.trim()) {
-          flash({ kind: 'error', text: translate('status.nothing') });
-          return;
-        }
-        setCaptureOpen(true);
-      };
 
       /**
        * Copies the composer content into the pool; the composer keeps its text.
@@ -10904,9 +10818,6 @@ window.__ModuleLoader__.load({
             return { ok: requestReleaseStop() };
           }
           // The sidebar page cannot read the composer, so it asks for the capture.
-          if (command.type === 'capture-check') {
-            return { ok: true, ready: draftRef.current.trim() !== '' };
-          }
           if (command.type === 'open-view') {
             setSettingsOpen(false);
             setReviewOpen(false);
@@ -10946,7 +10857,6 @@ window.__ModuleLoader__.load({
 
       if (!view.open) return null;
 
-      const captureGroups = captureChoices(state.categories, workspaces.items, currentWorkspaceId, state.settings);
       const changeScope = (next) => {
         setScope(next);
         setSettingsOpen(false);
@@ -11070,13 +10980,6 @@ window.__ModuleLoader__.load({
             h('button', {
               type: 'button',
               className: 'pp-icon pp-menu-trigger',
-              title: translate('panel.capture'),
-              'aria-label': translate('panel.capture'),
-              onClick: openCapture,
-            }, icon('capture')),
-            h('button', {
-              type: 'button',
-              className: 'pp-icon pp-menu-trigger',
               title: translate('settings.open'),
               'aria-label': translate('settings.open'),
               onClick: () => {
@@ -11124,16 +11027,6 @@ window.__ModuleLoader__.load({
                 poolActions.removeTray(pendingRemove.key);
                 setPendingRemove(null);
               },
-            })
-          : null,
-        captureOpen
-          ? h(CaptureMenu, {
-              groups: captureGroups,
-              onPick: (group) => {
-                setCaptureOpen(false);
-                captureDraft(group);
-              },
-              onCancel: () => setCaptureOpen(false),
             })
           : null,
         helpOpen ? h(HelpDialog, { onClose: () => setHelpOpen(false) }) : null,
