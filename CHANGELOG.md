@@ -45,6 +45,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The group settings no longer need a header row: each family states its own three choices on its row as
+  segments — **Expanded** / **Collapsed** / **Hidden** — so the dots under a name explain themselves
+  without a trip up to a column label, and the arrows keep their place at the row's end. The hint above now
+  says the row decides the display instead of pointing at columns that are gone.
+- **Reset built-in prompts** sits on its card's heading line, beside the family it resets, instead of
+  drifting to the card's bottom edge below an unrelated checkbox; the language it resets into moved to the
+  button's hover text, because the confirm step already spells it out before anything happens.
 - The settings page reads as one page with two sections instead of two dialogs: **Back to prompt pool**
   is now a borderless caption above the title (it used to sit beside it as a peer), its tabs wear the
   destination they switch to — amber for **Annotations**, blue for **Prompts** — instead of a neutral ink

@@ -147,7 +147,7 @@ window.__ModuleLoader__.load({
       'settings.notesKeepStore': '存为提示词后，仍旧保留',
       'settings.notesKeepStoreHint': '关闭后，存成提示词成功的批注会从列表移除。保存步骤不会把会话、原文节点和上下文带进提示词。',
       'settings.table': '全局共享池的分组',
-      'settings.tableHint': '箭头调整先后顺序；右侧三列决定这一组在全局共享池里怎么显示。工作区提示词不参与这些分组。',
+      'settings.tableHint': '每行决定这一组在全局共享池里怎么显示；箭头调整先后顺序。工作区提示词不参与这些分组。',
       'settings.showAllTab': '显示「全部」标签页',
       'settings.showAllTabHint': '关闭后在全局共享池的标签栏里隐藏「全部」；其他分组页签仍可正常切换，停在「全部」的视图会自动落到第一个可用页签。',
       'settings.tableGroup': '分组',
@@ -508,7 +508,7 @@ window.__ModuleLoader__.load({
       'settings.notesKeepStore': 'Keep annotations after saving as a prompt',
       'settings.notesKeepStoreHint': 'Turned off, annotations leave the list once saved as a prompt. The save step does not copy the session, source node or context into the prompt.',
       'settings.table': 'Groups in the global shared pool',
-      'settings.tableHint': 'Use the arrows to reorder; the three columns decide how each family shows up in the global shared pool. Workspace prompts do not use these groups.',
+      'settings.tableHint': 'Each row decides how that family shows up in the global shared pool; the arrows reorder them. Workspace prompts do not use these groups.',
       'settings.showAllTab': 'Show the “All” tab',
       'settings.showAllTabHint': 'Turned off, the global shared pool hides “All”; group tabs still switch normally, and a view parked on “All” lands on the first available tab.',
       'settings.tableGroup': 'Group',
@@ -5823,7 +5823,26 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'pp-set-group pp-set-card', style: { display: section === 'prompts' ? '' : 'none' } },
-          h('div', { className: 'pp-set-label' }, translate('settings.seedCard')),
+          // The reset belongs to the family it acts on, so it sits on the
+          // heading line instead of drifting to the card's bottom edge.
+          h(
+            'div',
+            { className: 'pp-set-cardhead' },
+            h('div', { className: 'pp-set-label' }, translate('settings.seedCard')),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'pp-mini',
+                'data-pp': 'seed-reset',
+                // The confirm step spells the language out anyway; the hover
+                // text saves the paragraph that used to repeat it here.
+                title: translate('settings.seedNote', { language: seedLanguageLabel }),
+                onClick: () => setSeedConfirm(true),
+              },
+              translate('settings.seedResetButton'),
+            ),
+          ),
           h(
             'div',
             { className: 'pp-hint' },
@@ -5841,25 +5860,6 @@ window.__ModuleLoader__.load({
             h('span', null, translate('settings.seedKeepEdited')),
           ),
           h('div', { className: 'pp-hint pp-set-hint' }, translate('settings.seedKeepEditedHint')),
-          h(
-            'div',
-            { className: 'pp-set-actions' },
-            h(
-              'span',
-              { className: 'pp-hint pp-set-note' },
-              translate('settings.seedNote', { language: seedLanguageLabel }),
-            ),
-            h(
-              'button',
-              {
-                type: 'button',
-                className: 'pp-mini',
-                'data-pp': 'seed-reset',
-                onClick: () => setSeedConfirm(true),
-              },
-              translate('settings.seedResetButton'),
-            ),
-          ),
           seedStatus ? h('div', { className: 'pp-hint' }, seedStatus) : null,
         ),
         h(
@@ -5883,56 +5883,63 @@ window.__ModuleLoader__.load({
             h('div', { className: 'pp-hint pp-set-hint' }, translate('settings.showAllTabHint')),
           ),
           h('div', { className: 'pp-hint pp-set-hint' }, translate('settings.tableHint')),
+          // Each family answers its own row: the three ways to show it are
+          // segments on that row, so the eye never travels up to a header to
+          // learn what the dots under a name mean.
           h(
             'div',
-            { className: 'pp-set-tr pp-set-th' },
-            h('span', null, translate('settings.tableGroup')),
-            ['tabs', 'nested', 'hidden'].map((mode) =>
-              h('span', { key: mode, className: 'pp-set-th-cell' }, translate('settings.mode.' + mode)),
-            ),
-            h('span', { className: 'pp-set-th-cell' }, translate('settings.tableOrder')),
-          ),
-          settings.order.map((family, index) =>
-            h(
-              'div',
-              { key: family, className: 'pp-set-tr' },
-              h('span', { className: 'pp-set-td-name' }, translate('settings.display.' + family)),
-              ['tabs', 'nested', 'hidden'].map((mode) =>
+            { className: 'pp-set-fams', role: 'group', 'aria-label': translate('settings.tableGroup') },
+            settings.order.map((family, index) =>
+              h(
+                'div',
+                { key: family, className: 'pp-set-fam' },
+                h('span', { className: 'pp-set-fam-name' }, translate('settings.display.' + family)),
                 h(
                   'span',
-                  { key: mode, className: 'pp-set-td-cell' },
-                  h('input', {
-                    type: 'radio',
-                    name: 'pp-display-' + family,
-                    checked: settings.display[family] === mode,
-                    onChange: () => poolActions.setSetting('display', { ...settings.display, [family]: mode }),
-                  }),
-                ),
-              ),
-              h(
-                'span',
-                { className: 'pp-set-td-order' },
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'pp-mini',
-                    disabled: index === 0,
-                    title: translate('settings.moveUp'),
-                    onClick: () => moveOrder(index, -1),
-                  },
-                  '↑',
+                  { className: 'pp-seg', role: 'radiogroup', 'aria-label': translate('settings.display.' + family) },
+                  ['tabs', 'nested', 'hidden'].map((mode) =>
+                    h(
+                      'label',
+                      {
+                        key: mode,
+                        className: 'pp-seg-opt',
+                        'data-active': settings.display[family] === mode ? 'true' : 'false',
+                      },
+                      h('input', {
+                        type: 'radio',
+                        name: 'pp-display-' + family,
+                        checked: settings.display[family] === mode,
+                        onChange: () => poolActions.setSetting('display', { ...settings.display, [family]: mode }),
+                      }),
+                      h('span', null, translate('settings.mode.' + mode)),
+                    ),
+                  ),
                 ),
                 h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'pp-mini',
-                    disabled: index === settings.order.length - 1,
-                    title: translate('settings.moveDown'),
-                    onClick: () => moveOrder(index, 1),
-                  },
-                  '↓',
+                  'span',
+                  { className: 'pp-set-fam-order', 'aria-label': translate('settings.tableOrder') },
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'pp-mini',
+                      disabled: index === 0,
+                      title: translate('settings.moveUp'),
+                      onClick: () => moveOrder(index, -1),
+                    },
+                    '↑',
+                  ),
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'pp-mini',
+                      disabled: index === settings.order.length - 1,
+                      title: translate('settings.moveDown'),
+                      onClick: () => moveOrder(index, 1),
+                    },
+                    '↓',
+                  ),
                 ),
               ),
             ),
@@ -11497,12 +11504,19 @@ window.__ModuleLoader__.load({
       '.pp-set-row{display:flex;align-items:flex-start;gap:8px;cursor:pointer}' +
       '.pp-set-row input{margin:3px 0 0;accent-color:var(--pp-accent);cursor:pointer}' +
       '.pp-set-hint{margin-top:2px;padding-left:22px}' +
-      '.pp-set-tr{display:grid;grid-template-columns:1fr 64px 64px 64px 76px;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--pp-line-2)}' +
-        '.pp-set-tr.pp-set-th{border-top:0;padding-bottom:2px;font-size:11px;color:var(--pp-ink-2)}' +
-        '.pp-set-td-name{font-size:12px;color:var(--pp-ink)}' +
-        '.pp-set-td-cell{display:flex;justify-content:center}' +
-        '.pp-set-th-cell{text-align:center}' +
-        '.pp-set-td-order{display:flex;justify-content:center;gap:4px}' +
+      '.pp-set-fams{display:flex;flex-direction:column}' +
+        '.pp-set-fam{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--pp-line-2)}' +
+        '.pp-set-fam:last-child{border-bottom:0}' +
+        '.pp-set-fam-name{flex:0 0 108px;font-size:12px;color:var(--pp-ink)}' +
+        '.pp-set-fam-order{display:flex;justify-content:flex-end;gap:4px;margin-left:auto}' +
+        '.pp-seg{display:inline-flex;flex:none;padding:2px;border:1px solid var(--pp-line);border-radius:8px}' +
+        '.pp-seg-opt{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:50px;height:22px;padding:0 6px;border-radius:6px;font-size:11.5px;line-height:1;color:var(--pp-ink-2);white-space:nowrap;cursor:pointer}' +
+        '.pp-seg-opt input{position:absolute;inset:0;margin:0;opacity:0;cursor:pointer}' +
+        '.pp-seg-opt:hover{color:var(--pp-ink)}' +
+        '.pp-seg-opt[data-active="true"]{background:var(--pp-accent-soft);color:var(--pp-accent);font-weight:600}' +
+        '.pp-seg-opt:focus-within{outline:2px solid color-mix(in srgb,var(--pp-accent) 55%,transparent);outline-offset:1px}' +
+        '.pp-set-cardhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}' +
+        '.pp-set-cardhead .pp-set-label{margin:0}' +
         '.pp-set-divider{height:1px;background:var(--pp-line-2);margin:14px 0 12px}' +
       '.pp-about{margin-top:14px}' +
       '.pp-about-version{margin-left:6px;font-size:11px;font-weight:400;color:var(--pp-ink-2);font-variant-numeric:tabular-nums}' +
@@ -11510,8 +11524,6 @@ window.__ModuleLoader__.load({
       '.pp-about-key{flex:none;width:60px;color:var(--pp-ink-2)}' +
       '.pp-about-row a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
         '.pp-set-label{font-size:12px;color:var(--pp-ink-2);margin:2px 0 4px}' +
-        '.pp-set-note{margin-right:auto;padding:0;line-height:1.4}' +
-        '.pp-set-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px}' +
       '.pp-set-card{padding:10px 12px;border:1px solid var(--pp-line-2);border-radius:10px;background:var(--pp-surface);box-shadow:none}' +
       '.pp-set-card .pp-set-label{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-set-card .pp-set-row{padding:3px 0}' +

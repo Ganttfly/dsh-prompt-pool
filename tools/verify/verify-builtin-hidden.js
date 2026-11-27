@@ -129,6 +129,17 @@ for (const mode of ['hidden', 'tabs', 'nested']) {
   if (checked !== wanted) failures.push(`${mode}: radio #${checked} is checked, expected #${wanted}`);
   if (radios.some((radio) => radio.props.disabled)) failures.push(`${mode}: a display radio is still disabled`);
 
+  // Each row names its own choices: the three modes are segments on the family
+  // row, so no header row is needed to explain a bare dot.
+  const segments = nodes(settings.component({}), []).filter(
+    (node) => typeof node.type === 'string' && node.props && node.props.className === 'pp-seg-opt',
+  );
+  if (segments.length !== 6) failures.push(`${mode}: expected 6 display segments (2 families x 3 modes), saw ${segments.length}`);
+  const labelled = segments.every((segment) => (segment.children || []).some(
+    (child) => child && child.children && String(child.children[0] || '').indexOf('settings.mode.') === 0,
+  ));
+  if (!labelled) failures.push(`${mode}: a display segment does not spell its mode`);
+
   if (failures.length === before) console.log(`[ok] display.builtin = ${mode}`);
 }
 
