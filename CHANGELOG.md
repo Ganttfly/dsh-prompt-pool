@@ -34,6 +34,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The **How the prompt pool works** card now describes the current flow in four short lines per column
+  instead of a paragraph: in-place annotation with continuous picking on one side, the two prompt scopes
+  and the two ways to send a prompt on the other.
 - The composer cap still reads **Prompt pool**, but its tooltip now names the action: **Open the prompt
   pool** (and its localized equivalent), so hovering the mark no longer repeats the visible label.
 - The composer trigger's brand cap now opens the right sidebar page instead of the composer panel,

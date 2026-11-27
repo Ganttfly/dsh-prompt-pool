@@ -125,11 +125,11 @@ window.__ModuleLoader__.load({
       'page.noMatch': '没有匹配的条目。',
       'help.open': '使用说明',
       'help.title': '提示池怎么用',
-      'help.intro': '批注留在对话里，提示词留在库里，要发的都在待发送队列里。',
+      'help.intro': '批注留在对话里，提示词留在库里，要发的先进队列。',
       'help.notesTitle': '批注',
-      'help.notesBody': '在回复里选中一句话，右键选择「批注」。批注只属于当前会话；点底部的「汇总批注」可以把它们合并成一条指令。',
+      'help.notesBody': '选中回复里的一句话，右键「批注」\n在段落旁的气泡里选类型、写内容\n接着点下一段就能连续标，Esc 退出\n底部「汇总批注」合成一条指令',
       'help.promptsTitle': '提示词',
-      'help.promptsBody': '把反复使用的指令存进库里：「提示词」放当前工作区，「共享池」放跨工作区共用的分组。点「插入」进输入框，点「＋」加入待发送队列；它是共享队列，发送后按顺序进入输入框。',
+      'help.promptsBody': '把常用指令存进库里\n「提示词」跟工作区走，「共享池」跨工作区\n「插入」放进输入框\n「＋」加入共享队列，按顺序送进输入框',
       'help.close': '知道了',
       'status.noComposer': '没有可用的输入框：请先打开一个对话页签',
       'status.noWorkspace': '当前会话还没有工作区，无法新建工作区提示词。',
@@ -469,11 +469,11 @@ window.__ModuleLoader__.load({
       'page.noMatch': 'No matching item.',
       'help.open': 'How it works',
       'help.title': 'How the prompt pool works',
-      'help.intro': 'Annotations stay in the conversation, prompts stay in the library, and everything to send waits in the send queue.',
+      'help.intro': 'Annotations stay in the conversation, prompts stay in the library, and anything to send waits in the queue.',
       'help.notesTitle': 'Annotations',
-      'help.notesBody': 'Select a sentence in a reply and choose “Annotate” from the context menu. Annotations belong to the current session; the “Summarize” control at the bottom merges them into one instruction.',
+      'help.notesBody': 'Select a sentence, right-click “Annotate”\nPick a type and write in the bubble beside it\nClick the next paragraph to keep going; Esc stops\n“Summarize” joins them into one instruction',
       'help.promptsTitle': 'Prompts',
-      'help.promptsBody': 'Save instructions you reuse: Prompts holds the current workspace, and Shared holds the groups used across workspaces. “Insert” puts one in the composer; “+” adds it to the send queue. The queue is shared and sends into the composer in order.',
+      'help.promptsBody': 'Keep reusable instructions in the library\nPrompts stay in the workspace; Shared spans all\n“Insert” drops one into the composer\n“+” adds it to the shared queue, sent in order',
       'help.close': 'Got it',
       'status.noComposer': 'No composer available: open a conversation tab first',
       'status.noWorkspace': 'This session has no workspace yet, so a workspace prompt cannot be created.',
@@ -11186,7 +11186,7 @@ window.__ModuleLoader__.load({
       '.pp-help-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--pp-ink)}' +
       '.pp-help-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:none;border-radius:6px;background:color-mix(in srgb,var(--pp-accent) 9%,transparent);color:var(--pp-accent)}' +
       '.pp-help-icon svg{width:14px;height:14px}' +
-      '.pp-help-body{font-size:11.5px;line-height:1.6;color:var(--pp-ink-2)}' +
+      '.pp-help-body{font-size:11.5px;line-height:1.6;color:var(--pp-ink-2);white-space:pre-line}' +
       '.pp-help-card .pp-modal-actions{margin-top:2px}' +
       // The page header stacks two rows: the three destinations, then the
       // search field with the contextual tools.
