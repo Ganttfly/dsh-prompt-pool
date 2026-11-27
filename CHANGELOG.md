@@ -34,6 +34,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- One annotation filed as a prompt now arrives ready to paste: the title stays empty, and the body is the
+  passage under 【原文】 followed by what was written on it under 【批注】, each on its own line. The kind
+  stays on the annotation itself — the two labels already separate the evidence from the instruction — and
+  the passage keeps its whole text instead of the 80-character preview used in the review reply. A batch of
+  annotations keeps its generated title, since that prompt has to be found again in the pool.
 - An annotation no longer explains itself in a browser tooltip: hovering the badge holds no native `title`,
   because the words are the annotation and the bubble says the rest. Clicking the annotated words now opens
   that annotation's bubble, the same as clicking its badge — the click is mapped back through the caret

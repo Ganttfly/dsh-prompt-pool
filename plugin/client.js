@@ -388,6 +388,8 @@ window.__ModuleLoader__.load({
       'note.composeStore': '存成提示词',
       'note.save.contextWarning': '转为提示词后不会保留会话上下文，请确认内容可以独立理解。',
       'note.composeStored': '已存成提示词到 {group}',
+      'note.prompt.quote': '【原文】',
+      'note.prompt.body': '【批注】',
       'note.inserted': '已插入输入框',
       'note.insertFailed': '输入框暂不可用，稍后再试',
       'note.quoteMissing': '这条批注暂时找不到原文位置（回复可能被折叠或改写了）。',
@@ -738,6 +740,8 @@ window.__ModuleLoader__.load({
       'note.composeStore': 'Save as prompt',
       'note.save.contextWarning': 'Saving as a prompt does not keep the conversation context; make sure the text stands on its own.',
       'note.composeStored': 'Saved as a prompt in {group}',
+      'note.prompt.quote': '【Original】',
+      'note.prompt.body': '【Annotation】',
       'note.inserted': 'Inserted into the composer',
       'note.insertFailed': 'The composer is not available; try again',
       'note.quoteMissing': 'This note cannot find its text right now (the reply may be folded or rewritten).',
@@ -6823,6 +6827,22 @@ window.__ModuleLoader__.load({
       return `【${label}】「${noteQuoteText(note.quote)}」${body ? '：' + body : ''}`;
     }
 
+    /**
+     * One annotation filed as a prompt: the passage it marks, then what was
+     * written on it, each under its own label. A prompt is asked to stand on
+     * its own, so it keeps the whole passage instead of the 80-character
+     * preview, and it drops the kind: the labels already say which half is the
+     * evidence and which is the instruction.
+     */
+    function composeNotePrompt(note) {
+      const quote = String(note.quote || '').replace(/\s+/g, ' ').trim();
+      const body = String(note.body || '').trim();
+      const parts = [];
+      if (quote) parts.push(translate('note.prompt.quote') + quote);
+      if (body) parts.push(translate('note.prompt.body') + body);
+      return parts.join('\n');
+    }
+
     /** The reply a session's annotations produce: numbered, each with its quote. */
     function composeNotesReply(list) {
       return list
@@ -8903,13 +8923,16 @@ window.__ModuleLoader__.load({
           flash(translate('note.noneSelected'), 'error');
           return;
         }
-        const text = target && target.kind === 'note' && target.note
-          ? composeNoteLine(target.note)
-          : composeNotesReply(notes);
+        const single = target && target.kind === 'note' && target.note ? target.note : null;
+        const text = single ? composeNotePrompt(single) : composeNotesReply(notes);
         openNoteSave({
           noteIds: notes.map((note) => note.id),
-          markStored: target && target.kind === 'note',
-          title: draftTitle(target && target.kind === 'note' && target.note ? target.note.quote : text),
+          markStored: single !== null,
+          // One annotation is filed without a title: 【原文】 and 【批注】 already
+          // say what the two parts are, and a blank title keeps the prompt
+          // pasteable as it stands. A batch still needs a title to be found
+          // again in the pool.
+          title: single ? '' : draftTitle(text),
           body: text,
           images: imagesForNotes(notes),
           choices: ordered,

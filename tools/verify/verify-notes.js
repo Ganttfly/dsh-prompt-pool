@@ -413,7 +413,8 @@ else {
         if (!draft || draft.open !== true || !Array.isArray(draft.choices) || draft.choices.length === 0) fail('the save step did not open');
         else {
           if (draft.choices[0].value !== 'builtin:oftenuse') fail('the default group is not first');
-          if (draft.body !== '【note.kind.comment】「构建是否接受参数？」：接受分支参数') fail('the save step lost the composed body');
+          if (draft.body !== 'note.prompt.quote构建是否接受参数？\nnote.prompt.body接受分支参数') fail('the save step lost the composed body');
+          if (draft.title !== '') fail('the save step prefilled a title for one annotation');
           const sheet = saveSheet();
           const saveButton = sheet && findAll(sheet, (node) => node.type === 'button'
             && String(node.props && node.props.className || '').indexOf('pp-note-btn-primary') >= 0)[0];
@@ -423,7 +424,8 @@ else {
             const pool = window.__dshPromptPoolStoreV1.get();
             const added = pool.items[pool.items.length - 1];
             if (!added || added.group !== 'builtin:oftenuse') fail(`promoted into ${added && added.group}`);
-            else if (added.body !== '【note.kind.comment】「构建是否接受参数？」：接受分支参数') fail(`promoted body ${JSON.stringify(added.body)}`);
+            else if (added.body !== 'note.prompt.quote构建是否接受参数？\nnote.prompt.body接受分支参数') fail(`promoted body ${JSON.stringify(added.body)}`);
+            else if (added.title !== '') fail('the stored annotation grew a title');
             const note = window.__dshPromptPoolNotesV1.get().items.find((entry) => entry.id === 'n2');
             if (!note || note.promotedGroup !== 'builtin:oftenuse') fail('the note was not marked as stored');
             if (textOf(notesView() || []).indexOf('note.stored') < 0) fail('the stored note has no marker');
@@ -688,6 +690,22 @@ if (source.indexOf('document.caretPositionFromPoint') < 0 || source.indexOf('doc
 } else if (source.indexOf('spotsRef.current = items.filter((item) => item.id)') < 0) {
   fail('only saved notes are exposed to the passage click');
 } else console.log('[ok] clicking the annotated words opens its bubble');
+
+// Filing one annotation as a prompt: the passage and the text written on it,
+// each under its own label, and no title to fill in.
+const promptStart = source.indexOf('function composeNotePrompt(note) {');
+const promptEnd = promptStart < 0 ? -1 : source.indexOf('\n    }', promptStart);
+const promptBody = promptStart < 0 || promptEnd < 0 ? '' : source.slice(promptStart, promptEnd);
+if (!promptBody) fail('one annotation has no prompt composer of its own');
+else if (promptBody.indexOf("translate('note.prompt.quote') + quote") < 0) fail('the prompt does not label the passage');
+else if (promptBody.indexOf("translate('note.prompt.body') + body") < 0) fail('the prompt does not label the annotation text');
+else if (promptBody.indexOf("parts.join('\\n')") < 0) fail('the two halves of the prompt are not put on separate lines');
+else console.log('[ok] one annotation files as 原文 + 批注');
+if (source.indexOf('const text = single ? composeNotePrompt(single) : composeNotesReply(notes);') < 0) {
+  fail('saving an annotation as a prompt does not use the two-part text');
+} else if (source.indexOf("title: single ? '' : draftTitle(text),") < 0) {
+  fail('saving one annotation still prefills a title');
+} else console.log('[ok] saving one annotation leaves its title empty');
 
 for (const failure of failures) console.error('[fail]', failure);
 console.log(failures.length === 0 ? '[ok] annotations live in the prompt pool' : `[fail] ${failures.length} check(s)`);
