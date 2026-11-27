@@ -101,10 +101,13 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   block — 【Original】the words on one line, 【Annotation】<kind>: what you wrote on the next — where the kind's
   own words open the annotation (Agree, Disagree, Question, Note, Idea, Additional info, To do), and an empty
   body keeps the kind word alone; the **Save as prompt** icon opens that note in the pool's own editor: the
-  sidebar switches to **Prompts** with the body written, so only the group and any last edits are left. The
+  sidebar switches to **Prompts** with the body written and the prompt's type already set to the one that
+  answers the annotation's kind (an agreement files as a decision, a disagreement or a comment as an opinion),
+  so only the group and any last edits are left. The
   review card's saved prompt uses the same block, one numbered note per entry (its second line indented),
-  and it too keeps the title blank. A host with no sidebar (the composer panel) still gets the standalone
-  confirmation step for title, body, images and target group.
+  and it too keeps the title blank and takes a type only when every checked note shares one kind. A host with
+  no sidebar (the composer panel) still gets the standalone
+  confirmation step for title, body, images and target group, and it files the same type.
   The page's bottom bar shows the selected count and **Summarize**; it opens the review card, which sits
   at the bottom like the send queue, collapses to a strip, and can be resized by dragging its top edge
   (double-click to reset). Rows gain checkboxes, immediate execution and to-do routing; Locate the passage stays,

@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Filing an annotation as a prompt picks its type for you: the prompt opens with the type that answers the
+  annotation's kind — an agreement as a decision, a disagreement or a comment as an opinion, and the rest by
+  name — so the pool shows the same glyph the mark carried. A reviewed batch takes a type only when every
+  checked annotation shares one kind; a mixed batch stays untyped rather than guessing.
 - The review card has a **Cancel** in its action cluster: it leaves summary mode, collapses the card
   and touches nothing else — the checked annotations, the prompt being written and the queue all stay as
   they were, so entering a summary is never a trap.

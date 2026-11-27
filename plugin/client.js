@@ -5240,6 +5240,8 @@ window.__ModuleLoader__.load({
           ? openPageView('workspace', true, {
             title: '',
             body: text,
+            // The batch inherits a type only when every mark shares one.
+            type: promptTypeForNotes(chosen),
             images: review.images,
             source: { noteIds: review.noteIds, markStored: false, onSaved: done },
           })
@@ -5250,6 +5252,7 @@ window.__ModuleLoader__.load({
           markStored: false,
           title: '',
           body: text,
+          type: promptTypeForNotes(chosen),
           images: review.images,
           choices: ordered,
           defaultGroup: preferred,
@@ -5299,6 +5302,7 @@ window.__ModuleLoader__.load({
           return;
         }
         const draft = seed && typeof seed === 'object' ? seed : null;
+        const seededType = normalizePromptType(draft && draft.type);
         const group = activeScope === 'workspace'
           ? workspaceGroup
           : groupForTab(activeGlobalTab, '');
@@ -5308,7 +5312,7 @@ window.__ModuleLoader__.load({
           group,
           title: draft && typeof draft.title === 'string' ? draft.title : '',
           body: draft && typeof draft.body === 'string' ? draft.body : '',
-          type: '',
+          type: seededType,
           images: normalizeImages(draft && draft.images),
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -5318,7 +5322,7 @@ window.__ModuleLoader__.load({
           group,
           title: item.title,
           body: item.body,
-          type: '',
+          type: seededType,
           images: normalizeImages(item.images),
           isNew: true,
           source: draft && draft.source && typeof draft.source === 'object' ? draft.source : null,
@@ -6755,6 +6759,7 @@ window.__ModuleLoader__.load({
       markStored: draft.markStored === true,
       title: typeof draft.title === 'string' ? draft.title : '',
       body: typeof draft.body === 'string' ? draft.body : '',
+      type: normalizePromptType(draft.type),
       images: normalizeImages(draft.images),
       choices: Array.isArray(draft.choices) ? draft.choices : [],
       defaultGroup: typeof draft.defaultGroup === 'string' ? draft.defaultGroup : '',
@@ -6911,6 +6916,32 @@ window.__ModuleLoader__.load({
         .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt))
         .map((note, index) => `${index + 1}. ${composeNotePrompt(note).replace(/\n/g, '\n   ')}`)
         .join('\n');
+    }
+
+    /**
+     * Annotation kinds and prompt types are two vocabularies for the same
+     * ideas, so a filed prompt inherits the type of the note it came from:
+     * agree→decision, disagree and comment→opinion (a rejected point is an
+     * opinion), the rest keep their id. A batch that mixes kinds has no single
+     * type to inherit, and stays untyped rather than guessing one.
+     */
+    const NOTE_PROMPT_TYPES = {
+      agree: 'decision',
+      disagree: 'opinion',
+      question: 'question',
+      comment: 'opinion',
+      idea: 'idea',
+      supplement: 'supplement',
+      todo: 'todo',
+    };
+
+    function promptTypeForNotes(list) {
+      const types = new Set(
+        (Array.isArray(list) ? list : [])
+          .map((note) => NOTE_PROMPT_TYPES[noteKind(note.kind).id] || ''),
+      );
+      if (types.size !== 1) return '';
+      return normalizePromptType(Array.from(types)[0]);
     }
 
     const REVIEW_GROUP_PROMPTS = {
@@ -7666,6 +7697,9 @@ window.__ModuleLoader__.load({
           group,
           title: title.trim(),
           body,
+          // The kind travels with the annotation's text: the sheet is the
+          // fallback path, and it files the same prompt as the page editor.
+          type: normalizePromptType(draft.type),
           images,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -9002,6 +9036,9 @@ window.__ModuleLoader__.load({
             // it stands — whether it is one annotation or a reviewed batch.
             title: '',
             body: text,
+            // The prompt wears the annotation's own kind, so a filed 【批注】 and
+            // the mark it came from read the same way in the pool.
+            type: promptTypeForNotes(notes),
             images: imagesForNotes(notes),
             // The annotation retires when the page saves the draft, by the same
             // rule the sheet uses; cancelling the draft leaves it in place.
@@ -9017,6 +9054,7 @@ window.__ModuleLoader__.load({
           markStored: single !== null,
           title: '',
           body: text,
+          type: promptTypeForNotes(notes),
           images: imagesForNotes(notes),
           choices: ordered,
           defaultGroup: preferred,
@@ -10779,6 +10817,7 @@ window.__ModuleLoader__.load({
           markStored: false,
           title: draftTitle(review.text),
           body: review.text,
+          type: promptTypeForNotes(chosen),
           images: review.images,
           choices: ordered,
           defaultGroup: preferred,

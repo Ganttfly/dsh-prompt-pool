@@ -733,6 +733,32 @@ if (source.indexOf('const text = single ? composeNotePrompt(single) : composeNot
   fail('a batch still invents a title');
 } else console.log('[ok] filing leaves the title empty, one annotation or a batch');
 
+// A filed prompt keeps the annotation's kind as its type: the two vocabularies
+// name the same ideas, so the pool shows the same glyph the mark carried. A
+// batch that mixes kinds has no one type to inherit and stays untyped.
+const typesStart = source.indexOf('const NOTE_PROMPT_TYPES = {');
+const typeFnStart = source.indexOf('function promptTypeForNotes(list) {', typesStart);
+const typesEnd = typeFnStart < 0 ? -1 : source.indexOf('\n    }', typeFnStart);
+if (typesStart < 0 || typesEnd < 0) {
+  fail('a filed prompt does not take the annotation kind');
+} else {
+  const pickType = new Function('noteKind', 'normalizePromptType', `${source.slice(typesStart, typesEnd + 6)}
+    return promptTypeForNotes;`)((kind) => ({ id: kind }), (value) => value);
+  const cases = [
+    [[{ kind: 'agree' }], 'decision', 'an agreement files as a decision'],
+    [[{ kind: 'disagree' }], 'opinion', 'a disagreement files as an opinion'],
+    [[{ kind: 'comment' }], 'opinion', 'a comment files as an opinion'],
+    [[{ kind: 'question' }], 'question', 'a question files as a question'],
+    [[{ kind: 'todo' }], 'todo', 'a to-do files as a to-do'],
+    [[{ kind: 'idea' }, { kind: 'idea' }], 'idea', 'a batch of one kind keeps it'],
+    [[{ kind: 'agree' }, { kind: 'todo' }], '', 'a mixed batch stays untyped'],
+    [[], '', 'a filing with nothing to file stays untyped'],
+  ];
+  const wrong = cases.filter(([notes, expected]) => pickType(notes) !== expected);
+  if (wrong.length > 0) fail(`a filed prompt takes the wrong type: ${wrong.map(([notes, expected]) => `${notes.map((note) => note.kind).join('+') || 'none'} != ${JSON.stringify(expected)}`).join(', ')}`);
+  else console.log('[ok] a filed prompt inherits the annotation kind');
+}
+
 // Filing hands the draft to the pool page when the sidebar is there: the page
 // opens its own editor on it, and saving there retires the annotation by the
 // same keep-or-remove rule the sheet uses.
@@ -746,6 +772,12 @@ if (source.indexOf("openPageView('workspace', true, {") < 0) {
   fail('the page editor does not retire the filed annotation');
 } else if (source.indexOf('create(target, pageIntentState.draft)') < 0) {
   fail('the page does not take the draft carried by the ask');
+} else if (source.indexOf('type: promptTypeForNotes(notes),') < 0) {
+  fail('the page draft does not carry the annotation kind');
+} else if (source.indexOf('const seededType = normalizePromptType(draft && draft.type);') < 0) {
+  fail('the page editor ignores the type the ask carried');
+} else if (source.split('type: seededType,').length - 1 !== 2) {
+  fail('the page draft and its editor disagree on the type');
 } else console.log('[ok] filing opens the page with the draft in place');
 
 // A reviewed batch takes the same route, and neither path fights a draft the
@@ -756,6 +788,8 @@ if (source.indexOf('currentWorkspaceId && !pageDraftOpen') < 0) {
   fail('the page does not publish whether a draft is open');
 } else if (source.indexOf("source: { noteIds: review.noteIds, markStored: false, onSaved: done },") < 0) {
   fail('the review card does not hand its text to the page');
+} else if (source.indexOf('type: promptTypeForNotes(chosen),') < 0) {
+  fail('a reviewed batch does not hand its shared kind to the page');
 } else if (source.indexOf("if (source && typeof source.onSaved === 'function') {") < 0) {
   fail('the page editor drops the review hand-off');
 } else console.log('[ok] a review and a note both file through the page');
