@@ -715,17 +715,19 @@ else if (blockBody.indexOf("return parts.join('\\n') + end;") < 0) {
   fail('the numbered batch does not indent the note line');
 } else console.log('[ok] one annotation files as 原文 / 批注');
 
-// A reviewed batch filed as a prompt takes the sentence shape too, while the
-// sent contract keeps its numbered groups.
+// A reviewed batch filed as a prompt reads the same way, while the sent
+// contract keeps its numbered groups.
 if (source.indexOf('const text = composeNotesReply(chosen);') < 0) {
   fail('a filed review keeps the sending contract');
-} else console.log('[ok] a filed review reads as 原文；批注 too');
+} else console.log('[ok] a filed review reads as 原文 / 批注 too');
 
 if (source.indexOf('const text = single ? composeNotePrompt(single) : composeNotesReply(notes);') < 0) {
   fail('saving an annotation as a prompt does not use the two-part text');
-} else if (source.indexOf("title: single ? '' : draftTitle(text),") < 0) {
-  fail('saving one annotation still prefills a title');
-} else console.log('[ok] saving one annotation leaves its title empty');
+} else if (source.indexOf("title: '',") < 0) {
+  fail('filing an annotation still prefills a title');
+} else if (source.indexOf("title: single ? '' : draftTitle(text),") >= 0) {
+  fail('a batch still invents a title');
+} else console.log('[ok] filing leaves the title empty, one annotation or a batch');
 
 // Filing hands the draft to the pool page when the sidebar is there: the page
 // opens its own editor on it, and saving there retires the annotation by the

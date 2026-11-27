@@ -5247,7 +5247,7 @@ window.__ModuleLoader__.load({
         };
         const filed = currentWorkspaceId && !pageDraftOpen
           ? openPageView('workspace', true, {
-            title: draftTitle(text),
+            title: '',
             body: text,
             images: review.images,
             source: { noteIds: review.noteIds, markStored: false, onSaved: done },
@@ -5257,7 +5257,7 @@ window.__ModuleLoader__.load({
         openNoteSave({
           noteIds: review.noteIds,
           markStored: false,
-          title: draftTitle(text),
+          title: '',
           body: text,
           images: review.images,
           choices: ordered,
@@ -9055,11 +9055,10 @@ window.__ModuleLoader__.load({
         // the page is already holding).
         const filed = currentWorkspaceId && !pageDraftOpen
           ? openPageView('workspace', true, {
-            // One annotation is filed without a title: 【原文】 and 【批注】 already
-            // say what the two parts are, and a blank title keeps the prompt
-            // pasteable as it stands. A batch still needs a title to be found
-            // again in the pool.
-            title: single ? '' : draftTitle(text),
+            // Filing never invents a title: 【原文】 and 【批注】 already say what
+            // the two parts are, and a blank title keeps the prompt pasteable as
+            // it stands — whether it is one annotation or a reviewed batch.
+            title: '',
             body: text,
             images: imagesForNotes(notes),
             // The annotation retires when the page saves the draft, by the same
@@ -9074,7 +9073,7 @@ window.__ModuleLoader__.load({
         openNoteSave({
           noteIds: notes.map((note) => note.id),
           markStored: single !== null,
-          title: single ? '' : draftTitle(text),
+          title: '',
           body: text,
           images: imagesForNotes(notes),
           choices: ordered,
