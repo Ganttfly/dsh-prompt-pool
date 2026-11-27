@@ -45,6 +45,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The send queue no longer disappears when it empties: it stays as a one-line strip in its usual place,
+  dashed and muted, saying how to fill it. A card that vanishes and comes back moves everything under the
+  pointer, and the queue is only ever one **+** away from returning.
+- A queued row wears one mark instead of a word: a prompt shows the type it was filed under, a reviewed
+  batch shows the review glyph, an annotation shows its own kind, and a prompt whose pool entry has been
+  removed falls back to the plain prompt chevron. The old chip spelled "Prompt" or "Summary" beside an icon
+  that already said it, taking the width the text itself needed.
 - Both tray menus now name each row with a mark of its own: a pointer on a line for **Continuous**, a funnel
   for **Summarize in one click**, the annotation bubble for **View annotations** (the shape its tab wears), a
   tray for **Save draft**, a boxed plus for **Add prompt**, and the prompt chevron for **View prompts**. The

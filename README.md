@@ -85,7 +85,10 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   switches between **one by one** and **merge**, and merge previews every queued
   prompt and its image attachments before handing one numbered message to the session queue; the images
   are shown as thumbnails outside the editable text and travel as attachments. There is no second subset
-  selection. Annotations are reviewed and sent from the Annotations page instead.
+  selection. Annotations are reviewed and sent from the Annotations page instead. A row wears the type
+  mark its prompt was filed under — a summary wears the review mark, an annotation its own kind — rather
+  than a word saying where it came from. With nothing queued the card stays as a one-line strip instead
+  of disappearing, so the bottom of the list does not move under the pointer.
 - **Annotate while you read** — select a passage in an assistant reply and right-click **Select to annotate**:
   pick a kind from its submenu (note / question / agree / disagree / idea / additional info / to-do), type up to 500
   full-width or 1,000 half-width characters (or leave it empty for a glyph-only badge), and the badge lands

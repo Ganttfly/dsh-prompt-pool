@@ -255,7 +255,7 @@ window.__ModuleLoader__.load({
       'tray.clearTitle': '清空待发送队列',
       'tray.clearConfirm': '队列里的 {n} 条会被一起移出。',
       'tray.clearAction': '清空',
-      'tray.empty': '队列里还没有提示词；在提示词行点「＋」加入。',
+      'tray.emptyStrip': '空着；在提示词行点「＋」加入。',
       'tray.remove': '移出',
       'tray.removeTitle': '移出这一条',
       'tray.removeConfirm': '移出后不可撤销；这条如果在队列里改过，改动不会保留。',
@@ -622,7 +622,7 @@ window.__ModuleLoader__.load({
       'tray.clearTitle': 'Clear the send queue',
       'tray.clearConfirm': 'All {n} queued items are removed at once.',
       'tray.clearAction': 'Clear',
-      'tray.empty': 'No prompts queued yet — use the ＋ control on a prompt row.',
+      'tray.emptyStrip': 'Empty — use the ＋ control on a prompt row.',
       'tray.remove': 'Remove',
       'tray.removeTitle': 'Remove this queued item',
       'tray.removeConfirm': 'This cannot be undone. Edits made to this queued copy are lost.',
@@ -3132,17 +3132,29 @@ window.__ModuleLoader__.load({
       );
     }
 
-    /** Human label for an outbox entry's source. */
-    function traySourceLabel(type) {
-      if (type === 'review') return translate('tray.source.review');
-      if (type === 'annotation') return translate('tray.source.annotation');
-      return translate('tray.source.prompt');
-    }
-
-    function traySourceIcon(type) {
-      if (type === 'review') return 'review';
-      if (type === 'annotation') return 'annotation';
-      return 'prompt';
+    /**
+     * What a queued row is, at a glance: a prompt wears the type it was filed
+     * under, a reviewed batch wears the summary mark, and an annotation wears
+     * its own kind. The word chip this replaced ("Prompt", "Summary") spelled
+     * out what the icon says, and the icon says which one it is faster.
+     */
+    function trayMarkOf(entry, items) {
+      const item = (Array.isArray(items) ? items : []).find((one) => one.id === entry.itemId);
+      const typeMeta = item ? promptTypeMeta(item.type) : null;
+      if (typeMeta) return { name: typeMeta.icon, tone: typeMeta.color, title: translate(typeMeta.label) };
+      if (entry.type === 'review') {
+        return { name: 'review', tone: '', title: translate('tray.source.review') };
+      }
+      if (entry.source && entry.source.kind) {
+        const kind = noteKind(entry.source.kind);
+        return { name: kind.icon, tone: kind.color, title: translate(kind.label) };
+      }
+      if (entry.type === 'annotation') {
+        return { name: 'annotation', tone: '', title: translate('tray.source.annotation') };
+      }
+      // The pool item this came from is gone (kept off after queueing), so the
+      // row falls back to "a prompt" rather than guessing a type.
+      return { name: 'prompt', tone: '', title: translate('tray.source.prompt') };
     }
 
     /** Merge every queued entry into one editable message. */
@@ -3241,13 +3253,26 @@ window.__ModuleLoader__.load({
     /** The send-queue card, shared by the panel and the page. */
     function renderTrayCard(props) {
       const {
-        entries, collapsed, busy, sessionId, trayRef,
+        collapsed, busy, sessionId, trayRef, items,
         height, cardRef, onResizeStart, onResizeBy, onResizeReset,
         editing, setEditing, onSaveEdit, onPasteImages, onClear, onRelease,
         onDigest, mode, onModeChange, onRemove, onOpenImage, onError,
       } = props;
 
-      if (!entries || entries.length === 0) return null;
+      const entries = Array.isArray(props.entries) ? props.entries : [];
+
+      // An empty queue keeps its place at the bottom. A card that vanishes and
+      // comes back makes the list jump under the pointer, and one line saying
+      // how to fill it is worth more than emptiness that looks like a bug.
+      if (entries.length === 0) {
+        return h(
+          'div',
+          { className: 'pp-queue-strip pp-queue-strip-empty' },
+          h('span', { className: 'pp-queue-strip-action', 'aria-hidden': true }, icon('queue')),
+          h('span', { className: 'pp-queue-strip-title' }, translate('tray.title')),
+          h('span', { className: 'pp-hint' }, translate('tray.emptyStrip')),
+        );
+      }
 
       if (collapsed) {
         return h(
@@ -3372,10 +3397,8 @@ window.__ModuleLoader__.load({
         ),
         h(
           'div',
-          { className: entries.length === 0 ? 'pp-tray pp-tray-empty' : 'pp-tray', ref: trayRef },
-          entries.length === 0
-            ? h('div', { className: 'pp-hint' }, translate('tray.empty'))
-            : entries.map((entry, index) => {
+          { className: 'pp-tray', ref: trayRef },
+          entries.map((entry, index) => {
               if (editing && editing.key === entry.key) {
                 return h(
                   'div',
@@ -3409,16 +3432,12 @@ window.__ModuleLoader__.load({
                   ),
                 );
               }
+              const mark = trayMarkOf(entry, items);
               return h(
                 'div',
                 { key: entry.key, className: 'pp-chip' },
                 h('span', { className: 'pp-chip-n' }, String(index + 1) + '.'),
-                h('span', {
-                  className: 'pp-chip-source',
-                  'data-type': entry.type || 'prompt',
-                },
-                h('span', { className: 'pp-chip-source-icon', 'aria-hidden': true }, icon(traySourceIcon(entry.type))),
-                traySourceLabel(entry.type)),
+                h(TypeMark, { name: mark.name, title: mark.title, tone: mark.tone }),
                 h('div', { className: 'pp-chip-t', title: entry.body }, entry.body),
                 h(ImageStrip, { images: entry.images, compact: true, max: 4, onOpen: onOpenImage }),
                 h(
@@ -5771,6 +5790,7 @@ window.__ModuleLoader__.load({
           !settingsOpen && scope !== 'notes' && !mergeOpen
             ? renderTrayCard({
                 entries: sessionTray,
+                items: state.items,
                 collapsed: queueCollapsed,
                 sessionId: activeSessionId,
                 trayRef,
@@ -11371,6 +11391,7 @@ window.__ModuleLoader__.load({
         !settingsOpen && scope !== 'notes' && !mergeOpen
           ? renderTrayCard({
               entries: tray,
+              items: state.items,
               collapsed: queueCollapsed,
               busy,
               sessionId: props.sessionId,
@@ -11774,7 +11795,6 @@ window.__ModuleLoader__.load({
       // The card sizes itself to the queue: an empty tray is one hint row, a full
       // one stops at half the page so the pool above keeps the room it needs.
       '.pp-page-foot .pp-tray{max-height:min(520px,52vh);min-height:0;flex:0 1 auto;overflow-y:auto}' +
-      '.pp-tray-empty{justify-content:flex-start;align-items:flex-start;padding:2px 2px 4px;text-align:left}' +
       '.pp-queue-toggle{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:-4px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--pp-ink-2);font:inherit;font-size:11px;cursor:pointer}' +
       '.pp-queue-toggle:hover{background:color-mix(in srgb,var(--pp-accent) 10%,transparent);color:var(--pp-accent)}' +
       '.pp-queue-toggle:focus-visible{outline:2px solid var(--pp-accent);outline-offset:1px}' +
@@ -11792,6 +11812,11 @@ window.__ModuleLoader__.load({
       '.pp-queue-strip svg{width:14px;height:14px}' +
       // The tray uses the page gutter, independent of which dock wrapper renders it.
       '.pp-queue-strip{width:calc(100% - 24px);margin:0 auto 10px;box-sizing:border-box}' +
+      // An empty queue keeps its strip: a status line, not a button, so nothing
+      // invites a click that would only reveal the same sentence.
+      '.pp-queue-strip-empty{border-style:dashed;background:transparent;color:var(--pp-ink-2)}' +
+      '.pp-queue-strip-empty .pp-queue-strip-title{color:var(--pp-ink-2);font-weight:600}' +
+      '.pp-queue-strip-empty .pp-queue-strip-action{opacity:.7}' +
       '.pp-page-item{padding:10px 12px;border-radius:10px;border:1px solid transparent}' +
       '.pp-page-item:hover{background:var(--pp-surface);border-color:var(--pp-line)}' +
       '.pp-page-item .pp-actions{opacity:.35}' +
@@ -11910,8 +11935,6 @@ window.__ModuleLoader__.load({
       '.pp-chip:hover .pp-chip-actions,.pp-chip:focus-within .pp-chip-actions{opacity:1}' +
       '@media (hover:none){.pp-chip-actions{opacity:1}}' +
       '.pp-chip-n{flex:none;padding-top:1px;font-size:11px;line-height:1.55;font-variant-numeric:tabular-nums;color:var(--pp-ink-2)}' +
-      '.pp-chip-source{flex:none;align-self:flex-start;display:inline-flex;align-items:center;gap:3px;margin-top:2px;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--pp-ink-2) 10%,transparent);color:var(--pp-ink-2);font-size:9.5px;line-height:15px}' +
-      '.pp-chip-source-icon{display:inline-flex;align-items:center}.pp-chip-source-icon svg{width:12px;height:12px}' +
       '.pp-chip-t{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:12px;line-height:1.55;color:var(--pp-ink);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}' +
       '.pp-chip .pp-icon{width:22px;height:22px}' +
       '.pp-actions .pp-icon svg,.pp-chip-actions .pp-icon svg{width:14px;height:14px}' +
