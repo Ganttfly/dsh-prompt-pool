@@ -5529,7 +5529,7 @@ window.__ModuleLoader__.load({
             }, icon('help')),
             h('button', {
               type: 'button',
-              className: 'pp-icon pp-menu-trigger pp-icon-save',
+              className: 'pp-icon pp-menu-trigger',
               title: translate('panel.capture'),
               'aria-label': translate('panel.capture'),
               onClick: openCapture,
@@ -11068,7 +11068,7 @@ window.__ModuleLoader__.load({
             }, icon('help')),
             h('button', {
               type: 'button',
-              className: 'pp-icon pp-menu-trigger pp-icon-save',
+              className: 'pp-icon pp-menu-trigger',
               title: translate('panel.capture'),
               'aria-label': translate('panel.capture'),
               onClick: openCapture,
@@ -11453,10 +11453,9 @@ window.__ModuleLoader__.load({
       '.pp-page-head .pp-scope-bar .pp-tab,.pp-panel-headline .pp-scope-bar .pp-tab{height:30px}' +
       '.pp-new-prompt{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;flex:none;padding:0 10px;font-size:12px;white-space:nowrap}' +
       '.pp-menu-trigger{width:26px;height:26px;border-radius:7px}' +
-      // Filing a draft is the one header action that writes to the pool, so it
-      // keeps the accent colour while help and settings stay muted.
-      '.pp-head-tools .pp-icon-save{color:var(--pp-accent)}' +
-      '.pp-head-tools .pp-icon-save:hover{background:var(--pp-accent-soft);color:var(--pp-accent)}' +
+      // Filing a draft is the one header action that writes to the pool, but a
+      // lone blue icon read as a different kind of control next to help and
+      // settings, so it keeps the plain ink and only the icon shape marks it.
       // The shared pool gets one context row between the destinations and the
       // search field for its group tabs; workspace prompts go straight to the list.
       '.pp-prompt-bar{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-bottom:1px solid var(--pp-line);font-size:11.5px;color:var(--pp-ink-2)}' +

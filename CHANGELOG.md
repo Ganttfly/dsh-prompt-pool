@@ -56,9 +56,9 @@ All notable changes to this project are documented here. The format follows
   a tab strip draws an icon in the host's ink, which turned the bare mark into three black bars that read
   as a generic list glyph beside the label, so the mark wears the same direction arrow as the composer's
   cap and the tab, the guide entry and the tools list all show one shape.
-  The header's **Save draft** action also trades its bookmark for an arrow dropping into an open tray, and
-  takes the accent colour, because it is the one header control that writes to the pool while help and
-  settings only open a surface.
+  The header's **Save draft** action also trades its bookmark for an arrow dropping into an open tray —
+  the shape carries it, so it keeps the plain icon ink like help and settings instead of a lone blue
+  control in the same row.
 - One annotation filed as a prompt now arrives ready to paste: the title stays empty, and the body is two
   lines — 【原文】passage, then 【批注】what was written. Each kind opens that annotation with its own fixed
   words (同意：/ 不同意：/ 疑问：/ 意见：/ 思路：/ 补充：/ 待办：), so the block says how the passage should
