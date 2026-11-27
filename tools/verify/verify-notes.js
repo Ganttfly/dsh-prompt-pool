@@ -413,7 +413,7 @@ else {
         if (!draft || draft.open !== true || !Array.isArray(draft.choices) || draft.choices.length === 0) fail('the save step did not open');
         else {
           if (draft.choices[0].value !== 'builtin:oftenuse') fail('the default group is not first');
-          if (draft.body !== 'note.prompt.quote构建是否接受参数？\nnote.prompt.body接受分支参数') fail('the save step lost the composed body');
+          if (draft.body !== 'note.prompt.quote构建是否接受参数？note.prompt.sepnote.prompt.bodynote.prompt.lead.comment接受分支参数note.prompt.end') fail('the save step lost the composed body');
           if (draft.title !== '') fail('the save step prefilled a title for one annotation');
           const sheet = saveSheet();
           const saveButton = sheet && findAll(sheet, (node) => node.type === 'button'
@@ -424,7 +424,7 @@ else {
             const pool = window.__dshPromptPoolStoreV1.get();
             const added = pool.items[pool.items.length - 1];
             if (!added || added.group !== 'builtin:oftenuse') fail(`promoted into ${added && added.group}`);
-            else if (added.body !== 'note.prompt.quote构建是否接受参数？\nnote.prompt.body接受分支参数') fail(`promoted body ${JSON.stringify(added.body)}`);
+            else if (added.body !== 'note.prompt.quote构建是否接受参数？note.prompt.sepnote.prompt.bodynote.prompt.lead.comment接受分支参数note.prompt.end') fail(`promoted body ${JSON.stringify(added.body)}`);
             else if (added.title !== '') fail('the stored annotation grew a title');
             const note = window.__dshPromptPoolNotesV1.get().items.find((entry) => entry.id === 'n2');
             if (!note || note.promotedGroup !== 'builtin:oftenuse') fail('the note was not marked as stored');
@@ -691,16 +691,34 @@ if (source.indexOf('document.caretPositionFromPoint') < 0 || source.indexOf('doc
   fail('only saved notes are exposed to the passage click');
 } else console.log('[ok] clicking the annotated words opens its bubble');
 
-// Filing one annotation as a prompt: the passage and the text written on it,
-// each under its own label, and no title to fill in.
-const promptStart = source.indexOf('function composeNotePrompt(note) {');
-const promptEnd = promptStart < 0 ? -1 : source.indexOf('\n    }', promptStart);
-const promptBody = promptStart < 0 || promptEnd < 0 ? '' : source.slice(promptStart, promptEnd);
-if (!promptBody) fail('one annotation has no prompt composer of its own');
-else if (promptBody.indexOf("translate('note.prompt.quote') + quote") < 0) fail('the prompt does not label the passage');
-else if (promptBody.indexOf("translate('note.prompt.body') + body") < 0) fail('the prompt does not label the annotation text');
-else if (promptBody.indexOf("parts.join('\\n')") < 0) fail('the two halves of the prompt are not put on separate lines');
-else console.log('[ok] one annotation files as 原文 + 批注');
+// Filing one annotation as a prompt: the passage, then what was said on it, in
+// one sentence opened by the kind's fixed words.
+const blockStart = source.indexOf('function composeNoteBlock(note, limit) {');
+const blockEnd = blockStart < 0 ? -1 : source.indexOf('\n    }', blockStart);
+const blockBody = blockStart < 0 || blockEnd < 0 ? '' : source.slice(blockStart, blockEnd);
+if (!blockBody) fail('one annotation has no prompt composer of its own');
+else if (blockBody.indexOf("translate('note.prompt.quote') + quote") < 0) fail('the prompt does not label the passage');
+else if (blockBody.indexOf("translate('note.prompt.body') + spoken") < 0) fail('the prompt does not label the annotation text');
+else if (blockBody.indexOf("parts.join(translate('note.prompt.sep'))") < 0) {
+  fail('the two halves do not share the 原文；批注。 shape');
+} else if (blockBody.indexOf("const end = /[！!？?]$/u.test(spoken) ? '' : translate('note.prompt.end');") < 0) {
+  fail('a question or exclamation gets a second full stop');
+} else if (source.indexOf("const NOTE_PROMPT_LEADS = {") < 0) {
+  fail('the annotation kind is not written into the prompt');
+} else if (source.indexOf("todo: 'note.prompt.lead.todo',") < 0) {
+  fail('one of the kinds has no fixed opener');
+} else if (source.indexOf("body ? notePromptLead(note) + body : translate(kind.label)") < 0) {
+  fail('an empty annotation has no kind opener to stand on');
+} else if (source.indexOf('return composeNoteBlock(note, 0);') < 0) {
+  fail('a filed prompt does not keep the whole passage');
+} else console.log('[ok] one annotation files as 原文；批注');
+
+// A reviewed batch filed as a prompt takes the sentence shape too, while the
+// sent contract keeps its numbered groups.
+if (source.indexOf('const text = composeNotesReply(chosen);') < 0) {
+  fail('a filed review keeps the sending contract');
+} else console.log('[ok] a filed review reads as 原文；批注 too');
+
 if (source.indexOf('const text = single ? composeNotePrompt(single) : composeNotesReply(notes);') < 0) {
   fail('saving an annotation as a prompt does not use the two-part text');
 } else if (source.indexOf("title: single ? '' : draftTitle(text),") < 0) {

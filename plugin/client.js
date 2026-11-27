@@ -391,6 +391,15 @@ window.__ModuleLoader__.load({
       'note.composeStored': '已存成提示词到 {group}',
       'note.prompt.quote': '【原文】',
       'note.prompt.body': '【批注】',
+      'note.prompt.sep': '；',
+      'note.prompt.end': '。',
+      'note.prompt.lead.agree': '同意：',
+      'note.prompt.lead.disagree': '不同意：',
+      'note.prompt.lead.question': '疑问：',
+      'note.prompt.lead.comment': '意见：',
+      'note.prompt.lead.idea': '思路：',
+      'note.prompt.lead.supplement': '补充：',
+      'note.prompt.lead.todo': '待办：',
       'note.inserted': '已插入输入框',
       'note.insertFailed': '输入框暂不可用，稍后再试',
       'note.quoteMissing': '这条批注暂时找不到原文位置（回复可能被折叠或改写了）。',
@@ -744,6 +753,15 @@ window.__ModuleLoader__.load({
       'note.composeStored': 'Saved as a prompt in {group}',
       'note.prompt.quote': '【Original】',
       'note.prompt.body': '【Annotation】',
+      'note.prompt.sep': '; ',
+      'note.prompt.end': '.',
+      'note.prompt.lead.agree': 'Agreed: ',
+      'note.prompt.lead.disagree': 'Disagree: ',
+      'note.prompt.lead.question': 'Question: ',
+      'note.prompt.lead.comment': 'Comment: ',
+      'note.prompt.lead.idea': 'Idea: ',
+      'note.prompt.lead.supplement': 'Adding: ',
+      'note.prompt.lead.todo': 'To do: ',
       'note.inserted': 'Inserted into the composer',
       'note.insertFailed': 'The composer is not available; try again',
       'note.quoteMissing': 'This note cannot find its text right now (the reply may be folded or rewritten).',
@@ -5221,17 +5239,18 @@ window.__ModuleLoader__.load({
         setReviewOpen(false);
         setReviewProcessing(false);
         setReviewVersion((value) => value + 1);
-        // The reviewed text is already a prompt, so it takes the same route as a
-        // single annotation: the page's editor when it can take it, the sheet
-        // otherwise (no sidebar, no workspace, or a draft already open there).
+        // A filed prompt keeps the same sentence shape as a single annotation,
+        // not the sending contract: the review card's numbered groups and rules
+        // exist to be answered, while a stored prompt is read again later.
+        const text = composeNotesReply(chosen);
         const done = () => {
           moveReviewTodos({ parkedIds: review.parkedIds });
           resetNoteReview(activeSessionId, review.noteIds);
         };
         const filed = currentWorkspaceId && !pageDraftOpen
           ? openPageView('workspace', true, {
-            title: draftTitle(review.text),
-            body: review.text,
+            title: draftTitle(text),
+            body: text,
             images: review.images,
             source: { noteIds: review.noteIds, markStored: false, onSaved: done },
           })
@@ -5240,8 +5259,8 @@ window.__ModuleLoader__.load({
         openNoteSave({
           noteIds: review.noteIds,
           markStored: false,
-          title: draftTitle(review.text),
-          body: review.text,
+          title: draftTitle(text),
+          body: text,
           images: review.images,
           choices: ordered,
           defaultGroup: preferred,
@@ -6890,20 +6909,62 @@ window.__ModuleLoader__.load({
       return `【${label}】「${noteQuoteText(note.quote)}」${body ? '：' + body : ''}`;
     }
 
+    /** The fixed opener each kind of note gets inside a prompt sentence. */
+    const NOTE_PROMPT_LEADS = {
+      agree: 'note.prompt.lead.agree',
+      disagree: 'note.prompt.lead.disagree',
+      question: 'note.prompt.lead.question',
+      comment: 'note.prompt.lead.comment',
+      idea: 'note.prompt.lead.idea',
+      supplement: 'note.prompt.lead.supplement',
+      todo: 'note.prompt.lead.todo',
+    };
+
+    function notePromptLead(note) {
+      const kind = noteKind(note.kind);
+      return translate(NOTE_PROMPT_LEADS[kind.id] || 'note.prompt.lead.comment');
+    }
+
+    /** Drop a full stop so two halves can share one line; ?! stay meaningful. */
+    function trimSentenceEnd(text) {
+      return String(text || '')
+        .replace(/\s+/g, ' ')
+        .replace(/[。．.]+$/u, '')
+        .trim();
+    }
+
     /**
-     * One annotation filed as a prompt: the passage it marks, then what was
-     * written on it, each under its own label. A prompt is asked to stand on
-     * its own, so it keeps the whole passage instead of the 80-character
-     * preview, and it drops the kind: the labels already say which half is the
-     * evidence and which is the instruction.
+     * One annotation as a prompt sentence: 【原文】passage；【批注】what was said。
+     * The kind now lives inside the sentence as its fixed opener, because the
+     * 【kind】 label that used to carry it is gone from the prompt. `limit`
+     * truncates the passage for inline insertion; a filed prompt keeps it whole.
      */
-    function composeNotePrompt(note) {
-      const quote = String(note.quote || '').replace(/\s+/g, ' ').trim();
-      const body = String(note.body || '').trim();
+    function composeNoteBlock(note, limit) {
+      const kind = noteKind(note.kind);
+      const quote = trimSentenceEnd(limit ? noteQuoteText(note.quote, limit) : note.quote);
+      const body = trimSentenceEnd(note.body);
+      const spoken = body ? notePromptLead(note) + body : translate(kind.label);
       const parts = [];
       if (quote) parts.push(translate('note.prompt.quote') + quote);
-      if (body) parts.push(translate('note.prompt.body') + body);
-      return parts.join('\n');
+      parts.push(translate('note.prompt.body') + spoken);
+      // A question or an exclamation already ends the sentence.
+      const end = /[！!？?]$/u.test(spoken) ? '' : translate('note.prompt.end');
+      return parts.join(translate('note.prompt.sep')) + end;
+    }
+
+    /** Inline lines stay short: the passage is a reminder, not the whole reply. */
+    function composeNoteLine(note) {
+      return composeNoteBlock(note, 80);
+    }
+
+    /**
+     * One annotation filed as a prompt: the passage it marks, then what was
+     * written on it, in the same sentence shape the composer gets. A prompt is
+     * asked to stand on its own, so it keeps the whole passage instead of the
+     * 80-character preview.
+     */
+    function composeNotePrompt(note) {
+      return composeNoteBlock(note, 0);
     }
 
     /** The reply a session's annotations produce: numbered, each with its quote. */
@@ -6911,7 +6972,7 @@ window.__ModuleLoader__.load({
       return list
         .slice()
         .sort((left, right) => (left.order - right.order) || (left.createdAt - right.createdAt))
-        .map((note, index) => `${index + 1}. ${composeNoteLine(note)}`)
+        .map((note, index) => `${index + 1}. ${composeNotePrompt(note)}`)
         .join('\n');
     }
 
