@@ -41,6 +41,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- **Locate** wears a map pin and says **Locate the passage**: the viewfinder corners it drew said
+  screenshot or full screen, while the pin is the shape that already means "that spot" — which is what
+  the action does, scrolling the transcript back to the annotated words. The pin's centre is filled
+  because a hole that small closes up at the 16px the row actions render at.
 - **Save as prompt** in an annotation row wears the prompt chevron plus a plus: the chevron is the mark
   the **Prompts** tab already carries, so the action says "start a prompt from this" instead of drawing a
   sheet with a fold — that outline read as "new document" and its inner plus closed up at 16px.

@@ -97,7 +97,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   the conversation's text size, so it grows with the reading font instead of staying small.
   The note stays on the exact wording, so you can keep reading and come back to the context instead of
   losing the point in a separate scratchpad; click the badge to edit. **Annotations** page always
-  exists: **Locate** scrolls to the passage, **Insert** writes one note into the composer in one fixed
+  exists: **Locate the passage** scrolls back to the words, **Insert into the composer** writes one note in one fixed
   block — 【Original】the words on one line, 【Annotation】<kind>: what you wrote on the next — where the kind's
   own words open the annotation (Agree, Disagree, Question, Note, Idea, Additional info, To do), and an empty
   body keeps the kind word alone; the **Save as prompt** icon opens that note in the pool's own editor: the
@@ -107,7 +107,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   confirmation step for title, body, images and target group.
   The page's bottom bar shows the selected count and **Summarize**; it opens the review card, which sits
   at the bottom like the send queue, collapses to a strip, and can be resized by dragging its top edge
-  (double-click to reset). Rows gain checkboxes, immediate execution and to-do routing; Locate stays,
+  (double-click to reset). Rows gain checkboxes, immediate execution and to-do routing; Locate the passage stays,
   while Insert / Save as prompt / Delete hide. The card is the prompt composer: preview and edit the
   prompt, use the Refresh link, then Save as prompt or Send from the status bar. The prompt keeps each ID
   (Agree-1, Question-2, …) and then reads as 【原文】 / 【批注】 blocks with the kind's fixed words, so a sent
@@ -135,7 +135,7 @@ the conversation, so the agent gets a precise instruction and you do not lose th
   Only assistant replies are accepted; your own messages and image-only or empty blocks are
   refused, and ineligible blocks keep the normal pointer and show no outline or label. The picker
   only covers the conversation body, so the composer, turn rail and the rest of the app stay
-  clickable. The block's text becomes the quote, so **Locate** still works. Right-click selection
+  clickable. The block's text becomes the quote, so **Locate the passage** still works. Right-click selection
   remains the exact-phrase path.
 - **Edit in the list** — on the **Annotations** page, click a note's body to edit its kind and text in
   place. The quoted passage is read-only; review mode keeps its checkbox and routing flow.
@@ -214,7 +214,7 @@ does not turn it on.
    over an assistant paragraph and click once; its editor opens in a bubble beside the block and the pick
    keeps running, so clicking the next paragraph adds the next note. Esc leaves before you pick. The pool's
    **Annotations** page
-   collects the notes; **Locate** scrolls to a passage, **Insert** writes one note into the composer, and the
+   collects the notes; **Locate the passage** scrolls back to the words, **Insert** writes one note into the composer, and the
    **Save as prompt** icon hands that note to the pool's editor (the sidebar switches to **Prompts**
    with the body already written, so only the group and any edits are left). Click a note's body to edit its kind and text in place;
    the quote is read-only. Select notes and choose **Summarize** in the bottom bar to open the review card;

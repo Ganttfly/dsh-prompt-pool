@@ -378,7 +378,7 @@ window.__ModuleLoader__.load({
       'note.composeHint': '把选中的批注汇总后插入输入框',
       'note.composeStoreHint': '把选中的批注存成一条提示词',
       'note.insert': '插入输入框',
-      'note.locate': '定位',
+      'note.locate': '定位到原文位置',
       'note.locateFailed': '这条批注暂时找不到原文（回复可能被折叠或改写了）。',
       'note.deleteConfirm': '删除这条批注？',
       'note.deleteHint': '删除后这条批注会从当前会话移除。',
@@ -739,7 +739,7 @@ window.__ModuleLoader__.load({
       'note.composeHint': 'Summarize the selected annotations into one draft',
       'note.composeStoreHint': 'Save the selected annotations as one prompt',
       'note.insert': 'Insert into the composer',
-      'note.locate': 'Locate',
+      'note.locate': 'Locate the passage',
       'note.locateFailed': 'This note cannot find its passage right now (the reply may be folded or rewritten).',
       'note.deleteConfirm': 'Delete this annotation?',
       'note.deleteHint': 'This annotation will be removed from the current session.',
@@ -3507,9 +3507,14 @@ window.__ModuleLoader__.load({
             h('path', { d: 'M4 6h9M4 12h9M4 18h6' }),
             h('path', { d: 'M17 13v7M13.5 16.5h7' }));
         case 'locate':
+          // A map pin: the annotation is tied to a spot in the transcript, and
+          // this is the shape everyone already reads as "that place". The
+          // viewfinder corners it replaced said screenshot or full screen.
+          // The centre is filled rather than hollow — a hole this small closes
+          // up at the 16px the row actions render at.
           return h('svg', base,
-            h('path', { d: 'M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15' }),
-            h('circle', { cx: 12, cy: 12, r: 1.7, fill: 'currentColor', stroke: 'none' }));
+            h('path', { d: 'M19.8 10.2c0 6.2-7.8 11.4-7.8 11.4s-7.8-5.2-7.8-11.4a7.8 7.8 0 0 1 15.6 0z' }),
+            h('circle', { cx: 12, cy: 10.2, r: 2.5, fill: 'currentColor', stroke: 'none' }));
         case 'annotation':
           return h('svg', base,
             h('rect', { x: 3.5, y: 4.5, width: 17, height: 11.5, rx: 2 }),
