@@ -5663,6 +5663,7 @@ window.__ModuleLoader__.load({
                 parkedNotes: reviewSelection.parked,
                 immediateIds: reviewSelection.immediateIds,
                 count: selectedNotes.length,
+                total: notesList.length,
                 open: reviewOpen,
                 version: reviewVersion,
                 height: reviewResize.height,
@@ -9422,6 +9423,9 @@ window.__ModuleLoader__.load({
       const parkedNotes = Array.isArray(props.parkedNotes) ? props.parkedNotes : [];
       const selectedNotes = Array.isArray(props.selectedNotes) ? props.selectedNotes : [];
       const immediateIds = Array.isArray(props.immediateIds) ? props.immediateIds : [];
+      const totalCount = Number(props.totalCount) || 0;
+      const canSelectAll = totalCount > selectedNotes.length;
+      const canClear = selectedNotes.length > 0;
       const processing = props.processing === true;
       const [batchId] = useState(() => newBatchId());
       const [draft, setDraft] = useState(null);
@@ -9505,12 +9509,38 @@ window.__ModuleLoader__.load({
                 { className: 'pp-review-headline' },
                 h('strong', null, translate('note.review.title')),
                 processing
-                  ? [
-                      h('span', { key: 'selected', className: 'pp-review-chip' }, translate('note.review.selected', { n: selectedNotes.length })),
-                      immediateIds.length > 0
-                        ? h('span', { key: 'immediate', className: 'pp-review-chip pp-review-chip-accent' }, translate('note.review.immediateCount', { n: immediateIds.length }))
+                  ? h('span', { key: 'selected', className: 'pp-review-chip' }, translate('note.review.selected', { n: selectedNotes.length }))
+                  : null,
+                processing && immediateIds.length > 0
+                  ? h('span', { key: 'immediate', className: 'pp-review-chip pp-review-chip-accent' }, translate('note.review.immediateCount', { n: immediateIds.length }))
+                  : null,
+                // Selection tools sit with the count they act on, and only when
+                // they can do something: no Select all when everything is
+                // checked, no Clear when nothing is.
+                processing && (canSelectAll || canClear)
+                  ? h(
+                      'span',
+                      { key: 'tools', className: 'pp-review-select-actions pp-review-select-tools' },
+                      canSelectAll
+                        ? h('button', {
+                            key: 'all',
+                            type: 'button',
+                            className: 'pp-note-link pp-review-select-link',
+                            onClick: props.onSelectAll,
+                          }, translate('note.review.selectAll'))
                         : null,
-                    ]
+                      canSelectAll && canClear
+                        ? h('span', { key: 'dot', className: 'pp-review-select-dot', 'aria-hidden': 'true' }, '·')
+                        : null,
+                      canClear
+                        ? h('button', {
+                            key: 'clear',
+                            type: 'button',
+                            className: 'pp-note-link pp-review-select-link',
+                            onClick: props.onClearSelection,
+                          }, translate('note.review.clearAll'))
+                        : null,
+                    )
                   : null,
               ),
             ),
@@ -9528,20 +9558,6 @@ window.__ModuleLoader__.load({
                     onClick: props.onStart,
                   }, translate('note.review.open'))
                 : [
-                    h(
-                      'span',
-                      { key: 'select', className: 'pp-review-select-actions' },
-                      h('button', {
-                        type: 'button',
-                        className: 'pp-note-link pp-review-select-link',
-                        onClick: props.onSelectAll,
-                      }, translate('note.review.selectAll')),
-                      h('button', {
-                        type: 'button',
-                        className: 'pp-note-link pp-review-select-link',
-                        onClick: props.onClearSelection,
-                      }, translate('note.review.clearAll')),
-                    ),
                     // Leaving the summary touches nothing: the card closes and
                     // the checkboxes go back to being plain rows.
                     h('button', {
@@ -9681,7 +9697,7 @@ window.__ModuleLoader__.load({
 
     function renderReviewDock(props) {
       const {
-        sessionId, open, count, version, height, cardRef,
+        sessionId, open, count, total, version, height, cardRef,
         selectedNotes, sentNotes, parkedNotes, immediateIds,
         onResizeStart, onResizeBy, onResizeReset,
         processing, onStart, onSelectAll, onClearSelection,
@@ -9756,6 +9772,7 @@ window.__ModuleLoader__.load({
               key: version,
               sessionId,
               processing,
+              totalCount: total,
               onStart,
               onSelectAll,
               onClearSelection,
@@ -11181,6 +11198,7 @@ window.__ModuleLoader__.load({
               parkedNotes: reviewSelection.parked,
               immediateIds: reviewSelection.immediateIds,
               count: selectedNotes.length,
+              total: notesList.length,
               open: reviewOpen,
               version: reviewVersion,
               height: reviewResize.height,
@@ -11900,6 +11918,8 @@ window.__ModuleLoader__.load({
       '.pp-review-preview-wrap{display:flex;flex:1;flex-direction:column;gap:5px;min-height:0;margin:8px 12px;padding:7px 8px;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-surface)}' +
       '.pp-review-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:none;flex-wrap:wrap}' +
       '.pp-review-select-actions{display:flex;align-items:center;gap:8px;flex:none}' +
+      '.pp-review-select-tools{gap:6px;margin-left:2px}' +
+      '.pp-review-select-dot{color:var(--pp-ink-3);font-size:11px;line-height:1}' +
       '.pp-review-preview-hint{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0 1px;color:var(--pp-note-ink-2);font-size:10.5px;line-height:1.45}' +
       '.pp-merge-attachments{display:flex;flex-direction:column;gap:4px;min-width:0;padding:0 1px}' +
       '.pp-merge-attachments-label{color:var(--pp-note-ink-2);font-size:10.5px;line-height:1.5}' +
@@ -11920,7 +11940,7 @@ window.__ModuleLoader__.load({
       '.pp-review-dock .pp-review-secondary:hover{border-color:color-mix(in srgb,var(--pp-summary-accent) 35%,var(--pp-line-2))}' +
       '.pp-review-dock .pp-review-select-link{color:var(--pp-summary-accent);text-decoration-color:color-mix(in srgb,var(--pp-summary-accent) 45%,transparent)}' +
       '.pp-review-dock .pp-review-select-link:hover{color:var(--pp-ink);text-decoration-color:currentColor}' +
-      '.pp-review-dock .pp-review-cancel{color:var(--pp-ink-2);margin-left:2px}' +
+      '.pp-review-dock .pp-review-cancel{color:var(--pp-ink-2);margin-left:2px;margin-right:2px}' +
       '.pp-review-dock .pp-review-cancel:hover{color:var(--pp-ink)}' +
       '.pp-review-dock .pp-review-refresh{color:var(--pp-summary-accent)}' +
       '.pp-review-dock .pp-review-stale{color:var(--pp-summary-accent)}' +

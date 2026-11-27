@@ -266,8 +266,8 @@ const check = (ok, label) => {
   let cardTree = renderCard(tree);
   let textarea = nodes(cardTree).find((node) => node.type === 'textarea');
   check(Boolean(textarea), 'the prompt card has an editor');
-  check(Boolean(byText(cardTree, 'note.review.selectAll')) && Boolean(byText(cardTree, 'note.review.clearAll')),
-    'select all / clear live on the card status bar');
+  check(Boolean(byText(cardTree, 'note.review.clearAll')) && !byText(cardTree, 'note.review.selectAll'),
+    'with everything checked, Clear shows and Select all steps aside');
   check(Boolean(textarea) && textarea.props.value.indexOf('q1') >= 0 && textarea.props.value.indexOf('q2') >= 0 && textarea.props.value.indexOf('q3') >= 0 && textarea.props.value.indexOf('q4') >= 0, 'the preview includes every checked annotation');
   check(Boolean(textarea) && textarea.props.value.indexOf('note.review.contextQuestion') >= 0, 'the prompt carries the complete question context');
   check(Boolean(textarea) && textarea.props.value.indexOf('B-') < 0, 'the generated prompt does not expose an internal batch id');
@@ -293,6 +293,7 @@ const check = (ok, label) => {
   textarea = nodes(cardTree).find((node) => node.type === 'textarea');
   card = findCard(tree);
   check(Boolean(card) && card.props.selectedNotes.length === 3, 'unchecking a row removes it from the selection');
+  check(Boolean(byText(cardTree, 'note.review.selectAll')), 'Select all comes back once a row is unchecked');
   check(Boolean(textarea) && textarea.props.value.indexOf('q3') < 0, 'unchecking a row removes it from the prompt');
   checks = reviewChecks(notesTree);
   if (checks[2]) checks[2].props.onChange();

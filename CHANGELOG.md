@@ -8,9 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- The review card has a **Cancel** beside Select all / Clear: it leaves summary mode, collapses the card
+- The review card has a **Cancel** in its action cluster: it leaves summary mode, collapses the card
   and touches nothing else — the checked annotations, the prompt being written and the queue all stay as
   they were, so entering a summary is never a trap.
+- The review card header is split by purpose: the chips and the selection tools (**Select all** /
+  **Clear**) sit together on the left, the decision (**Cancel**, **Save as prompt**, **Send**) stands alone on
+  the right. Selection tools appear only when they can act — no **Select all** while every annotation is
+  checked, no **Clear** while none is — so the row keeps one fewer link most of the time.
 - Point-and-click annotation. **Continuous** in the page header and **Continuous** in the composer's
   Annotations menu start a block picker: only assistant replies are eligible, and paragraphs, list items,
   headings, quotes, code blocks and table cells get an amber outline plus a size label. Each click adds an
