@@ -3546,6 +3546,23 @@ window.__ModuleLoader__.load({
             h('path', { d: 'M4 14.4h4.1l1.2 2.1h5.4l1.2-2.1H20' }),
             h('path', { d: 'M4 14.4v4.1A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-4.1' }),
             h('path', { d: 'M12 4.2v8.2M8.8 9.4 12 12.6l3.2-3.2' }));
+        case 'pick':
+          // Continuous annotation: a pointer landing on a line of the reply.
+          // The corner-plus shape the picker turns the cursor into collapses
+          // into a single blob at the 15px a menu row draws, so it keeps the
+          // arrow and borrows only the line under it.
+          return h('svg', base,
+            h('path', { d: 'M6.9 4 18.4 9.8l-4.7 1.3-1.6 4.7z' }),
+            h('path', { d: 'M4.2 19h15.6' }));
+        case 'funnel':
+          // Summarize: many marks go in, one instruction comes out.
+          return h('svg', base, h('path', { d: 'M3.8 5h16.4l-6.2 7.4v5.9l-4 2.3v-8.2z' }));
+        case 'plusBox':
+          // Add a prompt: a new entry in the pool, not another chevron — the
+          // chevron alone already means the Prompts destination one row down.
+          return h('svg', base,
+            h('path', { d: 'M5.2 4.6h13.6a1.6 1.6 0 0 1 1.6 1.6v11.6a1.6 1.6 0 0 1-1.6 1.6H5.2a1.6 1.6 0 0 1-1.6-1.6V6.2a1.6 1.6 0 0 1 1.6-1.6z' }),
+            h('path', { d: 'M12 8.6v6.8M8.6 12h6.8' }));
         case 'review':
           return h('svg', base,
             h('path', { d: 'M4 7h7M4 12h7M4 17h7' }),
@@ -3671,6 +3688,34 @@ window.__ModuleLoader__.load({
           },
         },
         icon(name),
+      );
+    }
+
+    /**
+     * A row of a tray menu. Each row carries its own mark: the menus used to
+     * repeat one glyph per menu, which said nothing the label did not already
+     * say, and then had none at all. A row's mark is what the action does, the
+     * way a row action's is.
+     *
+     * Called as a plain function, not as `h(MenuItem, …)`: the row has no state
+     * of its own, and building the button inline keeps the rendered tree honest
+     * for the tests that read it.
+     */
+    function MenuItem(options) {
+      return h(
+        'button',
+        {
+          key: options.id,
+          type: 'button',
+          role: 'menuitem',
+          className: 'pp-trigger-menu-item',
+          title: options.title,
+          disabled: options.disabled === true,
+          onClick: options.onClick,
+        },
+        h('span', { className: 'pp-trigger-menu-mark', 'aria-hidden': true }, icon(options.icon)),
+        h('span', { className: 'pp-trigger-menu-label' }, options.label),
+        options.trailing === undefined ? null : options.trailing,
       );
     }
 
@@ -3955,66 +4000,56 @@ window.__ModuleLoader__.load({
               },
               domainMenu === 'annotations'
                 ? [
-                    h('button', {
-                      key: 'annotate',
-                      type: 'button',
-                      role: 'menuitem',
-                      className: 'pp-trigger-menu-item',
+                    MenuItem({
+                      id: 'annotate',
+                      icon: 'pick',
+                      label: translate('note.addPick'),
                       onClick: () => {
                         setDomainMenu(null);
                         notePickActions.start(sessionId);
                       },
-                    },
-                    h('span', { className: 'pp-trigger-menu-label' }, translate('note.addPick'))),
-                    h('button', {
-                      key: 'summary',
-                      type: 'button',
-                      role: 'menuitem',
-                      className: 'pp-trigger-menu-item',
+                    }),
+                    MenuItem({
+                      id: 'summary',
+                      icon: 'funnel',
+                      label: translate('note.menu.summary'),
                       // Hovering explains the rules the generated prompt carries.
                       title: translate('note.review.intro'),
                       disabled: notes.length === 0,
+                      trailing: notes.length > 0
+                        ? h('span', { className: 'pp-trigger-menu-count' }, String(notes.length))
+                        : null,
                       onClick: () => {
                         setDomainMenu(null);
                         openSummary();
                       },
-                    },
-                    h('span', { className: 'pp-trigger-menu-label' }, translate('note.menu.summary')),
-                    notes.length > 0 ? h('span', { className: 'pp-trigger-menu-count' }, String(notes.length)) : null),
-                    h('button', {
-                      key: 'view',
-                      type: 'button',
-                      role: 'menuitem',
-                      className: 'pp-trigger-menu-item',
+                    }),
+                    MenuItem({
+                      id: 'view',
+                      icon: 'annotation',
+                      label: translate('note.menu.view'),
                       onClick: () => openPoolView('notes', false),
-                    },
-                    h('span', { className: 'pp-trigger-menu-label' }, translate('note.menu.view'))),
+                    }),
                   ]
                 : [
-                    h('button', {
-                      key: 'save',
-                      type: 'button',
-                      role: 'menuitem',
-                      className: 'pp-trigger-menu-item',
+                    MenuItem({
+                      id: 'save',
+                      icon: 'capture',
+                      label: translate('prompt.menu.save'),
                       onClick: () => { void openCaptureMenu(); },
-                    },
-                    h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.save'))),
-                    h('button', {
-                      key: 'new',
-                      type: 'button',
-                      role: 'menuitem',
-                      className: 'pp-trigger-menu-item',
+                    }),
+                    MenuItem({
+                      id: 'new',
+                      icon: 'plusBox',
+                      label: translate('prompt.menu.new'),
                       onClick: () => openPoolView('workspace', true),
-                    },
-                    h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.new'))),
-                    h('button', {
-                      key: 'view',
-                      type: 'button',
-                      role: 'menuitem',
-                      className: 'pp-trigger-menu-item',
+                    }),
+                    MenuItem({
+                      id: 'view',
+                      icon: 'prompt',
+                      label: translate('prompt.menu.view'),
                       onClick: () => openPoolView('workspace', false),
-                    },
-                    h('span', { className: 'pp-trigger-menu-label' }, translate('prompt.menu.view'))),
+                    }),
                   ],
             )
           : null,
@@ -11428,6 +11463,11 @@ window.__ModuleLoader__.load({
       '.pp-trigger-menu-item:hover:not([disabled]),.pp-trigger-menu-item:focus-visible:not([disabled]){background:var(--pp-menu-soft);color:var(--pp-menu-ink)}' +
       '.pp-trigger-menu-item:focus-visible{outline:2px solid var(--pp-menu-line);outline-offset:-2px}' +
       '.pp-trigger-menu-item[disabled]{opacity:.45;cursor:not-allowed}' +
+      // A row's mark is what the action does, in the menu's own accent; it is
+      // held a step quieter than the label so the label still leads.
+      '.pp-trigger-menu-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;width:16px;height:16px;color:var(--pp-menu-ink);opacity:.78}' +
+      '.pp-trigger-menu-mark svg{width:15px;height:15px}' +
+      '.pp-trigger-menu-item:hover:not([disabled]) .pp-trigger-menu-mark,.pp-trigger-menu-item:focus-visible:not([disabled]) .pp-trigger-menu-mark{opacity:1}' +
       '.pp-trigger-menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}' +
       '.pp-trigger-menu-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--pp-menu-tint) 14%,transparent);color:var(--pp-menu-ink);font-size:10px;font-weight:600;line-height:18px;font-variant-numeric:tabular-nums;text-align:center}' +
       '.pp-trigger-notice{position:absolute;right:0;bottom:calc(100% + 8px);z-index:2147483000;max-width:min(300px,calc(100vw - 16px));padding:6px 10px;border:1px solid var(--pp-line-2);border-radius:8px;background:var(--pp-surface-2);color:var(--pp-ink-2);box-shadow:0 8px 24px rgba(0,0,0,.16);font-size:11px;line-height:1.4;pointer-events:none}' +
@@ -12400,3 +12440,4 @@ window.__ModuleLoader__.load({
     };
   },
 });
+

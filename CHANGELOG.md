@@ -45,6 +45,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Both tray menus now name each row with a mark of its own: a pointer on a line for **Continuous**, a funnel
+  for **Summarize in one click**, the annotation bubble for **View annotations** (the shape its tab wears), a
+  tray for **Save draft**, a boxed plus for **Add prompt**, and the prompt chevron for **View prompts**. The
+  earlier menus repeated one glyph across all three rows and were then stripped bare; a mark here says what
+  the row does, so a repeat would be a lie. The destination rows borrow the glyph of the destination they
+  open, and the two menus draw in their own accent, so the marks also say which menu is open.
 - Annotations answer to their own retention switches. **Settings → Annotations** now holds three:
   keep an annotation after it is inserted into the composer (on by default), after a summary sends it
   away (off by default, matching the old behaviour), and after it is filed as a prompt. When a switch is
