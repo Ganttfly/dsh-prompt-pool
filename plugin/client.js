@@ -3854,9 +3854,14 @@ window.__ModuleLoader__.load({
           setSummaryError(translate('note.summary.failed'));
           return;
         }
-        if (!keepNotes) notesActions.removeMany(notes.map((note) => note.id));
+        if (!keepNotes) {
+          notesActions.removeMany(notes.map((note) => note.id));
+          // The marks that just left can come back, same as on the review card.
+          showToast(translate('note.summary.done'), 'ok', () => notesActions.restore(notes));
+        } else {
+          showNotice('ok', translate('note.summary.done'));
+        }
         setSummaryOpen(false);
-        showNotice('ok', translate('note.summary.done'));
       };
 
       return h(
