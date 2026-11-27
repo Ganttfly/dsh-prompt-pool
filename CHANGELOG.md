@@ -37,8 +37,13 @@ All notable changes to this project are documented here. The format follows
 - The **How the prompt pool works** card now leads with the problem each half solves — many remarks in a
   long reply, retyping a recurring instruction — and lists the matching steps underneath: mark in place
   and fold the marks into one instruction, or save once and insert or queue it.
-- The composer cap still reads **Prompt pool**, but its tooltip now names the action: **Open the prompt
-  pool** (and its localized equivalent), so hovering the mark no longer repeats the visible label.
+- Hovering a control now explains what pressing it produces instead of repeating its label: the cap says
+  the pool is the in-flow way to work with the model, **Annotations** says it is for raising questions and
+  settling decisions across a long reply and folding them into one prompt, its count badge names the
+  session's annotations, and **Prompts** says it keeps needs, ideas and instructions and queues multi-step
+  runs. The annotation kind chips quote the rule the summarize prompt sends for that kind, so hovering
+  **Opinion** shows the sentence the model will be given, and **Summarize** shows the rules it writes into
+  the generated prompt.
 - The composer trigger's brand cap now opens the right sidebar page instead of the composer panel,
   leaving the page's current destination alone and keeping the conversation uncovered. The Annotations
   and Prompts menus lead to the page too, and no longer offer a separate way into the panel. The panel

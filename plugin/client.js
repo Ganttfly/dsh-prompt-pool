@@ -78,7 +78,10 @@ window.__ModuleLoader__.load({
     // ---------------------------------------------------------------- locale
     const ZH = {
       'button.label': '提示池',
-      'button.open': '打开提示池',
+      'tip.pool': '打开提示池，开启与AI高效协作模式',
+      'tip.notes': '在大段会话中随手提问题、定决策，一键汇总成提示词',
+      'tip.noteCount': '此会话已标注{n}条批注',
+      'tip.prompts': '随时记录需求、灵感和指令；提前编排多步骤指令队列，一键发送。',
       'panel.title': '提示池',
       'panel.close': '关闭',
       'panel.capture': '保存当前输入',
@@ -332,7 +335,6 @@ window.__ModuleLoader__.load({
       'note.review.previewHint': '按当前勾选和立即实施选项生成；可直接修改。',
       'note.review.processTitle': '按当前勾选重新生成提示词',
       'note.review.refresh': '刷新',
-      'note.review.startTitle': '勾选批注并生成提示词',
       'note.review.idleHint': '点击「汇总批注」，勾选需要处理的批注、可自动生成汇总后的提示词。',
       'note.review.stale': '批注已变更，点「刷新」更新提示词。',
       'note.review.nothingSelected': '还没有勾选批注；在上方列表勾选后再生成提示词。',
@@ -424,7 +426,10 @@ window.__ModuleLoader__.load({
 
     const EN = {
       'button.label': 'Prompt pool',
-      'button.open': 'Open the prompt pool',
+      'tip.pool': 'Open the prompt pool and work with the model in flow',
+      'tip.notes': 'Ask and decide while reading a long reply; fold it into one prompt',
+      'tip.noteCount': '{n} annotations in this session',
+      'tip.prompts': 'Keep needs, ideas and instructions; queue multi-step prompts and send them in one go',
       'panel.title': 'Prompt pool',
       'panel.close': 'Close',
       'panel.capture': 'Save current input',
@@ -678,7 +683,6 @@ window.__ModuleLoader__.load({
       'note.review.previewHint': 'Generated from the checked annotations and immediate choices; edit freely.',
       'note.review.processTitle': 'Regenerate the prompt from the current selection',
       'note.review.refresh': 'Refresh',
-      'note.review.startTitle': 'Select annotations and generate the prompt',
       'note.review.idleHint': 'Click Summarize, check the annotations you need to process, and the combined prompt is generated automatically.',
       'note.review.stale': 'Annotations changed; press Refresh to update the prompt.',
       'note.review.nothingSelected': 'No annotations checked; check some rows above to generate a prompt.',
@@ -3583,8 +3587,7 @@ window.__ModuleLoader__.load({
       const barRef = useRef(null);
       const noticeTimer = useRef(0);
       const label = translate('button.label');
-      // The cap reads as the pool's name; its tooltip names the action.
-      const openLabel = translate('button.open');
+      // The cap reads as the pool's name; its tooltip says what opening it gives you.
 
       useEffect(() => () => {
         if (noticeTimer.current) clearTimeout(noticeTimer.current);
@@ -3764,7 +3767,7 @@ window.__ModuleLoader__.load({
               className: 'pp-btn pp-trigger',
               'data-open': view.open ? 'true' : 'false',
               disabled: release.active,
-              title: openLabel,
+              title: translate('tip.pool'),
               'aria-label': label,
               'aria-haspopup': 'dialog',
               'aria-expanded': view.open ? 'true' : 'false',
@@ -3790,7 +3793,7 @@ window.__ModuleLoader__.load({
               type: 'button',
               className: 'pp-trigger-action',
               'data-domain': 'annotations',
-              title: translate('scope.notes'),
+              title: translate('tip.notes'),
               'aria-label': translate('scope.notes'),
               'aria-haspopup': 'menu',
               'aria-expanded': domainMenu === 'annotations' ? 'true' : 'false',
@@ -3802,7 +3805,7 @@ window.__ModuleLoader__.load({
             icon('annotation'),
             h('span', null, translate('scope.notes')),
             notes.length > 0
-              ? h('span', { className: 'pp-trigger-count', 'aria-hidden': true, title: translate('note.summary.count', { n: notes.length }) }, String(notes.length))
+              ? h('span', { className: 'pp-trigger-count', 'aria-hidden': true, title: translate('tip.noteCount', { n: notes.length }) }, String(notes.length))
               : null,
             h('span', { className: 'pp-trigger-chevron', 'aria-hidden': true }, icon('chevronDown'))
           ),
@@ -3812,7 +3815,7 @@ window.__ModuleLoader__.load({
               type: 'button',
               className: 'pp-trigger-action',
               'data-domain': 'prompts',
-              title: translate('scope.prompts'),
+              title: translate('tip.prompts'),
               'aria-label': translate('scope.prompts'),
               'aria-haspopup': 'menu',
               'aria-expanded': domainMenu === 'prompts' ? 'true' : 'false',
@@ -3856,6 +3859,8 @@ window.__ModuleLoader__.load({
                       type: 'button',
                       role: 'menuitem',
                       className: 'pp-trigger-menu-item',
+                      // Hovering explains the rules the generated prompt carries.
+                      title: translate('note.review.intro'),
                       disabled: notes.length === 0,
                       onClick: () => {
                         setDomainMenu(null);
@@ -8546,6 +8551,9 @@ window.__ModuleLoader__.load({
                     type: 'button',
                     className: 'pp-note-kind',
                     'data-kind': entry.id,
+                    // The same sentence the review prompt sends for this kind, so
+                    // hovering a chip says what the model will be asked to do.
+                    title: translate(REVIEW_GROUP_PROMPTS[entry.id]),
                     'data-active': kind === entry.id ? 'true' : 'false',
                     style: { '--pp-kind': entry.color },
                     onClick: () => {
@@ -9293,7 +9301,8 @@ window.__ModuleLoader__.load({
                 ? h('button', {
                     type: 'button',
                     className: 'pp-note-btn pp-note-btn-primary pp-review-process',
-                    title: translate('note.review.startTitle'),
+                    // The tooltip is the rule text the generated prompt carries.
+                    title: translate('note.review.intro'),
                     disabled: busy,
                     onClick: props.onStart,
                   }, translate('note.review.open'))
