@@ -57,10 +57,11 @@ All notable changes to this project are documented here. The format follows
   off, the inserted or sent marks leave the list and the toast says so with an **Undo** that puts them
   back; keeping the sent ones also leaves the checked set and the review card untouched.
 - A collapsed family no longer merges its groups into one anonymous list: the family tab stays on the strip
-  and its groups appear as chips on a quieter track underneath (**All groups**, then each group with its
-  count). A chip narrows the list to that group, **All groups** widens it back, and a new item made while a
-  chip is picked lands in that chip's group instead of falling into the notes group. A family with a single
-  group shows no chips row.
+  and its groups appear as chips on a quieter track underneath (each group with its count). A chip narrows
+  the list to that group, and a new item made while a chip is picked lands in that chip's group instead of
+  falling into the notes group. There is no "all groups" chip: the family tab already means the whole family,
+  so picking the active chip again — or clicking the family tab — widens the list back to it, and the picked
+  chip starts out unpicked. A family with a single group shows no chips row.
 - A list that mixes groups says which group each row came from: the **All** tab and a collapsed family's
   unpicked view end each row with its group name. The tag had been dropped when the row's type badge moved
   into the title line, leaving the flag passed but unused.

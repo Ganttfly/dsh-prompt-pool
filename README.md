@@ -172,7 +172,8 @@ the conversation, so the agent gets a precise instruction and you do not lose th
 - **Groups** — the shared pool keeps frequent / notes / templates built in, plus your own categories;
   each workspace has its own prompt pool instead of a global workspace group. Each family can be expanded,
   folded into a single tab, or hidden; a folded family still lists its groups as chips on a row underneath
-  (**All groups**, then each group with its count), and a chip narrows the list to that group. Rows in a
+  (each group with its count), and a chip narrows the list to that group. The family tab itself means the
+  whole family, so picking the active chip again — or the family tab — goes back to it. Rows in a
   mixed list carry their group name at the end of the row. The **All** tab can be hidden too.
 - **Localized starter prompts** — a new pool is seeded in the host language, and Settings → Prompts
   can reset the built-in set in the current interface language. Edited built-ins can be kept as

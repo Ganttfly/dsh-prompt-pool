@@ -227,7 +227,6 @@ window.__ModuleLoader__.load({
       'row.familyWorkspace': '工作区分组',
       'tab.familyBuiltin': '内置分组',
       // Chips under a folded family tab: the whole family, then each group.
-      'tab.familyAll': '全部组',
       'tab.familyGroups': '分组',
       'row.classification': '分组',
       'page.new': '添加提示词',
@@ -595,7 +594,6 @@ window.__ModuleLoader__.load({
       'row.familyCustom': 'Custom',
       'row.familyWorkspace': 'Workspace groups',
       'tab.familyBuiltin': 'Built-in groups',
-      'tab.familyAll': 'All groups',
       'tab.familyGroups': 'Groups',
       'row.classification': 'Group',
       'page.new': 'Add prompt',
@@ -5550,6 +5548,9 @@ window.__ModuleLoader__.load({
                         setSettingsOpen(false);
                         setReviewOpen(false);
                         setReviewProcessing(false);
+                        // Landing on a family tab means the whole family, so a
+                        // chip picked earlier is dropped.
+                        setFamilyPick('');
                         setTab(next);
                       }, activeGlobalTab, fallbackTabFor(globalTabs)),
                       onDelete: (id) => setPendingCategory(id),
@@ -5563,18 +5564,22 @@ window.__ModuleLoader__.load({
                 'div',
                 // A folded family keeps its groups one click away instead of
                 // mixing them into one list: the strip folds, the chips do not.
+                // There is no "all groups" chip: the family tab above already
+                // means the whole family, so a second control for it would be
+                // two buttons for one state. Clicking the family tab again
+                // clears a picked chip.
                 { className: 'pp-group-bar', onKeyDown: focusTabByKey },
                 h(
                   'span',
                   { className: 'pp-group-track', role: 'tablist', 'aria-label': translate('tab.familyGroups') },
                   h(TabBar, {
-                    tabs: [{ id: 'nested:' + foldedFamily, label: translate('tab.familyAll'), group: foldedFamily }, ...familyGroups],
+                    tabs: familyGroups,
                     counts: tabCounts,
-                    active: familyPickId || 'nested:' + foldedFamily,
+                    active: familyPickId,
                     showAdd: false,
                     ...tabHandlers((next) => {
-                      setFamilyPick(next === 'nested:' + foldedFamily ? '' : next);
-                    }, familyPickId || 'nested:' + foldedFamily, ''),
+                      setFamilyPick(next === familyPickId ? '' : next);
+                    }, familyPickId, ''),
                     onDelete: (id) => setPendingCategory(id),
                   }),
                 ),

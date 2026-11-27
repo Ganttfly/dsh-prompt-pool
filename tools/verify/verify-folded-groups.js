@@ -164,9 +164,10 @@ const chips = chipsBar(foldedTree);
 check(Boolean(chips), 'the group chips row is missing under a folded family');
 if (chips) {
   const ids = chips.props.tabs.map((tab) => tab.id);
-  check(JSON.stringify(ids) === JSON.stringify(['nested:custom', 'custom:c1', 'custom:c2']),
+  check(JSON.stringify(ids) === JSON.stringify(['custom:c1', 'custom:c2']),
     `the chips read ${ids.join(',')}`);
-  check(chips.props.active === 'nested:custom', `the chips start on ${chips.props.active}, expected the whole family`);
+  check(ids.indexOf('nested:custom') < 0, 'the chips repeat the family tab as an "all groups" chip');
+  check(chips.props.active === '', `the chips start on ${chips.props.active}, expected none picked`);
   check(chips.props.showAdd === false, 'the chips row repeats the new-group action');
   const labels = chips.props.tabs.map((tab) => tab.label);
   check(labels.indexOf('工作') >= 0 && labels.indexOf('生活') >= 0,
@@ -187,11 +188,25 @@ if (chips) {
   check(!nodes(picked, []).some((node) => hasClass(node, 'pp-tag')),
     'a picked chip still labels every row with its group');
 
-  // 3. The first chip ("all groups") goes back to the whole family.
-  pickedChips.props.onSelect('nested:custom');
+  // 3. Picking the active chip again goes back to the whole family, so no
+  //    "all groups" chip is needed for the way back.
+  pickedChips.props.onSelect('custom:c2');
   const restored = folded.render();
   check(JSON.stringify(rowTitles(restored)) === JSON.stringify(['A', 'B']),
-    `going back shows ${rowTitles(restored).join(',')}`);
+    `clearing the chip shows ${rowTitles(restored).join(',')}`);
+  const restoredChips = chipsBar(restored);
+  check(Boolean(restoredChips) && restoredChips.props.active === '',
+    `clearing the chip left ${restoredChips && restoredChips.props.active} active`);
+
+  // 3b. Re-picking the family tab in the strip also clears the chip.
+  restoredChips.props.onSelect('custom:c1');
+  const narrowedAgain = folded.render();
+  check(JSON.stringify(rowTitles(narrowedAgain)) === JSON.stringify(['A']),
+    `re-picking c1 shows ${rowTitles(narrowedAgain).join(',')}`);
+  folded.select('nested:custom');
+  const backToFamily = folded.render();
+  check(JSON.stringify(rowTitles(backToFamily)) === JSON.stringify(['A', 'B']),
+    `the family tab left ${rowTitles(backToFamily).join(',')}, expected the whole family`);
 }
 
 // 4. An expanded custom family has no chips row; its group tabs still narrow.
