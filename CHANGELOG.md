@@ -52,7 +52,9 @@ All notable changes to this project are documented here. The format follows
   question mark, and a gear is the shape that needs no tooltip to be recognised.
 - Row actions read as one set: **Insert** is a 24px icon like queue, copy, store and delete, named by its
   tooltip instead of an accent-coloured text button sitting among three quiet icons. The two lists lose
-  the odd one out and each row gets about 24px back; nothing about what the actions do changed.
+  the odd one out and each row gets about 24px back; nothing about what the actions do changed. That
+  tooltip now reads **Insert into the composer** — an icon has no visible label, so it has to say where
+  the text lands, not just the verb.
 - The review prompt now opens with its response contract written one instruction per line: answer every
   annotation by kind and keep its ID; respond only, and never modify files or run tasks, unless the item
   carries an 【立即实施…】 marker; when executing, finish that item's answer first, then do exactly what the
