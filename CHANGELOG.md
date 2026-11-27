@@ -41,6 +41,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- **Save as prompt** in an annotation row wears the prompt chevron plus a plus: the chevron is the mark
+  the **Prompts** tab already carries, so the action says "start a prompt from this" instead of drawing a
+  sheet with a fold — that outline read as "new document" and its inner plus closed up at 16px.
 - **Save draft** now lives only in the composer's **Prompts** menu: the icon beside **Settings** is gone
   from the page and panel headers, so that row is navigation only and the action sits beside the text it
   copies. The menu item opens the same destination chooser, still copies rather than clears the composer,

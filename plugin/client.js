@@ -3483,9 +3483,13 @@ window.__ModuleLoader__.load({
             h('path', { d: 'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z' }),
             h('circle', { cx: 12, cy: 12, r: 3.1 }));
         case 'store':
+          // Storing an annotation as a prompt: the chevron is the mark the
+          // Prompts tab already wears, and the plus says a new prompt is
+          // being started. The sheet-with-a-fold it replaced read as "new
+          // document" and its little plus collapsed at 16px.
           return h('svg', base,
-            h('path', { d: 'M5 4h9l5 5v11H5z' }),
-            h('path', { d: 'M14 4v5h5M9 13h6M12 10v6' }));
+            h('path', { d: 'M4.4 6.6 9.9 12 4.4 17.4' }),
+            h('path', { d: 'M17 9.2v5.6M14.2 12h5.6' }));
         case 'capture':
           // Filing a draft: an arrow dropping into an open tray. A bookmark
           // outline read as a navigation pin next to the help and settings
